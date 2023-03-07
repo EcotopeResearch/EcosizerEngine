@@ -1,5 +1,6 @@
 from BuildingCreator import *
 from objects.SystemConfig import *
+from objects.systems.SwingTank import *
 
 class Input:
     def __init__(self):

@@ -1,4 +1,5 @@
 from objects.Building import *
+import numpy as np
 
 def create_building(inputs):
 
@@ -9,11 +10,13 @@ def create_building(inputs):
             raise Exception("Magnitude required.")
     
     # check custom loadshape or install standard loadshape
-    if(not hasattr(inputs, 'loadshape') or inputs.loadshape == None):
+    if(not hasattr(inputs, 'loadshape')):
         # TODO inputs for stream vs stream_avg?
         inputs.loadshape = getLoadShape(inputs.building_type)
     else:
         checkLoadShape(inputs.loadshape)
+
+    inputs.loadshape = np.array(inputs.loadshape) # TODO - this changes values a bit, check with scott
 
     match inputs.building_type:
         case 'apartment':
