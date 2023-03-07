@@ -1,34 +1,60 @@
 from objects.Building import *
 
-def create_building(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic, building_type, other_vars = None):
-    match building_type:
+def create_building(inputs):
+
+
+    if not hasattr(inputs, 'building_type'):
+            raise Exception("Building Type required.")
+    if not hasattr(inputs, 'magnitude'):
+            raise Exception("Magnitude required.")
+    
+    # check custom loadshape or install standard loadshape
+    if(not hasattr(inputs, 'loadshape') or inputs.loadshape == None):
+        # TODO inputs for stream vs stream_avg?
+        inputs.loadshape = getLoadShape(inputs.building_type)
+    else:
+        checkLoadShape(inputs.loadshape)
+
+    match inputs.building_type:
         case 'apartment':
-            return Apartment(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic)
+            return Apartment(inputs)
         case 'elementary_school':
-            return ElementarySchool(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic)
+            return ElementarySchool(inputs)
         case 'food_service_a':
-            return FoodServiceA(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic)
+            return FoodServiceA(inputs)
         case 'food_service_b':
-            return FoodServiceB(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic)
+            return FoodServiceB(inputs)
         case 'junior_high':
-            return JuniorHigh(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic)
+            return JuniorHigh(inputs)
         case 'mens_dorm':
-            return MensDorm(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic)
+            return MensDorm(inputs)
         case 'motel':
-            return Motel(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic)
+            return Motel(inputs)
         case 'nursing_home':
-            return NursingHome(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic)
+            return NursingHome(inputs)
         case 'office_building':
-            return OfficeBuilding(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic)
+            return OfficeBuilding(inputs)
         case 'senior_high':
-            return SeniorHigh(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic)
+            return SeniorHigh(inputs)
         case 'womens_dorm':
-            return WomensDorm(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic)
+            return WomensDorm(inputs)
         case 'multi_family':
-            if not other_vars or len(other_vars) < 3 or len(other_vars) > 4:
-                print('error here')
-                # TODO error
-            else:
-                return MultiFamily(hot_water_temp, city_water_temp, return_water_temp, flow_rate, magnitude_statistic, *other_vars)
+            return MultiFamily(inputs)
         case _:
-            return 'error?' # TODO handle error
+            raise Exception("Unrecognized building type.")
+        
+def getLoadShape(file_name, shape = 'Stream'):
+    with open(os.path.join(os.path.dirname(__file__), 'data/load_shapes/' + file_name + '.json')) as json_file:
+        dataDict = json.load(json_file)
+        try: 
+            return dataDict['loadshapes'][shape]
+        except KeyError:
+            raise KeyError("Mapping key not found for loadshapes, valid keys are: 'Stream', or 'Stream_Avg'")
+        
+def checkLoadShape(loadshape):
+    if len(loadshape) != 24:
+        raise Exception("Loadshape must be of length 24 but instead has length of "+str(len(loadshape))+".")
+    if sum(loadshape) > 1 + 1e-3 or sum(loadshape) < 1 - 1e-3:
+        raise Exception("Sum of the loadshape does not equal 1 but "+str(sum(loadshape))+".")
+    if any(x < 0 for x in loadshape):
+        raise Exception("Can not have negative load shape values in loadshape.")
