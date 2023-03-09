@@ -1,48 +1,51 @@
 from objects.Building import *
 import numpy as np
 
-def create_building(inputs):
+def create_building(incomingT_F, magnitude_stat, supplyT_F, building_type, loadshape = None, avgLoadshape = None,
+                    returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0):
 
 
-    if not hasattr(inputs, 'building_type'):
-            raise Exception("Building Type required.")
-    if not hasattr(inputs, 'magnitude'):
-            raise Exception("Magnitude required.")
+    if not isinstance(building_type, str):
+            raise Exception("building_type must be a string.")
     
     # check custom loadshape or install standard loadshape
-    if(not hasattr(inputs, 'loadshape')):
-        # TODO inputs for stream vs stream_avg?
-        inputs.loadshape = getLoadShape(inputs.building_type)
+    if(loadshape is None):
+        loadshape = getLoadShape(building_type)
     else:
-        checkLoadShape(inputs.loadshape)
+        checkLoadShape(loadshape)
+    if(avgLoadshape is None):
+        avgLoadshape = getLoadShape(building_type, 'Stream_Avg')
+    else:
+        checkLoadShape(avgLoadshape)
 
-    inputs.loadshape = np.array(inputs.loadshape) # TODO - this changes values a bit, check with scott
+    loadshape = np.array(loadshape) # TODO - this changes values of loadshape a bit, show this to scott
+    avgLoadshape = np.array(avgLoadshape) # TODO - this changes values of loadshape a bit, show this to scott
 
-    match inputs.building_type:
+    match building_type:
         case 'apartment':
-            return Apartment(inputs)
+            return Apartment(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'elementary_school':
-            return ElementarySchool(inputs)
+            return ElementarySchool(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'food_service_a':
-            return FoodServiceA(inputs)
+            return FoodServiceA(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'food_service_b':
-            return FoodServiceB(inputs)
+            return FoodServiceB(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'junior_high':
-            return JuniorHigh(inputs)
+            return JuniorHigh(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'mens_dorm':
-            return MensDorm(inputs)
+            return MensDorm(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'motel':
-            return Motel(inputs)
+            return Motel(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'nursing_home':
-            return NursingHome(inputs)
+            return NursingHome(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'office_building':
-            return OfficeBuilding(inputs)
+            return OfficeBuilding(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'senior_high':
-            return SeniorHigh(inputs)
+            return SeniorHigh(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'womens_dorm':
-            return WomensDorm(inputs)
+            return WomensDorm(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'multi_family':
-            return MultiFamily(inputs)
+            return MultiFamily(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt)
         case _:
             raise Exception("Unrecognized building type.")
         
