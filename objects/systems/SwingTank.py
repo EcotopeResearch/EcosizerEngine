@@ -2,7 +2,7 @@ from objects.SystemConfig import SystemConfig
 import numpy as np
 from objects.Building import Building
 from constants.Constants import *
-from utils import roundList
+from utils import roundList, mixVolume
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots
@@ -26,7 +26,18 @@ class SwingTank(SystemConfig):
         super().__init__(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                  doLoadShift, cdf_shift, schedule)
     
-    def calcRunningVol(self, heatHrs, onOffArr, loadshape):
+    def getSizingResults(self):
+        """
+        Returns the minimum primary volume and heating capacity sizing results
+
+        Returns
+        -------
+        list
+            self.PVol_G_atStorageT, self.PCap_kBTUhr, self.TMVol_G, self.TMCap_kBTUhr
+        """
+        return [self.PVol_G_atStorageT, self.PCap_kBTUhr, self.TMVol_G, self.TMCap_kBTUhr]
+    
+    def calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0):
         """
         Function to find the running volume for the hot water storage tank, which
         is needed for calculating the total volume for primary sizing and in the event of load shift sizing
@@ -38,6 +49,9 @@ class SwingTank(SystemConfig):
             The number of hours primary heating equipment can run in a day.
         onOffArr : ndarray
             array of 1/0's where 1's allow heat pump to run and 0's dissallow. of length 24.
+        loadshape:
+        effMixFract: int
+            not used in this subclass implimentation but needed because of class inheritence
 
         Raises
         ------
@@ -118,7 +132,7 @@ class SwingTank(SystemConfig):
 
         for ii in range(1, N):
 
-            hw_outSwing[ii] = self.mixVolume(D_hw[ii], swingT[ii-1], self.building.incomingT_F, self.building.supplyT_F)
+            hw_outSwing[ii] = mixVolume(D_hw[ii], swingT[ii-1], self.building.incomingT_F, self.building.supplyT_F)
             swingheating, swingT[ii], srun[ii] = self.runOneSwingStep(swingheating, swingT[ii-1], hw_outSwing[ii])
 
         return [swingT, srun, hw_outSwing]
@@ -223,7 +237,7 @@ class SwingTank(SystemConfig):
     
     def getTotalVolMax(self, runningVol_G):
         # For a swing tank the storage volume is found at the appropriate temperature in calcRunningVol
-        return runningVol_G
+        return runningVol_G / (1-self.aquaFract)
 
     def simulate(self, initPV=None, initST=None, Pcapacity=None, Pvolume=None):
         """
@@ -252,12 +266,11 @@ class SwingTank(SystemConfig):
 
         # Run the "simulation"
         for ii in range(1, len(G_hw)):
-            # TODO change mixVolume to a util file
-            hw_outSwing[ii] = self.mixVolume(D_hw[ii], swingT[ii-1], self.building.incomingT_F, self.building.supplyT_F)
+            hw_outSwing[ii] = mixVolume(D_hw[ii], swingT[ii-1], self.building.incomingT_F, self.building.supplyT_F)
 
             swingheating, swingT[ii], srun[ii] = self.runOneSwingStep(swingheating, swingT[ii-1], hw_outSwing[ii])
             #Get the mixed generation
-            mixedGHW = self.mixVolume(G_hw[ii], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
+            mixedGHW = mixVolume(G_hw[ii], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
             pheating, pV[ii], prun[ii] = self.runOnePrimaryStep(pheating, V0, Vtrig, pV[ii-1], hw_outSwing[ii], mixedGHW)
 
         return [roundList(pV, 3),
@@ -267,10 +280,6 @@ class SwingTank(SystemConfig):
                 roundList(swingT, 3),
                 roundList(srun, 3),
                 hw_outSwing]
-        # print("Heating capacity (PCap_kBTUhr)", self.PCap_kBTUhr)
-        # print("Swing Tank Volume (TMVol_G)", self.TMVol_G)
-        # print("Tank Volume (PVol_G_atStorageT)",self.PVol_G_atStorageT)
-        # print("Swing Resistance Element (TMCap_kBTUhr)", self.TMCap_kBTUhr)
 
     def plotStorageLoadSim(self, return_as_div=True):
         hrind_fromback = 24 # Look at the last 24 hours of the simulation not the whole thing

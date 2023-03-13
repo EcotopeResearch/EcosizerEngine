@@ -9,6 +9,7 @@ from scipy.stats import norm #lognorm
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots
+from utils import roundList, mixVolume
 
 class SystemConfig(ABC):
     def __init__(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
@@ -52,8 +53,50 @@ class SystemConfig(ABC):
         self.PVol_G_atStorageT, self.effSwingFract, self.LSconstrained = self.sizePrimaryTankVolume(self.maxDayRun_hr)
         self.PCap_kBTUhr = self.primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.effSwingFract )
 
+    def getSizingResults(self):
+        """
+        Returns the minimum primary volume and heating capacity sizing results
+
+        Returns
+        -------
+        list
+            self.PVol_G_atStorageT, self.PCap_kBTUhr
+        """
+        return [self.PVol_G_atStorageT, self.PCap_kBTUhr]
+
     def simulate(self, initPV=None, initST=None, Pcapacity=None, Pvolume=None):
-        pass
+        """
+        Inputs
+        ------
+        initPV : float
+            Primary volume at start of the simulation
+        initST : float
+            Primary Swing tank at start of the simulation
+        """
+
+        G_hw, D_hw, V0, Vtrig, pV, pheating = self.getInitialSimulationValues(Pcapacity, Pvolume)
+
+        hw_outSwing = [0] * (len(G_hw))
+        hw_outSwing[0] = D_hw[0]
+        prun = [0] * (len(G_hw))
+
+        if initPV:
+            pV[0] = initPV
+
+        # Run the "simulation"
+        for ii in range(1, len(G_hw)):
+            mixedDHW = mixVolume(D_hw[ii], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
+            mixedGHW = mixVolume(G_hw[ii], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
+            pheating, pV[ii], prun[ii] = self.runOnePrimaryStep(pheating, V0, Vtrig, pV[ii-1], mixedDHW, mixedGHW)
+
+        # The None's are placeholders for certain metrics from subclasses
+        return [roundList(pV, 3),
+                roundList(G_hw, 3),
+                roundList(D_hw, 3),
+                roundList(prun, 3),
+                None,
+                None,
+                None]
 
     def getInitialSimulationValues(self, Pcapacity=None, Pvolume=None):
         """
@@ -110,7 +153,7 @@ class SystemConfig(ABC):
 
     def HRLIST_to_MINLIST(self, a_list):
         """
-        TODO get description for this
+        TODO get description for this and move to utils
 
         """
         out_list = []
@@ -194,6 +237,7 @@ class SystemConfig(ABC):
             (self.building.supplyT_F - self.building.incomingT_F) / self.defrostFactor /1000.
         return heatCap
 
+    #TODO utils
     def getPeakIndices(self, diff1):
         """
         Finds the points of an array where the values go from positive to negative
@@ -213,32 +257,6 @@ class SystemConfig(ABC):
         diff1 = np.insert(diff1, 0, 0)
         diff1[diff1==0] = .0001 #Got to catch this error in the algorithm. Damn 0s.
         return np.where(np.diff(np.sign(diff1))<0)[0]
-    
-    def mixVolume(self, vol, hotT, coldT, outT):
-        """
-        Adjusts the volume of water such that the hotT water and outT water have the
-        same amount of energy, meaning different volumes.
-
-        Parameters
-        ----------
-        vol : float
-            The reference volume to convert.
-        hotT : float
-            The hot water temperature used for mixing.
-        coldT : float
-            The cold water tempeature used for mixing.
-        outT : float
-            The out water temperature from mixing.
-
-        Returns
-        -------
-        float
-            Temperature adjusted volume.
-
-        """
-        fraction = (outT - coldT) / (hotT - coldT)
-
-        return vol * fraction
     
     def sizePrimaryTankVolume(self, heatHrs):
         """
@@ -263,16 +281,14 @@ class SystemConfig(ABC):
         largerLS = False
 
         # Running vol
-        print("self.building.loadshape", self.building.loadshape)
-        runningVol_G, effMixFract = self.calcRunningVol(heatHrs, np.ones(24), self.building.loadshape)
-        print("ok now effMixFract", effMixFract)
+        runningVol_G, effMixFract = self.calcRunningVol(heatHrs, np.ones(24), self.building.loadshape, effMixFract)
 
         # If doing load shift, solve for the runningVol_G and take the larger volume
         if self.doLoadShift:
             LSrunningVol_G = 0
             LSeffMixFract = 0
             # calculate loadshift sizing with avg loadshape (see page 19 of methodology documentation)
-            LSrunningVol_G, LSeffMixFract = self.calcRunningVol(heatHrs, self.schedule, self.building.avgLoadshape)
+            LSrunningVol_G, LSeffMixFract = self.calcRunningVol(heatHrs, self.schedule, self.building.avgLoadshape, LSeffMixFract)
             LSrunningVol_G *= self.fract_total_vol
 
             # Get total volume from max of primary method or load shift method
@@ -281,8 +297,7 @@ class SystemConfig(ABC):
                 effMixFract = LSeffMixFract
                 largerLS = True
 
-        print("runningVol_G !!!!!! ", runningVol_G)
-        totalVolMax = self.getTotalVolMax(runningVol_G) / (1-self.aquaFract)
+        totalVolMax = self.getTotalVolMax(runningVol_G)
 
         # Check the Cycling Volume ############################################
         cyclingVol_G = totalVolMax * (self.aquaFract - (1 - self.percentUseable))
@@ -298,12 +313,50 @@ class SystemConfig(ABC):
         return totalVolMax, effMixFract, largerLS
     
     # @abstractmethod
-    def calcRunningVol(self, heatHrs, onOffArr, loadshape):
-        print("hopefully should not be printing this")
-        return 0, 0
+    def calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0):
+        """
+        Function to find the running volume for the hot water storage tank, which
+        is needed for calculating the total volume for primary sizing and in the event of load shift sizing
+        represents the entire volume.
+
+        Parameters
+        ----------
+        heatHrs : float
+            The number of hours primary heating equipment can run in a day.
+        onOffArr : ndarray
+            array of 1/0's where 1's allow heat pump to run and 0's dissallow. of length 24.
+        loadshape:
+        effMixFract: Int
+            will return effMixFract to retain the value. Needed because of SwingTank subclass implimentation
+
+        Raises
+        ------
+        Exception: Error if oversizeing system.
+
+        Returns
+        -------
+        runV_G : float
+            The running volume in gallons
+
+        """          
+        genrate = np.tile(onOffArr,2) / heatHrs #hourly
+        diffN = genrate - np.tile(loadshape,2) #hourly
+        diffInd = self.getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
+        # print(self.totalHWLoad)
+        diffN *= self.totalHWLoad
+        # Get the running volume ##############################################
+        if len(diffInd) == 0:
+            raise Exception("ERROR ID 03","The heating rate is greater than the peak volume the system is oversized! Try increasing the hours the heat pump runs in a day", )
+        runV_G = 0
+        for peakInd in diffInd:
+            #Get the rest of the day from the start of the peak
+            diffCum = np.cumsum(diffN[peakInd:])  #hourly
+            runV_G = max(runV_G, -min(diffCum[diffCum<0.])) #Minimum value less than 0 or 0.
+
+        return runV_G, effMixFract
     
     def getTotalVolMax(self, runningVol_G):
-        return self.mixVolume(runningVol_G, self.storageT_F, self.building.incomingT_F, self.building.supplyT_F) / (1-self.aquaFract)
+        return mixVolume(runningVol_G, self.storageT_F, self.building.incomingT_F, self.building.supplyT_F) / (1-self.aquaFract)
     
     def primaryCurve(self):
         """
@@ -463,7 +516,4 @@ class Primary(SystemConfig):
                  doLoadShift = False, cdf_shift = 1, schedule = None):
         super().__init__(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                  doLoadShift, cdf_shift, schedule)
-    
-    def simulate(self):
-        return super().simulate()
 
