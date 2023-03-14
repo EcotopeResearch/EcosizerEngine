@@ -2,7 +2,7 @@
 
 ### Installing:
 Steps for installing conda environment from the Anaconda prompt
-1. Navigate to the HPWHulator directory.
+1. Navigate to the Ecolator directory.
 2. Create new environment from .yml file.
 
 
