@@ -12,7 +12,7 @@ class HPWHulator:
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
                             setpointTM_F = 0, TMonTemp_F = 0, offTime_hr = 0, CA = False):
         
-        building = create_building( incomingT_F     = incomingT_F,
+        building = createBuilding( incomingT_F     = incomingT_F,
                                     magnitude_stat  = magnitude_stat, 
                                     supplyT_F       = supplyT_F, 
                                     building_type   = building_type,

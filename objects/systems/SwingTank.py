@@ -2,7 +2,7 @@ from objects.SystemConfig import SystemConfig
 import numpy as np
 from objects.Building import Building
 from constants.Constants import *
-from utils import roundList, mixVolume
+from utils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots
@@ -63,9 +63,11 @@ class SwingTank(SystemConfig):
             The running volume in gallons
 
         """
+
+        eff_HW_mix_faction = effMixFract
         genrate = np.tile(onOffArr,2) / heatHrs #hourly
         diffN   = genrate - np.tile(loadshape, 2) #hourly
-        diffInd = self.getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
+        diffInd = getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
                 
         # Get the running volume ##############################################
         if len(diffInd) == 0:
@@ -78,7 +80,7 @@ class SwingTank(SystemConfig):
         runV_G = 0
         for peakInd in diffInd:
             hw_out = np.tile(loadshape, 2)
-            hw_out = np.array(self.HRLIST_to_MINLIST(hw_out[peakInd:peakInd+24])) \
+            hw_out = np.array(HRLIST_to_MINLIST(hw_out[peakInd:peakInd+24])) \
                 / 60 * self.totalHWLoad # to minute
             
             # Simulate the swing tank assuming it hits the peak just above the supply temperature.
@@ -88,7 +90,7 @@ class SwingTank(SystemConfig):
 
             # Get the effective adjusted hot water demand on the primary system at the storage temperature.
             temp_eff_HW_mix_faction = sum(hw_out_from_swing)/self.totalHWLoad #/2 because the sim goes for two days
-            genrate_min = np.array(self.HRLIST_to_MINLIST(genrate[peakInd:peakInd+24])) \
+            genrate_min = np.array(HRLIST_to_MINLIST(genrate[peakInd:peakInd+24])) \
                 / 60 * self.totalHWLoad * temp_eff_HW_mix_faction # to minute
 
             # Get the new difference in generation and demand
@@ -107,7 +109,7 @@ class SwingTank(SystemConfig):
                 runV_G = new_runV_G #Minimum value less than 0 or 0.
                 eff_HW_mix_faction = temp_eff_HW_mix_faction
 
-        return runV_G, eff_HW_mix_faction # TODO default value for eff_HW_mix_faction ?
+        return runV_G, eff_HW_mix_faction
     
     def simJustSwing(self, N, hw_out, initST=None):
         """

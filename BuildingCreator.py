@@ -1,7 +1,7 @@
 from objects.Building import *
 import numpy as np
 
-def create_building(incomingT_F, magnitude_stat, supplyT_F, building_type, loadshape = None, avgLoadshape = None,
+def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadshape = None, avgLoadshape = None,
                     returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0):
 
 

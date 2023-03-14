@@ -9,7 +9,7 @@ from scipy.stats import norm #lognorm
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots
-from utils import roundList, mixVolume
+from utils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
 
 class SystemConfig(ABC):
     def __init__(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
@@ -138,8 +138,8 @@ class SystemConfig(ABC):
         D_hw = self.totalHWLoad * self.fract_total_vol * np.tile(loadShapeN, 3)
 
         # To per minute from per hour
-        G_hw = np.array(self.HRLIST_to_MINLIST(G_hw)) / 60
-        D_hw = np.array(self.HRLIST_to_MINLIST(D_hw)) / 60
+        G_hw = np.array(HRLIST_to_MINLIST(G_hw)) / 60
+        D_hw = np.array(HRLIST_to_MINLIST(D_hw)) / 60
 
         # Init the "simulation"
         V0 = np.ceil(Pvolume * self.percentUseable)
@@ -149,17 +149,6 @@ class SystemConfig(ABC):
         pheating = False
 
         return G_hw, D_hw, V0, Vtrig, pV, pheating
-        
-
-    def HRLIST_to_MINLIST(self, a_list):
-        """
-        TODO get description for this and move to utils
-
-        """
-        out_list = []
-        for num in a_list:
-            out_list += [num]*60
-        return out_list
     
     def setLoadShift(self, schedule, cdf_shift=1):
         """
@@ -236,27 +225,6 @@ class SystemConfig(ABC):
         heatCap = self.totalHWLoad / heathours * rhoCp * \
             (self.building.supplyT_F - self.building.incomingT_F) / self.defrostFactor /1000.
         return heatCap
-
-    #TODO utils
-    def getPeakIndices(self, diff1):
-        """
-        Finds the points of an array where the values go from positive to negative
-
-        Parameters
-        ----------
-        diff1 : array_like
-            A 1 dimensional array.
-
-        Returns
-        -------
-        ndarray
-            Array of indices in which input array changes from positive to negative
-        """
-        if not isinstance(diff1, np.ndarray):
-            diff1 = np.array(diff1)
-        diff1 = np.insert(diff1, 0, 0)
-        diff1[diff1==0] = .0001 #Got to catch this error in the algorithm. Damn 0s.
-        return np.where(np.diff(np.sign(diff1))<0)[0]
     
     def sizePrimaryTankVolume(self, heatHrs):
         """
@@ -341,7 +309,7 @@ class SystemConfig(ABC):
         """          
         genrate = np.tile(onOffArr,2) / heatHrs #hourly
         diffN = genrate - np.tile(loadshape,2) #hourly
-        diffInd = self.getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
+        diffInd = getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
         # print(self.totalHWLoad)
         diffN *= self.totalHWLoad
         # Get the running volume ##############################################
