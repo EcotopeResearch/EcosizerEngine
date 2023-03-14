@@ -5,6 +5,7 @@ Steps for installing conda environment from the Anaconda prompt
 1. Navigate to the HPWHulator directory.
 2. Create new environment from .yml file.
 
+
 	$ conda env create --file Ecolator.yml
 
 If the environment creation doesn't work, make sure Anaconda is up-to-date with
@@ -13,9 +14,11 @@ If the environment creation doesn't work, make sure Anaconda is up-to-date with
 
 3. Check that the environment was created
 
+
 	$ conda env list
 
 4. Activate the new environment
+
 
 	$ conda activate Ecolator
 
@@ -37,6 +40,7 @@ I haven't set up unit testing yet >.<
 ### Updating Documentation:
 1. If not installed in environment: pip install sphinx and numpydocs
 2. Using Anaconda prompt navigate to docs directory and run:
+
 
 	$ make html
 
