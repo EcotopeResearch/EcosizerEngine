@@ -12,6 +12,12 @@ If the environment creation doesn't work, make sure Anaconda is up-to-date with
 
     $ conda update --all
 
+If that doesn't work, you may need to force Anaconda to download and use python 3.11 (it defaults to 3.9) by making another environment
+
+    $ conda create -n py311 python=3.11
+    $ conda activate py311
+    $ conda env create --file Ecolator.yml
+
 3. Check that the environment was created
 
 
