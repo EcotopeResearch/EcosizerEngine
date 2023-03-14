@@ -1,9 +1,5 @@
-from abc import ABC, abstractmethod
 from constants.Constants import *
 from objects.Building import Building
-# Functions to gather data from JSON
-import os
-import json
 import numpy as np
 from scipy.stats import norm #lognorm
 from plotly.graph_objs import Figure, Scatter
@@ -11,7 +7,7 @@ from plotly.offline import plot
 from plotly.subplots import make_subplots
 from utils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
 
-class SystemConfig(ABC):
+class SystemConfig:
     def __init__(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                  doLoadShift = False, cdf_shift = 1, schedule = None):
         # TODO input checking - also for buildings

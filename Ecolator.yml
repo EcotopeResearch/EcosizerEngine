@@ -1,0 +1,6 @@
+name: Ecolator
+dependencies:
+  - python=3.10.9
+  - pip=23.0.1
+  - pip:
+    - -r requirements.txt

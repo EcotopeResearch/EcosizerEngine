@@ -1,12 +1,10 @@
-from abc import ABC, abstractmethod
-# Functions to gather data from JSON
 import os
 import json
 import numpy as np
 
 from constants.Constants import *
 
-class Building(ABC):
+class Building:
     def __init__(self, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
         # if not hasattr(inputs, 'loadshape'):
         #     raise Exception("Loadshape required.")
