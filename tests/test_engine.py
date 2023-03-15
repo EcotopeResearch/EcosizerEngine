@@ -14,7 +14,7 @@ class QuietPrint:
 
 # Fixtures
 @pytest.fixture
-def swing_sizer(): # Returns the hpwh sizer object designed for Cali options
+def swing_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
         hpwh = EcosizerEngine.EcosizerEngine(
             incomingT_F     = 50,
@@ -65,3 +65,22 @@ def test_mixVolume(hotT, coldT, outT, expected):
 ])
 def test_sizingResult(swing_sizer, expected):
     assert swing_sizer.getSizingResults() == expected
+
+# Check for system initialization errors
+def test_invalid_system_parameter_errors():
+    with pytest.raises(Exception, match="Invalid input given for Storage temp, it must be between 32 and 212F."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 15, 0.8, 0.8, "swingtank", "mens_dorm")
+    with pytest.raises(Exception, match="Invalid input given for Defrost Factor, must be a number between 0 and 1."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", defrostFactor=3)
+    with pytest.raises(Exception, match="Invalid input given for percentUseable, must be a number between 0 and 1."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 5, 0.8, "swingtank", "mens_dorm")
+    with pytest.raises(Exception, match="Invalid input given for percentUseable, must be a number between 0 and 1."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 'zebrah', 0.8, "swingtank", "mens_dorm")
+    with pytest.raises(Exception, match="Invalid input given for compRuntime_hr, must be an integer."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", compRuntime_hr='skateboard')
+    with pytest.raises(Exception, match="Invalid input given for aquaFract must, be a number between 0 and 1."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 1.2, "swingtank", "mens_dorm")
+    with pytest.raises(Exception, match="Invalid input given for cdf_shift, must be a number between 0 and 1."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 1, "swingtank", "mens_dorm", cdf_shift = 'eighteen')
+    with pytest.raises(Exception, match="Invalid input given for doLoadShift, must be a boolean."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", doLoadShift = 'eighteen')

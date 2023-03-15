@@ -25,11 +25,6 @@ class EcosizerEngine:
                                     Wapt            = Wapt
         )
 
-        print("======= "+building_type+" =======")
-        print(building.magnitude)
-        print(building.recirc_loss)
-        print(building.incomingT_F)
-
         system = createSystem(  schematic, 
                                 building, 
                                 storageT_F, 

@@ -5,7 +5,7 @@ from scipy.stats import norm #lognorm
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots
-from utils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
+from utils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices, checkLiqudWater
 
 class SystemConfig:
     def __init__(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
@@ -22,13 +22,12 @@ class SystemConfig:
         #     raise Exception("compRuntime_hr required.")
         # if not hasattr(inputs, 'aquaFract'):
         #     raise Exception("aquaFract required.")
+
+        # check inputs. Schedule not checked because it is checked elsewhere
+        self._checkInputs(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift)
         
-        self.doLoadShift = False # do we need this? TODO
-        if(isinstance(building, Building)):
-            self.building = building
-        else:
-            raise Exception("Error: Building is not valid.")
-        
+        self.doLoadShift = doLoadShift
+        self.building = building        
         self.totalHWLoad = self.building.magnitude
         self.storageT_F = storageT_F
         self.defrostFactor = defrostFactor
@@ -48,6 +47,24 @@ class SystemConfig:
         #size system
         self.PVol_G_atStorageT, self.effSwingFract, self.LSconstrained = self.sizePrimaryTankVolume(self.maxDayRun_hr)
         self.PCap_kBTUhr = self.primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.effSwingFract )
+
+    def _checkInputs(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift):
+        if not isinstance(building, Building):
+            raise Exception("Error: Building is not valid.")
+        if not (isinstance(storageT_F, int) or isinstance(storageT_F, float)) or not checkLiqudWater(storageT_F):
+            raise Exception('Invalid input given for Storage temp, it must be between 32 and 212F.')
+        if not (isinstance(defrostFactor, int) or isinstance(defrostFactor, float)) or defrostFactor < 0 or defrostFactor > 1:
+            raise Exception("Invalid input given for Defrost Factor, must be a number between 0 and 1.")
+        if not (isinstance(percentUseable, int) or isinstance(percentUseable, float)) or percentUseable > 1 or percentUseable < 0:
+            raise Exception("Invalid input given for percentUseable, must be a number between 0 and 1.")
+        if not isinstance(compRuntime_hr, int):
+            raise Exception("Invalid input given for compRuntime_hr, must be an integer.")
+        if not (isinstance(aquaFract, int) or isinstance(aquaFract, float)) or aquaFract > 1 or aquaFract < 0:
+            raise Exception("Invalid input given for aquaFract must, be a number between 0 and 1.")
+        if not (isinstance(cdf_shift, int) or isinstance(cdf_shift, float)) or cdf_shift > 1 or cdf_shift < 0:
+            raise Exception("Invalid input given for cdf_shift, must be a number between 0 and 1.")
+        if not isinstance(doLoadShift, bool):
+            raise Exception("Invalid input given for doLoadShift, must be a boolean.")
 
     def getSizingResults(self):
         """
