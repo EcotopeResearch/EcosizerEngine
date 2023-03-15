@@ -1,7 +1,7 @@
-from Ecolator import *
+from EcosizerEngine import *
 from SystemCreator import *
 
-swinghpwh = Ecolator(  incomingT_F     = 50,
+swinghpwh = EcosizerEngine(  incomingT_F     = 50,
                     magnitude_stat  = 100,
                     supplyT_F       = 120,
                     storageT_F      = 150,
@@ -37,7 +37,7 @@ print("recInd",recInd)
 
 print("========================================================================================================")
 
-parallelhpwh = Ecolator(  incomingT_F     = 50,
+parallelhpwh = EcosizerEngine(  incomingT_F     = 50,
                     magnitude_stat  = 100,
                     supplyT_F       = 120,
                     storageT_F      = 150,

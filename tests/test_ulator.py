@@ -1,6 +1,6 @@
 import pytest
 from utils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
-import Ecolator
+import EcosizerEngine
 import numpy as np
 import os, sys
 
@@ -16,7 +16,7 @@ class QuietPrint:
 @pytest.fixture
 def swing_sizer(): # Returns the hpwh sizer object designed for Cali options
     with QuietPrint():
-        hpwh = Ecolator.Ecolator(
+        hpwh = EcosizerEngine.EcosizerEngine(
             incomingT_F     = 50,
             magnitude_stat  = 100,
             supplyT_F       = 120,

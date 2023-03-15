@@ -1,12 +1,12 @@
-# Ecolator 	
+# EcosizerEngine 	
 
 ### Installing:
 Steps for installing conda environment from the Anaconda prompt
-1. Navigate to the Ecolator directory.
+1. Navigate to the EcosizerEngine directory.
 2. Create new environment from .yml file.
 
 
-	$ conda env create --file Ecolator.yml
+	$ conda env create --file EcosizerEngine.yml
 
 If the environment creation doesn't work, make sure Anaconda is up-to-date with
 
@@ -16,7 +16,7 @@ If that doesn't work, you may need to force Anaconda to download and use python 
 
     $ conda create -n py311 python=3.11
     $ conda activate py311
-    $ conda env create --file Ecolator.yml
+    $ conda env create --file EcosizerEngine.yml
 
 3. Check that the environment was created
 
@@ -26,11 +26,11 @@ If that doesn't work, you may need to force Anaconda to download and use python 
 4. Activate the new environment
 
 
-	$ conda activate Ecolator
+	$ conda activate EcosizerEngine
 
 If an environment already exits it can be removed with:
 
-	$ conda remove --name Ecolator --all
+	$ conda remove --name EcosizerEngine --all
 
 
 All the available environment can be found with:
