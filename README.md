@@ -38,10 +38,9 @@ All the available environment can be found with:
 	$ conda env list
 
 ### Testing:
-I haven't set up unit testing yet >.<
-<!-- From the parent directory in Anaconda prompt and type
+From the parent directory in Anaconda prompt and type
 
-	$ python -m pytest -->
+	$ python -m pytest
 
 ### Updating Documentation:
 1. If not installed in environment: pip install sphinx and numpydocs
