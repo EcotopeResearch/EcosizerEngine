@@ -1,10 +1,10 @@
 from BuildingCreator import *
 from SystemCreator import *
 
-print("HPWHulator 2.0 Copyright (C) 2023  Ecotope Inc. ")
+print("Ecolator Copyright (C) 2023  Ecotope Inc. ")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")
 
-class HPWHulator:
+class Ecolator:
 
     def __init__(self, incomingT_F, magnitude_stat, supplyT_F, storageT_F, percentUseable, aquaFract, 
                             schematic, building_type, loadshape = None, schedule = None, cdf_shift = 1,
