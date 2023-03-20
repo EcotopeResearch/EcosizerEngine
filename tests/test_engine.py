@@ -1,6 +1,6 @@
 import pytest
-from utils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
-import EcosizerEngine
+from objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
+import engine.EcosizerEngine as EcosizerEngine
 import numpy as np
 import os, sys
 
@@ -39,6 +39,61 @@ def swing_sizer(): # Returns the hpwh swing tank
         )
     return hpwh
 
+@pytest.fixture
+def parallel_sizer(): # Returns the hpwh swing tank
+    with QuietPrint():
+        hpwh = EcosizerEngine.EcosizerEngine(
+            incomingT_F     = 50,
+            magnitude_stat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            percentUseable  = 0.8, 
+            aquaFract       = 0.4, 
+            schematic       = 'paralleltank', 
+            building_type   = 'multi_family',
+            returnT_F       = 0, 
+            flow_rate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 100,
+            schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            doLoadShift     = True,
+            cdf_shift       = 0.8,
+            setpointTM_F    = 130,
+            TMonTemp_F      = 120,
+            offTime_hr      = 0.333
+        )
+    return hpwh
+
+@pytest.fixture
+def primary_sizer(): # Returns the hpwh swing tank
+    with QuietPrint():
+        hpwh = EcosizerEngine.EcosizerEngine(
+            incomingT_F     = 50,
+            magnitude_stat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            percentUseable  = 0.8, 
+            aquaFract       = 0.4, 
+            schematic       = 'primary', 
+            building_type   = 'multi_family',
+            returnT_F       = 0, 
+            flow_rate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 100,
+            schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            doLoadShift     = True,
+            cdf_shift       = 0.8
+        )
+    return hpwh
+
 ###############################################################################
 ###############################################################################
 # Unit Tests
@@ -61,10 +116,22 @@ def test_mixVolume(hotT, coldT, outT, expected):
     assert round(mixVolume(100, hotT, coldT, outT), 3) == expected
 
 @pytest.mark.parametrize("expected", [
-   ([1507.1634879836542, 151.2139605971942, 300, 59.712485]),
+   ([1507.1634879836542, 151.2139605971942, 300, 59.712485])
 ])
-def test_sizingResult(swing_sizer, expected):
+def test_swingSizingResult(swing_sizer, expected):
     assert swing_sizer.getSizingResults() == expected
+
+@pytest.mark.parametrize("expected", [
+   ([1122.528466677145, 112.45143269230772])
+])
+def test_primarySizingResult(primary_sizer, expected):
+    assert primary_sizer.getSizingResults() == expected
+
+@pytest.mark.parametrize("expected", [
+   ([1122.528466677145, 112.45143269230772, 136.0194559548742, 59.712485])
+])
+def test_parallelSizingResult(parallel_sizer, expected):
+    assert parallel_sizer.getSizingResults() == expected
 
 # Check for system initialization errors
 def test_invalid_system_parameter_errors():
@@ -84,3 +151,24 @@ def test_invalid_system_parameter_errors():
         EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 1, "swingtank", "mens_dorm", cdf_shift = 'eighteen')
     with pytest.raises(Exception, match="Invalid input given for doLoadShift, must be a boolean."):
         EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", doLoadShift = 'eighteen')
+
+# Check for building initialization errors
+def test_invalid_building_parameter_errors():
+    with pytest.raises(Exception, match="No default loadshape found for building type climbing_gym."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 15, 0.8, 0.8, "swingtank", "climbing_gym")
+    with pytest.raises(Exception, match="Loadshape must be of length 24 but instead has length of 5."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", loadshape=[1,2,3,4,5])
+    with pytest.raises(Exception, match="Sum of the loadshape does not equal 1. Loadshape needs to be normalized."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", loadshape=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
+    with pytest.raises(Exception, match="Can not have negative load shape values in loadshape."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", loadshape=[1,2,-3,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+    with pytest.raises(Exception, match="Error: Supply temp must be a number."):
+        EcosizerEngine.EcosizerEngine(35, 4, "whoops", 150, 0.8, 0.8, "swingtank", "mens_dorm")
+    with pytest.raises(Exception, match="Error: Return temp must be a number."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 1.2, "swingtank", "mens_dorm", returnT_F="uh oh")
+    with pytest.raises(Exception, match="Error: Supply temp must be higher than return temp."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 1, "swingtank", "mens_dorm", returnT_F=150)
+    with pytest.raises(Exception, match="Error: City water temp must be a number."):
+        EcosizerEngine.EcosizerEngine("not a number", 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm")
+    with pytest.raises(Exception, match="Error: Flow rate must be a number."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", flow_rate = "problem")

@@ -1,5 +1,5 @@
-from BuildingCreator import *
-from SystemCreator import *
+from engine.BuildingCreator import *
+from engine.SystemCreator import *
 
 print("EcosizerEngine Copyright (C) 2023  Ecotope Inc. ")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")

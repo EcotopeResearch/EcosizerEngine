@@ -2,7 +2,7 @@ from objects.SystemConfig import SystemConfig
 import numpy as np
 from objects.Building import Building
 from constants.Constants import *
-from utils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
+from objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots

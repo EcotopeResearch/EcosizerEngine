@@ -5,23 +5,12 @@ from scipy.stats import norm #lognorm
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots
-from utils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices, checkLiqudWater
+from objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices, checkLiqudWater
 
 class SystemConfig:
     def __init__(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                  doLoadShift = False, cdf_shift = 1, schedule = None):
         # TODO input checking - also for buildings
-        # check inputs
-        # if not hasattr(inputs, 'storageT_F'):
-        #     raise Exception("storageT_F required.")
-        # if not hasattr(inputs, 'defrostFactor'):
-        #     raise Exception("defrostFactor required.")
-        # if not hasattr(inputs, 'percentUseable'):
-        #     raise Exception("percentUseable required.")
-        # if not hasattr(inputs, 'compRuntime_hr'):
-        #     raise Exception("compRuntime_hr required.")
-        # if not hasattr(inputs, 'aquaFract'):
-        #     raise Exception("aquaFract required.")
 
         # check inputs. Schedule not checked because it is checked elsewhere
         self._checkInputs(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift)

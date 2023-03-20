@@ -3,6 +3,43 @@ import numpy as np
 
 def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadshape = None, avgLoadshape = None,
                     returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0):
+    
+    """
+    Initializes the building in which the HPWH system will be sized for
+
+    Attributes
+    ----------
+    incomingT_F : float 
+        The incoming city water temperature on the design day. [°F]
+    magnitude_stat : int
+        a number that will be used to assess the magnitude of the building based on the building type
+    supplyT_F : float
+        The hot water supply temperature.[°F]
+    building_type : string
+        a string indicating the type of building we are sizing for (e.g. "multi_family", "office_building", etc.)
+    loadShape : ndarray
+        defaults to design load shape for building type.
+    loadShape : ndarray
+        defaults to average load shape for building type.
+    returnT_F : float 
+        The water temperature returning from the recirculation loop. [°F]
+    flow_rate : float 
+        The pump flow rate of the recirculation loop. (GPM)
+    gpdpp : float
+        The volume of water in gallons at 120F each person uses per dat.[°F]
+    nBR : array_like
+        A list of the number of units by size in the order 0 bedroom units,
+        1 bedroom units, 2 bedroom units, 3 bedroom units, 4 bedroom units,
+        5 bedroom units.
+    nApt: integer
+        The number of apartments. Use with Qdot_apt to determine total recirculation losses. (For multi-falmily buildings)
+    Wapt:  float
+        Watts of heat lost in through recirculation piping system. Used with N_apt to determine total recirculation losses. (For multi-falmily buildings)
+
+    Raises
+    ----------
+    Exception: Error if building_type is not in list of valid building_type names.
+    """
 
 
     if not isinstance(building_type, str):
@@ -50,17 +87,19 @@ def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadsh
             raise Exception("Unrecognized building type.")
         
 def getLoadShape(file_name, shape = 'Stream'):
-    with open(os.path.join(os.path.dirname(__file__), 'data/load_shapes/' + file_name + '.json')) as json_file:
-        dataDict = json.load(json_file)
-        try: 
+    if shape != 'Stream' and shape != 'Stream_Avg':
+        raise Exception("Mapping key not found for loadshapes, valid keys are: 'Stream', or 'Stream_Avg'")
+    try:
+        with open(os.path.join(os.path.dirname(__file__), '../data/load_shapes/' + file_name + '.json')) as json_file:
+            dataDict = json.load(json_file)
             return dataDict['loadshapes'][shape]
-        except KeyError:
-            raise KeyError("Mapping key not found for loadshapes, valid keys are: 'Stream', or 'Stream_Avg'")
+    except:
+        raise Exception("No default loadshape found for building type " +file_name + ".")
         
 def checkLoadShape(loadshape):
     if len(loadshape) != 24:
         raise Exception("Loadshape must be of length 24 but instead has length of "+str(len(loadshape))+".")
     if sum(loadshape) > 1 + 1e-3 or sum(loadshape) < 1 - 1e-3:
-        raise Exception("Sum of the loadshape does not equal 1 but "+str(sum(loadshape))+".")
+        raise Exception("Sum of the loadshape does not equal 1. Loadshape needs to be normalized.")
     if any(x < 0 for x in loadshape):
         raise Exception("Can not have negative load shape values in loadshape.")

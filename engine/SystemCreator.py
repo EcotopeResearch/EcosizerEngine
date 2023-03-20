@@ -1,0 +1,57 @@
+from objects.SystemConfig import *
+from objects.systems.SwingTank import *
+from objects.systems.ParallelLoopTank import *
+
+def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift = False, 
+                 cdf_shift = 1, schedule = None, safetyTM = 0, setpointTM_F = 0, TMonTemp_F = 0, offTime_hr = 0, CA = False):
+    """
+    Initializes and sizes the HPWH system. Both primary and tempurature maintenance (for parrallel loop and swing tank) are set up in this function.
+
+    Attributes
+    ----------
+    schematic : String
+        Indicates schematic type. Valid values are 'swingtank', 'paralleltank', and 'primary'
+    building : Building
+        Building object the HPWH system will be sized for.
+    storageT_F : float 
+        The hot water storage temperature. [°F]
+   defrostFactor : float 
+        A multipier used to account for defrost in the final heating capacity. Default equals 1.
+    percentUseable : float
+        The fraction of the storage volume that can be filled with hot water.
+    compRuntime_hr : float
+        The number of hours the compressor will run on the design day. [Hr]
+    aquaFract: float
+        The fraction of the total hieght of the primary hot water tanks at which the Aquastat is located.
+    doLoadShift : boolean
+        Set to true if doing loadshift
+    cdf_shift: float
+        Percentage of days the load shift will be met
+    schedule : array_like
+        List or array of 0's and 1's for don't run and run respectively. Used for load shifting
+    safetyTM : float
+        The saftey factor for the temperature maintenance system.
+    setpointTM_F : float
+        The setpoint of the temprature maintence tank. Defaults to 130 °F.
+    TMonTemp_F : float
+        The temperature where parallel loop tank will turn on.
+        Defaults to 120 °F.
+
+    Raises
+    ----------
+    Exception: Error if schematic is not in list of valid schematic names.
+
+    """
+    
+    match schematic:
+        case 'swingtank':
+            return SwingTank(safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
+                             doLoadShift, cdf_shift, schedule, CA)        
+        case 'paralleltank':
+            return ParallelLoopTank(safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
+                 doLoadShift, cdf_shift, schedule)
+        case 'primary':
+            return Primary(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift, schedule)
+        case _:
+            raise Exception("Unknown schematic type.")
+        

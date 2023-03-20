@@ -1,6 +1,16 @@
 # EcosizerEngine 	
 
 ### Installing:
+Steps for installing using docker container
+1. Navigate to the EcosizerEngine directory.
+2. Build container with docker file
+
+	$ docker build -t ecosizerengine:latest .
+
+3. Run docker container
+
+	$  docker run -it ecosizerengine bash
+
 Steps for installing conda environment from the Anaconda prompt
 1. Navigate to the EcosizerEngine directory.
 2. Create new environment from .yml file.
@@ -38,7 +48,7 @@ All the available environment can be found with:
 	$ conda env list
 
 ### Testing:
-From the parent directory in Anaconda prompt and type
+From the parent directory, while running docker container or conda environment, type
 
 	$ python -m pytest
 

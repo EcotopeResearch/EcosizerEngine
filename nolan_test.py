@@ -1,5 +1,4 @@
-from EcosizerEngine import *
-from SystemCreator import *
+from engine.EcosizerEngine import *
 
 swinghpwh = EcosizerEngine(  incomingT_F     = 50,
                     magnitude_stat  = 100,
@@ -7,7 +6,7 @@ swinghpwh = EcosizerEngine(  incomingT_F     = 50,
                     storageT_F      = 150,
                     percentUseable  = 0.8, 
                     aquaFract       = 0.4, 
-                    schematic       = 'swingtank', 
+                    schematic       = 'primary', 
                     building_type   = 'multi_family',
                     returnT_F       = 0, 
                     flow_rate       = 0,
@@ -25,9 +24,9 @@ swinghpwh = EcosizerEngine(  incomingT_F     = 50,
 outlist = swinghpwh.getSizingResults()
 
 print("Heating capacity (PCap_kBTUhr)", outlist[1])
-print("Swing Tank Volume (TMVol_G)", outlist[2])
+# print("Swing Tank Volume (TMVol_G)", outlist[2])
 print("Tank Volume (PVol_G_atStorageT)",outlist[0])
-print("Swing Resistance Element (TMCap_kBTUhr)", outlist[3])
+# print("Swing Resistance Element (TMCap_kBTUhr)", outlist[3])
 
 [x_data, y_data, hours, recInd] = swinghpwh.primaryCurve()
 print("x_data",x_data)
