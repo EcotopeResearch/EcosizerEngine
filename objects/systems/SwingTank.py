@@ -2,7 +2,7 @@ from objects.SystemConfig import SystemConfig
 import numpy as np
 from objects.Building import Building
 from constants.Constants import *
-from objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
+from objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices, checkHeatHours
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots
@@ -37,7 +37,7 @@ class SwingTank(SystemConfig):
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr, self.TMVol_G, self.TMCap_kBTUhr]
     
-    def calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0):
+    def calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0.):
         """
         Function to find the running volume for the hot water storage tank, which
         is needed for calculating the total volume for primary sizing and in the event of load shift sizing
@@ -50,9 +50,10 @@ class SwingTank(SystemConfig):
         onOffArr : ndarray
             array of 1/0's where 1's allow heat pump to run and 0's dissallow. of length 24.
         loadshape:
-        effMixFract: int
-            not used in this subclass implimentation but needed because of class inheritence
-
+        effMixFract: float
+            The fractional adjustment to the total hot water load for the
+            primary system.
+            
         Raises
         ------
         Exception: Error if oversizeing system.
@@ -232,13 +233,22 @@ class SwingTank(SystemConfig):
         heatCap
             The heating capacity in [btu/hr].
         """
-        self._checkHeatHours(heathours)
+        checkHeatHours(heathours)
         heatCap = self.totalHWLoad * effSwingVolFract / heathours * rhoCp * \
             (self.storageT_F - self.building.incomingT_F) / self.defrostFactor /1000.
         return heatCap
     
     def getTotalVolMax(self, runningVol_G):
-        # For a swing tank the storage volume is found at the appropriate temperature in calcRunningVol
+        """
+        Calculates the maximum primary storage using the Ecotope sizing methodology
+        For a swing tank the storage volume is found at the appropriate temperature in calcRunningVol
+        
+        Returns
+        -------
+        totalVolMax : float
+            The total storage volume in gallons adjusted to the storage tempreature
+        
+        """
         return runningVol_G / (1-self.aquaFract)
 
     def simulate(self, initPV=None, initST=None, Pcapacity=None, Pvolume=None):
@@ -249,6 +259,12 @@ class SwingTank(SystemConfig):
             Primary volume at start of the simulation
         initST : float
             Primary Swing tank at start of the simulation
+        Pcapacity : float
+            The primary heating capacity in kBTUhr to use for the simulation,
+            default is the sized system
+        Pvolume : float
+            The primary storage volume in gallons to  to use for the simulation,
+            default is the sized system
         """
 
         G_hw, D_hw, V0, Vtrig, pV, pheating = self.getInitialSimulationValues(Pcapacity, Pvolume)

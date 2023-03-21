@@ -100,3 +100,19 @@ def getPeakIndices(diff1):
     diff1 = np.insert(diff1, 0, 0)
     diff1[diff1==0] = .0001 #Got to catch this error in the algorithm. Damn 0s.
     return np.where(np.diff(np.sign(diff1))<0)[0]
+
+def checkHeatHours(heathours):
+    """
+    Quick check to see if heating hours is a valid number between 1 and 24
+
+    Parameters
+    ----------
+    heathours (float or numpy.ndarray)
+        The number of hours primary heating equipment can run.
+    """
+    if isinstance(heathours, np.ndarray):
+        if any(heathours > 24) or any(heathours <= 0):
+            raise Exception("Heat hours is not within 1 - 24 hours")
+    else:
+        if heathours > 24 or heathours <= 0:
+            raise Exception("Heat hours is not within 1 - 24 hours")

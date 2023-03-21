@@ -4,14 +4,11 @@ import numpy as np
 from scipy.stats import norm #lognorm
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
-from plotly.subplots import make_subplots
-from objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices, checkLiqudWater
+from objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices, checkLiqudWater, checkHeatHours
 
 class SystemConfig:
     def __init__(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                  doLoadShift = False, cdf_shift = 1, schedule = None):
-        # TODO input checking - also for buildings
-
         # check inputs. Schedule not checked because it is checked elsewhere
         self._checkInputs(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift)
         
@@ -34,7 +31,7 @@ class SystemConfig:
         self.maxDayRun_hr = min(self.compRuntime_hr, sum(self.schedule))
 
         #size system
-        self.PVol_G_atStorageT, self.effSwingFract, self.LSconstrained = self.sizePrimaryTankVolume(self.maxDayRun_hr)
+        self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr)
         self.PCap_kBTUhr = self.primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.effSwingFract )
 
     def _checkInputs(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift):
@@ -73,7 +70,25 @@ class SystemConfig:
         initPV : float
             Primary volume at start of the simulation
         initST : float
-            Primary Swing tank at start of the simulation
+            Primary Swing tank at start of the simulation. Not used in this instance of the function
+        Pcapacity : float
+            The primary heating capacity in kBTUhr to use for the simulation,
+            default is the sized system
+        Pvolume : float
+            The primary storage volume in gallons to  to use for the simulation,
+            default is the sized system
+        
+        Returns
+        -------
+        list [ pV, G_hw, D_hw, prun ]
+        pV : list 
+            Volume of HW in the tank with time at the strorage temperature.
+        G_hw : list 
+            The generation of HW with time at the supply temperature
+        D_hw : list 
+            The hot water demand with time at the tsupply temperature
+        prun : list 
+            The actual output in gallons of the HPWH with time
         """
 
         G_hw, D_hw, V0, Vtrig, pV, pheating = self.getInitialSimulationValues(Pcapacity, Pvolume)
@@ -91,19 +106,14 @@ class SystemConfig:
             mixedGHW = mixVolume(G_hw[ii], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
             pheating, pV[ii], prun[ii] = self.runOnePrimaryStep(pheating, V0, Vtrig, pV[ii-1], mixedDHW, mixedGHW)
 
-        # The None's are placeholders for certain metrics from subclasses
         return [roundList(pV, 3),
                 roundList(G_hw, 3),
                 roundList(D_hw, 3),
-                roundList(prun, 3),
-                None,
-                None,
-                None]
+                roundList(prun, 3)]
 
     def getInitialSimulationValues(self, Pcapacity=None, Pvolume=None):
         """
-        Returns sizing storage depletion and load results for water volumes at
-        the supply temperature
+        Returns initialized arrays needed for 3-day simulation
 
         Parameters
         ----------
@@ -116,11 +126,20 @@ class SystemConfig:
 
         Returns
         -------
-        list [ V, G_hw, D_hw, run ]
-        V - Volume of HW in the tank with time at the strorage temperature.
-        G_hw - The generation of HW with time at the supply temperature
-        D_hw - The hot water demand with time at the tsupply temperature
-        run - The actual output in gallons of the HPWH with time
+        list [ G_hw, D_hw, V0, V, run, pheating ]
+        G_hw : list
+            The generation of HW with time at the supply temperature
+        D_hw : list
+            The hot water demand with time at the tsupply temperature
+        V0 : float
+            The storage volume of the primary system at the storage temperature
+        Vtrig : float
+            The remaining volume of the primary storage volume when heating is
+            triggered, note this equals V0*(1 - aquaFract) TODO is that true tho?
+        pV : list 
+            Volume of HW in the tank with time at the strorage temperature. Initialized to array of 0s with pV[0] set to V0
+        pheating : boolean 
+            set to false. Simulation starts with a full tank so primary heating starts off
         """
         if not Pcapacity:
             Pcapacity =  self.PCap_kBTUhr
@@ -186,23 +205,7 @@ class SystemConfig:
             fract = norm_mean + norm_std * norm.ppf(cdf_shift) #TODO norm_mean and std are currently from multi-family, need other types
             self.fract_total_vol = fract if fract <= 1. else 1.
         
-        self.doLoadShift = True # TODO necessary?
-
-    def _checkHeatHours(self, heathours):
-        """
-        Quick check to see if heating hours is a valid number between 1 and 24
-
-        Parameters
-        ----------
-        heathours (float or numpy.ndarray)
-            The number of hours primary heating equipment can run.
-        """
-        if isinstance(heathours, np.ndarray):
-            if any(heathours > 24) or any(heathours <= 0):
-                raise Exception("Heat hours is not within 1 - 24 hours")
-        else:
-            if heathours > 24 or heathours <= 0:
-                raise Exception("Heat hours is not within 1 - 24 hours")
+        self.doLoadShift = True
 
     # SwingTank has it's own implimentation
     def primaryHeatHrs2kBTUHR(self, heathours, effSwingVolFract=1):
@@ -223,7 +226,7 @@ class SystemConfig:
         heatCap
             The heating capacity in [btu/hr].
         """
-        self._checkHeatHours(heathours)
+        checkHeatHours(heathours)
         heatCap = self.totalHWLoad / heathours * rhoCp * \
             (self.building.supplyT_F - self.building.incomingT_F) / self.defrostFactor /1000.
         return heatCap
@@ -236,19 +239,25 @@ class SystemConfig:
         ----------
         heatHrs : float
             The number of hours primary heating equipment can run in a day.
+        
+        Raises
+        ------
+        ValueError: aquastat fraction is too low.
+        ValueError: The minimum aquastat fraction is greater than 1.
 
         Returns
         -------
         totalVolMax : float
             The total storage volume in gallons adjusted to the storage tempreature
+        effMixFract : float
+            The fractional adjustment to the total hot water load for the
+            primary system. Only used in a swing tank system.
+        
         """
         if heatHrs <= 0 or heatHrs > 24:
             raise Exception("Heat hours is not within 1 - 24 hours")
         # Fraction used for adjusting swing tank volume.
         effMixFract = 1.
-        # If the system is sized for load shift days or the load shift
-        # requirement is less than required
-        largerLS = False
 
         # Running vol
         runningVol_G, effMixFract = self.calcRunningVol(heatHrs, np.ones(24), self.building.loadshape, effMixFract)
@@ -265,7 +274,6 @@ class SystemConfig:
             if LSrunningVol_G > runningVol_G:
                 runningVol_G = LSrunningVol_G
                 effMixFract = LSeffMixFract
-                largerLS = True
 
         totalVolMax = self.getTotalVolMax(runningVol_G)
 
@@ -280,9 +288,8 @@ class SystemConfig:
             raise ValueError("02", "The minimum aquastat fraction is greater than 1. This is due to the storage efficency and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )
 
         # Return the temperature adjusted total volume ########################
-        return totalVolMax, effMixFract, largerLS
+        return totalVolMax, effMixFract
     
-    # @abstractmethod
     def calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0):
         """
         Function to find the running volume for the hot water storage tank, which
@@ -296,8 +303,9 @@ class SystemConfig:
         onOffArr : ndarray
             array of 1/0's where 1's allow heat pump to run and 0's dissallow. of length 24.
         loadshape:
+            normalized array of length 24 representing the daily loadshape for this calculation.
         effMixFract: Int
-            will return effMixFract to retain the value. Needed because of SwingTank subclass implimentation
+            unused value in this instance of the function. Used in Swing Tank implimentation
 
         Raises
         ------
@@ -307,16 +315,17 @@ class SystemConfig:
         -------
         runV_G : float
             The running volume in gallons
-
+        effMixFract: int
+            returns same value from parameter. Needed for Swing Tank implimentation. Not actually used in this function instance 
         """          
         genrate = np.tile(onOffArr,2) / heatHrs #hourly
         diffN = genrate - np.tile(loadshape,2) #hourly
         diffInd = getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
-        # print(self.totalHWLoad)
         diffN *= self.totalHWLoad
         # Get the running volume ##############################################
         if len(diffInd) == 0:
-            raise Exception("ERROR ID 03","The heating rate is greater than the peak volume the system is oversized! Try increasing the hours the heat pump runs in a day", )
+            #TODO but what if it is undersized? Also can this ever be hit? users currently do not have power to change num hours from interface
+            raise Exception("ERROR ID 03","The heating rate is greater than the peak volume the system is oversized! Try increasing the hours the heat pump runs in a day",)
         runV_G = 0
         for peakInd in diffInd:
             #Get the rest of the day from the start of the peak
@@ -326,6 +335,20 @@ class SystemConfig:
         return runV_G, effMixFract
     
     def getTotalVolMax(self, runningVol_G):
+        """
+        Calculates the maximum primary storage using the Ecotope sizing methodology
+
+        Parameters
+        ----------
+        runningVol_G : float
+            The running volume in gallons
+
+        Returns
+        -------
+        totalVolMax : float
+            The total storage volume in gallons adjusted to the storage tempreature
+        
+        """
         return mixVolume(runningVol_G, self.storageT_F, self.building.incomingT_F, self.building.supplyT_F) / (1-self.aquaFract)
     
     def primaryCurve(self):
@@ -359,7 +382,7 @@ class SystemConfig:
         effMixFract = np.ones(len(heatHours))
         for ii in range(0,len(heatHours)):
             try:
-                volN[ii], effMixFract[ii], _ = self.sizePrimaryTankVolume(heatHours[ii])
+                volN[ii], effMixFract[ii] = self.sizePrimaryTankVolume(heatHours[ii])
             except ValueError:
                 break
         # Cut to the point the aquastat fraction was too small
@@ -379,6 +402,13 @@ class SystemConfig:
 
         Parameters
         ----------
+        pheating : boolean
+            indicates whether system is heating at the beginning of this step
+        V0 : float
+            The storage volume of the primary system at the storage temperature
+        Vtrig : float
+            The remaining volume of the primary storage volume when heating is
+            triggered, note this equals V0*(1 - aquaFract) TODO is that true tho? 
         Vcurr : float
             The primary volume at the timestep.
         hw_out : float
@@ -389,6 +419,8 @@ class SystemConfig:
 
         Returns
         -------
+        pheating : boolean
+            Boolean indicating if the primary system is heating at the end of this step in the simulation 
         Vnew : float
             The new primary volume at the timestep.
         did_run : float
@@ -429,12 +461,13 @@ class SystemConfig:
         ----------
         return_as_div
             A logical on the output, as a div (true) or as a figure (false)
+
         Returns
         -------
         div/fig
             plot_div
         """
-        [V, G_hw, D_hw, run, _, _, _] = self.simulate()
+        [V, G_hw, D_hw, run] = self.simulate()
 
         hrind_fromback = 24 # Look at the last 24 hours of the simulation not the whole thing
         run = np.array(run[-(60*hrind_fromback):])*60
