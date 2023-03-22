@@ -9,16 +9,20 @@ from plotly.subplots import make_subplots
 
 class SwingTank(SystemConfig):
 
+    #Sizing tables, likely won't need anymore? TODO
     Table_Napts = [0, 12, 24, 48, 96]
     sizingTable_EMASHRAE = ["80", "80", "80", "120 - 300", "120 - 300"]
     sizingTable_CA = ["80", "96", "168", "288", "480"]
 
     def __init__(self, safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                  doLoadShift = False, cdf_shift = 1, schedule = None, CA = False):
-        # if not hasattr(inputs, 'safetyTM'):
-        #     raise Exception("safetyTM required")
-        if safetyTM <= 1.:
+        # check Saftey factor
+        if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
+        # check building because recirc losses needed before super().__init__()
+        if not isinstance(building, Building):
+            raise Exception("Error: Building is not valid.")
+        
         self.safetyTM = safetyTM
         self.TMVol_G = 300 # TODO Scott to figure out table stuff for self.TMVol_G use 120 for now TODO had to set to 300
         self.element_deadband_F = 8.
@@ -49,10 +53,10 @@ class SwingTank(SystemConfig):
             The number of hours primary heating equipment can run in a day.
         onOffArr : ndarray
             array of 1/0's where 1's allow heat pump to run and 0's dissallow. of length 24.
-        loadshape:
+        loadshape : ndarray
+            normalized array of length 24 representing the daily loadshape for this calculation.
         effMixFract: float
-            The fractional adjustment to the total hot water load for the
-            primary system.
+            The fractional adjustment to the total hot water load for the primary system.
             
         Raises
         ------
@@ -62,11 +66,14 @@ class SwingTank(SystemConfig):
         -------
         runV_G : float
             The running volume in gallons
+        eff_HW_mix_faction : float
+            The fractional adjustment to the total hot water load for the
+            primary system. Only used in a swing tank system.
 
         """
 
         eff_HW_mix_faction = effMixFract
-        genrate = np.tile(onOffArr,2) / heatHrs #hourly
+        genrate = np.tile(onOffArr,2) / heatHrs #hourly 
         diffN   = genrate - np.tile(loadshape, 2) #hourly
         diffInd = getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
                 
@@ -114,11 +121,19 @@ class SwingTank(SystemConfig):
     
     def simJustSwing(self, N, hw_out, initST=None):
         """
-        Inputs
-        ------
+        Parameters
+        ----------
+        N : int
+            the length of the simulation in hours
+        hw_out : list
 
         initST : float
             Primary Swing tank at start of sim
+
+        Returns
+        -------
+        hw_outSwing : list
+
         """
         swingT = [self.building.supplyT_F] + [0] * (N - 1)
         D_hw = hw_out

@@ -3,7 +3,7 @@ from objects.systems.SwingTank import *
 from objects.systems.ParallelLoopTank import *
 
 def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift = False, 
-                 cdf_shift = 1, schedule = None, safetyTM = 0, setpointTM_F = 0, TMonTemp_F = 0, offTime_hr = 0, CA = False):
+                 cdf_shift = 1, schedule = None, safetyTM = 1.75, setpointTM_F = 135, TMonTemp_F = 0, offTime_hr = 0.333, CA = False):
     """
     Initializes and sizes the HPWH system. Both primary and tempurature maintenance (for parrallel loop and swing tank) are set up in this function.
 
@@ -53,5 +53,5 @@ def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable,
         case 'primary':
             return Primary(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift, schedule)
         case _:
-            raise Exception("Unknown schematic type.")
+            raise Exception("Unknown system schematic type.")
         

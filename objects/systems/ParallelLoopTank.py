@@ -24,24 +24,24 @@ class ParallelLoopTank(SystemConfig):
         self.TMCap_kBTUhr = self.safetyTM * self.building.recirc_loss / 1000
 
     def _checkParallelLoopInputs(self, safetyTM, offTime_hr, setpointTM_F, TMonTemp_F):
-        # Quick Check the inputs makes sense
+        # Quick Check to make sure the inputs make sense
         
-        if not isinstance(safetyTM, float) or safetyTM <= 1.:
+        if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
-        if not isinstance(offTime_hr, float) or offTime_hr > 1 or offTime_hr <= 0:
+        if not (isinstance(offTime_hr, float) or isinstance(offTime_hr, int)) or offTime_hr > 1 or offTime_hr <= 0:
             raise Exception("The One Cycle Off Time the temperature maintenance system must be a float bigger than zero and less than or equal to one hour.")
         if tmCompMinimumRunTime >= offTime_hr/(safetyTM - 1.):
             raise Exception("The expected run time of the parallel tank is less time the minimum runtime for a HPWH of " + str(tmCompMinimumRunTime*60)+ " minutes.")
         if not (isinstance(setpointTM_F, int) or isinstance(setpointTM_F, float)) or not checkLiqudWater(setpointTM_F):
-            raise Exception('Invalid input given for setpointTM_F, it must be between 32 and 212F.\n')
+            raise Exception('Invalid input given for setpointTM_F, it must be between 32 and 212F.')
         if not (isinstance(TMonTemp_F, int) or isinstance(TMonTemp_F, float)) or not checkLiqudWater(TMonTemp_F): #TODO confirm both ints and floats work
-            raise Exception('Invalid input given for TMonTemp_F, it must be between 32 and 212F.\n')
+            raise Exception('Invalid input given for TMonTemp_F, it must be between 32 and 212F.')
         if setpointTM_F <= TMonTemp_F:
             raise Exception("The temperature maintenance setpoint temperature must be greater than the turn on temperature")
         if setpointTM_F <= self.building.incomingT_F:
-            raise Exception("The temperature maintenance setpoint temperature must be greater than the city cold water temperature ")
+            raise Exception("The temperature maintenance setpoint temperature must be greater than the city cold water temperature")
         if TMonTemp_F <= self.building.incomingT_F:
-            raise Exception("The temperature maintenance turn on temperature must be greater than the city cold water temperature ")
+            raise Exception("The temperature maintenance on temperature must be greater than the city cold water temperature")
 
     def getSizingResults(self):
         """

@@ -202,7 +202,7 @@ class SystemConfig:
             self.fract_total_vol = 1
         else:
             # calculate fraction totalHWLoad of required to meet load shift days
-            fract = norm_mean + norm_std * norm.ppf(cdf_shift) #TODO norm_mean and std are currently from multi-family, need other types
+            fract = norm_mean + norm_std * norm.ppf(cdf_shift) #TODO norm_mean and std are currently from multi-family, need other types eventually. For now, loadshifting will only be available for multi-family
             self.fract_total_vol = fract if fract <= 1. else 1.
         
         self.doLoadShift = True
@@ -302,7 +302,7 @@ class SystemConfig:
             The number of hours primary heating equipment can run in a day.
         onOffArr : ndarray
             array of 1/0's where 1's allow heat pump to run and 0's dissallow. of length 24.
-        loadshape:
+        loadshape : ndarray
             normalized array of length 24 representing the daily loadshape for this calculation.
         effMixFract: Int
             unused value in this instance of the function. Used in Swing Tank implimentation

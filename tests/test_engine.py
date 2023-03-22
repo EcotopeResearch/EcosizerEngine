@@ -3,6 +3,7 @@ from objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, g
 import engine.EcosizerEngine as EcosizerEngine
 import numpy as np
 import os, sys
+from constants.Constants import *
 
 class QuietPrint:
     def __enter__(self):
@@ -137,6 +138,8 @@ def test_parallelSizingResult(parallel_sizer, expected):
 def test_invalid_system_parameter_errors():
     with pytest.raises(Exception, match="Invalid input given for Storage temp, it must be between 32 and 212F."):
         EcosizerEngine.EcosizerEngine(35, 4, 120, 15, 0.8, 0.8, "swingtank", "mens_dorm")
+    with pytest.raises(Exception, match="Unknown system schematic type."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 15, 0.8, 0.8, "wierd_system", "mens_dorm")
     with pytest.raises(Exception, match="Invalid input given for Defrost Factor, must be a number between 0 and 1."):
         EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", defrostFactor=3)
     with pytest.raises(Exception, match="Invalid input given for percentUseable, must be a number between 0 and 1."):
@@ -151,6 +154,24 @@ def test_invalid_system_parameter_errors():
         EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 1, "swingtank", "mens_dorm", cdf_shift = 'eighteen')
     with pytest.raises(Exception, match="Invalid input given for doLoadShift, must be a boolean."):
         EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", doLoadShift = 'eighteen')
+    with pytest.raises(Exception, match="The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", safetyTM = 0.2)
+    with pytest.raises(Exception, match="The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "paralleltank", "mens_dorm", safetyTM = 0.2)
+    with pytest.raises(Exception, match="The One Cycle Off Time the temperature maintenance system must be a float bigger than zero and less than or equal to one hour."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "paralleltank", "mens_dorm", offTime_hr = 0.)
+    with pytest.raises(Exception, match="The expected run time of the parallel tank is less time the minimum runtime for a HPWH of " + str(tmCompMinimumRunTime*60)+ " minutes."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "paralleltank", "mens_dorm", offTime_hr = 0.1, safetyTM = 5)
+    with pytest.raises(Exception, match="Invalid input given for setpointTM_F, it must be between 32 and 212F."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "paralleltank", "mens_dorm", setpointTM_F = 5)
+    with pytest.raises(Exception, match="Invalid input given for TMonTemp_F, it must be between 32 and 212F."):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "paralleltank", "mens_dorm", TMonTemp_F = 5)
+    with pytest.raises(Exception, match="The temperature maintenance setpoint temperature must be greater than the turn on temperature"):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "paralleltank", "mens_dorm", TMonTemp_F = 135, setpointTM_F = 135)
+    with pytest.raises(Exception, match="The temperature maintenance setpoint temperature must be greater than the city cold water temperature"):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "paralleltank", "mens_dorm", setpointTM_F = 34, TMonTemp_F = 33)
+    with pytest.raises(Exception, match="The temperature maintenance on temperature must be greater than the city cold water temperature"):
+        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "paralleltank", "mens_dorm", TMonTemp_F = 34)
 
 # Check for building initialization errors
 def test_invalid_building_parameter_errors():

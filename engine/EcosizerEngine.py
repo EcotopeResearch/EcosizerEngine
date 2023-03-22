@@ -10,7 +10,7 @@ class EcosizerEngine:
                             schematic, building_type, loadshape = None, schedule = None, cdf_shift = 1,
                             returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
-                            setpointTM_F = 0, TMonTemp_F = 0, offTime_hr = 0, CA = False):
+                            setpointTM_F = 135, TMonTemp_F = 0, offTime_hr = 0.333, CA = False):
         
         building = createBuilding( incomingT_F     = incomingT_F,
                                     magnitude_stat  = magnitude_stat, 

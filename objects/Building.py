@@ -105,8 +105,6 @@ class MultiFamily(Building):
             raise Exception("Error: Number of apartments must be an integer.")
         if not (isinstance(Wapt, int)):
             raise Exception("Error: WATTs per apt must be an integer.")
-        # if not hasattr(inputs, 'gpdpp'):
-        #     raise Exception("GPDPP required.")
         with open(os.path.join(os.path.dirname(__file__), '../data/load_shapes/multi_family.json')) as json_file:
             dataDict = json.load(json_file)
             # Check if gpdpp is a string and look up by key
