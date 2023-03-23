@@ -43,9 +43,9 @@ class SystemConfig:
             raise Exception("Invalid input given for Defrost Factor, must be a number between 0 and 1.")
         if not (isinstance(percentUseable, int) or isinstance(percentUseable, float)) or percentUseable > 1 or percentUseable < 0:
             raise Exception("Invalid input given for percentUseable, must be a number between 0 and 1.")
-        if not isinstance(compRuntime_hr, int):
-            raise Exception("Invalid input given for compRuntime_hr, must be an integer.")
-        if not (isinstance(aquaFract, int) or isinstance(aquaFract, float)) or aquaFract > 1 or aquaFract < 0:
+        if not isinstance(compRuntime_hr, int) or compRuntime_hr <= 0 or compRuntime_hr > 24:
+            raise Exception("Invalid input given for compRuntime_hr, must be an integer between 0 and 24.")
+        if not (isinstance(aquaFract, int) or isinstance(aquaFract, float)) or aquaFract > 1 or aquaFract <= 0:
             raise Exception("Invalid input given for aquaFract must, be a number between 0 and 1.")
         if not (isinstance(cdf_shift, int) or isinstance(cdf_shift, float)) or cdf_shift > 1 or cdf_shift < 0:
             raise Exception("Invalid input given for cdf_shift, must be a number between 0 and 1.")
