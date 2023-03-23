@@ -54,7 +54,7 @@ class SystemConfig:
 
     def getSizingResults(self):
         """
-        Returns the minimum primary volume and heating capacity sizing results
+        Returns the minimum primary volume and heating capacity sizing results. Implimented seperatly in Temp Maintenence systems.
 
         Returns
         -------
@@ -65,6 +65,7 @@ class SystemConfig:
 
     def simulate(self, initPV=None, initST=None, Pcapacity=None, Pvolume=None):
         """
+        Implimented seperatly for Swink Tank systems 
         Inputs
         ------
         initPV : float
@@ -212,6 +213,8 @@ class SystemConfig:
         """
         Converts from hours of heating in a day to heating capacity.
 
+        Implimented seperatly in Swing Tank systems
+
         Parameters
         ----------
         heathours : float or numpy.ndarray
@@ -295,6 +298,8 @@ class SystemConfig:
         Function to find the running volume for the hot water storage tank, which
         is needed for calculating the total volume for primary sizing and in the event of load shift sizing
         represents the entire volume.
+
+        Implimented seperatly for Swing Tank systems
 
         Parameters
         ----------
@@ -456,6 +461,8 @@ class SystemConfig:
         """
         Returns a plot of the of the simulation for the minimum sized primary
         system as a div or plotly figure. Can plot the minute level simulation
+
+        Implimented seperatly for Swing Tank systems
 
         Parameters
         ----------

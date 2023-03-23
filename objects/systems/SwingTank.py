@@ -315,6 +315,20 @@ class SwingTank(SystemConfig):
                 hw_outSwing]
 
     def plotStorageLoadSim(self, return_as_div=True):
+        """
+        Returns a plot of the of the simulation for the minimum sized primary
+        system as a div or plotly figure. Can plot the minute level simulation
+
+        Parameters
+        ----------
+        return_as_div
+            A logical on the output, as a div (true) or as a figure (false)
+
+        Returns
+        -------
+        div/fig
+            plot_div
+        """
         hrind_fromback = 24 # Look at the last 24 hours of the simulation not the whole thing
         [V, G_hw, D_hw, run, swingT, srun, _] = self.simulate()
 
