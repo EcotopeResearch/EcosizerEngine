@@ -135,6 +135,9 @@ class MultiFamily(Building):
 
 class MultiUse(Building):
     def __init__(self, building_list, incomingT_F, supplyT_F, returnT_F, flow_rate):
+        # Generates building with loadshape that is combination of multiple loadshapes, one for each use section of the building. Each loadshape is multiplied
+        # by the magnitude of that use section of the multi-use building, then all added together and divided by the total magnitude for the whole building
+
         total_magnitude = building_list[0].magnitude
         total_loadshape = [j * building_list[0].magnitude for j in building_list[0].loadshape]
         total_avg_loadshape = [j * building_list[0].magnitude for j in building_list[0].avgLoadshape]
