@@ -132,4 +132,25 @@ class MultiFamily(Building):
         # recalculate recirc_loss with different method if applicable
         if(nApt > 0 and Wapt > 0):
             self.recirc_loss = nApt * Wapt * W_TO_BTUHR
-    
+
+class MultiUse(Building):
+    def __init__(self, building_list, incomingT_F, supplyT_F, returnT_F, flow_rate):
+        total_magnitude = building_list[0].magnitude
+        total_loadshape = [j * building_list[0].magnitude for j in building_list[0].loadshape]
+        total_avg_loadshape = [j * building_list[0].magnitude for j in building_list[0].avgLoadshape]
+
+        for i in range(1, len(building_list)):
+            total_magnitude += building_list[i].magnitude
+            add_loadshape = [j * building_list[i].magnitude for j in building_list[i].loadshape]
+            add_avg_loadshape = [j * building_list[i].magnitude for j in building_list[i].avgLoadshape]
+            total_loadshape = [total_loadshape[j] + add_loadshape[j] for j in range(len(total_loadshape))]
+            total_avg_loadshape = [total_avg_loadshape[j] + add_avg_loadshape[j] for j in range(len(total_avg_loadshape))]
+
+        total_loadshape = [j / total_magnitude for j in total_loadshape]
+        total_avg_loadshape = [j / total_magnitude for j in total_avg_loadshape]
+        total_loadshape = np.array(total_loadshape)
+        total_avg_loadshape = np.array(total_avg_loadshape)
+
+        self.magnitude = total_magnitude
+
+        super().__init__(total_loadshape, total_avg_loadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)

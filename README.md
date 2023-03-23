@@ -11,6 +11,12 @@ Steps for installing using docker container
 
 	$  docker run -it ecosizerengine bash
 
+4. When you are done messing about in the docker image, just type the command
+
+	$ exit
+
+or press ctrl+c then ctrl+d
+
 Steps for installing conda environment from the Anaconda prompt
 1. Navigate to the EcosizerEngine directory.
 2. Create new environment from .yml file.

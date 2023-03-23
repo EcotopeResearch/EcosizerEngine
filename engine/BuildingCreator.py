@@ -11,15 +11,15 @@ def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadsh
     ----------
     incomingT_F : float 
         The incoming city water temperature on the design day. [°F]
-    magnitude_stat : int
+    magnitude_stat : int or list
         a number that will be used to assess the magnitude of the building based on the building type
     supplyT_F : float
         The hot water supply temperature.[°F]
-    building_type : string
+    building_type : string or list
         a string indicating the type of building we are sizing for (e.g. "multi_family", "office_building", etc.)
     loadShape : ndarray
         defaults to design load shape for building type.
-    loadShape : ndarray
+    avgLoadShape : ndarray
         defaults to average load shape for building type.
     returnT_F : float 
         The water temperature returning from the recirculation loop. [°F]
@@ -41,7 +41,27 @@ def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadsh
     Exception: Error if building_type is not in list of valid building_type names.
     """
 
-
+    # handle multiuse buildings
+    if isinstance(building_type, list):
+        if len(building_type) == 1:
+            building_type = building_type[0]
+        else:
+            if not isinstance(magnitude_stat, list) or len(building_type) != len(magnitude_stat):
+                raise Exception("Missing values for multi-use building. Collected " + str(len(building_type)) + " building types but collected " + 
+                                ("1" if not isinstance(magnitude_stat, list) else str(len(magnitude_stat)))+ " magnitude varriables")
+            building_list = []
+            for i in range(len(building_type)):
+                building_list.append(createBuilding(incomingT_F, magnitude_stat[i], supplyT_F, building_type[i], loadshape, avgLoadshape,
+                        returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt))
+            return MultiUse(building_list, incomingT_F, supplyT_F, returnT_F, flow_rate)
+    
+    #only one building type so there should only be one magnitude statistic 
+    if isinstance(magnitude_stat, list):
+        if len(magnitude_stat) == 1:
+            magnitude_stat = magnitude_stat[0]
+        else:
+            raise Exception("Missing values for multi-use building. Collected 1 building type but collected " + str(len(magnitude_stat)) + " magnitude varriables")
+    
     if not isinstance(building_type, str):
             raise Exception("building_type must be a string.")
     

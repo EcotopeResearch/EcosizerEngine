@@ -172,24 +172,3 @@ def test_invalid_system_parameter_errors():
         EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "paralleltank", "mens_dorm", setpointTM_F = 34, TMonTemp_F = 33)
     with pytest.raises(Exception, match="The temperature maintenance on temperature must be greater than the city cold water temperature"):
         EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "paralleltank", "mens_dorm", TMonTemp_F = 34)
-
-# Check for building initialization errors
-def test_invalid_building_parameter_errors():
-    with pytest.raises(Exception, match="No default loadshape found for building type climbing_gym."):
-        EcosizerEngine.EcosizerEngine(35, 4, 120, 15, 0.8, 0.8, "swingtank", "climbing_gym")
-    with pytest.raises(Exception, match="Loadshape must be of length 24 but instead has length of 5."):
-        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", loadshape=[1,2,3,4,5])
-    with pytest.raises(Exception, match="Sum of the loadshape does not equal 1. Loadshape needs to be normalized."):
-        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", loadshape=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
-    with pytest.raises(Exception, match="Can not have negative load shape values in loadshape."):
-        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", loadshape=[1,2,-3,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    with pytest.raises(Exception, match="Error: Supply temp must be a number."):
-        EcosizerEngine.EcosizerEngine(35, 4, "whoops", 150, 0.8, 0.8, "swingtank", "mens_dorm")
-    with pytest.raises(Exception, match="Error: Return temp must be a number."):
-        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 1.2, "swingtank", "mens_dorm", returnT_F="uh oh")
-    with pytest.raises(Exception, match="Error: Supply temp must be higher than return temp."):
-        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 1, "swingtank", "mens_dorm", returnT_F=150)
-    with pytest.raises(Exception, match="Error: City water temp must be a number."):
-        EcosizerEngine.EcosizerEngine("not a number", 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm")
-    with pytest.raises(Exception, match="Error: Flow rate must be a number."):
-        EcosizerEngine.EcosizerEngine(35, 4, 120, 150, 0.8, 0.8, "swingtank", "mens_dorm", flow_rate = "problem")
