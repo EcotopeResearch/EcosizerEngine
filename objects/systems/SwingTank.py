@@ -89,7 +89,7 @@ class SwingTank(SystemConfig):
         for peakInd in diffInd:
             hw_out = np.tile(loadshape, 2)
             hw_out = np.array(HRLIST_to_MINLIST(hw_out[peakInd:peakInd+24])) \
-                / 60 * self.totalHWLoad # to minute
+                / 60 * self.building.magnitude # to minute
             
             # Simulate the swing tank assuming it hits the peak just above the supply temperature.
             # Get the volume removed for the primary adjusted by the swing tank
@@ -97,9 +97,9 @@ class SwingTank(SystemConfig):
             [_, _, hw_out_from_swing] = self.simJustSwing(N, hw_out, self.building.supplyT_F + 0.1)
 
             # Get the effective adjusted hot water demand on the primary system at the storage temperature.
-            temp_eff_HW_mix_faction = sum(hw_out_from_swing)/self.totalHWLoad #/2 because the sim goes for two days
+            temp_eff_HW_mix_faction = sum(hw_out_from_swing)/self.building.magnitude #/2 because the sim goes for two days
             genrate_min = np.array(HRLIST_to_MINLIST(genrate[peakInd:peakInd+24])) \
-                / 60 * self.totalHWLoad * temp_eff_HW_mix_faction # to minute
+                / 60 * self.building.magnitude * temp_eff_HW_mix_faction # to minute
 
             # Get the new difference in generation and demand
             diffN = genrate_min - hw_out_from_swing
@@ -249,7 +249,7 @@ class SwingTank(SystemConfig):
             The heating capacity in [btu/hr].
         """
         checkHeatHours(heathours)
-        heatCap = self.totalHWLoad * effSwingVolFract / heathours * rhoCp * \
+        heatCap = self.building.magnitude * effSwingVolFract / heathours * rhoCp * \
             (self.storageT_F - self.building.incomingT_F) / self.defrostFactor /1000.
         return heatCap
     

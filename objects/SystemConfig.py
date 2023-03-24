@@ -14,7 +14,7 @@ class SystemConfig:
         
         self.doLoadShift = doLoadShift
         self.building = building        
-        self.totalHWLoad = self.building.magnitude
+        # self.totalHWLoad = self.building.magnitude
         self.storageT_F = storageT_F
         self.defrostFactor = defrostFactor
         self.percentUseable = percentUseable
@@ -157,7 +157,7 @@ class SystemConfig:
                * self.defrostFactor * np.tile(self.schedule,3)
         
         # Define the use of DHW with the normalized load shape
-        D_hw = self.totalHWLoad * self.fract_total_vol * np.tile(loadShapeN, 3)
+        D_hw = self.building.magnitude * self.fract_total_vol * np.tile(loadShapeN, 3)
 
         # To per minute from per hour
         G_hw = np.array(HRLIST_to_MINLIST(G_hw)) / 60
@@ -202,7 +202,7 @@ class SystemConfig:
         if cdf_shift == 1: # meaing 100% of days covered by load shift
             self.fract_total_vol = 1
         else:
-            # calculate fraction totalHWLoad of required to meet load shift days
+            # calculate fraction total hot water required to meet load shift days
             fract = norm_mean + norm_std * norm.ppf(cdf_shift) #TODO norm_mean and std are currently from multi-family, need other types eventually. For now, loadshifting will only be available for multi-family
             self.fract_total_vol = fract if fract <= 1. else 1.
         
@@ -230,7 +230,7 @@ class SystemConfig:
             The heating capacity in [btu/hr].
         """
         checkHeatHours(heathours)
-        heatCap = self.totalHWLoad / heathours * rhoCp * \
+        heatCap = self.building.magnitude / heathours * rhoCp * \
             (self.building.supplyT_F - self.building.incomingT_F) / self.defrostFactor /1000.
         return heatCap
     
@@ -282,7 +282,7 @@ class SystemConfig:
 
         # Check the Cycling Volume ############################################
         cyclingVol_G = totalVolMax * (self.aquaFract - (1 - self.percentUseable))
-        minRunVol_G = pCompMinimumRunTime * (self.totalHWLoad * effMixFract / heatHrs) # (generation rate - no usage)
+        minRunVol_G = pCompMinimumRunTime * (self.building.magnitude * effMixFract / heatHrs) # (generation rate - no usage)
 
         if minRunVol_G > cyclingVol_G:
             min_AF = minRunVol_G / totalVolMax + (1 - self.percentUseable)
@@ -326,7 +326,7 @@ class SystemConfig:
         genrate = np.tile(onOffArr,2) / heatHrs #hourly
         diffN = genrate - np.tile(loadshape,2) #hourly
         diffInd = getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
-        diffN *= self.totalHWLoad
+        diffN *= self.building.magnitude
         # Get the running volume ##############################################
         if len(diffInd) == 0:
             #TODO but what if it is undersized? Also can this ever be hit? users currently do not have power to change num hours from interface
