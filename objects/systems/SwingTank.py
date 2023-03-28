@@ -13,6 +13,7 @@ class SwingTank(SystemConfig):
     Table_Napts = [0, 12, 24, 48, 96]
     sizingTable_EMASHRAE = ["80", "80", "80", "120 - 300", "120 - 300"]
     sizingTable_CA = ["80", "96", "168", "288", "480"]
+    sizingTable = [40, 50, 80, 100, 120, 150, 160, 175, 200, 240, 250, 320, 350, 400, 440, 480]
 
     def __init__(self, safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                  doLoadShift = False, cdf_shift = 1, schedule = None, CA = False):
@@ -41,7 +42,7 @@ class SwingTank(SystemConfig):
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr, self.TMVol_G, self.TMCap_kBTUhr]
     
-    def calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0.):
+    def _calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0.):
         """
         Function to find the running volume for the hot water storage tank, which
         is needed for calculating the total volume for primary sizing and in the event of load shift sizing
@@ -93,11 +94,10 @@ class SwingTank(SystemConfig):
             
             # Simulate the swing tank assuming it hits the peak just above the supply temperature.
             # Get the volume removed for the primary adjusted by the swing tank
-            N = len(hw_out)
-            [_, _, hw_out_from_swing] = self.simJustSwing(N, hw_out, self.building.supplyT_F + 0.1)
+            [_, _, hw_out_from_swing] = self.simJustSwing(len(hw_out), hw_out, self.building.supplyT_F + 0.1)
 
             # Get the effective adjusted hot water demand on the primary system at the storage temperature.
-            temp_eff_HW_mix_faction = sum(hw_out_from_swing)/self.building.magnitude #/2 because the sim goes for two days
+            temp_eff_HW_mix_faction = sum(hw_out_from_swing)/self.building.magnitude
             genrate_min = np.array(HRLIST_to_MINLIST(genrate[peakInd:peakInd+24])) \
                 / 60 * self.building.magnitude * temp_eff_HW_mix_faction # to minute
 
@@ -148,14 +148,14 @@ class SwingTank(SystemConfig):
         srun = [0] * N
         swingheating = False
 
-        for ii in range(1, N):
+        for i in range(1, N):
 
-            hw_outSwing[ii] = mixVolume(D_hw[ii], swingT[ii-1], self.building.incomingT_F, self.building.supplyT_F)
-            swingheating, swingT[ii], srun[ii] = self.runOneSwingStep(swingheating, swingT[ii-1], hw_outSwing[ii])
+            hw_outSwing[i] = mixVolume(D_hw[i], swingT[i-1], self.building.incomingT_F, self.building.supplyT_F)
+            swingheating, swingT[i], srun[i] = self.__runOneSwingStep(swingheating, swingT[i-1], hw_outSwing[i])
 
         return [swingT, srun, hw_outSwing]
     
-    def runOneSwingStep(self, swingheating, Tcurr, hw_out):
+    def __runOneSwingStep(self, swingheating, Tcurr, hw_out):
         """
         Runs one step on the swing tank step. Since the swing tank is in series
         with the primary system the temperature needs to be tracked to inform
@@ -217,20 +217,7 @@ class SwingTank(SystemConfig):
 
         return swingheating, Tnew, did_run
     
-    def getSizingTable(self, CA=True): #TODO do we need this?
-        """
-        Returns sizing table for a swing tank
-
-        Returns
-        -------
-        list
-            self.Table_Napts, self.Table
-        """
-        if CA:
-            return list(zip(self.Table_Napts, self.sizingTable_CA))
-        return list(zip(self.Table_Napts, self.sizingTable_EMASHRAE))
-    
-    def primaryHeatHrs2kBTUHR(self, heathours, effSwingVolFract=1):
+    def _primaryHeatHrs2kBTUHR(self, heathours, effSwingVolFract=1):
         """
         Converts from hours of heating in a day to heating capacity.
 
@@ -253,7 +240,7 @@ class SwingTank(SystemConfig):
             (self.storageT_F - self.building.incomingT_F) / self.defrostFactor /1000.
         return heatCap
     
-    def getTotalVolMax(self, runningVol_G):
+    def _getTotalVolAtStorage(self, runningVol_G):
         """
         Calculates the maximum primary storage using the Ecotope sizing methodology
         For a swing tank the storage volume is found at the appropriate temperature in calcRunningVol
@@ -282,7 +269,7 @@ class SwingTank(SystemConfig):
             default is the sized system
         """
 
-        G_hw, D_hw, V0, Vtrig, pV, pheating = self.getInitialSimulationValues(Pcapacity, Pvolume)
+        G_hw, D_hw, V0, Vtrig, pV, pheating = self._getInitialSimulationValues(Pcapacity, Pvolume)
 
         swingT = [self.storageT_F] + [0] * (len(G_hw) - 1)
         srun = [0] * (len(G_hw))
@@ -301,7 +288,7 @@ class SwingTank(SystemConfig):
         for ii in range(1, len(G_hw)):
             hw_outSwing[ii] = mixVolume(D_hw[ii], swingT[ii-1], self.building.incomingT_F, self.building.supplyT_F)
 
-            swingheating, swingT[ii], srun[ii] = self.runOneSwingStep(swingheating, swingT[ii-1], hw_outSwing[ii])
+            swingheating, swingT[ii], srun[ii] = self.__runOneSwingStep(swingheating, swingT[ii-1], hw_outSwing[ii])
             #Get the mixed generation
             mixedGHW = mixVolume(G_hw[ii], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
             pheating, pV[ii], prun[ii] = self.runOnePrimaryStep(pheating, V0, Vtrig, pV[ii-1], hw_outSwing[ii], mixedGHW)

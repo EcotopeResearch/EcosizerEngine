@@ -77,7 +77,7 @@ def test_primaryResults(simplePrimary, expected):
     assert [simplePrimary.PVol_G_atStorageT, simplePrimary.PCap_kBTUhr, simplePrimary.schedule, simplePrimary.maxDayRun_hr] == expected
 
 @pytest.mark.parametrize("expected", [
-   ([467.6418425, 91.3667890625, [1]*24, 16, 90.67963730324945, 59.712485])
+   ([467.6418425, 91.3667890625, [1]*24, 16, 90.67963730324946, 59.712485])
 ])
 def test_parallelResults(parallellTank, expected):
     assert [parallellTank.PVol_G_atStorageT, parallellTank.PCap_kBTUhr, 

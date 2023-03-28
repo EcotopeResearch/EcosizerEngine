@@ -4,6 +4,7 @@ import engine.EcosizerEngine as EcosizerEngine
 import numpy as np
 import os, sys
 from constants.Constants import *
+from plotly.graph_objs import Figure
 
 class QuietPrint:
     def __enter__(self):
@@ -134,3 +135,15 @@ def test_primarySizingResult(primary_sizer, expected):
 def test_parallelSizingResult(parallel_sizer, expected):
     assert parallel_sizer.getSizingResults() == expected
 
+@pytest.mark.parametrize("return_as_div, expected", [
+   (True, str),
+   (False, Figure)
+])
+def test_figReturnTypes(parallel_sizer, return_as_div, expected):
+    assert type(parallel_sizer.plotStorageLoadSim(return_as_div)) is expected
+
+def test_primaryCurve(parallel_sizer):
+    primaryCurveInfo = parallel_sizer.primaryCurve()
+    assert len(primaryCurveInfo) == 4
+    assert len(primaryCurveInfo[0]) == len(primaryCurveInfo[1]) == len(primaryCurveInfo[2])
+    assert primaryCurveInfo[3] == 44

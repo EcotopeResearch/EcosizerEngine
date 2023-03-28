@@ -20,7 +20,7 @@ class ParallelLoopTank(SystemConfig):
         self.offTime_hr = offTime_hr # Hour
         self.safetyTM = safetyTM # Safety factor
 
-        self.TMVol_G  =  self.building.recirc_loss / rhoCp * self.offTime_hr / (self.setpointTM_F - self.TMonTemp_F)
+        self.TMVol_G  =  (self.building.recirc_loss / rhoCp) * (self.offTime_hr / (self.setpointTM_F - self.TMonTemp_F))
         self.TMCap_kBTUhr = self.safetyTM * self.building.recirc_loss / 1000
 
     def _checkParallelLoopInputs(self, safetyTM, offTime_hr, setpointTM_F, TMonTemp_F):

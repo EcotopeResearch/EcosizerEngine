@@ -22,7 +22,7 @@ class SystemConfig:
         self.aquaFract = aquaFract
 
         if doLoadShift and not schedule is None:
-            self.setLoadShift(schedule, cdf_shift)
+            self._setLoadShift(schedule, cdf_shift)
         else:
             self.schedule = [1] * 24
             self.fract_total_vol = 1 # fraction of total volume for for load shifting, or 1 if no load shifting
@@ -32,7 +32,7 @@ class SystemConfig:
 
         #size system
         self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr)
-        self.PCap_kBTUhr = self.primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.effSwingFract )
+        self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.effSwingFract )
 
     def _checkInputs(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift):
         if not isinstance(building, Building):
@@ -92,7 +92,7 @@ class SystemConfig:
             The actual output in gallons of the HPWH with time
         """
 
-        G_hw, D_hw, V0, Vtrig, pV, pheating = self.getInitialSimulationValues(Pcapacity, Pvolume)
+        G_hw, D_hw, V0, Vtrig, pV, pheating = self._getInitialSimulationValues(Pcapacity, Pvolume)
 
         hw_outSwing = [0] * (len(G_hw))
         hw_outSwing[0] = D_hw[0]
@@ -102,17 +102,17 @@ class SystemConfig:
             pV[0] = initPV
 
         # Run the "simulation"
-        for ii in range(1, len(G_hw)):
-            mixedDHW = mixVolume(D_hw[ii], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
-            mixedGHW = mixVolume(G_hw[ii], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
-            pheating, pV[ii], prun[ii] = self.runOnePrimaryStep(pheating, V0, Vtrig, pV[ii-1], mixedDHW, mixedGHW)
+        for i in range(1, len(G_hw)):
+            mixedDHW = mixVolume(D_hw[i], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
+            mixedGHW = mixVolume(G_hw[i], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
+            pheating, pV[i], prun[i] = self.runOnePrimaryStep(pheating, V0, Vtrig, pV[i-1], mixedDHW, mixedGHW)
 
         return [roundList(pV, 3),
                 roundList(G_hw, 3),
                 roundList(D_hw, 3),
                 roundList(prun, 3)]
 
-    def getInitialSimulationValues(self, Pcapacity=None, Pvolume=None):
+    def _getInitialSimulationValues(self, Pcapacity=None, Pvolume=None):
         """
         Returns initialized arrays needed for 3-day simulation
 
@@ -172,7 +172,7 @@ class SystemConfig:
 
         return G_hw, D_hw, V0, Vtrig, pV, pheating
     
-    def setLoadShift(self, schedule, cdf_shift=1):
+    def _setLoadShift(self, schedule, cdf_shift=1):
         """
         Sets the load shifting schedule from input schedule
 
@@ -209,7 +209,7 @@ class SystemConfig:
         self.doLoadShift = True
 
     # SwingTank has it's own implimentation
-    def primaryHeatHrs2kBTUHR(self, heathours, effSwingVolFract=1):
+    def _primaryHeatHrs2kBTUHR(self, heathours, effSwingVolFract=1):
         """
         Converts from hours of heating in a day to heating capacity.
 
@@ -263,14 +263,14 @@ class SystemConfig:
         effMixFract = 1.
 
         # Running vol
-        runningVol_G, effMixFract = self.calcRunningVol(heatHrs, np.ones(24), self.building.loadshape, effMixFract)
+        runningVol_G, effMixFract = self._calcRunningVol(heatHrs, np.ones(24), self.building.loadshape, effMixFract)
 
         # If doing load shift, solve for the runningVol_G and take the larger volume
         if self.doLoadShift:
             LSrunningVol_G = 0
             LSeffMixFract = 0
             # calculate loadshift sizing with avg loadshape (see page 19 of methodology documentation)
-            LSrunningVol_G, LSeffMixFract = self.calcRunningVol(heatHrs, self.schedule, self.building.avgLoadshape, LSeffMixFract)
+            LSrunningVol_G, LSeffMixFract = self._calcRunningVol(heatHrs, self.schedule, self.building.avgLoadshape, LSeffMixFract)
             LSrunningVol_G *= self.fract_total_vol
 
             # Get total volume from max of primary method or load shift method
@@ -278,22 +278,22 @@ class SystemConfig:
                 runningVol_G = LSrunningVol_G
                 effMixFract = LSeffMixFract
 
-        totalVolMax = self.getTotalVolMax(runningVol_G)
+        totalVolAtStorage = self._getTotalVolAtStorage(runningVol_G)
 
         # Check the Cycling Volume ############################################
-        cyclingVol_G = totalVolMax * (self.aquaFract - (1 - self.percentUseable))
+        cyclingVol_G = totalVolAtStorage * (self.aquaFract - (1 - self.percentUseable))
         minRunVol_G = pCompMinimumRunTime * (self.building.magnitude * effMixFract / heatHrs) # (generation rate - no usage)
 
         if minRunVol_G > cyclingVol_G:
-            min_AF = minRunVol_G / totalVolMax + (1 - self.percentUseable)
+            min_AF = minRunVol_G / totalVolAtStorage + (1 - self.percentUseable)
             if min_AF < 1:
                 raise ValueError("01", "The aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: ", round(min_AF,3))
             raise ValueError("02", "The minimum aquastat fraction is greater than 1. This is due to the storage efficency and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )
 
         # Return the temperature adjusted total volume ########################
-        return totalVolMax, effMixFract
+        return totalVolAtStorage, effMixFract
     
-    def calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0):
+    def _calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0):
         """
         Function to find the running volume for the hot water storage tank, which
         is needed for calculating the total volume for primary sizing and in the event of load shift sizing
@@ -339,9 +339,9 @@ class SystemConfig:
 
         return runV_G, effMixFract
     
-    def getTotalVolMax(self, runningVol_G):
+    def _getTotalVolAtStorage(self, runningVol_G):
         """
-        Calculates the maximum primary storage using the Ecotope sizing methodology
+        Calculates the maximum primary storage using the Ecotope sizing methodology. Swing Tanks implement sperately
 
         Parameters
         ----------
@@ -385,17 +385,17 @@ class SystemConfig:
         
         volN = np.zeros(len(heatHours))
         effMixFract = np.ones(len(heatHours))
-        for ii in range(0,len(heatHours)):
+        for i in range(0,len(heatHours)):
             try:
-                volN[ii], effMixFract[ii] = self.sizePrimaryTankVolume(heatHours[ii])
+                volN[i], effMixFract[i] = self.sizePrimaryTankVolume(heatHours[i])
             except ValueError:
                 break
         # Cut to the point the aquastat fraction was too small
-        volN        = volN[:ii]
-        heatHours   = heatHours[:ii]
-        effMixFract = effMixFract[:ii]
+        volN        = volN[:i]
+        heatHours   = heatHours[:i]
+        effMixFract = effMixFract[:i]
 
-        return [volN, self.primaryHeatHrs2kBTUHR(heatHours, effMixFract), heatHours, recIndex]
+        return [volN, self._primaryHeatHrs2kBTUHR(heatHours, effMixFract), heatHours, recIndex]
 
     
     def runOnePrimaryStep(self, pheating, V0, Vtrig, Vcurr, hw_out, hw_in):

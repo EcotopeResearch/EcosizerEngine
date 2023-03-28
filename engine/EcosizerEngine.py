@@ -137,7 +137,7 @@ class EcosizerEngine:
         """
         return self.system.primaryCurve()
     
-    def plotStorageLoadSim(self):
+    def plotStorageLoadSim(self, return_as_div=True):
         """
         Returns a plot of the of the simulation for the minimum sized primary
         system as a div or plotly figure. Can plot the minute level simulation
@@ -152,4 +152,4 @@ class EcosizerEngine:
         div/fig
             plot_div
         """
-        return self.system.plotStorageLoadSim()
+        return self.system.plotStorageLoadSim(return_as_div)
