@@ -1,6 +1,6 @@
-from objects.SystemConfig import *
-from objects.systems.SwingTank import *
-from objects.systems.ParallelLoopTank import *
+from ecosizer_engine_package.objects.SystemConfig import *
+from ecosizer_engine_package.objects.systems.SwingTank import *
+from ecosizer_engine_package.objects.systems.ParallelLoopTank import *
 
 def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift = False, 
                  cdf_shift = 1, schedule = None, safetyTM = 1.75, setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, CA = False):

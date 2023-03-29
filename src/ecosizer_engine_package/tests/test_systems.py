@@ -1,9 +1,8 @@
 import pytest
-from engine.SystemCreator import createSystem
-from engine.BuildingCreator import createBuilding
-import numpy as np
+from ecosizer_engine_package.engine.SystemCreator import createSystem
+from ecosizer_engine_package.engine.BuildingCreator import createBuilding
 import os, sys
-from constants.Constants import *
+from ecosizer_engine_package.constants.Constants import *
 
 class QuietPrint:
     def __enter__(self):

@@ -1,9 +1,9 @@
 import pytest
-from objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
-import engine.EcosizerEngine as EcosizerEngine
+from ecosizer_engine_package.objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
+import ecosizer_engine_package.engine.EcosizerEngine as EcosizerEngine
 import numpy as np
 import os, sys
-from constants.Constants import *
+from ecosizer_engine_package.constants.Constants import *
 from plotly.graph_objs import Figure
 
 class QuietPrint:
@@ -18,7 +18,7 @@ class QuietPrint:
 @pytest.fixture
 def swing_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
-        hpwh = EcosizerEngine.EcosizerEngine(
+        hpwh = EcosizerEngine(
             incomingT_F     = 50,
             magnitude_stat  = 100,
             supplyT_F       = 120,
@@ -44,7 +44,7 @@ def swing_sizer(): # Returns the hpwh swing tank
 @pytest.fixture
 def parallel_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
-        hpwh = EcosizerEngine.EcosizerEngine(
+        hpwh = EcosizerEngine(
             incomingT_F     = 50,
             magnitude_stat  = 100,
             supplyT_F       = 120,
@@ -73,7 +73,7 @@ def parallel_sizer(): # Returns the hpwh swing tank
 @pytest.fixture
 def primary_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
-        hpwh = EcosizerEngine.EcosizerEngine(
+        hpwh = EcosizerEngine(
             incomingT_F     = 50,
             magnitude_stat  = 100,
             supplyT_F       = 120,

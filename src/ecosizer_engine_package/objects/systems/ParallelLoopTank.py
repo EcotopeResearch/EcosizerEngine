@@ -1,8 +1,8 @@
-from objects.SystemConfig import SystemConfig
+from ecosizer_engine_package.objects.SystemConfig import SystemConfig
 import numpy as np
-from objects.Building import Building
-from constants.Constants import *
-from objects.systemConfigUtils import checkLiqudWater
+from ecosizer_engine_package.objects.Building import Building
+from ecosizer_engine_package.constants.Constants import *
+from ecosizer_engine_package.objects.systemConfigUtils import checkLiqudWater
 
 class ParallelLoopTank(SystemConfig):
     def __init__(self, safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 

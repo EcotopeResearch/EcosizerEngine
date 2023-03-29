@@ -1,8 +1,8 @@
-from objects.SystemConfig import SystemConfig
+from ecosizer_engine_package.objects.SystemConfig import SystemConfig
 import numpy as np
-from objects.Building import Building
-from constants.Constants import *
-from objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices, checkHeatHours
+from ecosizer_engine_package.objects.Building import Building
+from ecosizer_engine_package.constants.Constants import *
+from ecosizer_engine_package.objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices, checkHeatHours
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots

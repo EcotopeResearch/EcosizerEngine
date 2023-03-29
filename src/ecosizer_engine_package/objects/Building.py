@@ -2,7 +2,7 @@ import os
 import json
 import numpy as np
 
-from constants.Constants import *
+from ecosizer_engine_package.constants.Constants import *
 
 class Building:
     def __init__(self, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
