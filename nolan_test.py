@@ -1,5 +1,5 @@
-from engine.EcosizerEngine import *
-from engine.BuildingCreator import createBuilding
+from ecosizer_engine_package import *
+# from engine.BuildingCreator import createBuilding
 
 building = createBuilding(
             incomingT_F     = 50,
