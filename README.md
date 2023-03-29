@@ -1,7 +1,38 @@
-# EcosizerEngine 	
+# EcosizerEngine
 
-### Installing:
-Steps for installing using docker container
+### Requirements:
+
+This software requires a python version greater than or equal to 3.11 to be installed in the environment it is running in.
+
+### Using the package in scripts:
+
+1. Install the package with pip
+
+	$ pip install ecosizer-engine
+
+2. To import and use the tools in this package, add the following import statement to your script:
+
+	from ecosizer_engine_package import *
+
+You should now be able to use the features of EcosizerEngine in your script
+
+### Running locally in a container:
+First, clone the EcosizerEngine repo from github
+
+    $ git clone https://github.com/EcotopeResearch/EcosizerEngine.git
+
+Depending on what type of environment you want to run the code in, please follow the appropriate steps.
+
+Steps for installing in a virtual environment:
+1. Navigate to the EcosizerEngine directory. This should be the same directory level as src/, setup.py, and this README document.
+2. Run the following command:
+
+	$ pip install -e .
+
+This will install the ecosizer-engine package locally in editable format, such that changes you make in the source code here will be reflected in implementation.
+This pip install should also install all dependencies for ecosizer-engine (i.e. numpy, scipy, pytest, and plotly)
+
+Steps for installing using docker container:
 1. Navigate to the EcosizerEngine directory.
 2. Build container with docker file
 
@@ -17,7 +48,7 @@ Steps for installing using docker container
 
 or press ctrl+c then ctrl+d
 
-Steps for installing conda environment from the Anaconda prompt
+Steps for installing conda environment from the Anaconda prompt:
 1. Navigate to the EcosizerEngine directory.
 2. Create new environment from .yml file.
 
@@ -54,16 +85,18 @@ All the available environment can be found with:
 	$ conda env list
 
 ### Testing:
-From the parent directory, while running docker container or conda environment, type
+From the parent directory, type
 
 	$ python -m pytest
 
-### Updating Documentation:
+This will run all unit tests for the package
+
+<!-- ### Updating Documentation:
 1. If not installed in environment: pip install sphinx and numpydocs
-2. Using Anaconda prompt navigate to docs directory and run:
+2. navigate to docs directory and run:
 
 
 	$ make html
 
 ### Contact Information
-To get in touch with Ecotope Inc. go here: http://ecotope.com/contact/
+To get in touch with Ecotope Inc. go here: http://ecotope.com/contact/ -->
