@@ -9,13 +9,13 @@ from plotly.subplots import make_subplots
 
 class SwingTank(SystemConfig):
 
-    #Sizing tables, likely won't need anymore? TODO
+    #Assuming that these swing sizing methodologies will be dropped in next code cycle so they likely can be removed, it not we will need to implement additional swing sizing
     Table_Napts = [0, 12, 24, 48, 96]
-    sizingTable_EMASHRAE = ["80", "80", "80", "120 - 300", "120 - 300"]
-    sizingTable_CA = ["80", "96", "168", "288", "480"]
-    sizingTable = [40, 50, 80, 100, 120, 150, 160, 175, 200, 240, 250, 320, 350, 400, 440, 480]
+    #sizingTable_EMASHRAE = ["80", "80", "80", "120 - 300", "120 - 300"]
+    #sizingTable_CA = ["80", "96", "168", "288", "480"]
+    sizingTable = [40, 50, 80, 100, 120, 160, 175, 240, 350] #multiples of standard tank sizes
 
-    def __init__(self, safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
+    def __init__(self, safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract,
                  doLoadShift = False, cdf_shift = 1, schedule = None, CA = False):
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
@@ -23,11 +23,15 @@ class SwingTank(SystemConfig):
         # check building because recirc losses needed before super().__init__()
         if not isinstance(building, Building):
             raise Exception("Error: Building is not valid.")
-        
+        #check if recirc losses require tank larger than 350 gallons
+        if building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR) > max(self.sizingTable):
+            raise Exception("Recirculation losses are too high, consider using multiple central plants.")
+
         self.safetyTM = safetyTM
-        self.TMVol_G = 300 # TODO Scott to figure out table stuff for self.TMVol_G use 120 for now TODO had to set to 300
+        self.TMVol_G = min([x for x in self.sizingTable if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
         self.element_deadband_F = 8.
         self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
+        
         super().__init__(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                  doLoadShift, cdf_shift, schedule)
     
