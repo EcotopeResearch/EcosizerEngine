@@ -27,13 +27,6 @@ class SwingTank(SystemConfig):
         if building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR) > max(self.sizingTable):
             raise Exception("Recirculation losses are too high, consider using multiple central plants.")
 
-        #catch cases where recirc losses are too high and swing tank would be larger than 350 gallons - two central plants should be used
-        #try: 
-        #    self.TMVol_G = min([x for x in self.sizingTable if x > (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
-        #except ValueError:
-        #    print("Recirculation losses are too high, consider using multiple central plants.")
-        #   exit()
-
         self.safetyTM = safetyTM
         self.TMVol_G = min([x for x in self.sizingTable if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
         self.element_deadband_F = 8.
