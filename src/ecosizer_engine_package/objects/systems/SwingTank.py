@@ -23,15 +23,19 @@ class SwingTank(SystemConfig):
         # check building because recirc losses needed before super().__init__()
         if not isinstance(building, Building):
             raise Exception("Error: Building is not valid.")
-        
+        #check if recirc losses require tank larger than 350 gallons
+        if building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR) > max(self.sizingTable):
+            raise Exception("Recirculation losses are too high, consider using multiple central plants.")
+
         #catch cases where recirc losses are too high and swing tank would be larger than 350 gallons - two central plants should be used
-        try: 
-            self.TMVol_G = min([x for x in self.sizingTable if x > (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
-        except ValueError:
-            print("Recirculation losses are too high, consider using multiple central plants.")
-            exit()
-            self.safetyTM = safetyTM
+        #try: 
+        #    self.TMVol_G = min([x for x in self.sizingTable if x > (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
+        #except ValueError:
+        #    print("Recirculation losses are too high, consider using multiple central plants.")
+        #   exit()
+
         self.safetyTM = safetyTM
+        self.TMVol_G = min([x for x in self.sizingTable if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
         self.element_deadband_F = 8.
         self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
         
