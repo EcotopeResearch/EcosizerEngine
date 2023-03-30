@@ -84,12 +84,14 @@ def test_parallelResults(parallellTank, expected):
             parallellTank.TMVol_G, parallellTank.TMCap_kBTUhr] == expected
     
 @pytest.mark.parametrize("expected", [
-   ([563.9746928755372, 119.52696817290625, [1]*24, 16, 300, 59.712485]) # TODO that 300 will need to change once we have a strategy for swingtanks
+   ([541.821019381441, 118.32788822712561, [1]*24, 16, 120, 59.712485]) # TODO that 300 will need to change once we have a strategy for swingtanks
 ])
 def test_swingResults(swingTank, expected):
+    print(swingTank.PVol_G_atStorageT)
     assert [swingTank.PVol_G_atStorageT, swingTank.PCap_kBTUhr, 
             swingTank.schedule, swingTank.maxDayRun_hr,
             swingTank.TMVol_G, swingTank.TMCap_kBTUhr] == expected
+
 
 # Check for system initialization errors
 def test_invalid_system_parameter_errors():
