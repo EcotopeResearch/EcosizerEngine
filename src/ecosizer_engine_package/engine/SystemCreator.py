@@ -15,7 +15,7 @@ def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable,
         Building object the HPWH system will be sized for.
     storageT_F : float 
         The hot water storage temperature. [°F]
-   defrostFactor : float 
+    defrostFactor : float 
         A multipier used to account for defrost in the final heating capacity. Default equals 1.
     percentUseable : float
         The fraction of the storage volume that can be filled with hot water.

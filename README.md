@@ -91,7 +91,7 @@ From the parent directory, type
 
 This will run all unit tests for the package
 
-<!-- ### Updating Documentation:
+### Updating Documentation:
 1. If not installed in environment: pip install sphinx and numpydocs
 2. navigate to docs directory and run:
 
@@ -99,4 +99,4 @@ This will run all unit tests for the package
 	$ make html
 
 ### Contact Information
-To get in touch with Ecotope Inc. go here: http://ecotope.com/contact/ -->
+To get in touch with Ecotope Inc. go here: http://ecotope.com/contact/

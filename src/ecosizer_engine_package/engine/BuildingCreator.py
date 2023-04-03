@@ -39,6 +39,7 @@ def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadsh
     Raises
     ----------
     Exception: Error if building_type is not in list of valid building_type names.
+    
     """
 
     # handle multiuse buildings

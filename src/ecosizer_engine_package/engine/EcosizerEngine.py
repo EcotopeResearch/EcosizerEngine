@@ -6,71 +6,72 @@ print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, an
 
 class EcosizerEngine:
 
+    """
+    Initializes and sizes the HPWH system for a building based on the given parameters.
+
+    Attributes
+    ----------
+    incomingT_F : float 
+        The incoming city water temperature on the design day. [°F]
+    magnitude_stat : int or list
+        a number that will be used to assess the magnitude of the building based on the building type
+    supplyT_F : float
+        The hot water supply temperature.[°F]
+    storageT_F : float 
+        The hot water storage temperature. [°F]
+    percentUseable : float
+        The fraction of the storage volume that can be filled with hot water.
+    aquaFract: float
+        The fraction of the total hieght of the primary hot water tanks at which the Aquastat is located.
+    schematic : String
+        Indicates schematic type. Valid values are 'swingtank', 'paralleltank', and 'primary'
+    building_type : string or list
+        a string indicating the type of building we are sizing for (e.g. "multi_family", "office_building", etc.)
+    loadShape : ndarray
+        defaults to design load shape for building type.
+    avgLoadShape : ndarray
+        defaults to average load shape for building type.
+    schedule : array_like
+        List or array of 0's and 1's for don't run and run respectively. Used for load shifting
+    cdf_shift: float
+        Percentage of days the load shift will be met
+    returnT_F : float 
+        The water temperature returning from the recirculation loop. [°F]
+    flow_rate : float 
+        The pump flow rate of the recirculation loop. (GPM)
+    gpdpp : float
+        The volume of water in gallons at 120F each person uses per dat.[°F]
+    nBR : array_like
+        A list of the number of units by size in the order 0 bedroom units,
+        1 bedroom units, 2 bedroom units, 3 bedroom units, 4 bedroom units,
+        5 bedroom units.
+    safetyTM : float
+        The saftey factor for the temperature maintenance system.
+    defrostFactor : float 
+        A multipier used to account for defrost in the final heating capacity. Default equals 1.
+    compRuntime_hr : float
+        The number of hours the compressor will run on the design day. [Hr]
+    nApt: integer
+        The number of apartments. Use with Qdot_apt to determine total recirculation losses. (For multi-falmily buildings)
+    Wapt:  float
+        Watts of heat lost in through recirculation piping system. Used with N_apt to determine total recirculation losses. (For multi-falmily buildings)  
+    doLoadShift : boolean
+        Set to true if doing loadshift
+    setpointTM_F : float
+        The setpoint of the temprature maintence tank. Defaults to 130 °F.
+    TMonTemp_F : float
+        The temperature where parallel loop tank will turn on.
+        Defaults to 120 °F.
+    offTime_hr: integer
+        Maximum hours per day the temperature maintenance equipment can run.
+
+    """
+
     def __init__(self, incomingT_F, magnitude_stat, supplyT_F, storageT_F, percentUseable, aquaFract, 
                             schematic, building_type, loadshape = None, avgLoadshape = None, schedule = None, cdf_shift = 1,
                             returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, CA = False):
-        """
-        Initializes and sizes the HPWH system for a building based on the given parameters.
-
-        Attributes
-        ----------
-        incomingT_F : float 
-            The incoming city water temperature on the design day. [°F]
-        magnitude_stat : int or list
-            a number that will be used to assess the magnitude of the building based on the building type
-        supplyT_F : float
-            The hot water supply temperature.[°F]
-        storageT_F : float 
-            The hot water storage temperature. [°F]
-        percentUseable : float
-            The fraction of the storage volume that can be filled with hot water.
-        aquaFract: float
-            The fraction of the total hieght of the primary hot water tanks at which the Aquastat is located.
-        schematic : String
-            Indicates schematic type. Valid values are 'swingtank', 'paralleltank', and 'primary'
-        building_type : string or list
-            a string indicating the type of building we are sizing for (e.g. "multi_family", "office_building", etc.)
-        loadShape : ndarray
-            defaults to design load shape for building type.
-        avgLoadShape : ndarray
-            defaults to average load shape for building type.
-        schedule : array_like
-            List or array of 0's and 1's for don't run and run respectively. Used for load shifting
-        cdf_shift: float
-            Percentage of days the load shift will be met
-        returnT_F : float 
-            The water temperature returning from the recirculation loop. [°F]
-        flow_rate : float 
-            The pump flow rate of the recirculation loop. (GPM)
-        gpdpp : float
-            The volume of water in gallons at 120F each person uses per dat.[°F]
-        nBR : array_like
-            A list of the number of units by size in the order 0 bedroom units,
-            1 bedroom units, 2 bedroom units, 3 bedroom units, 4 bedroom units,
-            5 bedroom units.
-        safetyTM : float
-            The saftey factor for the temperature maintenance system.
-        defrostFactor : float 
-            A multipier used to account for defrost in the final heating capacity. Default equals 1.
-        compRuntime_hr : float
-            The number of hours the compressor will run on the design day. [Hr]
-        nApt: integer
-            The number of apartments. Use with Qdot_apt to determine total recirculation losses. (For multi-falmily buildings)
-        Wapt:  float
-            Watts of heat lost in through recirculation piping system. Used with N_apt to determine total recirculation losses. (For multi-falmily buildings)  
-        doLoadShift : boolean
-            Set to true if doing loadshift
-        setpointTM_F : float
-            The setpoint of the temprature maintence tank. Defaults to 130 °F.
-        TMonTemp_F : float
-            The temperature where parallel loop tank will turn on.
-            Defaults to 120 °F.
-        offTime_hr: integer
-            Maximum hours per day the temperature maintenance equipment can run.
-
-        """
         
         building = createBuilding( incomingT_F     = incomingT_F,
                                     magnitude_stat  = magnitude_stat, 
