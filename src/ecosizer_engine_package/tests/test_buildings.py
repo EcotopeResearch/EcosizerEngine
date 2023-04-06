@@ -3,6 +3,7 @@ from ecosizer_engine_package.engine.BuildingCreator import createBuilding
 import numpy as np
 import os, sys
 from ecosizer_engine_package.constants.Constants import *
+import re
 
 class QuietPrint:
     def __enter__(self):
@@ -138,6 +139,16 @@ def test_custom_loadshapes(loadShape, buildingType, magnitude, expected):
 
 # Check for building initialization errors
 def test_invalid_building_parameter_errors():
+    with pytest.raises(Exception, match="Error: Number of apartments must be an integer."):
+        createBuilding(35, 4, 120, "multi_family", nApt='blah')
+    with pytest.raises(Exception, match="Error: WATTs per apt must be an integer."):
+        createBuilding(35, 4, 120, "multi_family", Wapt='blah')
+    with pytest.raises(Exception, match="Error: GPDPP must be a number."):
+        createBuilding(35, 4, 120, "multi_family", gpdpp=None)
+    with pytest.raises(Exception, match=re.escape("Error: standardGPD must be a String of one of the following values: ['ca', 'ashLow', 'ashMed', 'ecoMark']")):
+        createBuilding(35, 4, 120, "multi_family", gpdpp=25, standardGPD=5)
+    with pytest.raises(Exception, match=re.escape("Error: standardGPD must be a String of one of the following values: ['ca', 'ashLow', 'ashMed', 'ecoMark']")):
+        createBuilding(35, 4, 120, "multi_family", gpdpp=25, standardGPD='yabadabado')
     with pytest.raises(Exception, match="No default loadshape found for building type climbing_gym."):
         createBuilding(35, 4, 120, "climbing_gym")
     with pytest.raises(Exception, match="Loadshape must be of length 24 but instead has length of 5."):

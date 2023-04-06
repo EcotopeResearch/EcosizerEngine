@@ -105,7 +105,7 @@ class MultiFamily(Building):
             raise Exception("Error: WATTs per apt must be an integer.")
         if standardGPD is None:
             if not (isinstance(gpdpp, int) or isinstance(gpdpp, float)):
-                raise Exception("Error: GPDPP must be a number or sting representing the default GGPD statistic to use.")
+                raise Exception("Error: GPDPP must be a number.")
         else:
             if isinstance(standardGPD, str) and standardGPD in possibleStandardGPDs: # if the input here is a string get the appropriate standard gpdpp
                 with open(os.path.join(os.path.dirname(__file__), '../data/load_shapes/multi_family.json')) as json_file:
@@ -127,7 +127,7 @@ class MultiFamily(Building):
                     else:
                         gpdpp = dataDict['gpdpp'][standardGPD][0]
             else:
-                raise Exception("Error: standardGPD must be a String of one of the following values: " + possibleStandardGPDs)
+                raise Exception("Error: standardGPD must be a String of one of the following values: " + str(possibleStandardGPDs))
             
         self.magnitude = gpdpp * n_people # gpdpp * number_of_people
 
