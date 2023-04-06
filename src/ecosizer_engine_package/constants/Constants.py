@@ -12,3 +12,5 @@ tmCompMinimumRunTime = 20./60.
 
 norm_mean = 0.7052988591269841 # mean of normalized stream data
 norm_std = 0.08236427664525116 # standard deviation of normalized stream data
+
+possibleStandardGPDs = ['ca', 'ashLow', 'ashMed', 'ecoMark']

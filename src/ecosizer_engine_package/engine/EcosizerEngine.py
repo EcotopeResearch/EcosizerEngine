@@ -63,15 +63,16 @@ class EcosizerEngine:
         The temperature where parallel loop tank will turn on.
         Defaults to 120 °F.
     offTime_hr: integer
-        Maximum hours per day the temperature maintenance equipment can run.
-
+        Maximum hours per day the temperature maintenance equipment can run
+    standardGPD : string
+        indicates whether to use a standard gpdpp specification for multi-family buildings. Set to None if not using a standard gpdpp.
     """
 
     def __init__(self, incomingT_F, magnitude_stat, supplyT_F, storageT_F, percentUseable, aquaFract, 
                             schematic, building_type, loadshape = None, avgLoadshape = None, schedule = None, cdf_shift = 1,
                             returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
-                            setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, CA = False):
+                            setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None):
         
         building = createBuilding( incomingT_F     = incomingT_F,
                                     magnitude_stat  = magnitude_stat, 
@@ -84,7 +85,8 @@ class EcosizerEngine:
                                     gpdpp           = gpdpp,
                                     nBR             = nBR,
                                     nApt            = nApt,
-                                    Wapt            = Wapt
+                                    Wapt            = Wapt,
+                                    standardGPD     = standardGPD
         )
 
         system = createSystem(  schematic, 
@@ -100,8 +102,7 @@ class EcosizerEngine:
                                 safetyTM = safetyTM, 
                                 setpointTM_F = setpointTM_F, 
                                 TMonTemp_F = TMonTemp_F, 
-                                offTime_hr = offTime_hr, 
-                                CA = CA
+                                offTime_hr = offTime_hr
         )
  
         self.system = system

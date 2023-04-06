@@ -1,39 +1,31 @@
-from ecosizer_engine_package import *
-# from engine.BuildingCreator import createBuilding
+from ecosizer_engine_package import EcosizerEngine
 
-building = createBuilding(
-            incomingT_F     = 50,
-            magnitude_stat  = [100,5],
-            supplyT_F       = 120,
-            building_type   = ["womens_dorm", "junior_high"],
-            flow_rate       = 5,
-            returnT_F       = 100,
-    )
+hpwh = EcosizerEngine(  incomingT_F     = 50,
+                    magnitude_stat  = 30,
+                    supplyT_F       = 120,
+                    storageT_F      = 150,
+                    percentUseable  = 0.8, 
+                    aquaFract       = 0.4, 
+                    schematic       = 'primary', 
+                    building_type   = 'multi_family',
+                    returnT_F       = 0, 
+                    flow_rate       = 0,
+                    gpdpp           = 25,
+                    safetyTM        = 1.75,
+                    defrostFactor   = 1, 
+                    compRuntime_hr  = 16, 
+                    nApt            = 30, 
+                    Wapt            = 100,
+                    schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1], #loadshift schedule
+                    doLoadShift     = True,
+                    cdf_shift       = 0.8
+)
 
-# swinghpwh = EcosizerEngine(  incomingT_F     = 50,
-#                     magnitude_stat  = 100,
-#                     supplyT_F       = 120,
-#                     storageT_F      = 150,
-#                     percentUseable  = 0.8, 
-#                     aquaFract       = 0.4, 
-#                     schematic       = 'primary', 
-#                     building_type   = 'multi_family',
-#                     returnT_F       = 0, 
-#                     flow_rate       = 0,
-#                     gpdpp           = 25,
-#                     safetyTM        = 1.75,
-#                     defrostFactor   = 1, 
-#                     compRuntime_hr  = 16, 
-#                     nApt            = 100, 
-#                     Wapt            = 100,
-#                     schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
-#                     doLoadShift     = True,
-#                     cdf_shift       = 0.8
-# )
+outlist = hpwh.getSizingResults()
+[x_data, y_data, hours, recInd] = hpwh.primaryCurve()
+plotSimDiv = hpwh.plotStorageLoadSim()
 
-# outlist = swinghpwh.getSizingResults()
-
-# print("Heating capacity (PCap_kBTUhr)", outlist[1])
+print("Heating capacity (PCap_kBTUhr)", outlist[1])
 # # print("Swing Tank Volume (TMVol_G)", outlist[2])
 # print("Tank Volume (PVol_G_atStorageT)",outlist[0])
 # # print("Swing Resistance Element (TMCap_kBTUhr)", outlist[3])

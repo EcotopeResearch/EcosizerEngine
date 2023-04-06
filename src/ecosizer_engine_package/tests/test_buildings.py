@@ -37,8 +37,9 @@ def multiFamilyWithBedrooms(): # Returns the hpwh swing tank
             building_type   = 'multi_family',
             nApt            = 100, 
             Wapt            = 100,
-            gpdpp           = 'ca',
-            nBR             = [0,1,5,3,2,0]
+            gpdpp           = 100,
+            nBR             = [0,1,5,3,2,0],
+            standardGPD     = 'ca'
         )
     return building
 
