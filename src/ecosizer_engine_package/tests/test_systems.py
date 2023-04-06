@@ -14,9 +14,9 @@ class QuietPrint:
 
 default_building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = 100,
+            magnitudeStat  = 100,
             supplyT_F       = 120,
-            building_type   = 'multi_family',
+            buildingType   = 'multi_family',
             nApt            = 100, 
             Wapt            = 100,
             gpdpp           = 25
@@ -73,14 +73,14 @@ def swingTank(): # Returns the hpwh swing tank
    ([467.6418425, 91.3667890625, [1]*24, 16])
 ])
 def test_primaryResults(simplePrimary, expected):
-    assert [simplePrimary.PVol_G_atStorageT, simplePrimary.PCap_kBTUhr, simplePrimary.schedule, simplePrimary.maxDayRun_hr] == expected
+    assert [simplePrimary.PVol_G_atStorageT, simplePrimary.PCap_kBTUhr, simplePrimary.loadShiftSchedule, simplePrimary.maxDayRun_hr] == expected
 
 @pytest.mark.parametrize("expected", [
    ([467.6418425, 91.3667890625, [1]*24, 16, 90.67963730324946, 59.712485])
 ])
 def test_parallelResults(parallellTank, expected):
     assert [parallellTank.PVol_G_atStorageT, parallellTank.PCap_kBTUhr, 
-            parallellTank.schedule, parallellTank.maxDayRun_hr,
+            parallellTank.loadShiftSchedule, parallellTank.maxDayRun_hr,
             parallellTank.TMVol_G, parallellTank.TMCap_kBTUhr] == expected
     
 @pytest.mark.parametrize("expected", [
@@ -88,7 +88,7 @@ def test_parallelResults(parallellTank, expected):
 ])
 def test_swingResults(swingTank, expected):
     assert [swingTank.PVol_G_atStorageT, swingTank.PCap_kBTUhr, 
-            swingTank.schedule, swingTank.maxDayRun_hr,
+            swingTank.loadShiftSchedule, swingTank.maxDayRun_hr,
             swingTank.TMVol_G, swingTank.TMCap_kBTUhr] == expected
 
 
@@ -110,8 +110,8 @@ def test_invalid_system_parameter_errors():
         createSystem("swingtank", default_building, 150, 1, 0.8, 25, 0.4)
     with pytest.raises(Exception, match="Invalid input given for aquaFract must, be a number between 0 and 1."):
         createSystem("swingtank", default_building, 150, 1, 0.8, 16, 0.)
-    with pytest.raises(Exception, match="Invalid input given for cdf_shift, must be a number between 0 and 1."):
-        createSystem("swingtank", default_building, 150, 1, 0.8, 16, 0.4, cdf_shift = 'eighteen')
+    with pytest.raises(Exception, match="Invalid input given for loadShiftPercent, must be a number between 0 and 1."):
+        createSystem("swingtank", default_building, 150, 1, 0.8, 16, 0.4, loadShiftPercent = 'eighteen')
     with pytest.raises(Exception, match="Invalid input given for doLoadShift, must be a boolean."):
         createSystem("swingtank", default_building, 150, 1, 0.8, 16, 0.4, doLoadShift = 'eighteen')
     with pytest.raises(Exception, match="The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses."):

@@ -1,7 +1,7 @@
 from ecosizer_engine_package.objects.Building import *
 import numpy as np
 
-def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadshape = None, avgLoadshape = None,
+def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshape = None, avgLoadshape = None,
                     returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0, standardGPD = None):
     
     """
@@ -11,11 +11,11 @@ def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadsh
     ----------
     incomingT_F : float 
         The incoming city water temperature on the design day. [°F]
-    magnitude_stat : int or list
+    magnitudeStat : int or list
         a number that will be used to assess the magnitude of the building based on the building type
     supplyT_F : float
         The hot water supply temperature.[°F]
-    building_type : string or list
+    buildingType : string or list
         a string indicating the type of building we are sizing for (e.g. "multi_family", "office_building", etc.)
     loadShape : ndarray
         defaults to design load shape for building type.
@@ -40,72 +40,72 @@ def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadsh
 
     Raises
     ----------
-    Exception: Error if building_type is not in list of valid building_type names.
+    Exception: Error if buildingType is not in list of valid buildingType names.
 
     """
 
     # handle multiuse buildings
-    if isinstance(building_type, list):
-        if len(building_type) == 1:
-            building_type = building_type[0]
+    if isinstance(buildingType, list):
+        if len(buildingType) == 1:
+            buildingType = buildingType[0]
         else:
-            if not isinstance(magnitude_stat, list) or len(building_type) != len(magnitude_stat):
-                raise Exception("Missing values for multi-use building. Collected " + str(len(building_type)) + " building types but collected " + 
-                                ("1" if not isinstance(magnitude_stat, list) else str(len(magnitude_stat)))+ " magnitude varriables")
+            if not isinstance(magnitudeStat, list) or len(buildingType) != len(magnitudeStat):
+                raise Exception("Missing values for multi-use building. Collected " + str(len(buildingType)) + " building types but collected " + 
+                                ("1" if not isinstance(magnitudeStat, list) else str(len(magnitudeStat)))+ " magnitude varriables")
             building_list = []
-            for i in range(len(building_type)):
-                building_list.append(createBuilding(incomingT_F, magnitude_stat[i], supplyT_F, building_type[i], loadshape, avgLoadshape,
+            for i in range(len(buildingType)):
+                building_list.append(createBuilding(incomingT_F, magnitudeStat[i], supplyT_F, buildingType[i], loadshape, avgLoadshape,
                         returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt))
             return MultiUse(building_list, incomingT_F, supplyT_F, returnT_F, flow_rate)
     
     #only one building type so there should only be one magnitude statistic 
-    if isinstance(magnitude_stat, list):
-        if len(magnitude_stat) == 1:
-            magnitude_stat = magnitude_stat[0]
+    if isinstance(magnitudeStat, list):
+        if len(magnitudeStat) == 1:
+            magnitudeStat = magnitudeStat[0]
         else:
-            raise Exception("Missing values for multi-use building. Collected 1 building type but collected " + str(len(magnitude_stat)) + " magnitude varriables")
+            raise Exception("Missing values for multi-use building. Collected 1 building type but collected " + str(len(magnitudeStat)) + " magnitude varriables")
     
-    if not isinstance(building_type, str):
-            raise Exception("building_type must be a string.")
+    if not isinstance(buildingType, str):
+            raise Exception("buildingType must be a string.")
     
     # check custom loadshape or install standard loadshape
     if(loadshape is None):
-        loadshape = getLoadShape(building_type)
+        loadshape = getLoadShape(buildingType)
     else:
         checkLoadShape(loadshape)
     if(avgLoadshape is None):
-        avgLoadshape = getLoadShape(building_type, 'Stream_Avg')
+        avgLoadshape = getLoadShape(buildingType, 'Stream_Avg')
     else:
         checkLoadShape(avgLoadshape)
 
     loadshape = np.array(loadshape) # TODO - this changes values of loadshape a bit, show this to scott
     avgLoadshape = np.array(avgLoadshape) # TODO - this changes values of loadshape a bit, show this to scott
 
-    match building_type:
+    match buildingType:
         case 'apartment':
-            return Apartment(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return Apartment(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'elementary_school':
-            return ElementarySchool(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return ElementarySchool(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'food_service_a':
-            return FoodServiceA(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return FoodServiceA(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'food_service_b':
-            return FoodServiceB(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return FoodServiceB(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'junior_high':
-            return JuniorHigh(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return JuniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'mens_dorm':
-            return MensDorm(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return MensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'motel':
-            return Motel(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return Motel(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'nursing_home':
-            return NursingHome(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return NursingHome(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'office_building':
-            return OfficeBuilding(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return OfficeBuilding(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'senior_high':
-            return SeniorHigh(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return SeniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'womens_dorm':
-            return WomensDorm(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return WomensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'multi_family':
-            return MultiFamily(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt, standardGPD)
+            return MultiFamily(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt, standardGPD)
         case _:
             raise Exception("Unrecognized building type.")
         

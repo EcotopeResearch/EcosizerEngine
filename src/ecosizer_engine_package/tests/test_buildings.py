@@ -19,9 +19,9 @@ def multiFamily(): # Returns the hpwh swing tank
     with QuietPrint():
         building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = 100,
+            magnitudeStat  = 100,
             supplyT_F       = 120,
-            building_type   = 'multi_family',
+            buildingType   = 'multi_family',
             nApt            = 100, 
             Wapt            = 100,
             gpdpp           = 25
@@ -33,9 +33,9 @@ def multiFamilyWithBedrooms(): # Returns the hpwh swing tank
     with QuietPrint():
         building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = 100,
+            magnitudeStat  = 100,
             supplyT_F       = 120,
-            building_type   = 'multi_family',
+            buildingType   = 'multi_family',
             nApt            = 100, 
             Wapt            = 100,
             gpdpp           = 100,
@@ -49,9 +49,9 @@ def nursingHomeAndOffice(): # Returns the hpwh swing tank
     with QuietPrint():
         building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = [100, 75],
+            magnitudeStat  = [100, 75],
             supplyT_F       = 120,
-            building_type   = ['nursing_home','office_building'],
+            buildingType   = ['nursing_home','office_building'],
             returnT_F       = 100, 
             flow_rate       = 5
         )
@@ -96,9 +96,9 @@ def test_multiUseResults(nursingHomeAndOffice, expected):
 def test_magnitudes(buildingType, magnitude, expected):
     building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = magnitude,
+            magnitudeStat  = magnitude,
             supplyT_F       = 120,
-            building_type   = buildingType,
+            buildingType   = buildingType,
             flow_rate       = 5,
             returnT_F       = 100,
     )
@@ -113,9 +113,9 @@ def test_magnitudes(buildingType, magnitude, expected):
 def test_default_loadshapes(buildingType, magnitude, expected):
     building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = magnitude,
+            magnitudeStat  = magnitude,
             supplyT_F       = 120,
-            building_type   = buildingType,
+            buildingType   = buildingType,
             flow_rate       = 5,
             returnT_F       = 100,
     )
@@ -128,9 +128,9 @@ def test_default_loadshapes(buildingType, magnitude, expected):
 def test_custom_loadshapes(loadShape, buildingType, magnitude, expected):
     building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = magnitude,
+            magnitudeStat  = magnitude,
             supplyT_F       = 120,
-            building_type   = buildingType,
+            buildingType   = buildingType,
             flow_rate       = 5,
             returnT_F       = 100,
             loadshape       = loadShape

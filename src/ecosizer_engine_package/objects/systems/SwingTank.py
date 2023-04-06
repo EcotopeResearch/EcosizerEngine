@@ -14,7 +14,7 @@ class SwingTank(SystemConfig):
     sizingTable = [40, 50, 80, 100, 120, 160, 175, 240, 350] #multiples of standard tank sizes
 
     def __init__(self, safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract,
-                 doLoadShift = False, cdf_shift = 1, schedule = None):
+                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None):
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
@@ -31,7 +31,7 @@ class SwingTank(SystemConfig):
         self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
         
         super().__init__(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                 doLoadShift, cdf_shift, schedule)
+                 doLoadShift, loadShiftPercent, loadShiftSchedule)
     
     def getSizingResults(self):
         """

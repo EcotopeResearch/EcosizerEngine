@@ -20,13 +20,13 @@ def swing_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
         hpwh = EcosizerEngine(
             incomingT_F     = 50,
-            magnitude_stat  = 100,
+            magnitudeStat  = 100,
             supplyT_F       = 120,
             storageT_F      = 150,
             percentUseable  = 0.8, 
             aquaFract       = 0.4, 
             schematic       = 'swingtank', 
-            building_type   = 'multi_family',
+            buildingType   = 'multi_family',
             returnT_F       = 0, 
             flow_rate       = 0,
             gpdpp           = 25,
@@ -35,9 +35,9 @@ def swing_sizer(): # Returns the hpwh swing tank
             compRuntime_hr  = 16, 
             nApt            = 100, 
             Wapt            = 100,
-            schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
             doLoadShift     = True,
-            cdf_shift       = 0.8
+            loadShiftPercent       = 0.8
         )
     return hpwh
 
@@ -46,13 +46,13 @@ def parallel_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
         hpwh = EcosizerEngine(
             incomingT_F     = 50,
-            magnitude_stat  = 100,
+            magnitudeStat  = 100,
             supplyT_F       = 120,
             storageT_F      = 150,
             percentUseable  = 0.8, 
             aquaFract       = 0.4, 
             schematic       = 'paralleltank', 
-            building_type   = 'multi_family',
+            buildingType   = 'multi_family',
             returnT_F       = 0, 
             flow_rate       = 0,
             gpdpp           = 25,
@@ -61,9 +61,9 @@ def parallel_sizer(): # Returns the hpwh swing tank
             compRuntime_hr  = 16, 
             nApt            = 100, 
             Wapt            = 100,
-            schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
             doLoadShift     = True,
-            cdf_shift       = 0.8,
+            loadShiftPercent       = 0.8,
             setpointTM_F    = 130,
             TMonTemp_F      = 120,
             offTime_hr      = 0.333
@@ -75,13 +75,13 @@ def primary_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
         hpwh = EcosizerEngine(
             incomingT_F     = 50,
-            magnitude_stat  = 100,
+            magnitudeStat  = 100,
             supplyT_F       = 120,
             storageT_F      = 150,
             percentUseable  = 0.8, 
             aquaFract       = 0.4, 
             schematic       = 'primary', 
-            building_type   = 'multi_family',
+            buildingType   = 'multi_family',
             returnT_F       = 0, 
             flow_rate       = 0,
             gpdpp           = 25,
@@ -90,9 +90,9 @@ def primary_sizer(): # Returns the hpwh swing tank
             compRuntime_hr  = 16, 
             nApt            = 100, 
             Wapt            = 100,
-            schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
             doLoadShift     = True,
-            cdf_shift       = 0.8
+            loadShiftPercent       = 0.8
         )
     return hpwh
 

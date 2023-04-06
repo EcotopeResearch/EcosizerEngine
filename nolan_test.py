@@ -1,13 +1,13 @@
 from ecosizer_engine_package import EcosizerEngine
 
 hpwh = EcosizerEngine(  incomingT_F     = 50,
-                    magnitude_stat  = 30,
+                    magnitudeStat  = 30,
                     supplyT_F       = 120,
                     storageT_F      = 150,
                     percentUseable  = 0.8, 
                     aquaFract       = 0.4, 
                     schematic       = 'primary', 
-                    building_type   = 'multi_family',
+                    buildingType   = 'multi_family',
                     returnT_F       = 0, 
                     flow_rate       = 0,
                     gpdpp           = 25,
@@ -16,9 +16,9 @@ hpwh = EcosizerEngine(  incomingT_F     = 50,
                     compRuntime_hr  = 16, 
                     nApt            = 30, 
                     Wapt            = 100,
-                    schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1], #loadshift schedule
+                    loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1], #loadshift schedule
                     doLoadShift     = True,
-                    cdf_shift       = 0.8
+                    loadShiftPercent       = 0.8
 )
 
 outlist = hpwh.getSizingResults()
@@ -39,13 +39,13 @@ print("Heating capacity (PCap_kBTUhr)", outlist[1])
 # print("========================================================================================================")
 
 # parallelhpwh = EcosizerEngine(  incomingT_F     = 50,
-#                     magnitude_stat  = 100,
+#                     magnitudeStat  = 100,
 #                     supplyT_F       = 120,
 #                     storageT_F      = 150,
 #                     percentUseable  = 0.8, 
 #                     aquaFract       = 0.4, 
 #                     schematic       = 'paralleltank', 
-#                     building_type   = 'multi_family',
+#                     buildingType   = 'multi_family',
 #                     returnT_F       = 0, 
 #                     flow_rate       = 0,
 #                     gpdpp           = 25,
@@ -54,9 +54,9 @@ print("Heating capacity (PCap_kBTUhr)", outlist[1])
 #                     compRuntime_hr  = 16, 
 #                     nApt            = 100, 
 #                     Wapt            = 100,
-#                     schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+#                     loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
 #                     doLoadShift     = True,
-#                     cdf_shift       = 0.8,
+#                     loadShiftPercent       = 0.8,
 #                     setpointTM_F    = 130,
 #                     TMonTemp_F      = 120,
 #                     offTime_hr      = 0.333
