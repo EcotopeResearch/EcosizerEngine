@@ -1,9 +1,9 @@
 import pytest
-from ecosizer_engine_package.objects.systemConfigUtils import roundList, mixVolume, hrToMinList, getPeakIndices
-import ecosizer_engine_package.engine.EcosizerEngine as EcosizerEngine
+from ecoengine.objects.systemConfigUtils import roundList, mixVolume, hrToMinList, getPeakIndices
+import ecoengine.engine.EcosizerEngine as EcosizerEngine
 import numpy as np
 import os, sys
-from ecosizer_engine_package.constants.Constants import *
+from ecoengine.constants.Constants import *
 from plotly.graph_objs import Figure
 
 class QuietPrint:

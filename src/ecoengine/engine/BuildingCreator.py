@@ -1,4 +1,4 @@
-from ecosizer_engine_package.objects.Building import *
+from ecoengine.objects.Building import *
 import numpy as np
 
 def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshape = None, avgLoadshape = None,

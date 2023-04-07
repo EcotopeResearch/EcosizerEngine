@@ -1,8 +1,8 @@
 import pytest
-from ecosizer_engine_package.engine.BuildingCreator import createBuilding
+from ecoengine.engine.BuildingCreator import createBuilding
 import numpy as np
 import os, sys
-from ecosizer_engine_package.constants.Constants import *
+from ecoengine.constants.Constants import *
 import re
 
 class QuietPrint:

@@ -1,4 +1,4 @@
-from ecosizer_engine_package import EcosizerEngine
+from ecoengine import EcosizerEngine
 
 hpwh = EcosizerEngine(  incomingT_F     = 50,
                     magnitudeStat  = 30,

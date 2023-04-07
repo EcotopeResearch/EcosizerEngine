@@ -1,4 +1,4 @@
-from ecosizer_engine_package.constants.Constants import *
+from ecoengine.constants.Constants import *
 from .Building import Building
 import numpy as np
 from scipy.stats import norm #lognorm
