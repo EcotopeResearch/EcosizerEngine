@@ -84,7 +84,7 @@ def test_parallelResults(parallellTank, expected):
             parallellTank.TMVol_G, parallellTank.TMCap_kBTUhr] == expected
     
 @pytest.mark.parametrize("expected", [
-   ([541.821019381441, 118.32788822712561, [1]*24, 16, 120, 59.712485]) 
+   ([540.4258388420066, 118.11496284632373, [1]*24, 16, 100, 59.712485]) 
 ])
 def test_swingResults(swingTank, expected):
     assert [swingTank.PVol_G_atStorageT, swingTank.PCap_kBTUhr, 

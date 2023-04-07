@@ -74,10 +74,10 @@ class EcosizerEngine:
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None):
         
-        building = createBuilding( incomingT_F     = incomingT_F,
-                                    magnitudeStat  = magnitudeStat, 
+        building = createBuilding(  incomingT_F     = incomingT_F,
+                                    magnitudeStat   = magnitudeStat, 
                                     supplyT_F       = supplyT_F, 
-                                    buildingType   = buildingType,
+                                    buildingType    = buildingType,
                                     loadshape       = loadshape,
                                     avgLoadshape    = avgLoadshape,
                                     returnT_F       = returnT_F, 
@@ -96,13 +96,13 @@ class EcosizerEngine:
                                 percentUseable, 
                                 compRuntime_hr, 
                                 aquaFract, 
-                                doLoadShift = doLoadShift, 
-                                loadShiftPercent = loadShiftPercent, 
-                                loadShiftSchedule = loadShiftSchedule, 
-                                safetyTM = safetyTM, 
-                                setpointTM_F = setpointTM_F, 
-                                TMonTemp_F = TMonTemp_F, 
-                                offTime_hr = offTime_hr
+                                doLoadShift         = doLoadShift, 
+                                loadShiftPercent    = loadShiftPercent, 
+                                loadShiftSchedule   = loadShiftSchedule, 
+                                safetyTM            = safetyTM, 
+                                setpointTM_F        = setpointTM_F, 
+                                TMonTemp_F          = TMonTemp_F, 
+                                offTime_hr          = offTime_hr
         )
  
         self.system = system
@@ -155,3 +155,14 @@ class EcosizerEngine:
             plot_div
         """
         return self.system.plotStorageLoadSim(return_as_div)
+    
+    def getHWMagnitude(self):
+        """
+        Returns the total daily hot water for the building the HPWH is being sized for.
+        
+        Returns
+        -------
+        magnitude : Float
+            The total daily hot water for the building the HPWH is being sized for.
+        """
+        return self.system.building.magnitude
