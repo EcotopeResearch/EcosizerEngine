@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import norm #lognorm
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
-from .systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices, checkLiqudWater, checkHeatHours
+from .systemConfigUtils import roundList, mixVolume, hrToMinList, getPeakIndices, checkLiqudWater, checkHeatHours
 
 class SystemConfig:
     def __init__(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
@@ -160,8 +160,8 @@ class SystemConfig:
         D_hw = self.building.magnitude * self.fract_total_vol * np.tile(loadShapeN, 3)
 
         # To per minute from per hour
-        G_hw = np.array(HRLIST_to_MINLIST(G_hw)) / 60
-        D_hw = np.array(HRLIST_to_MINLIST(D_hw)) / 60
+        G_hw = np.array(hrToMinList(G_hw)) / 60
+        D_hw = np.array(hrToMinList(D_hw)) / 60
 
         # Init the "simulation"
         V0 = np.ceil(Pvolume * self.percentUseable)

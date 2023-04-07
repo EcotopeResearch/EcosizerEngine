@@ -60,7 +60,7 @@ def mixVolume(vol, hotT, coldT, outT):
 
     return vol * fraction
 
-def HRLIST_to_MINLIST(a_list):
+def hrToMinList(a_list):
     """
     Repeats each element of a_list 60 times to go from hourly to minute.
     Still may need other unit conversions to get data from per hour to per minute

@@ -1,5 +1,5 @@
 import pytest
-from ecosizer_engine_package.objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
+from ecosizer_engine_package.objects.systemConfigUtils import roundList, mixVolume, hrToMinList, getPeakIndices
 import ecosizer_engine_package.engine.EcosizerEngine as EcosizerEngine
 import numpy as np
 import os, sys
