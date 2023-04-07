@@ -2,7 +2,7 @@ from ecosizer_engine_package.objects.Building import *
 import numpy as np
 
 def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadshape = None, avgLoadshape = None,
-                    returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0):
+                    returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0, standardGPD = None):
     
     """
     Initializes the building in which the HPWH system will be sized for
@@ -35,11 +35,13 @@ def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadsh
         The number of apartments. Use with Qdot_apt to determine total recirculation losses. (For multi-falmily buildings)
     Wapt:  float
         Watts of heat lost in through recirculation piping system. Used with N_apt to determine total recirculation losses. (For multi-falmily buildings)
+    standardGPD : string
+        indicates whether to use a standard gpdpp specification for multi-family buildings. Set to None if not using a standard gpdpp.
 
     Raises
     ----------
     Exception: Error if building_type is not in list of valid building_type names.
-    
+
     """
 
     # handle multiuse buildings
@@ -103,7 +105,7 @@ def createBuilding(incomingT_F, magnitude_stat, supplyT_F, building_type, loadsh
         case 'womens_dorm':
             return WomensDorm(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         case 'multi_family':
-            return MultiFamily(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt)
+            return MultiFamily(magnitude_stat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt, standardGPD)
         case _:
             raise Exception("Unrecognized building type.")
         

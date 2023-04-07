@@ -97,36 +97,39 @@ class SeniorHigh(Building):
         super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
     
 class MultiFamily(Building):
-    def __init__(self, n_people, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt):
+    def __init__(self, n_people, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt, standardGPD):
         # check inputs
-        if not (isinstance(gpdpp, int) or isinstance(gpdpp, float) or isinstance(gpdpp, str)):
-            raise Exception("Error: GPDPP must be a number or sting representing the default GGPD statistic to use.")
         if not (isinstance(nApt, int)):
             raise Exception("Error: Number of apartments must be an integer.")
         if not (isinstance(Wapt, int)):
             raise Exception("Error: WATTs per apt must be an integer.")
-        with open(os.path.join(os.path.dirname(__file__), '../data/load_shapes/multi_family.json')) as json_file:
-            dataDict = json.load(json_file)
-            # Check if gpdpp is a string and look up by key
-            if isinstance(gpdpp, str): # if the inputs here is a string get the get the gpdpp
+        if standardGPD is None:
+            if not (isinstance(gpdpp, int) or isinstance(gpdpp, float)):
+                raise Exception("Error: GPDPP must be a number.")
+        else:
+            if isinstance(standardGPD, str) and standardGPD in possibleStandardGPDs: # if the input here is a string get the appropriate standard gpdpp
+                with open(os.path.join(os.path.dirname(__file__), '../data/load_shapes/multi_family.json')) as json_file:
+                    dataDict = json.load(json_file)
 
-                if gpdpp.lower() == "ca" :
-                    if nBR is None or not (isinstance(nBR, list) or isinstance(nBR, np.ndarray))or sum(nBR) == 0 or len(nBR) != 6:
-                        raise Exception("Cannot get the gpdpp for the CA data set without knowning the number of units by bedroom size for 0 BR (studios) through 5+ BR, the list must be of length 6 in that order.")
+                    if standardGPD.lower() == "ca" :
+                        if nBR is None or not (isinstance(nBR, list) or isinstance(nBR, np.ndarray))or sum(nBR) == 0 or len(nBR) != 6:
+                            raise Exception("Cannot get the gpdpp for the CA data set without knowning the number of units by bedroom size for 0 BR (studios) through 5+ BR, the list must be of length 6 in that order.")
 
-                    # Count up the gpdpp for each bedroom type
-                    daily_totals = np.zeros(365)
-                    for ii in range(0,6):
-                        daily_totals += nBR[ii] * np.array(dataDict['ca_gpdpp'][str(ii) + "br"]) # daily totals is gpdpp * bedroom
+                        # Count up the gpdpp for each bedroom type
+                        daily_totals = np.zeros(365)
+                        for i in range(0,6):
+                            daily_totals += nBR[i] * np.array(dataDict['ca_gpdpp'][str(i) + "br"]) # daily totals is gpdpp * bedroom
 
-                    # Get the 98th percentile day divide by the number of people rounded up to an integer.
-                    gpdpp = round(np.percentile(daily_totals,98)/ sum(nBR), 1)
+                        # Get the 98th percentile day divide by the number of people rounded up to an integer.
+                        gpdpp = round(np.percentile(daily_totals,98)/ sum(nBR), 1)
 
-                # Else look up by normal key function
-                else:
-                    gpdpp = dataDict['gpdpp'][gpdpp][0] # TODO error handle
+                    # Else look up by normal key function
+                    else:
+                        gpdpp = dataDict['gpdpp'][standardGPD][0]
+            else:
+                raise Exception("Error: standardGPD must be a String of one of the following values: " + str(possibleStandardGPDs))
             
-            self.magnitude = gpdpp * n_people # gpdpp * number_of_people
+        self.magnitude = gpdpp * n_people # gpdpp * number_of_people
 
         super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
         # recalculate recirc_loss with different method if applicable

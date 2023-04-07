@@ -3,7 +3,7 @@ from ecosizer_engine_package.objects.systems.SwingTank import *
 from ecosizer_engine_package.objects.systems.ParallelLoopTank import *
 
 def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift = False, 
-                 cdf_shift = 1, schedule = None, safetyTM = 1.75, setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, CA = False):
+                 cdf_shift = 1, schedule = None, safetyTM = 1.75, setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333):
     """
     Initializes and sizes the HPWH system. Both primary and tempurature maintenance (for parrallel loop and swing tank) are set up in this function.
 
@@ -48,7 +48,7 @@ def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable,
     match schematic:
         case 'swingtank':
             return SwingTank(safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                             doLoadShift, cdf_shift, schedule, CA)        
+                             doLoadShift, cdf_shift, schedule)        
         case 'paralleltank':
             return ParallelLoopTank(safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                  doLoadShift, cdf_shift, schedule)

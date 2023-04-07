@@ -11,12 +11,10 @@ class SwingTank(SystemConfig):
 
     #Assuming that these swing sizing methodologies will be dropped in next code cycle so they likely can be removed, it not we will need to implement additional swing sizing
     Table_Napts = [0, 12, 24, 48, 96]
-    #sizingTable_EMASHRAE = ["80", "80", "80", "120 - 300", "120 - 300"]
-    #sizingTable_CA = ["80", "96", "168", "288", "480"]
     sizingTable = [40, 50, 80, 100, 120, 160, 175, 240, 350] #multiples of standard tank sizes
 
     def __init__(self, safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract,
-                 doLoadShift = False, cdf_shift = 1, schedule = None, CA = False):
+                 doLoadShift = False, cdf_shift = 1, schedule = None):
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
