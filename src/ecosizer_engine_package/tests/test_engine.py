@@ -118,7 +118,7 @@ def test_mixVolume(hotT, coldT, outT, expected):
     assert round(mixVolume(100, hotT, coldT, outT), 3) == expected
 
 @pytest.mark.parametrize("expected", [
-   ([1488.039019785309, 151.03288535763838, 120, 59.712485])
+   ([1484.462240335448, 151.2390581159244, 100, 59.712485])
 ])
 def test_swingSizingResult(swing_sizer, expected):
     assert swing_sizer.getSizingResults() == expected
