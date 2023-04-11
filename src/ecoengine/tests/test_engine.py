@@ -1,9 +1,9 @@
 import pytest
-from ecosizer_engine_package.objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices
-import ecosizer_engine_package.engine.EcosizerEngine as EcosizerEngine
+from ecoengine.objects.systemConfigUtils import roundList, mixVolume, hrToMinList, getPeakIndices
+import ecoengine.engine.EcosizerEngine as EcosizerEngine
 import numpy as np
 import os, sys
-from ecosizer_engine_package.constants.Constants import *
+from ecoengine.constants.Constants import *
 from plotly.graph_objs import Figure
 
 class QuietPrint:
@@ -20,13 +20,13 @@ def swing_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
         hpwh = EcosizerEngine(
             incomingT_F     = 50,
-            magnitude_stat  = 100,
+            magnitudeStat  = 100,
             supplyT_F       = 120,
             storageT_F      = 150,
             percentUseable  = 0.8, 
             aquaFract       = 0.4, 
             schematic       = 'swingtank', 
-            building_type   = 'multi_family',
+            buildingType   = 'multi_family',
             returnT_F       = 0, 
             flow_rate       = 0,
             gpdpp           = 25,
@@ -35,9 +35,9 @@ def swing_sizer(): # Returns the hpwh swing tank
             compRuntime_hr  = 16, 
             nApt            = 100, 
             Wapt            = 100,
-            schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
             doLoadShift     = True,
-            cdf_shift       = 0.8
+            loadShiftPercent       = 0.8
         )
     return hpwh
 
@@ -46,13 +46,13 @@ def parallel_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
         hpwh = EcosizerEngine(
             incomingT_F     = 50,
-            magnitude_stat  = 100,
+            magnitudeStat  = 100,
             supplyT_F       = 120,
             storageT_F      = 150,
             percentUseable  = 0.8, 
             aquaFract       = 0.4, 
             schematic       = 'paralleltank', 
-            building_type   = 'multi_family',
+            buildingType   = 'multi_family',
             returnT_F       = 0, 
             flow_rate       = 0,
             gpdpp           = 25,
@@ -61,9 +61,9 @@ def parallel_sizer(): # Returns the hpwh swing tank
             compRuntime_hr  = 16, 
             nApt            = 100, 
             Wapt            = 100,
-            schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
             doLoadShift     = True,
-            cdf_shift       = 0.8,
+            loadShiftPercent       = 0.8,
             setpointTM_F    = 130,
             TMonTemp_F      = 120,
             offTime_hr      = 0.333
@@ -75,13 +75,13 @@ def primary_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
         hpwh = EcosizerEngine(
             incomingT_F     = 50,
-            magnitude_stat  = 100,
+            magnitudeStat  = 100,
             supplyT_F       = 120,
             storageT_F      = 150,
             percentUseable  = 0.8, 
             aquaFract       = 0.4, 
             schematic       = 'primary', 
-            building_type   = 'multi_family',
+            buildingType   = 'multi_family',
             returnT_F       = 0, 
             flow_rate       = 0,
             gpdpp           = 25,
@@ -90,9 +90,9 @@ def primary_sizer(): # Returns the hpwh swing tank
             compRuntime_hr  = 16, 
             nApt            = 100, 
             Wapt            = 100,
-            schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadShiftSchedule = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
             doLoadShift     = True,
-            cdf_shift       = 0.8
+            loadShiftPercent= 0.8
         )
     return hpwh
 
@@ -117,30 +117,35 @@ def test_getPeakIndices( arr, expected):
 def test_mixVolume(hotT, coldT, outT, expected):
     assert round(mixVolume(100, hotT, coldT, outT), 3) == expected
 
-@pytest.mark.parametrize("expected", [
-   ([1484.462240335448, 151.2390581159244, 100, 59.712485])
+@pytest.mark.parametrize("sizingResult, magnitude", [
+   ([1484.462240335448, 151.2390581159244, 100, 59.712485], 2500)
 ])
-def test_swingSizingResult(swing_sizer, expected):
-    assert swing_sizer.getSizingResults() == expected
+def test_swingSizingResult(swing_sizer, sizingResult, magnitude):
+    assert swing_sizer.getSizingResults() == sizingResult
+    assert swing_sizer.getHWMagnitude() == magnitude
 
-@pytest.mark.parametrize("expected", [
-   ([1122.528466677145, 112.45143269230772])
+@pytest.mark.parametrize("sizingResult, magnitude", [
+   ([1122.528466677145, 112.45143269230772], 2500)
 ])
-def test_primarySizingResult(primary_sizer, expected):
-    assert primary_sizer.getSizingResults() == expected
+def test_primarySizingResult(primary_sizer, sizingResult, magnitude):
+    assert primary_sizer.getSizingResults() == sizingResult
+    assert primary_sizer.getHWMagnitude() == magnitude
 
-@pytest.mark.parametrize("expected", [
-   ([1122.528466677145, 112.45143269230772, 136.0194559548742, 59.712485])
+@pytest.mark.parametrize("sizingResult, magnitude", [
+   ([1122.528466677145, 112.45143269230772, 136.0194559548742, 59.712485], 2500)
 ])
-def test_parallelSizingResult(parallel_sizer, expected):
-    assert parallel_sizer.getSizingResults() == expected
+def test_parallelSizingResult(parallel_sizer, sizingResult, magnitude):
+    assert parallel_sizer.getSizingResults() == sizingResult
+    assert parallel_sizer.getHWMagnitude() == magnitude
 
 @pytest.mark.parametrize("return_as_div, expected", [
    (True, str),
    (False, Figure)
 ])
-def test_figReturnTypes(parallel_sizer, return_as_div, expected):
+def test_figReturnTypes(parallel_sizer, swing_sizer, primary_sizer, return_as_div, expected):
     assert type(parallel_sizer.plotStorageLoadSim(return_as_div)) is expected
+    assert type(swing_sizer.plotStorageLoadSim(return_as_div)) is expected
+    assert type(primary_sizer.plotStorageLoadSim(return_as_div)) is expected
 
 def test_primaryCurve(parallel_sizer):
     primaryCurveInfo = parallel_sizer.primaryCurve()

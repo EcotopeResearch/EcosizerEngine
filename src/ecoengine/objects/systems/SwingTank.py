@@ -1,8 +1,8 @@
-from ecosizer_engine_package.objects.SystemConfig import SystemConfig
+from ecoengine.objects.SystemConfig import SystemConfig
 import numpy as np
-from ecosizer_engine_package.objects.Building import Building
-from ecosizer_engine_package.constants.Constants import *
-from ecosizer_engine_package.objects.systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices, checkHeatHours
+from ecoengine.objects.Building import Building
+from ecoengine.constants.Constants import *
+from ecoengine.objects.systemConfigUtils import roundList, mixVolume, hrToMinList, getPeakIndices, checkHeatHours
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots
@@ -14,7 +14,7 @@ class SwingTank(SystemConfig):
     sizingTable = [40, 50, 80, 100, 120, 160, 175, 240, 350] #multiples of standard tank sizes
 
     def __init__(self, safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract,
-                 doLoadShift = False, cdf_shift = 1, schedule = None):
+                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None):
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
@@ -31,7 +31,7 @@ class SwingTank(SystemConfig):
         self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
         
         super().__init__(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                 doLoadShift, cdf_shift, schedule)
+                 doLoadShift, loadShiftPercent, loadShiftSchedule)
     
     def getSizingResults(self):
         """
@@ -91,7 +91,7 @@ class SwingTank(SystemConfig):
         runV_G = 0
         for peakInd in diffInd:
             hw_out = np.tile(loadshape, 2)
-            hw_out = np.array(HRLIST_to_MINLIST(hw_out[peakInd:peakInd+24])) \
+            hw_out = np.array(hrToMinList(hw_out[peakInd:peakInd+24])) \
                 / 60 * self.building.magnitude # to minute
             
             # Simulate the swing tank assuming it hits the peak just above the supply temperature.
@@ -100,7 +100,7 @@ class SwingTank(SystemConfig):
 
             # Get the effective adjusted hot water demand on the primary system at the storage temperature.
             temp_eff_HW_mix_faction = sum(hw_out_from_swing)/self.building.magnitude
-            genrate_min = np.array(HRLIST_to_MINLIST(genrate[peakInd:peakInd+24])) \
+            genrate_min = np.array(hrToMinList(genrate[peakInd:peakInd+24])) \
                 / 60 * self.building.magnitude * temp_eff_HW_mix_faction # to minute
 
             # Get the new difference in generation and demand

@@ -1,16 +1,16 @@
-from ecosizer_engine_package.constants.Constants import *
+from ecoengine.constants.Constants import *
 from .Building import Building
 import numpy as np
 from scipy.stats import norm #lognorm
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
-from .systemConfigUtils import roundList, mixVolume, HRLIST_to_MINLIST, getPeakIndices, checkLiqudWater, checkHeatHours
+from .systemConfigUtils import roundList, mixVolume, hrToMinList, getPeakIndices, checkLiqudWater, checkHeatHours
 
 class SystemConfig:
     def __init__(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                 doLoadShift = False, cdf_shift = 1, schedule = None):
-        # check inputs. Schedule not checked because it is checked elsewhere
-        self._checkInputs(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift)
+                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None):
+        # check inputs. LoadShiftSchedule not checked because it is checked elsewhere
+        self._checkInputs(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent)
         
         self.doLoadShift = doLoadShift
         self.building = building        
@@ -21,20 +21,20 @@ class SystemConfig:
         self.compRuntime_hr = compRuntime_hr
         self.aquaFract = aquaFract
 
-        if doLoadShift and not schedule is None:
-            self._setLoadShift(schedule, cdf_shift)
+        if doLoadShift and not loadShiftSchedule is None:
+            self._setLoadShift(loadShiftSchedule, loadShiftPercent)
         else:
-            self.schedule = [1] * 24
+            self.loadShiftSchedule = [1] * 24
             self.fract_total_vol = 1 # fraction of total volume for for load shifting, or 1 if no load shifting
 
         #Check if need to increase sizing to meet lower runtimes for load shift
-        self.maxDayRun_hr = min(self.compRuntime_hr, sum(self.schedule))
+        self.maxDayRun_hr = min(self.compRuntime_hr, sum(self.loadShiftSchedule))
 
         #size system
         self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr)
         self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.effSwingFract )
 
-    def _checkInputs(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift):
+    def _checkInputs(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):
         if not isinstance(building, Building):
             raise Exception("Error: Building is not valid.")
         if not (isinstance(storageT_F, int) or isinstance(storageT_F, float)) or not checkLiqudWater(storageT_F):
@@ -47,8 +47,8 @@ class SystemConfig:
             raise Exception("Invalid input given for compRuntime_hr, must be an integer between 0 and 24.")
         if not (isinstance(aquaFract, int) or isinstance(aquaFract, float)) or aquaFract > 1 or aquaFract <= 0:
             raise Exception("Invalid input given for aquaFract must, be a number between 0 and 1.")
-        if not (isinstance(cdf_shift, int) or isinstance(cdf_shift, float)) or cdf_shift > 1 or cdf_shift < 0:
-            raise Exception("Invalid input given for cdf_shift, must be a number between 0 and 1.")
+        if not (isinstance(loadShiftPercent, int) or isinstance(loadShiftPercent, float)) or loadShiftPercent > 1 or loadShiftPercent < 0:
+            raise Exception("Invalid input given for loadShiftPercent, must be a number between 0 and 1.")
         if not isinstance(doLoadShift, bool):
             raise Exception("Invalid input given for doLoadShift, must be a boolean.")
 
@@ -154,14 +154,14 @@ class SystemConfig:
 
         # Get the generation rate from the primary capacity
         G_hw = 1000 * Pcapacity / rhoCp / (self.building.supplyT_F - self.building.incomingT_F) \
-               * self.defrostFactor * np.tile(self.schedule,3)
+               * self.defrostFactor * np.tile(self.loadShiftSchedule,3)
         
         # Define the use of DHW with the normalized load shape
         D_hw = self.building.magnitude * self.fract_total_vol * np.tile(loadShapeN, 3)
 
         # To per minute from per hour
-        G_hw = np.array(HRLIST_to_MINLIST(G_hw)) / 60
-        D_hw = np.array(HRLIST_to_MINLIST(D_hw)) / 60
+        G_hw = np.array(hrToMinList(G_hw)) / 60
+        D_hw = np.array(hrToMinList(D_hw)) / 60
 
         # Init the "simulation"
         V0 = np.ceil(Pvolume * self.percentUseable)
@@ -172,38 +172,38 @@ class SystemConfig:
 
         return G_hw, D_hw, V0, Vtrig, pV, pheating
     
-    def _setLoadShift(self, schedule, cdf_shift=1):
+    def _setLoadShift(self, loadShiftSchedule, loadShiftPercent=1):
         """
-        Sets the load shifting schedule from input schedule
+        Sets the load shifting schedule from input loadShiftSchedule
 
         Parameters
         ----------
-        schedule : array_like
+        loadShiftSchedule : array_like
             List or array of 0's and 1's for don't run and run.
 
-        cdf_shift : float
+        loadShiftPercent : float
             Percentile of days which need to be covered by load shifting
 
         """
         # Check
-        if len(schedule) != 24 : #TODO ensure schedule is valid and add load up
-            raise Exception("loadshift is not of length 24 but instead has length of "+str(len(schedule))+".")
-        if sum(schedule) == 0 :
+        if len(loadShiftSchedule) != 24 : #TODO ensure loadShiftSchedule is valid and add load up
+            raise Exception("loadshift is not of length 24 but instead has length of "+str(len(loadShiftSchedule))+".")
+        if sum(loadShiftSchedule) == 0 :
             raise Exception("When using Load shift the HPWH's must run for at least 1 hour each day.")
-        if cdf_shift < 0.25 :
+        if loadShiftPercent < 0.25 :
             raise Exception("Load shift only available for above 25 percent of days.")
-        if cdf_shift > 1 :
+        if loadShiftPercent > 1 :
             raise Exception("Cannot load shift for more than 100 percent of days")
 
-        self.schedule = schedule
-        self.loadshift = np.array(schedule, dtype = float)# Coerce to numpy array of data type float
+        self.loadShiftSchedule = loadShiftSchedule
+        self.loadshift = np.array(loadShiftSchedule, dtype = float)# Coerce to numpy array of data type float
 
-        # adjust for cdf_shift
-        if cdf_shift == 1: # meaing 100% of days covered by load shift
+        # adjust for loadShiftPercent
+        if loadShiftPercent == 1: # meaing 100% of days covered by load shift
             self.fract_total_vol = 1
         else:
             # calculate fraction total hot water required to meet load shift days
-            fract = norm_mean + norm_std * norm.ppf(cdf_shift) #TODO norm_mean and std are currently from multi-family, need other types eventually. For now, loadshifting will only be available for multi-family
+            fract = norm_mean + norm_std * norm.ppf(loadShiftPercent) #TODO norm_mean and std are currently from multi-family, need other types eventually. For now, loadshifting will only be available for multi-family
             self.fract_total_vol = fract if fract <= 1. else 1.
         
         self.doLoadShift = True
@@ -270,7 +270,7 @@ class SystemConfig:
             LSrunningVol_G = 0
             LSeffMixFract = 0
             # calculate loadshift sizing with avg loadshape (see page 19 of methodology documentation)
-            LSrunningVol_G, LSeffMixFract = self._calcRunningVol(heatHrs, self.schedule, self.building.avgLoadshape, LSeffMixFract)
+            LSrunningVol_G, LSeffMixFract = self._calcRunningVol(heatHrs, self.loadShiftSchedule, self.building.avgLoadshape, LSeffMixFract)
             LSrunningVol_G *= self.fract_total_vol
 
             # Get total volume from max of primary method or load shift method
@@ -523,7 +523,7 @@ class SystemConfig:
     
 class Primary(SystemConfig):
     def __init__(self, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                 doLoadShift = False, cdf_shift = 1, schedule = None):
+                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None):
         super().__init__(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                 doLoadShift, cdf_shift, schedule)
+                 doLoadShift, loadShiftPercent, loadShiftSchedule)
 

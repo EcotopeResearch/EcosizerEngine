@@ -98,5 +98,21 @@ This will run all unit tests for the package
 
 	$ make html
 
+### Updating version on pypi
+
+1. If you haven't installed them before, pip install build and twine
+
+	$ python -m pip install --upgrade build
+
+
+	$ python -m pip install --user --upgrade twine
+
+2. Update the version number in setup.cfg
+3. Run the following commands from the project root directory:
+
+	$ python -m build
+
+	$ python -m twine upload dist/*
+
 ### Contact Information
 To get in touch with Ecotope Inc. go here: http://ecotope.com/contact/

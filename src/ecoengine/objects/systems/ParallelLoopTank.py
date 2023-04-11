@@ -1,18 +1,18 @@
-from ecosizer_engine_package.objects.SystemConfig import SystemConfig
+from ecoengine.objects.SystemConfig import SystemConfig
 import numpy as np
-from ecosizer_engine_package.objects.Building import Building
-from ecosizer_engine_package.constants.Constants import *
-from ecosizer_engine_package.objects.systemConfigUtils import checkLiqudWater
+from ecoengine.objects.Building import Building
+from ecoengine.constants.Constants import *
+from ecoengine.objects.systemConfigUtils import checkLiqudWater
 
 class ParallelLoopTank(SystemConfig):
     def __init__(self, safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                 doLoadShift = False, cdf_shift = 1, schedule = None):
+                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None):
 
         if TMonTemp_F == 0:
             TMonTemp_F = building.incomingT_F + 2
         
         super().__init__(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                 doLoadShift, cdf_shift, schedule)
+                 doLoadShift, loadShiftPercent, loadShiftSchedule)
         
         self._checkParallelLoopInputs(safetyTM, offTime_hr, setpointTM_F, TMonTemp_F)
         self.setpointTM_F = setpointTM_F
