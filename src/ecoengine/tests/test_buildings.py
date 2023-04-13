@@ -53,7 +53,7 @@ def nursingHomeAndOffice(): # Returns the hpwh swing tank
             supplyT_F       = 120,
             buildingType   = ['nursing_home','office_building'],
             returnT_F       = 100, 
-            flow_rate       = 5
+            flowRate       = 5
         )
     return building
 
@@ -99,7 +99,7 @@ def test_magnitudes(buildingType, magnitude, expected):
             magnitudeStat  = magnitude,
             supplyT_F       = 120,
             buildingType   = buildingType,
-            flow_rate       = 5,
+            flowRate       = 5,
             returnT_F       = 100,
     )
     assert round(building.magnitude,1) == expected
@@ -116,7 +116,7 @@ def test_default_loadshapes(buildingType, magnitude, expected):
             magnitudeStat  = magnitude,
             supplyT_F       = 120,
             buildingType   = buildingType,
-            flow_rate       = 5,
+            flowRate       = 5,
             returnT_F       = 100,
     )
     assert np.array_equal(np.round(building.loadshape[:3], decimals=5), np.round(expected, decimals=5))
@@ -131,7 +131,7 @@ def test_custom_loadshapes(loadShape, buildingType, magnitude, expected):
             magnitudeStat  = magnitude,
             supplyT_F       = 120,
             buildingType   = buildingType,
-            flow_rate       = 5,
+            flowRate       = 5,
             returnT_F       = 100,
             loadshape       = loadShape
     )
@@ -166,7 +166,7 @@ def test_invalid_building_parameter_errors():
     with pytest.raises(Exception, match="Error: City water temp must be a number."):
         createBuilding("not a number", 4, 120, "mens_dorm")
     with pytest.raises(Exception, match="Error: Flow rate must be a number."):
-        createBuilding(35, 4, 120, "mens_dorm", flow_rate = "problem")
+        createBuilding(35, 4, 120, "mens_dorm", flowRate = "problem")
     with pytest.raises(Exception, match="Missing values for multi-use building. Collected 2 building types but collected 1 magnitude varriables"):
         createBuilding(35, 4, 120, ["mens_dorm","yep"])
     with pytest.raises(Exception, match="Missing values for multi-use building. Collected 2 building types but collected 4 magnitude varriables"):

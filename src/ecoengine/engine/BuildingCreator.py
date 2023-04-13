@@ -2,7 +2,7 @@ from ecoengine.objects.Building import *
 import numpy as np
 
 def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshape = None, avgLoadshape = None,
-                    returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0, standardGPD = None):
+                    returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0, standardGPD = None):
     
     """
     Initializes the building in which the HPWH system will be sized for
@@ -23,7 +23,7 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
         defaults to average load shape for building type.
     returnT_F : float 
         The water temperature returning from the recirculation loop. [°F]
-    flow_rate : float 
+    flowRate : float 
         The pump flow rate of the recirculation loop. (GPM)
     gpdpp : float
         The volume of water in gallons at 120F each person uses per dat.[°F]
@@ -55,8 +55,8 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
             building_list = []
             for i in range(len(buildingType)):
                 building_list.append(createBuilding(incomingT_F, magnitudeStat[i], supplyT_F, buildingType[i], loadshape, avgLoadshape,
-                        returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt))
-            return MultiUse(building_list, incomingT_F, supplyT_F, returnT_F, flow_rate)
+                        returnT_F, flowRate, gpdpp, nBR, nApt, Wapt))
+            return MultiUse(building_list, incomingT_F, supplyT_F, returnT_F, flowRate)
     
     #only one building type so there should only be one magnitude statistic 
     if isinstance(magnitudeStat, list):
@@ -83,29 +83,29 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
 
     match buildingType:
         case 'apartment':
-            return Apartment(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return Apartment(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         case 'elementary_school':
-            return ElementarySchool(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return ElementarySchool(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         case 'food_service_a':
-            return FoodServiceA(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return FoodServiceA(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         case 'food_service_b':
-            return FoodServiceB(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return FoodServiceB(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         case 'junior_high':
-            return JuniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return JuniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         case 'mens_dorm':
-            return MensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return MensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         case 'motel':
-            return Motel(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return Motel(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         case 'nursing_home':
-            return NursingHome(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return NursingHome(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         case 'office_building':
-            return OfficeBuilding(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return OfficeBuilding(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         case 'senior_high':
-            return SeniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return SeniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         case 'womens_dorm':
-            return WomensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+            return WomensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         case 'multi_family':
-            return MultiFamily(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt, standardGPD)
+            return MultiFamily(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, gpdpp, nBR, nApt, Wapt, standardGPD)
         case _:
             raise Exception("Unrecognized building type.")
         

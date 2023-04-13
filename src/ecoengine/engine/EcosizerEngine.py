@@ -37,7 +37,7 @@ class EcosizerEngine:
         Percentage of days the load shift will be met
     returnT_F : float 
         The water temperature returning from the recirculation loop. [°F]
-    flow_rate : float 
+    flowRate : float 
         The pump flow rate of the recirculation loop. (GPM)
     gpdpp : float
         The volume of water in gallons at 120F each person uses per dat.[°F]
@@ -70,7 +70,7 @@ class EcosizerEngine:
 
     def __init__(self, incomingT_F, magnitudeStat, supplyT_F, storageT_F, percentUseable, aquaFract, 
                             schematic, buildingType, loadshape = None, avgLoadshape = None, loadShiftSchedule = None, loadShiftPercent = 1,
-                            returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
+                            returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None):
         
@@ -81,7 +81,7 @@ class EcosizerEngine:
                                     loadshape       = loadshape,
                                     avgLoadshape    = avgLoadshape,
                                     returnT_F       = returnT_F, 
-                                    flow_rate       = flow_rate,
+                                    flowRate       = flowRate,
                                     gpdpp           = gpdpp,
                                     nBR             = nBR,
                                     nApt            = nApt,

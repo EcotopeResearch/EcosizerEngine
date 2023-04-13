@@ -5,17 +5,17 @@ import numpy as np
 from ecoengine.constants.Constants import *
 
 class Building:
-    def __init__(self, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         
-        self._checkParams(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        self._checkParams(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
 
         self.loadshape = loadshape
         self.avgLoadshape = avgLoadshape
         self.incomingT_F = incomingT_F
         self.supplyT_F = supplyT_F
-        self.recirc_loss = (supplyT_F - returnT_F) * flow_rate * rhoCp * 60. #BTU/HR
+        self.recirc_loss = (supplyT_F - returnT_F) * flowRate * rhoCp * 60. #BTU/HR
 
-    def _checkParams(self, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def _checkParams(self, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         if not isinstance(loadshape, np.ndarray) or len(loadshape) != 24:
             raise Exception("Error: Loadshape must be a list of length 24.")
         if sum(loadshape) > 1 + 1e-3 or sum(loadshape) < 1 - 1e-3:
@@ -36,68 +36,68 @@ class Building:
             raise Exception("Error: Supply temp must be higher than return temp.")
         if not (isinstance(incomingT_F, int) or isinstance(incomingT_F, float)):
             raise Exception("Error: City water temp must be a number.")
-        if not (isinstance(flow_rate, int) or isinstance(flow_rate, float)):
+        if not (isinstance(flowRate, int) or isinstance(flowRate, float)):
             raise Exception("Error: Flow rate must be a number.")
         if not hasattr(self, 'magnitude'):
             raise Exception("Magnitude has not been set.")
 
 class MensDorm(Building):
-    def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         self.magnitude = n_students * 18.9 # ASHREA GPD per student
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
 
 class WomensDorm(Building):
-    def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         self.magnitude = n_students * 16.4 # ASHREA GPD per student
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
 
 class Motel(Building):
-    def __init__(self, n_units, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, n_units, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         self.magnitude = n_units * 28.8 # ASHREA GPD per unit
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
 
 class NursingHome(Building):
-    def __init__(self, n_beds, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, n_beds, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         self.magnitude = n_beds * 20.1 # ASHREA GPD per bed
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
 
 class OfficeBuilding(Building):
-    def __init__(self, n_people, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, n_people, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         self.magnitude = n_people * 1.11 # ASHREA GPD per person
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
 
 class FoodServiceA(Building):
-    def __init__(self, n_meals, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, n_meals, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         self.magnitude = n_meals * 11.032 # ASHREA GPD per meal
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
 
 class FoodServiceB(Building):
-    def __init__(self, n_meals, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, n_meals, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         self.magnitude = n_meals * 6.288 # ASHREA GPD per meal
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
 
 class Apartment(Building):
-    def __init__(self, n_units, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, n_units, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         self.magnitude = n_units * 42.8 # ASHREA GPD per unit
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
 
 class ElementarySchool(Building):
-    def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         self.magnitude = n_students * 1.081 # ASHREA GPD per student
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
 
 class JuniorHigh(Building):
-    def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         self.magnitude = n_students * 3.27 # ASHREA GPD per student
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
 
 class SeniorHigh(Building):
-    def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         self.magnitude = n_students * 3.02 # ASHREA GPD per student
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
     
 class MultiFamily(Building):
-    def __init__(self, n_people, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate, gpdpp, nBR, nApt, Wapt, standardGPD):
+    def __init__(self, n_people, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, gpdpp, nBR, nApt, Wapt, standardGPD):
         # check inputs
         if not (isinstance(nApt, int)):
             raise Exception("Error: Number of apartments must be an integer.")
@@ -131,13 +131,13 @@ class MultiFamily(Building):
             
         self.magnitude = gpdpp * n_people # gpdpp * number_of_people
 
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
         # recalculate recirc_loss with different method if applicable
         if(nApt > 0 and Wapt > 0):
             self.recirc_loss = nApt * Wapt * W_TO_BTUHR
 
 class MultiUse(Building):
-    def __init__(self, building_list, incomingT_F, supplyT_F, returnT_F, flow_rate):
+    def __init__(self, building_list, incomingT_F, supplyT_F, returnT_F, flowRate):
         # Generates building with loadshape that is combination of multiple loadshapes, one for each use section of the building. Each loadshape is multiplied
         # by the magnitude of that use section of the multi-use building, then all added together and divided by the total magnitude for the whole building
 
@@ -159,4 +159,4 @@ class MultiUse(Building):
 
         self.magnitude = total_magnitude
 
-        super().__init__(total_loadshape, total_avg_loadshape, incomingT_F, supplyT_F, returnT_F, flow_rate)
+        super().__init__(total_loadshape, total_avg_loadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
