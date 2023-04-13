@@ -1,1 +1,1 @@
-include src/ecosizer_engine_package/data/load_shapes/*.json
+include src/ecoengine/data/load_shapes/*.json
