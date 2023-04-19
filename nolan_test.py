@@ -1,12 +1,12 @@
 from ecoengine import EcosizerEngine
 
 hpwh = EcosizerEngine(  incomingT_F     = 50,
-                    magnitudeStat  = 30,
+                    magnitudeStat  = 100,
                     supplyT_F       = 120,
                     storageT_F      = 150,
                     percentUseable  = 0.8, 
                     aquaFract       = 0.4, 
-                    schematic       = 'primary', 
+                    schematic       = 'paralleltank', 
                     buildingType   = 'multi_family',
                     returnT_F       = 0, 
                     flowRate       = 0,
@@ -14,21 +14,21 @@ hpwh = EcosizerEngine(  incomingT_F     = 50,
                     safetyTM        = 1.75,
                     defrostFactor   = 1, 
                     compRuntime_hr  = 16, 
-                    nApt            = 30, 
+                    nApt            = 100, 
                     Wapt            = 100,
                     loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1], #loadshift schedule
-                    doLoadShift     = True,
+                    doLoadShift     = False,
                     loadShiftPercent       = 0.8
 )
 
 outlist = hpwh.getSizingResults()
-[x_data, y_data, hours, recInd] = hpwh.primaryCurve()
-plotSimDiv = hpwh.plotStorageLoadSim()
+# [x_data, y_data, hours, recInd] = hpwh.primaryCurve()
+# plotSimDiv = hpwh.plotStorageLoadSim()
 
 print("Heating capacity (PCap_kBTUhr)", outlist[1])
-# # print("Swing Tank Volume (TMVol_G)", outlist[2])
-# print("Tank Volume (PVol_G_atStorageT)",outlist[0])
-# # print("Swing Resistance Element (TMCap_kBTUhr)", outlist[3])
+print("pl Tank Volume (TMVol_G)", outlist[2])
+print("Tank Volume (PVol_G_atStorageT)",outlist[0])
+print("Swing Resistance Element (TMCap_kBTUhr)", outlist[3])
 
 # [x_data, y_data, hours, recInd] = swinghpwh.primaryCurve()
 # print("x_data",x_data)
