@@ -3,7 +3,8 @@ from ecosizer_engine_package.objects.systems.SwingTank import *
 from ecosizer_engine_package.objects.systems.ParallelLoopTank import *
 
 def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift = False, 
-                 cdf_shift = 1, schedule = None, safetyTM = 1.75, setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, CA = False):
+                 aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, cdf_shift = 1, schedule = None, loadUpHours = None, safetyTM = 1.75, 
+                 setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, CA = False):
     """
     Initializes and sizes the HPWH system. Both primary and tempurature maintenance (for parrallel loop and swing tank) are set up in this function.
 
@@ -15,20 +16,28 @@ def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable,
         Building object the HPWH system will be sized for.
     storageT_F : float 
         The hot water storage temperature. [°F]
-   defrostFactor : float 
+    defrostFactor : float 
         A multipier used to account for defrost in the final heating capacity. Default equals 1.
     percentUseable : float
         The fraction of the storage volume that can be filled with hot water.
     compRuntime_hr : float
         The number of hours the compressor will run on the design day. [Hr]
     aquaFract: float
-        The fraction of the total hieght of the primary hot water tanks at which the Aquastat is located.
+        The fraction of the total height of the primary hot water tanks at which the Aquastat is located.
     doLoadShift : boolean
         Set to true if doing loadshift
+    aquaFractLoadUp : float
+        The fraction of the total height of the primary hot water tanks at which the load up aquastat is located.
+    aquaFractShed : float
+        The fraction of the total height of the primary hot water tanks at which the shed aquastat is located.
+    loadUpT_F : float
+        The hot water storage temperature between the normal and load up aquastat. [°F]
     cdf_shift: float
         Percentage of days the load shift will be met
     schedule : array_like
-        List or array of 0's and 1's for don't run and run respectively. Used for load shifting
+        List or array of 0's, 1's used for load shifting, 0 indicates system is off. 
+    loadUpHours : float
+        Number of hours spent loading up for first shed.
     safetyTM : float
         The saftey factor for the temperature maintenance system.
     setpointTM_F : float
@@ -48,12 +57,13 @@ def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable,
     match schematic:
         case 'swingtank':
             return SwingTank(safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                             doLoadShift, cdf_shift, schedule, CA)        
+                             doLoadShift, cdf_shift, schedule, loadUpHours, CA, aquaFractLoadUp, aquaFractShed, loadUpT_F)        
         case 'paralleltank':
             return ParallelLoopTank(safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                 doLoadShift, cdf_shift, schedule)
+                 doLoadShift, cdf_shift, schedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)
         case 'primary':
-            return Primary(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift, schedule)
+            return Primary(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, cdf_shift, schedule, loadUpHours,
+                           aquaFractLoadUp, aquaFractShed, loadUpT_F)
         case _:
             raise Exception("Unknown system schematic type.")
         

@@ -6,8 +6,9 @@ print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, an
 
 class EcosizerEngine:
 
-    def __init__(self, incomingT_F, magnitude_stat, supplyT_F, storageT_F, percentUseable, aquaFract, 
-                            schematic, building_type, loadshape = None, avgLoadshape = None, schedule = None, cdf_shift = 1,
+    def __init__(self, incomingT_F, magnitude_stat, supplyT_F, storageT_F, percentUseable, aquaFract,
+                            schematic, building_type, loadshape = None, avgLoadshape = None, schedule = None, loadUpHours = None,
+                            aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, cdf_shift = 1,
                             returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, CA = False):
@@ -27,7 +28,7 @@ class EcosizerEngine:
         percentUseable : float
             The fraction of the storage volume that can be filled with hot water.
         aquaFract: float
-            The fraction of the total hieght of the primary hot water tanks at which the Aquastat is located.
+            The fraction of the total height of the primary hot water tanks at which the Aquastat is located.
         schematic : String
             Indicates schematic type. Valid values are 'swingtank', 'paralleltank', and 'primary'
         building_type : string or list
@@ -37,7 +38,15 @@ class EcosizerEngine:
         avgLoadShape : ndarray
             defaults to average load shape for building type.
         schedule : array_like
-            List or array of 0's and 1's for don't run and run respectively. Used for load shifting
+            List or array of 0's, 1's used for load shifting, 0 indicates system is off. 
+        loadUpHours : float
+            Number of hours spent loading up for first shed.
+        aquaFractLoadUp : float
+            The fraction of the total height of the primary hot water tanks at which the load up aquastat is located.
+        aquaFractShed : float
+            The fraction of the total height of the primary hot water tanks at which the shed aquastat is located.
+        loadUpT_F : float
+            The hot water storage temperature between the normal and load up aquastat. [°F]
         cdf_shift: float
             Percentage of days the load shift will be met
         returnT_F : float 
@@ -93,9 +102,13 @@ class EcosizerEngine:
                                 percentUseable, 
                                 compRuntime_hr, 
                                 aquaFract, 
+                                aquaFractLoadUp = aquaFractLoadUp,
+                                aquaFractShed = aquaFractShed,
+                                loadUpT_F = loadUpT_F,
                                 doLoadShift = doLoadShift, 
                                 cdf_shift = cdf_shift, 
                                 schedule = schedule, 
+                                loadUpHours = loadUpHours,
                                 safetyTM = safetyTM, 
                                 setpointTM_F = setpointTM_F, 
                                 TMonTemp_F = TMonTemp_F, 
