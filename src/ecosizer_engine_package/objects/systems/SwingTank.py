@@ -121,11 +121,9 @@ class SwingTank(SystemConfig):
             if runV_G < new_runV_G:
                 runV_G = new_runV_G #Minimum value less than 0 or 0.
                 eff_HW_mix_fraction = temp_eff_HW_mix_fraction
-                print(eff_HW_mix_fraction)
 
         #convert to supply so that we can reuse functionality #TODO verify that this is correct 
         runV_G = runV_G * (self.storageT_F - self.building.incomingT_F) / (self.building.supplyT_F - self.building.incomingT_F) 
-        print('swing running vol', runV_G)
         return runV_G, eff_HW_mix_fraction
     
     def _calcRunningVolLS(self, effMixFract):
@@ -254,7 +252,7 @@ class SwingTank(SystemConfig):
         genrate = self.building.magnitude * effSwingVolFract / heathours
         heatCap = genrate * rhoCp * \
             (self.storageT_F - self.building.incomingT_F) / self.defrostFactor / 1000 #use storage temp instead of supply temp
-        print(heatCap)
+        
         if self.doLoadShift:
             Vshift, VconsumedLU = self._calcPrelimVol() 
             Vload = Vshift * (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) #volume in 'load up' portion of tank

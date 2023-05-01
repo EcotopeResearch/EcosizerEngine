@@ -236,8 +236,8 @@ class SystemConfig:
             raise Exception("Invalid input given for shed aquastat fraction, must be a number between normal aquastat fraction and 1.")
         if not (isinstance(loadUpT_F, int) or isinstance(loadUpT_F, float)) or loadUpT_F < storageT_F or not checkLiqudWater(loadUpT_F):
             raise Exception("Invalid input given for load up storage temp, it must be a number between normal storage temp and 212F.")
-        if not (isinstance(loadUpHours, int) or isinstance(loadUpHours, float)) or loadUpHours > schedule.index(0): #make sure there are not more load up hours than nhours before first shed
-            raise Exception("Invalid input given for load up hours, must be a number less than or equal to hours in day before first shed period,") 
+        if not (isinstance(loadUpHours, int)) or loadUpHours > schedule.index(0): #make sure there are not more load up hours than nhours before first shed
+            raise Exception("Invalid input given for load up hours, must be an integer less than or equal to hours in day before first shed period,") 
 
         self.schedule = schedule
         self.loadUpHours = loadUpHours
@@ -451,7 +451,7 @@ class SystemConfig:
         #take max between running volume and preliminary shifted volume
         if LSrunV_G < Vshift:
             LSrunV_G = Vshift
-        print('loadshift running v', LSrunV_G)
+        
         return LSrunV_G, effMixFract 
 
     def _getTotalVolAtStorage(self, runningVol_G):
@@ -665,7 +665,6 @@ class SystemConfig:
         shedHours = [i for i in range(len(self.schedule)) if self.schedule[i] == 0] #get all scheduled shed hours
         firstShed = [x for i,x in enumerate(shedHours) if x == shedHours[0] + i] #get first shed
         Vshift = sum([self.building.avgLoadshape[i]*self.building.magnitude for i in firstShed])#calculate vol used during first shed
-
         VconsumedLU = sum(self.building.avgLoadshape[firstShed[0]-self.loadUpHours : firstShed[0]]) * self.building.magnitude
         
         return Vshift, VconsumedLU 
