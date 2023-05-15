@@ -12,6 +12,7 @@ class SwingTank(SystemConfig):
     #Assuming that these swing sizing methodologies will be dropped in next code cycle so they likely can be removed, it not we will need to implement additional swing sizing
     Table_Napts = [0, 12, 24, 48, 96]
     sizingTable = [40, 50, 80, 100, 120, 160, 175, 240, 350] #multiples of standard tank sizes
+    sizingTable_CA = [80, 96, 168, 288, 480]
 
     def __init__(self, safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None):
@@ -27,6 +28,7 @@ class SwingTank(SystemConfig):
 
         self.safetyTM = safetyTM
         self.TMVol_G = min([x for x in self.sizingTable if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
+        self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
         self.element_deadband_F = 8.
         self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
         
@@ -40,9 +42,9 @@ class SwingTank(SystemConfig):
         Returns
         -------
         list
-            self.PVol_G_atStorageT, self.PCap_kBTUhr, self.TMVol_G, self.TMCap_kBTUhr
+            self.PVol_G_atStorageT, self.PCap_kBTUhr, self.TMVol_G, self.TMCap_kBTUhr, self.CA_TMVol_G
         """
-        return [self.PVol_G_atStorageT, self.PCap_kBTUhr, self.TMVol_G, self.TMCap_kBTUhr]
+        return [self.PVol_G_atStorageT, self.PCap_kBTUhr, self.TMVol_G, self.TMCap_kBTUhr, self.CA_TMVol_G]
     
     def _calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0.):
         """
