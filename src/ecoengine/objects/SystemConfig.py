@@ -165,7 +165,7 @@ class SystemConfig:
 
         # Init the "simulation"
         V0 = np.ceil(Pvolume * self.percentUseable)
-        Vtrig = np.ceil(Pvolume * (1 - self.aquaFract)) + 1 # To prevent negatives with any of that rounding math.
+        Vtrig = np.ceil(Pvolume * (1 - self.aquaFract)) + 1 # To prevent negatives with any of that rounding math. TODO Nolan is sus of that +1
         pV = [V0] + [0] * (len(G_hw) - 1)
 
         pheating = False
@@ -441,7 +441,7 @@ class SystemConfig:
         else:  # Else not heating,
             Vnew = Vcurr - hw_out # So lose HW
             if Vnew < Vtrig: # If should heat
-                time_missed = (Vtrig - Vnew)/hw_out # Volume below turn on / rate of draw gives time below tigger
+                time_missed = (Vtrig - Vnew)/hw_out # Volume below turn on / rate of draw gives time below tigger (aquastat)
                 Vnew += hw_in * time_missed # Start heating
                 did_run = hw_in * time_missed
                 pheating = True

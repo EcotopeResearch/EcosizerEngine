@@ -114,7 +114,7 @@ class EcosizerEngine:
         Returns
         -------
         list
-            self.PVol_G_atStorageT, self.PCap_kBTUhr (also self.TMVol_G, self.TMCap_kBTUhr if there is a TM system)
+            self.PVol_G_atStorageT, self.PCap_kBTUhr (also self.TMVol_G, self.TMCap_kBTUhr if there is a TM system and self.CA_TMVol_G if SwingTank)
         """
         return self.system.getSizingResults()
 
