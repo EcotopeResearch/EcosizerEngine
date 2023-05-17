@@ -102,11 +102,13 @@ class SystemConfig:
         if initPV:
             pV[0] = initPV
 
+        #get mixed storage temp
+        mixedStorT_F = self._mixStorageTemps(pV[0])[0]
+
         # Run the "simulation"
         for i in range(1, len(G_hw)):
-            
-            mixedDHW = mixVolume(D_hw[i], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F) #TODO how can we address mixed temp issue with multiple setpoints
-            mixedGHW = mixVolume(G_hw[i], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
+            mixedDHW = mixVolume(D_hw[i], mixedStorT_F, self.building.incomingT_F, self.building.supplyT_F) #TODO how can we address mixed temp issue with multiple setpoints
+            mixedGHW = mixVolume(G_hw[i], mixedStorT_F, self.building.incomingT_F, self.building.supplyT_F)
             pheating, pV[i], prun[i] = self.runOnePrimaryStep(pheating, V0, Vtrig[i], pV[i-1], mixedDHW, mixedGHW) 
             
         return [roundList(pV, 3),
@@ -140,7 +142,7 @@ class SystemConfig:
             The remaining volume of the primary storage volume when heating is
             triggered, note this equals V0*(1 - aquaFract[i]) 
         pV : list 
-            Volume of HW in the tank with time at the strorage temperature. Initialized to array of 0s with pV[0] set to V0
+            Volume of HW in the tank with time at the storage temperature. Initialized to array of 0s with pV[0] set to V0
         pheating : boolean 
             set to false. Simulation starts with a full tank so primary heating starts off
         """
@@ -174,7 +176,7 @@ class SystemConfig:
             shedHours = [i for i in range(len(self.schedule)) if self.schedule[i] == 0] 
             Vtrig = [Pvolume * (1 - self.aquaFractLoadUp) if shedHours[0] - self.loadUpHours <= i <= shedHours[0] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
             
-            #check if there are two sheds, if so set hours inbetween to load up
+            #check if there are two sheds, if so set all hours inbetween to load up
             try:
                 secondShed = [[shedHours[i-1], shedHours[i]] for i in range(1, len(shedHours)) if shedHours[i] - shedHours[i-1] > 1][0]
                 Vtrig = [Pvolume * (1 - self.aquaFractLoadUp) if secondShed[0] <= i <= secondShed[1] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
@@ -257,10 +259,10 @@ class SystemConfig:
         
         self.doLoadShift = True
 
-    # SwingTank has it's own implimentation
     def _primaryHeatHrs2kBTUHR(self, heathours, effSwingVolFract=1):
         """
-        Converts from hours of heating in a day to heating capacity.
+        Converts from hours of heating in a day to heating capacity. If loadshifting compares this method to capacity needed to load up
+        and takes maximum.
 
         Implimented seperatly in Swing Tank systems
 
@@ -288,7 +290,7 @@ class SystemConfig:
         if self.doLoadShift:
             Vshift, VconsumedLU = self._calcPrelimVol() 
             Vload = Vshift * (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) #volume in 'load up' portion of tank
-            LUgenrate = (Vload + VconsumedLU) / self.loadUpHours #rate needed to load up tank and offset use 
+            LUgenrate = (Vload + VconsumedLU) / self.loadUpHours #rate needed to load up tank and offset use during load up period
             
             #compare with original genrate
             genrate = max(LUgenrate, genrate)
@@ -329,6 +331,7 @@ class SystemConfig:
 
         # Running vol
         runningVol_G, effMixFract = self._calcRunningVol(heatHrs, np.ones(24), self.building.loadshape, effMixFract)
+        print('Main Func: SizePrimary', runningVol_G)
         totalVolAtStorage = self._getTotalVolAtStorage(runningVol_G)
         
         if self.doLoadShift:
@@ -370,6 +373,7 @@ class SystemConfig:
 
         
         # Return the temperature adjusted total volume ########################
+        
         return totalVolAtStorage, effMixFract
     
     def _calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0):
@@ -398,9 +402,9 @@ class SystemConfig:
         Returns
         -------
         runV_G : float
-            The running volume in gallons
+            The running volume in gallons at supply temp.
         effMixFract: int
-            returns same value from parameter. Needed for Swing Tank implimentation. Not actually used in this function instance 
+            Needed for swing tank implementation.
         """          
         genrate = np.tile(onOffArr,2) / heatHrs #hourly
         diffN = genrate - np.tile(loadshape,2) #hourly
@@ -416,13 +420,15 @@ class SystemConfig:
             #Get the rest of the day from the start of the peak
             diffCum = np.cumsum(diffN[peakInd:])  #hourly
             runV_G = max(runV_G, -min(diffCum[diffCum<0.])) #Minimum value less than 0 or 0.
-            
+        print('calc runV_G PRIMARY', runV_G)
         return runV_G, effMixFract
     
     def _calcRunningVolLS(self, effMixFract = 1):
         """
-        Function to calculate the running volume if load shifting. Takes the maximum between
-        preliminary volume post-first shed deficit.
+        Function to calculate the running volume if load shifting. Using the max generation rate between normal sizing
+        and preliminary volume, the deficit between generation and hot water use is then added to the preliminary volume.
+
+        Implemented separately for swing tank system.
 
         Parameters
         ------      
@@ -432,31 +438,30 @@ class SystemConfig:
         Returns
         ------
         LSrunV_G : float
-            Volume needed between primary shed aquastat and load up aquastat at storage temp.
+            Volume needed between primary shed aquastat and load up aquastat at supply temp.
         effMixFract : float
-            Use for swing tank implementation.
+            Used for swing tank implementation.
         """
         Vshift = self._calcPrelimVol()[0] #volume to make it through first shed
         
-        genrateON = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, effMixFract)[1] #max generation rate
+        genrateON = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, effMixFract)[1] #max generation rate from both methods
         genrate = [genrateON if x != 0 else 0 for x in self.schedule] #set generation rate during shed to 0
         
         diffN = np.tile(genrate, 2) - np.tile(self.building.avgLoadshape,2) * self.building.magnitude
         
         #get first index after shed
         shedEnd = [i for i,x in enumerate(genrate[1:],1) if x > genrate[i-1]][0] #start at beginning of first shed, fully loaded up equivalent to starting at the end of shed completely "empty"
-        diffCum = np.cumsum(diffN[shedEnd:]) #TODO: new plan documentation did not say to loop, do I need to check other times after other sheds??
+        diffCum = np.cumsum(diffN[shedEnd:]) 
         LSrunV_G = -min(diffCum[diffCum<0.], default = 0) #numbers less than 0 are a hot water deficit, find the biggest deficit. if no deficit then 0.
         
-        #take max between running volume and preliminary shifted volume
-        if LSrunV_G < Vshift:
-            LSrunV_G = Vshift
+        #add running volume to preliminary shifted volume
+        LSrunV_G += Vshift
         
         return LSrunV_G, effMixFract 
 
     def _getTotalVolAtStorage(self, runningVol_G):
         """
-        Calculates the maximum primary storage using the Ecotope sizing methodology. Swing Tanks implement sperately
+        Calculates the maximum primary storage using the Ecotope sizing methodology. Swing Tanks implement sperately.
 
         Parameters
         ----------
@@ -469,7 +474,7 @@ class SystemConfig:
         Returns
         -------
         totalVolMax : float
-            The total storage volume in gallons adjusted to the storage tempreature
+            The total storage volume in gallons adjusted to the storage tempreature.
         
         """
         
@@ -594,7 +599,7 @@ class SystemConfig:
         """
         [V, G_hw, D_hw, run] = self.simulate()
         
-        hrind_fromback = 72 # Look at the last 24 hours of the simulation not the whole thing
+        hrind_fromback = 24 # Look at the last 24 hours of the simulation not the whole thing
         run = np.array(run[-(60*hrind_fromback):])*60
         G_hw = np.array(G_hw[-(60*hrind_fromback):])*60
         D_hw = np.array(D_hw[-(60*hrind_fromback):])*60
@@ -640,20 +645,12 @@ class SystemConfig:
     
     def _calcPrelimVol(self):
         '''
-        Function to calculate volume shifted during first shed period in order to calculate generation rate.
+        Function to calculate volume shifted during first shed period, which is used to calculated generation rate
+        needed for load up.
 
         Parameters
         ----------
-        loadshape : ndarray
-            Normalized hourly water use.
-        magnitude : float
-            Total volume of daily hot water demand.
-        schedule : array_like
-            List or array of 0's, 1's, and 2's shed, normal, and load up operation. Used for load shifting. 
-        aquaFractShed : float
-            The fraction of the total height of the primary hot water tanks at which the shed aquastat is located.
-        aquaFractLoadUp : float
-            The fraction of the total height of the primary hot water tanks at which the load up aquastat is located.
+        None.
 
         Returns 
         ----------
@@ -673,8 +670,9 @@ class SystemConfig:
 
     def _mixStorageTemps(self, runningVol_G):
         """
-        Calculates average tank volume using load up and normal setpoints according to locations of aquastats. 
-        Used for load shifting when there are two setpoints.
+        Calculates average tank temperature using load up and normal setpoints according to locations of aquastats. 
+        Used for load shifting when there are two setpoints. Returns normal storage setpoint if load up and normal
+        setpoint are equal or if not loadshifting.
 
         Parameters
         ----------
@@ -688,24 +686,28 @@ class SystemConfig:
             The hot water storage temperature between the normal and load up aquastat. [°F]
         storageT_F : float 
             The hot water storage temperature under normal operation. [°F]
-        runV_G : float
-             The running volume in gallons at supply temp. [gal]
+        Volume: float
+             The volume in gallons at supply temp to be converted to volume at storage temp. [gal]
 
         Returns
         ----------
         mixStorageT_F: float
-            Average storage temperature.
+            Average storage temperature calcuated with normal setpoint and load up setpoint.
         totalVolMax : float
-            The total storage volume in gallons adjusted to the storage tempreature
+            The total storage volume in gallons adjusted to the average storage temperature.
         """
+        mixStorageT_F = self.storageT_F
 
-        f = (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) 
-        normV = (1 - f) * runningVol_G
-        loadV = f * runningVol_G
+        if self.doLoadShift:
+            f = (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) 
+            normV = (1 - f) * runningVol_G
+            loadV = f * runningVol_G
 
-        mixStorageT_F = (self.storageT_F * normV + self.loadUpT_F * loadV) / (normV + loadV)
+            mixStorageT_F = (self.storageT_F * normV + self.loadUpT_F * loadV) / (normV + loadV)
 
-        return mixStorageT_F, mixVolume(runningVol_G, mixStorageT_F, self.building.incomingT_F, self.building.supplyT_F) / (self.aquaFractShed - self.aquaFractLoadUp)
+            return mixStorageT_F, mixVolume(runningVol_G, mixStorageT_F, self.building.incomingT_F, self.building.supplyT_F) / (self.aquaFractShed - self.aquaFractLoadUp)
+        
+        return [mixStorageT_F]
 
     
 class Primary(SystemConfig):

@@ -29,7 +29,8 @@ class SwingTank(SystemConfig):
             raise Exception("Recirculation losses are too high, consider using multiple central plants.")
 
         self.safetyTM = safetyTM
-        self.TMVol_G = min([x for x in self.sizingTable if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
+        #self.TMVol_G = min([x for x in self.sizingTable if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))]) #removed equal sign
+        self.TMVol_G = 300.
         self.element_deadband_F = 8.
         self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
         
@@ -50,8 +51,10 @@ class SwingTank(SystemConfig):
     def _calcRunningVol(self, heatHrs, onOffArr, loadshape, effMixFract = 0.):
         """
         Function to find the running volume for the hot water storage tank, which
-        is needed for calculating the total volume for primary sizing and in the event of load shift sizing
-        represents the entire volume.
+        is needed for calculating the total volume for primary sizing. Calculation 
+        is done in swing tank reference frame. Volume is at swing tank temperature, 
+        which is equal to the volume displaced from the primary storage tank. Volume is 
+        converted to supply temp for consistency.
 
         Parameters
         ----------
@@ -71,7 +74,7 @@ class SwingTank(SystemConfig):
         Returns
         -------
         runV_G : float
-            The running volume in gallons   IS THIS AT SUPPLY TEMP?
+            The running volume in gallons at supply temp.
         eff_HW_mix_faction : float
             The fractional adjustment to the total hot water load for the
             primary system. Only used in a swing tank system.
@@ -82,7 +85,7 @@ class SwingTank(SystemConfig):
         genrate = np.tile(onOffArr,2) / heatHrs #hourly 
         diffN   = genrate - np.tile(loadshape, 2) #hourly
         diffInd = getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
-                
+        
         # Get the running volume ##############################################
         if len(diffInd) == 0:
             raise Exception("ERROR ID 03","The heating rate is greater than the peak volume the system is oversized! Try increasing the hours the heat pump runs in a day",)
@@ -92,22 +95,24 @@ class SwingTank(SystemConfig):
         diffInd = np.append(diffInd, diffInd+1)
         diffInd = diffInd[diffInd < 24]
         runV_G = 0
+        
         for peakInd in diffInd:
             hw_out = np.tile(loadshape, 2)
             hw_out = np.array(HRLIST_to_MINLIST(hw_out[peakInd:peakInd+24])) \
                 / 60 * self.building.magnitude # to minute
-            
             # Simulate the swing tank assuming it hits the peak just above the supply temperature.
             # Get the volume removed for the primary adjusted by the swing tank
-            [_, _, hw_out_from_swing] = self.simJustSwing(len(hw_out), hw_out, self.building.supplyT_F + 0.1)
-
+            [_, _, hw_out_from_swing] = self.simJustSwing(len(hw_out), hw_out, self.building.supplyT_F + 0.1)  
+            print('hwoutswing', sum(hw_out_from_swing))
             # Get the effective adjusted hot water demand on the primary system at the storage temperature.
             temp_eff_HW_mix_fraction = sum(hw_out_from_swing)/self.building.magnitude
+           
             genrate_min = np.array(HRLIST_to_MINLIST(genrate[peakInd:peakInd+24])) \
-                / 60 * self.building.magnitude * temp_eff_HW_mix_fraction # to minute #TODO will this need to be changed??
-
-            # Get the new difference in generation and demand
+                / 60 * self.building.magnitude * temp_eff_HW_mix_fraction # to minute 
+        
+            # Get the new difference in generation and demand at storage temp
             diffN = genrate_min - hw_out_from_swing
+
             # Get the rest of the day from the start of the peak
             diffCum = np.cumsum(diffN)
 
@@ -117,18 +122,120 @@ class SwingTank(SystemConfig):
                     continue
 
             new_runV_G = -min(diffCum[diffCum<0.])
-
+            
             if runV_G < new_runV_G:
                 runV_G = new_runV_G #Minimum value less than 0 or 0.
                 eff_HW_mix_fraction = temp_eff_HW_mix_fraction
-
-        #convert to supply so that we can reuse functionality #TODO verify that this is correct 
-        runV_G = runV_G * (self.storageT_F - self.building.incomingT_F) / (self.building.supplyT_F - self.building.incomingT_F) 
+        print('mix fract', eff_HW_mix_fraction)
+        print('calc runV_G SWING at storage', runV_G)
+        #convert to supply so that we can reuse functionality 
+        storMixedT_F = self._mixStorageTemps(runV_G)[0]
+        runV_G = runV_G * (storMixedT_F - self.building.incomingT_F) / (self.building.supplyT_F - self.building.incomingT_F) 
+        print('runV_G SWING at supply', runV_G)
         return runV_G, eff_HW_mix_fraction
     
+
     def _calcRunningVolLS(self, effMixFract):
-        return super()._calcRunningVolLS(effMixFract)
+        """
+        Function to to find the adjusted hot water demand on the primary system by the swing tank. Function
+        uses maximum generation rate between standard method and rate needed to load up then finds the 
+        deficit in volume at storage temp (running volume) and adds to preliminary volume. Volume is converted
+        to supply temp for consistency.
+
+        Parameters
+        ----------
+        effMixFract: float
+            The fractional adjustment to the total hot water load for the primary system.
+            
+        Raises
+        ------
+        Exception: Error if oversizing system.
+
+        Returns
+        -------
+        runV_G : float
+            The running volume in gallons at supply temp.
+        eff_HW_mix_faction : float
+            The fractional adjustment to the total hot water load for the
+            primary system. Only used in a swing tank system.
+
+        """
+        Vshift = self._calcPrelimVol()[0]
+
+        genrateON = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, effMixFract)[1] #max generation rate in storage/swing frame
+        genrate = np.tile([genrateON if x != 0 else 0 for x in self.schedule], 2) #set generation rate during shed to 0
         
+        #diffN = genrate - np.tile(self.building.avgLoadshape,2) * self.building.magnitude
+        
+        #get first index after shed and go through next 24 hours
+        shedEnd = [i for i,x in enumerate(genrate[1:],1) if x > genrate[i-1]][0] #start at beginning of first shed, fully loaded up equivalent to starting at the end of shed completely "empty"
+        hw_out = np.tile(self.building.loadshape, 2)
+        hw_out = np.array(HRLIST_to_MINLIST(hw_out[shedEnd:shedEnd+24])) \
+                / 60 * self.building.magnitude # to minute
+        
+        # Simulate the swing tank assuming it hits the peak just above the supply temperature.
+        [_, _, hw_out_from_swing] = self.simJustSwing(len(hw_out), hw_out, self.building.supplyT_F + 0.1) #VOLUME OF HOT WATER NEEDED AT STORAGE TEMP
+        
+        # Get the effective adjusted hot water demand on the primary system at the storage temperature.
+        eff_HW_mix_fraction = sum(hw_out_from_swing)/self.building.magnitude
+        genrate_min = np.array(HRLIST_to_MINLIST(genrate[shedEnd:shedEnd+24])) \
+                / 60 #* self.building.magnitude #* eff_HW_mix_fraction
+        
+        #get difference in generation and demand
+        diffN = genrate_min - hw_out_from_swing
+
+        #get the rest of the day from the start of the peak
+        diffCum = np.cumsum(diffN)
+
+        #get the biggest deficit and add to preliminary volume
+        runV_G = -min(diffCum[diffCum<0.], default = 0)
+        runV_G += Vshift
+       
+        #get mixed storage temp
+        mixedStorT_F = self._mixStorageTemps(runV_G)[0]
+        
+        #convert from storage to supply volume
+        runV_G = runV_G * (mixedStorT_F- self.building.incomingT_F) / (self.building.supplyT_F - self.building.incomingT_F) 
+        
+        return runV_G, eff_HW_mix_fraction
+
+    
+    def _calcPrelimVol(self):
+        '''
+        Function to calculate volume shifted during first shed period in order to calculate generation rate,
+        adjusted for swing tank usage. Values are in swing tank reference frame and thus at storage temperature.
+
+        Parameters
+        ----------
+        None
+
+        Returns 
+        ----------
+        Vshift : float
+            Volume at storage temp between normal and load up AQ fract needed to make it through first shed period.
+        VconsumedLU : float
+            Volume at storage temp consumed during first load up period.
+        '''
+        shedHours = [i for i in range(len(self.schedule)) if self.schedule[i] == 0] #get all scheduled shed hours
+        firstShed = [x for i,x in enumerate(shedHours) if x == shedHours[0] + i] #get first shed
+        Vshift = sum([self.building.avgLoadshape[i]*self.building.magnitude for i in firstShed])#calculate vol used during first shed
+        VconsumedLU = sum(self.building.avgLoadshape[firstShed[0]-self.loadUpHours : firstShed[0]]) * self.building.magnitude
+        
+        #get swing tank contribution for shed period
+        hw_out = np.array(HRLIST_to_MINLIST(self.building.avgLoadshape[i] for i in firstShed)) / 60 * self.building.magnitude 
+        [_, _, hw_out_from_swing] = self.simJustSwing(len(hw_out), hw_out, self.building.supplyT_F + 0.1)
+        effMixFract = sum(hw_out_from_swing) / Vshift
+        Vshift *= effMixFract #volume needed for shift at storage temperature
+      
+        #get swing tank contribution for load up period
+        hw_out = np.array(HRLIST_to_MINLIST(self.building.avgLoadshape[firstShed[0]-self.loadUpHours:firstShed[0]])) / 60 * self.building.magnitude
+        [_, _, hw_out_from_swing] = self.simJustSwing(len(hw_out), hw_out, self.building.supplyT_F + 0.1)
+        effMixFract = sum(hw_out_from_swing) / VconsumedLU 
+        VconsumedLU *= effMixFract
+       
+        return Vshift, VconsumedLU
+
+
     def simJustSwing(self, N, hw_out, initST=None):
         """
         Parameters
@@ -143,6 +250,8 @@ class SwingTank(SystemConfig):
         Returns
         -------
         hw_outSwing : list
+            Hot water exiting swing tank at swing tank temperature - this is the demand on the 
+            primary system.
 
         """
         swingT = [self.building.supplyT_F] + [0] * (N - 1)
@@ -152,24 +261,22 @@ class SwingTank(SystemConfig):
             swingT[0] = initST
         
         # Run the "simulation"
-
         hw_outSwing = [0] * N
         hw_outSwing[0] = D_hw[0]
         srun = [0] * N
         swingheating = False
 
         for i in range(1, N):
-
             hw_outSwing[i] = mixVolume(D_hw[i], swingT[i-1], self.building.incomingT_F, self.building.supplyT_F)
             swingheating, swingT[i], srun[i] = self.__runOneSwingStep(swingheating, swingT[i-1], hw_outSwing[i])
-
+        print('total swing temp', sum(swingT))
         return [swingT, srun, hw_outSwing]
     
     def __runOneSwingStep(self, swingheating, Tcurr, hw_out):
         """
         Runs one step on the swing tank step. Since the swing tank is in series
         with the primary system the temperature needs to be tracked to inform
-        inputs for primary step. The driving assumptions hereare that the swing
+        inputs for primary step. The driving assumptions here are that the swing
         tank is well mixed and can be tracked by the average tank temperature
         and that the system loses the recirculation loop losses as a constant
         Watts and thus the actual flow rate and return temperature from the
@@ -192,7 +299,7 @@ class SwingTank(SystemConfig):
             Logic if heated during time step (1) or not (0)
 
         """
-        did_run = 0 #TODO fix average temps
+        did_run = 0 
 
         # Take out the recirc losses
         Tnew = Tcurr - self.building.recirc_loss / 60 / rhoCp / self.TMVol_G
@@ -200,8 +307,9 @@ class SwingTank(SystemConfig):
 
         # Add in heat for a draw
         if hw_out:
-            Tnew += hw_out * (self.storageT_F - Tcurr) / self.TMVol_G
-
+            mixedStorT_F = self._mixStorageTemps(hw_out)[0]
+            Tnew += hw_out * (mixedStorT_F - Tcurr) / self.TMVol_G #HERE IS WHERE TEMP NEEDS UPDATED
+        
         # Check if the element is heating
         if swingheating:
             Tnew += element_dT #If heating, generate HW and lose HW
@@ -229,7 +337,9 @@ class SwingTank(SystemConfig):
     
     def _primaryHeatHrs2kBTUHR(self, heathours, effSwingVolFract):
         """
-        Converts from hours of heating in a day to heating capacity.
+        Converts from hours of heating in a day to heating capacity. Takes maximum from 
+        standard method based on number of heating hours and load shift method based on
+        load up hours.
 
         Parameters
         ----------
@@ -258,8 +368,8 @@ class SwingTank(SystemConfig):
             Vload = Vshift * (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) #volume in 'load up' portion of tank
             LUgenrate = (Vload + VconsumedLU) / self.loadUpHours #rate needed to load up tank and offset use 
             LUheatCap = LUgenrate * rhoCp * \
-                (self.building.supplyT_F - self.building.incomingT_F) / self.defrostFactor / 1000
-            
+                (self.storageT_F - self.building.incomingT_F) / self.defrostFactor / 1000
+            #TODO putting these in supply temp instead of storage... make sure this is correct
             #compare swing and loadshift capacity
             if LUheatCap > heatCap:
                 heatCap = LUheatCap
@@ -299,7 +409,9 @@ class SwingTank(SystemConfig):
 
         G_hw, D_hw, V0, Vtrig, pV, pheating = self._getInitialSimulationValues(Pcapacity, Pvolume)
         
-        swingT = [self.storageT_F] + [0] * (len(G_hw) - 1)
+        #get mixed storage temp of usable volume - this is the new 'setpoint'
+        mixedStorT_F = self._mixStorageTemps(pV[0])[0]
+        swingT = [mixedStorT_F] + [0] * (len(G_hw) - 1)
         srun = [0] * (len(G_hw))
         hw_outSwing = [0] * (len(G_hw))
         hw_outSwing[0] = D_hw[0]
@@ -318,7 +430,7 @@ class SwingTank(SystemConfig):
             
             swingheating, swingT[ii], srun[ii] = self.__runOneSwingStep(swingheating, swingT[ii-1], hw_outSwing[ii])
             #Get the mixed generation
-            mixedGHW = mixVolume(G_hw[ii], self.storageT_F, self.building.incomingT_F, self.building.supplyT_F)
+            mixedGHW = mixVolume(G_hw[ii], mixedStorT_F, self.building.incomingT_F, self.building.supplyT_F) #replaced self.storageT_F with mixedStorT_F
             pheating, pV[ii], prun[ii] = self.runOnePrimaryStep(pheating, V0, Vtrig[ii], pV[ii-1], hw_outSwing[ii], mixedGHW)
 
         return [roundList(pV, 3),
@@ -344,7 +456,7 @@ class SwingTank(SystemConfig):
         div/fig
             plot_div
         """
-        hrind_fromback = 72 # Look at the last 24 hours of the simulation not the whole thing
+        hrind_fromback = 24 # Look at the last 24 hours of the simulation not the whole thing
         [V, G_hw, D_hw, run, swingT, srun, _] = self.simulate()
 
         run = np.array(run[-(60*hrind_fromback):])*60
