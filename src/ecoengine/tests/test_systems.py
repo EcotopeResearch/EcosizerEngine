@@ -154,9 +154,9 @@ def test_invalid_setpoints():
     with pytest.raises(Exception, match="The temperature maintenance on temperature must be greater than the city cold water temperature"):
         createSystem("paralleltank", default_building, 150, 1, 0.8, 16, 0.4, TMonTemp_F = 34)
 def test_invalid_ls_schedule():
-    with pytest.raises(Exception, match="loadshift is not of length 24 but instead has length of 0."):
+    with pytest.raises(Exception, match="Load shift is not of length 24 but instead has length of 0."):
         createSystem('primary', default_building, 150, 1, .8, 16, 0.4, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [])
-    with pytest.raises(Exception, match="loadshift is not of length 24 but instead has length of 25."):
+    with pytest.raises(Exception, match="Load shift is not of length 24 but instead has length of 25."):
         createSystem('primary', default_building, 150, 1, .8, 16, 0.4, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [0]*25)
     with pytest.raises(Exception, match="When using Load shift the HPWH's must run for at least 1 hour each day."):
         createSystem('primary', default_building, 150, 1, .8, 16, 0.4, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [0]*24)

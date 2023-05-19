@@ -23,8 +23,11 @@ def swing_sizer(): # Returns the hpwh swing tank
             magnitudeStat  = 100,
             supplyT_F       = 120,
             storageT_F      = 150,
-            percentUseable  = 0.8, 
+            loadUpT_F       = 150,
+            percentUseable  = 0.9, 
             aquaFract       = 0.4, 
+            aquaFractLoadUp = 0.21,
+            aquaFractShed   = 0.8,
             schematic       = 'swingtank', 
             buildingType   = 'multi_family',
             returnT_F       = 0, 
@@ -36,6 +39,7 @@ def swing_sizer(): # Returns the hpwh swing tank
             nApt            = 100, 
             Wapt            = 100,
             loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadUpHours     = 3,
             doLoadShift     = True,
             loadShiftPercent       = 0.8
         )
@@ -49,8 +53,11 @@ def parallel_sizer(): # Returns the hpwh swing tank
             magnitudeStat  = 100,
             supplyT_F       = 120,
             storageT_F      = 150,
-            percentUseable  = 0.8, 
+            loadUpT_F       = 150,
+            percentUseable  = 0.9, 
             aquaFract       = 0.4, 
+            aquaFractLoadUp = 0.21,
+            aquaFractShed   = 0.8,
             schematic       = 'paralleltank', 
             buildingType   = 'multi_family',
             returnT_F       = 0, 
@@ -62,6 +69,7 @@ def parallel_sizer(): # Returns the hpwh swing tank
             nApt            = 100, 
             Wapt            = 100,
             loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadUpHours     = 3,
             doLoadShift     = True,
             loadShiftPercent       = 0.8,
             setpointTM_F    = 130,
@@ -78,8 +86,11 @@ def primary_sizer(): # Returns the hpwh swing tank
             magnitudeStat  = 100,
             supplyT_F       = 120,
             storageT_F      = 150,
-            percentUseable  = 0.8, 
+            loadUpT_F       = 150,
+            percentUseable  = 0.9, 
             aquaFract       = 0.4, 
+            aquaFractLoadUp = 0.21,
+            aquaFractShed   = 0.8,
             schematic       = 'primary', 
             buildingType   = 'multi_family',
             returnT_F       = 0, 
@@ -90,7 +101,8 @@ def primary_sizer(): # Returns the hpwh swing tank
             compRuntime_hr  = 16, 
             nApt            = 100, 
             Wapt            = 100,
-            loadShiftSchedule = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadUpHours     = 3,
             doLoadShift     = True,
             loadShiftPercent= 0.8
         )
@@ -118,21 +130,21 @@ def test_mixVolume(hotT, coldT, outT, expected):
     assert round(mixVolume(100, hotT, coldT, outT), 3) == expected
 
 @pytest.mark.parametrize("sizingResult, magnitude", [
-   ([1484.462240335448, 151.2390581159244, 100, 59.712485, 168], 2500)
+   ([1412.0829378753049, 145.14595864966793, 100, 59.712485, 168], 2500)
 ])
 def test_swingSizingResult(swing_sizer, sizingResult, magnitude):
     assert swing_sizer.getSizingResults() == sizingResult
     assert swing_sizer.getHWMagnitude() == magnitude
 
 @pytest.mark.parametrize("sizingResult, magnitude", [
-   ([1122.528466677145, 112.45143269230772], 2500)
+   ([1141.554372892012, 112.45143269230772], 2500)
 ])
 def test_primarySizingResult(primary_sizer, sizingResult, magnitude):
     assert primary_sizer.getSizingResults() == sizingResult
     assert primary_sizer.getHWMagnitude() == magnitude
 
 @pytest.mark.parametrize("sizingResult, magnitude", [
-   ([1122.528466677145, 112.45143269230772, 136.0194559548742, 59.712485], 2500)
+   ([1141.554372892012, 112.45143269230772, 136.0194559548742, 59.712485], 2500)
 ])
 def test_parallelSizingResult(parallel_sizer, sizingResult, magnitude):
     assert parallel_sizer.getSizingResults() == sizingResult
@@ -150,5 +162,5 @@ def test_figReturnTypes(parallel_sizer, swing_sizer, primary_sizer, return_as_di
 def test_primaryCurve(parallel_sizer):
     primaryCurveInfo = parallel_sizer.primaryCurve()
     assert len(primaryCurveInfo) == 4
-    assert len(primaryCurveInfo[0]) == len(primaryCurveInfo[1]) == len(primaryCurveInfo[2])
+    assert len(primaryCurveInfo[0]) == len(primaryCurveInfo[1]) == len(primaryCurveInfo[2]) #THIS IS FAILINGG
     assert primaryCurveInfo[3] == 44
