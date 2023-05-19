@@ -11,7 +11,7 @@ class EcosizerEngine:
                             aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1,
                             returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
-                            setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, CA = False):
+                            setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, CA = False, standardGPD = None): #DO I NEED TO REMOVE CA??
         """
         Initializes and sizes the HPWH system for a building based on the given parameters.
 
@@ -78,13 +78,16 @@ class EcosizerEngine:
             Defaults to 120 °F.
         offTime_hr: integer
             Maximum hours per day the temperature maintenance equipment can run.
+        standardGPD : string
+            indicates whether to use a standard gpdpp specification for multi-family buildings. Set to None if not using a standard gpdpp.
 
         """
         
-        building = createBuilding( incomingT_F     = incomingT_F,
-                                    magnitudeStat  = magnitudeStat, 
+        
+        building = createBuilding(  incomingT_F     = incomingT_F,
+                                    magnitudeStat   = magnitudeStat, 
                                     supplyT_F       = supplyT_F, 
-                                    buildingType   = buildingType,
+                                    buildingType    = buildingType,
                                     loadshape       = loadshape,
                                     avgLoadshape    = avgLoadshape,
                                     returnT_F       = returnT_F, 
@@ -92,8 +95,8 @@ class EcosizerEngine:
                                     gpdpp           = gpdpp,
                                     nBR             = nBR,
                                     nApt            = nApt,
-                                    Wapt            = Wapt
-        )
+                                    Wapt            = Wapt,
+                                    standardGPD     = standardGPD)
 
         system = createSystem(  schematic, 
                                 building, 
@@ -113,8 +116,7 @@ class EcosizerEngine:
                                 setpointTM_F = setpointTM_F, 
                                 TMonTemp_F = TMonTemp_F, 
                                 offTime_hr = offTime_hr, 
-                                CA = CA
-        )
+                                CA = CA)
  
         self.system = system
     
@@ -125,7 +127,7 @@ class EcosizerEngine:
         Returns
         -------
         list
-            self.PVol_G_atStorageT, self.PCap_kBTUhr (also self.TMVol_G, self.TMCap_kBTUhr if there is a TM system)
+            self.PVol_G_atStorageT, self.PCap_kBTUhr (also self.TMVol_G, self.TMCap_kBTUhr if there is a TM system and self.CA_TMVol_G if SwingTank)
         """
         return self.system.getSizingResults()
 
@@ -139,7 +141,7 @@ class EcosizerEngine:
         volN : array
             Array of volume in the tank at each hour.
 
-        sHrs2kBTUHR : array
+        primaryHeatHrs2kBTUHR : array
             Array of heating capacity in kBTU/hr
             
         heatHours : array

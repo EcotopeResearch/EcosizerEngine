@@ -1,42 +1,128 @@
-# from ecosizer_engine_package import *
-# # from engine.BuildingCreator import createBuilding
+# <<<<<<< HEAD
+# # from ecosizer_engine_package import *
+# # # from engine.BuildingCreator import createBuilding
 
-# building = createBuilding(
-#             incomingT_F     = 50,
-#             magnitude_stat  = [100,5],
-#             supplyT_F       = 120,
-#             building_type   = ["womens_dorm", "junior_high"],
-#             flow_rate       = 5,
-#             returnT_F       = 100,
-#     )
+# # building = createBuilding(
+# #             incomingT_F     = 50,
+# #             magnitude_stat  = [100,5],
+# #             supplyT_F       = 120,
+# #             building_type   = ["womens_dorm", "junior_high"],
+# #             flow_rate       = 5,
+# #             returnT_F       = 100,
+# #     )
 
-# # swinghpwh = EcosizerEngine(  incomingT_F     = 50,
-# #                     magnitude_stat  = 100,
-# #                     supplyT_F       = 120,
-# #                     storageT_F      = 150,
-# #                     percentUseable  = 0.8, 
-# #                     aquaFract       = 0.4, 
-# #                     schematic       = 'primary', 
-# #                     building_type   = 'multi_family',
-# #                     returnT_F       = 0, 
-# #                     flow_rate       = 0,
-# #                     gpdpp           = 25,
-# #                     safetyTM        = 1.75,
-# #                     defrostFactor   = 1, 
-# #                     compRuntime_hr  = 16, 
-# #                     nApt            = 100, 
-# #                     Wapt            = 100,
-# #                     schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
-# #                     doLoadShift     = True,
-# #                     cdf_shift       = 0.8
-# # )
+# # # swinghpwh = EcosizerEngine(  incomingT_F     = 50,
+# # #                     magnitude_stat  = 100,
+# # #                     supplyT_F       = 120,
+# # #                     storageT_F      = 150,
+# # #                     percentUseable  = 0.8, 
+# # #                     aquaFract       = 0.4, 
+# # #                     schematic       = 'primary', 
+# # #                     building_type   = 'multi_family',
+# # #                     returnT_F       = 0, 
+# # #                     flow_rate       = 0,
+# # #                     gpdpp           = 25,
+# # #                     safetyTM        = 1.75,
+# # #                     defrostFactor   = 1, 
+# # #                     compRuntime_hr  = 16, 
+# # #                     nApt            = 100, 
+# # #                     Wapt            = 100,
+# # #                     schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+# # #                     doLoadShift     = True,
+# # #                     cdf_shift       = 0.8
+# # # )
 
-# # outlist = swinghpwh.getSizingResults()
+# # # outlist = swinghpwh.getSizingResults()
 
-# # print("Heating capacity (PCap_kBTUhr)", outlist[1])
+# # # print("Heating capacity (PCap_kBTUhr)", outlist[1])
+# # # # print("Swing Tank Volume (TMVol_G)", outlist[2])
+# # # print("Tank Volume (PVol_G_atStorageT)",outlist[0])
+# # # # print("Swing Resistance Element (TMCap_kBTUhr)", outlist[3])
+
+# # # [x_data, y_data, hours, recInd] = swinghpwh.primaryCurve()
+# # # print("x_data",x_data)
+# # # print("y_data",y_data)
+# # # print("hours",hours)
+# # # print("recInd",recInd)
+
+# # # print("========================================================================================================")
+
+# # # parallelhpwh = EcosizerEngine(  incomingT_F     = 50,
+# # #                     magnitude_stat  = 100,
+# # #                     supplyT_F       = 120,
+# # #                     storageT_F      = 150,
+# # #                     percentUseable  = 0.8, 
+# # #                     aquaFract       = 0.4, 
+# # #                     schematic       = 'paralleltank', 
+# # #                     building_type   = 'multi_family',
+# # #                     returnT_F       = 0, 
+# # #                     flow_rate       = 0,
+# # #                     gpdpp           = 25,
+# # #                     safetyTM        = 1.75,
+# # #                     defrostFactor   = 1, 
+# # #                     compRuntime_hr  = 16, 
+# # #                     nApt            = 100, 
+# # #                     Wapt            = 100,
+# # #                     schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+# # #                     doLoadShift     = True,
+# # #                     cdf_shift       = 0.8,
+# # #                     setpointTM_F    = 130,
+# # #                     TMonTemp_F      = 120,
+# # #                     offTime_hr      = 0.333
+
+# # # )
+
+# # # outlist = parallelhpwh.getSizingResults()
+
+# # # print("Heating capacity (PCap_kBTUhr)", outlist[1])
 # # # print("Swing Tank Volume (TMVol_G)", outlist[2])
-# # print("Tank Volume (PVol_G_atStorageT)",outlist[0])
+# # # print("Tank Volume (PVol_G_atStorageT)",outlist[0])
 # # # print("Swing Resistance Element (TMCap_kBTUhr)", outlist[3])
+
+# # # [x_data, y_data, hours, recInd] = parallelhpwh.primaryCurve()
+# # # print("x_data",x_data)
+# # # print("y_data",y_data)
+# # # print("hours",hours)
+# # # print("recInd",recInd)
+# =======
+# from ecoengine import EcosizerEngine
+# import numpy as np
+
+# hpwh = EcosizerEngine(  incomingT_F     = 50,
+#                     magnitudeStat  = 1,
+#                     supplyT_F       = 120,
+#                     storageT_F      = 180,
+#                     percentUseable  = .8, 
+#                     aquaFract       = .4,
+#                     loadshape= np.array([0,40,0,0,0,0,300,0,0,0,0,0,0,0,0,82,0,0,0,17,0,0,0,0])/439,
+#                     schematic       = 'swingtank', 
+#                     buildingType   = 'multi_family',
+#                     returnT_F       = 100, 
+#                     flowRate       = 3,
+#                     gpdpp           = 439,
+#                     standardGPD = None,
+#                     safetyTM        = 1.75,
+#                     defrostFactor   = 1, 
+#                     compRuntime_hr  = 16, 
+#                     nApt            = 1, 
+#                     # Wapt            = 100,
+#                     # loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1], #loadshift schedule
+#                     doLoadShift     = False,
+#                     # loadShiftPercent       = 0.8,
+#                     offTime_hr = 0.5,
+#                     TMonTemp_F = 125
+# )
+
+# outlist = hpwh.getSizingResults()
+# hpwh.plotStorageLoadSim()
+# # [x_data, y_data, hours, recInd] = hpwh.primaryCurve()
+# # plotSimDiv = hpwh.plotStorageLoadSim()
+
+# print("Heating capacity (PCap_kBTUhr)", outlist[1])
+# print("pl Tank Volume (TMVol_G)", outlist[2])
+# print("Tank Volume (PVol_G_atStorageT)",outlist[0])
+# print("Swing Resistance Element (TMCap_kBTUhr)", outlist[3])
+# print("Swing Tank Volume (TMVol_G) CA", outlist[4])
 
 # # [x_data, y_data, hours, recInd] = swinghpwh.primaryCurve()
 # # print("x_data",x_data)
@@ -47,24 +133,24 @@
 # # print("========================================================================================================")
 
 # # parallelhpwh = EcosizerEngine(  incomingT_F     = 50,
-# #                     magnitude_stat  = 100,
+# #                     magnitudeStat  = 100,
 # #                     supplyT_F       = 120,
 # #                     storageT_F      = 150,
 # #                     percentUseable  = 0.8, 
 # #                     aquaFract       = 0.4, 
 # #                     schematic       = 'paralleltank', 
-# #                     building_type   = 'multi_family',
+# #                     buildingType   = 'multi_family',
 # #                     returnT_F       = 0, 
-# #                     flow_rate       = 0,
+# #                     flowRate       = 0,
 # #                     gpdpp           = 25,
 # #                     safetyTM        = 1.75,
 # #                     defrostFactor   = 1, 
 # #                     compRuntime_hr  = 16, 
 # #                     nApt            = 100, 
 # #                     Wapt            = 100,
-# #                     schedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+# #                     loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
 # #                     doLoadShift     = True,
-# #                     cdf_shift       = 0.8,
+# #                     loadShiftPercent       = 0.8,
 # #                     setpointTM_F    = 130,
 # #                     TMonTemp_F      = 120,
 # #                     offTime_hr      = 0.333
@@ -83,6 +169,7 @@
 # # print("y_data",y_data)
 # # print("hours",hours)
 # # print("recInd",recInd)
+# >>>>>>> main
 
 
 

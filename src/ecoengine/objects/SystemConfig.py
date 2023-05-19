@@ -160,7 +160,6 @@ class SystemConfig:
         G_hw = 1000 * Pcapacity / rhoCp / (self.building.supplyT_F - self.building.incomingT_F) \
                * self.defrostFactor * np.tile(self.loadShiftSchedule, 3)
 
-        
         # Define the use of DHW with the normalized load shape
         D_hw = self.building.magnitude * self.fract_total_vol * np.tile(loadShapeN, 3)
 
@@ -189,7 +188,6 @@ class SystemConfig:
         G_hw = np.array(hrToMinList(G_hw)) / 60
         D_hw = np.array(hrToMinList(D_hw)) / 60
         Vtrig = np.array(hrToMinList(np.tile(Vtrig, 3))) 
-
         pV = [V0] + [0] * (len(G_hw) - 1)
 
         pheating = False
@@ -221,6 +219,7 @@ class SystemConfig:
 
         """
         # Check
+
         if not(isinstance(loadShiftSchedule, list)):
             raise Exception("Invalid input given for schedule, must be an array of length 24.")
         if len(loadShiftSchedule) != 24: 
@@ -249,7 +248,7 @@ class SystemConfig:
         self.loadUpT_F = loadUpT_F
         self.loadshift = np.array(loadShiftSchedule, dtype = float) # Coerce to numpy array of data type float
         
-        # adjust for cdf_shift
+        # adjust for loadShiftPercent
         if loadShiftPercent == 1: # meaing 100% of days covered by load shift
             self.fract_total_vol = 1
             
@@ -597,6 +596,7 @@ class SystemConfig:
 
         else:  # Else not heating, REMOVED TIME MISSED HERE
             Vnew = Vcurr - hw_out # So lose HW
+
             if Vnew < Vtrig: # If should heat
                 Vnew += hw_in # # Start heating
                 did_run = hw_in 

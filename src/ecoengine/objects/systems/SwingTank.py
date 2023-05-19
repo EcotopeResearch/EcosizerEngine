@@ -17,6 +17,7 @@ class SwingTank(SystemConfig):
     def __init__(self, safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, CA = False, aquaFractLoadUp = None, 
                  aquaFractShed = None, loadUpT_F = None):
+
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
@@ -28,14 +29,14 @@ class SwingTank(SystemConfig):
             raise Exception("Recirculation losses are too high, consider using multiple central plants.")
 
         self.safetyTM = safetyTM
-        self.TMVol_G = min([x for x in self.sizingTable if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))]) #removed equal sign
+        self.TMVol_G = min([x for x in self.sizingTable if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
         self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
         self.element_deadband_F = 8.
         self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
         
         super().__init__(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)
-        
+
     def getSizingResults(self):
         """
         Returns the minimum primary volume and heating capacity sizing results

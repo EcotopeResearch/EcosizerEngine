@@ -103,6 +103,7 @@ def primary_sizer(): # Returns the hpwh swing tank
             Wapt            = 100,
             loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
             loadUpHours     = 3,
+            #loadShiftSchedule = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
             doLoadShift     = True,
             loadShiftPercent= 0.8
         )
