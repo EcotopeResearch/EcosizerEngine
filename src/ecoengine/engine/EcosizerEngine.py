@@ -6,10 +6,10 @@ print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, an
 
 class EcosizerEngine:
 
-    def __init__(self, incomingT_F, magnitude_stat, supplyT_F, storageT_F, percentUseable, aquaFract,
-                            schematic, building_type, loadshape = None, avgLoadshape = None, schedule = None, loadUpHours = None,
-                            aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, cdf_shift = 1,
-                            returnT_F = 0, flow_rate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
+    def __init__(self, incomingT_F, magnitudeStat, supplyT_F, storageT_F, percentUseable, aquaFract,
+                            schematic, buildingType, loadshape = None, avgLoadshape = None, loadShiftSchedule = None, loadUpHours = None,
+                            aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1,
+                            returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, CA = False):
         """
@@ -37,7 +37,7 @@ class EcosizerEngine:
             defaults to design load shape for building type.
         avgLoadShape : ndarray
             defaults to average load shape for building type.
-        schedule : array_like
+        loadShiftSchedule : array_like
             List or array of 0's, 1's used for load shifting, 0 indicates system is off. 
         loadUpHours : float
             Number of hours spent loading up for first shed.
@@ -47,7 +47,7 @@ class EcosizerEngine:
             The fraction of the total height of the primary hot water tanks at which the shed aquastat is located.
         loadUpT_F : float
             The hot water storage temperature between the normal and load up aquastat. [°F]
-        cdf_shift: float
+        loadShiftPercent: float
             Percentage of days the load shift will be met
         returnT_F : float 
             The water temperature returning from the recirculation loop. [°F]
@@ -82,13 +82,13 @@ class EcosizerEngine:
         """
         
         building = createBuilding( incomingT_F     = incomingT_F,
-                                    magnitude_stat  = magnitude_stat, 
+                                    magnitudeStat  = magnitudeStat, 
                                     supplyT_F       = supplyT_F, 
-                                    building_type   = building_type,
+                                    buildingType   = buildingType,
                                     loadshape       = loadshape,
                                     avgLoadshape    = avgLoadshape,
                                     returnT_F       = returnT_F, 
-                                    flow_rate       = flow_rate,
+                                    flowRate       = flowRate,
                                     gpdpp           = gpdpp,
                                     nBR             = nBR,
                                     nApt            = nApt,
@@ -106,8 +106,8 @@ class EcosizerEngine:
                                 aquaFractShed = aquaFractShed,
                                 loadUpT_F = loadUpT_F,
                                 doLoadShift = doLoadShift, 
-                                cdf_shift = cdf_shift, 
-                                schedule = schedule, 
+                                loadShiftPercent = loadShiftPercent, 
+                                loadShiftSchedule = loadShiftSchedule, 
                                 loadUpHours = loadUpHours,
                                 safetyTM = safetyTM, 
                                 setpointTM_F = setpointTM_F, 
@@ -139,7 +139,7 @@ class EcosizerEngine:
         volN : array
             Array of volume in the tank at each hour.
 
-        primaryHeatHrs2kBTUHR : array
+        sHrs2kBTUHR : array
             Array of heating capacity in kBTU/hr
             
         heatHours : array
@@ -166,3 +166,30 @@ class EcosizerEngine:
             plot_div
         """
         return self.system.plotStorageLoadSim(return_as_div)
+    
+    def lsSizedPoints(self):
+        """
+        Returns combinations of storage and capacity based on number of 
+        load up hours
+
+        Returns 
+        -------
+        volN : array
+            Array of storage volume for each number of load up hours.
+        CapN : array
+            Array of heating capacity for each number of load up hours.
+        N : array
+            Array of load up hours tested. Goes from 1 to hour before first shed.
+        """
+        return self.system.lsSizedPoints()
+
+    def getHWMagnitude(self):
+        """
+        Returns the total daily hot water for the building the HPWH is being sized for.
+        
+        Returns
+        -------
+        magnitude : Float
+            The total daily hot water for the building the HPWH is being sized for.
+        """
+        return self.system.building.magnitude

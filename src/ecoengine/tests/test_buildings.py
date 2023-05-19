@@ -1,8 +1,9 @@
 import pytest
-from ecosizer_engine_package.engine.BuildingCreator import createBuilding
+from ecoengine.engine.BuildingCreator import createBuilding
 import numpy as np
 import os, sys
-from ecosizer_engine_package.constants.Constants import *
+from ecoengine.constants.Constants import *
+import re
 
 class QuietPrint:
     def __enter__(self):
@@ -18,9 +19,9 @@ def multiFamily(): # Returns the hpwh swing tank
     with QuietPrint():
         building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = 100,
+            magnitudeStat  = 100,
             supplyT_F       = 120,
-            building_type   = 'multi_family',
+            buildingType   = 'multi_family',
             nApt            = 100, 
             Wapt            = 100,
             gpdpp           = 25
@@ -32,13 +33,14 @@ def multiFamilyWithBedrooms(): # Returns the hpwh swing tank
     with QuietPrint():
         building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = 100,
+            magnitudeStat  = 100,
             supplyT_F       = 120,
-            building_type   = 'multi_family',
+            buildingType   = 'multi_family',
             nApt            = 100, 
             Wapt            = 100,
-            gpdpp           = 'ca',
-            nBR             = [0,1,5,3,2,0]
+            gpdpp           = 100,
+            nBR             = [0,1,5,3,2,0],
+            standardGPD     = 'ca'
         )
     return building
 
@@ -47,11 +49,11 @@ def nursingHomeAndOffice(): # Returns the hpwh swing tank
     with QuietPrint():
         building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = [100, 75],
+            magnitudeStat  = [100, 75],
             supplyT_F       = 120,
-            building_type   = ['nursing_home','office_building'],
+            buildingType   = ['nursing_home','office_building'],
             returnT_F       = 100, 
-            flow_rate       = 5
+            flowRate       = 5
         )
     return building
 
@@ -94,10 +96,10 @@ def test_multiUseResults(nursingHomeAndOffice, expected):
 def test_magnitudes(buildingType, magnitude, expected):
     building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = magnitude,
+            magnitudeStat  = magnitude,
             supplyT_F       = 120,
-            building_type   = buildingType,
-            flow_rate       = 5,
+            buildingType   = buildingType,
+            flowRate       = 5,
             returnT_F       = 100,
     )
     assert round(building.magnitude,1) == expected
@@ -111,10 +113,10 @@ def test_magnitudes(buildingType, magnitude, expected):
 def test_default_loadshapes(buildingType, magnitude, expected):
     building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = magnitude,
+            magnitudeStat  = magnitude,
             supplyT_F       = 120,
-            building_type   = buildingType,
-            flow_rate       = 5,
+            buildingType   = buildingType,
+            flowRate       = 5,
             returnT_F       = 100,
     )
     assert np.array_equal(np.round(building.loadshape[:3], decimals=5), np.round(expected, decimals=5))
@@ -126,10 +128,10 @@ def test_default_loadshapes(buildingType, magnitude, expected):
 def test_custom_loadshapes(loadShape, buildingType, magnitude, expected):
     building = createBuilding(
             incomingT_F     = 50,
-            magnitude_stat  = magnitude,
+            magnitudeStat  = magnitude,
             supplyT_F       = 120,
-            building_type   = buildingType,
-            flow_rate       = 5,
+            buildingType   = buildingType,
+            flowRate       = 5,
             returnT_F       = 100,
             loadshape       = loadShape
     )
@@ -137,6 +139,16 @@ def test_custom_loadshapes(loadShape, buildingType, magnitude, expected):
 
 # Check for building initialization errors
 def test_invalid_building_parameter_errors():
+    with pytest.raises(Exception, match="Error: Number of apartments must be an integer."):
+        createBuilding(35, 4, 120, "multi_family", nApt='blah')
+    with pytest.raises(Exception, match="Error: WATTs per apt must be an integer."):
+        createBuilding(35, 4, 120, "multi_family", Wapt='blah')
+    with pytest.raises(Exception, match="Error: GPDPP must be a number."):
+        createBuilding(35, 4, 120, "multi_family", gpdpp=None)
+    with pytest.raises(Exception, match=re.escape("Error: standardGPD must be a String of one of the following values: ['ca', 'ashLow', 'ashMed', 'ecoMark']")):
+        createBuilding(35, 4, 120, "multi_family", gpdpp=25, standardGPD=5)
+    with pytest.raises(Exception, match=re.escape("Error: standardGPD must be a String of one of the following values: ['ca', 'ashLow', 'ashMed', 'ecoMark']")):
+        createBuilding(35, 4, 120, "multi_family", gpdpp=25, standardGPD='yabadabado')
     with pytest.raises(Exception, match="No default loadshape found for building type climbing_gym."):
         createBuilding(35, 4, 120, "climbing_gym")
     with pytest.raises(Exception, match="Loadshape must be of length 24 but instead has length of 5."):
@@ -154,7 +166,7 @@ def test_invalid_building_parameter_errors():
     with pytest.raises(Exception, match="Error: City water temp must be a number."):
         createBuilding("not a number", 4, 120, "mens_dorm")
     with pytest.raises(Exception, match="Error: Flow rate must be a number."):
-        createBuilding(35, 4, 120, "mens_dorm", flow_rate = "problem")
+        createBuilding(35, 4, 120, "mens_dorm", flowRate = "problem")
     with pytest.raises(Exception, match="Missing values for multi-use building. Collected 2 building types but collected 1 magnitude varriables"):
         createBuilding(35, 4, 120, ["mens_dorm","yep"])
     with pytest.raises(Exception, match="Missing values for multi-use building. Collected 2 building types but collected 4 magnitude varriables"):
