@@ -65,6 +65,27 @@ def swingTank(): # Returns the hpwh swing tank
         )
     return system
 
+@pytest.fixture
+def LSprimary():
+    with QuietPrint():
+       system = createSystem(
+            schematic   = 'primary', 
+            building    = default_building, 
+            storageT_F  = 150, 
+            defrostFactor   = 1, 
+            percentUseable  = .8, 
+            compRuntime_hr  = 16, 
+            aquaFract   = 0.4,
+            aquaFractLoadUp = 0.25,
+            aquaFractShed = 0.8,
+            loadUpT_F = 150,
+            loadShiftSchedule = [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            doLoadShift = True,
+            loadUpHours = 2
+        )
+    return system 
+
+
 ###############################################################################
 ###############################################################################
 # Unit Tests
@@ -91,6 +112,11 @@ def test_swingResults(swingTank, expected):
             swingTank.loadShiftSchedule, swingTank.maxDayRun_hr,
             swingTank.TMVol_G, swingTank.TMCap_kBTUhr] == expected
 
+@pytest.mark.parametrize("expected", [
+    ([841.0350199999997, 91.3667890625])
+])
+def test_LSprimary(LSprimary, expected):
+    assert [LSprimary.PVol_G_atStorageT, LSprimary.PCap_kBTUhr] == expected
 
 # Check for system initialization errors
 def test_invalid_building():
@@ -162,3 +188,16 @@ def test_invalid_ls_schedule():
         createSystem('primary', default_building, 150, 1, .8, 16, 0.4, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [0]*24)
     with pytest.raises(Exception, match="Load shift only available for above 25 percent of days."):
         createSystem('primary', default_building, 150, 1, .8, 16, 0.4, doLoadShift = True, loadShiftPercent = 0.23, loadShiftSchedule = [1]*24)
+def test_invalid_loadshift_vars():
+    with pytest.raises(Exception, match = "Invalid input given for load up aquastat fraction, must be a number between 0 and normal aquastat fraction."):
+        createSystem('primary', default_building, 150, 1, .8, 16, 0.4, doLoadShift = True, aquaFractLoadUp = 0.5, aquaFractShed = 0.8,
+                     loadShiftSchedule = [1]*24, loadUpT_F = 160, loadUpHours = 0)
+    with pytest.raises(Exception, match = "Invalid input given for shed aquastat fraction, must be a number between normal aquastat fraction and 1."):
+        createSystem('primary', default_building, 150, 1, .8, 16, 0.5, doLoadShift = True, aquaFractLoadUp = 0.3, aquaFractShed = 0.4,
+                     loadShiftSchedule = [1]*24, loadUpT_F = 160, loadUpHours = 0)
+    with pytest.raises(Exception, match = "Invalid input given for load up storage temp, it must be a number between normal storage temp and 212F."):
+        createSystem('primary', default_building, 150, 1, .8, 16, 0.4, doLoadShift = True, aquaFractLoadUp = 0.3, aquaFractShed = 0.8,
+                     loadShiftSchedule = [1]*24, loadUpT_F = 140, loadUpHours = 0)
+    with pytest.raises(Exception, match = "Invalid input given for load up hours, must be an integer less than or equal to hours in day before first shed period."):
+        createSystem('primary', default_building, 150, 1, .8, 16, 0.4, doLoadShift = True, aquaFractLoadUp = 0.3, aquaFractShed = 0.8,
+                     loadShiftSchedule = [1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], loadUpT_F = 160, loadUpHours = 2)

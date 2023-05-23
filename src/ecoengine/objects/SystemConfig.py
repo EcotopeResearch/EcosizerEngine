@@ -107,7 +107,7 @@ class SystemConfig:
 
         # Run the "simulation"
         for i in range(1, len(G_hw)):
-            mixedDHW = mixVolume(D_hw[i], mixedStorT_F, self.building.incomingT_F, self.building.supplyT_F) #TODO how can we address mixed temp issue with multiple setpoints
+            mixedDHW = mixVolume(D_hw[i], mixedStorT_F, self.building.incomingT_F, self.building.supplyT_F) 
             mixedGHW = mixVolume(G_hw[i], mixedStorT_F, self.building.incomingT_F, self.building.supplyT_F)
             pheating, pV[i], prun[i] = self.runOnePrimaryStep(pheating, V0, Vtrig[i], pV[i-1], mixedDHW, mixedGHW) 
             
@@ -235,12 +235,12 @@ class SystemConfig:
             raise Exception("Cannot load shift for more than 100 percent of days")
         if not (isinstance(aquaFractLoadUp, int) or isinstance(aquaFractLoadUp, float)) or aquaFractLoadUp > aquaFract or aquaFractLoadUp <= 0:
             raise Exception("Invalid input given for load up aquastat fraction, must be a number between 0 and normal aquastat fraction.")
-        if not (isinstance(aquaFractShed, int) or isinstance(aquaFractShed, float)) or aquaFractShed > 1 or aquaFractShed < aquaFract:
+        if not (isinstance(aquaFractShed, int) or isinstance(aquaFractShed, float)) or aquaFractShed >= 1 or aquaFractShed < aquaFract:
             raise Exception("Invalid input given for shed aquastat fraction, must be a number between normal aquastat fraction and 1.")
         if not (isinstance(loadUpT_F, int) or isinstance(loadUpT_F, float)) or loadUpT_F < storageT_F or not checkLiqudWater(loadUpT_F):
             raise Exception("Invalid input given for load up storage temp, it must be a number between normal storage temp and 212F.")
         if not (isinstance(loadUpHours, int)) or loadUpHours > loadShiftSchedule.index(0): #make sure there are not more load up hours than nhours before first shed
-            raise Exception("Invalid input given for load up hours, must be an integer less than or equal to hours in day before first shed period,") 
+            raise Exception("Invalid input given for load up hours, must be an integer less than or equal to hours in day before first shed period.") 
 
         self.loadShiftSchedule = loadShiftSchedule
         self.loadUpHours = loadUpHours
@@ -280,26 +280,26 @@ class SystemConfig:
         -------
         heatCap
             The heating capacity in [btu/hr].
-        genrate
+        genRate
             The generation rate in [gal/hr] when the heat pump is on. 
             If loadshifting this is the maximum between normal calculation
             and what is necessary to complete first load up.
         """
         checkHeatHours(heathours)
-        genrate = self.building.magnitude * effSwingVolFract / heathours
+        genRate = self.building.magnitude * effSwingVolFract / heathours
         
         if self.doLoadShift and not primaryCurve:
             Vshift, VconsumedLU = self._calcPrelimVol(loadUpHours) 
             Vload = Vshift * (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) #volume in 'load up' portion of tank
-            LUgenrate = (Vload + VconsumedLU) / loadUpHours #rate needed to load up tank and offset use during load up period
+            LUgenRate = (Vload + VconsumedLU) / loadUpHours #rate needed to load up tank and offset use during load up period
             
-            #compare with original genrate
-            genrate = max(LUgenrate, genrate)
+            #compare with original genRate
+            genRate = max(LUgenRate, genRate)
             
-        heatCap = genrate * rhoCp * \
+        heatCap = genRate * rhoCp * \
             (self.building.supplyT_F - self.building.incomingT_F) / self.defrostFactor / 1000
        
-        return heatCap, genrate
+        return heatCap, genRate
     
 
     def sizePrimaryTankVolume(self, heatHrs, loadUpHours, primaryCurve = False):
@@ -412,8 +412,8 @@ class SystemConfig:
         effMixFract: int
             Needed for swing tank implementation.
         """          
-        genrate = np.tile(onOffArr,2) / heatHrs #hourly
-        diffN = genrate - np.tile(loadshape,2) #hourly
+        genRate = np.tile(onOffArr,2) / heatHrs #hourly
+        diffN = genRate - np.tile(loadshape,2) #hourly
         diffInd = getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
         diffN *= self.building.magnitude
         
@@ -436,7 +436,10 @@ class SystemConfig:
         Implemented separately for swing tank system.
 
         Parameters
-        ------      
+        ------   
+        loadUpHours : float
+            Number of hours of scheduled load up before first shed. If sizing, this is set by user. If creating sizing
+            plot, number may vary.   
         effMixFract : float
             Only used in swing tank implementation.
 
@@ -449,13 +452,13 @@ class SystemConfig:
         """
         Vshift = self._calcPrelimVol(loadUpHours)[0] #volume to make it through first shed
         
-        genrateON = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, loadUpHours, effSwingVolFract = effMixFract, primaryCurve = False)[1] #max generation rate from both methods
-        genrate = [genrateON if x != 0 else 0 for x in self.loadShiftSchedule] #set generation rate during shed to 0
+        genRateON = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, loadUpHours, effSwingVolFract = effMixFract, primaryCurve = False)[1] #max generation rate from both methods
+        genRate = [genRateON if x != 0 else 0 for x in self.loadShiftSchedule] #set generation rate during shed to 0
         
-        diffN = np.tile(genrate, 2) - np.tile(self.building.avgLoadshape,2) * self.building.magnitude
+        diffN = np.tile(genRate, 2) - np.tile(self.building.avgLoadshape,2) * self.building.magnitude
         
         #get first index after shed
-        shedEnd = [i for i,x in enumerate(genrate[1:],1) if x > genrate[i-1]][0] #start at beginning of first shed, fully loaded up equivalent to starting at the end of shed completely "empty"
+        shedEnd = [i for i,x in enumerate(genRate[1:],1) if x > genRate[i-1]][0] #start at beginning of first shed, fully loaded up equivalent to starting at the end of shed completely "empty"
         diffCum = np.cumsum(diffN[shedEnd:]) 
         LSrunV_G = -min(diffCum[diffCum<0.], default = 0) #numbers less than 0 are a hot water deficit, find the biggest deficit. if no deficit then 0.
         
@@ -683,7 +686,9 @@ class SystemConfig:
 
         Parameters
         ----------
-        None.
+        loadUpHours : float
+            Number of hours of scheduled load up before first shed. If sizing, this is set by user. If creating sizing
+            plot, number may vary. 
 
         Returns 
         ----------
@@ -709,18 +714,8 @@ class SystemConfig:
 
         Parameters
         ----------
-        aquaFract: float
-            The fraction of the total height of the primary hot water tanks at which the Aquastat is located.
-        aquaFractLoadUp : float
-            The fraction of the total height of the primary hot water tanks at which the load up aquastat is located.
-        aquaFractShed : float
-            The fraction of the total height of the primary hot water tanks at which the shed aquastat is located.
-        loadUpT_F : float
-            The hot water storage temperature between the normal and load up aquastat. [°F]
-        storageT_F : float 
-            The hot water storage temperature under normal operation. [°F]
-        Volume: float
-             The volume in gallons at supply temp to be converted to volume at storage temp. [gal]
+        runningVol_G : float
+            Volume of water to be mixed. 
 
         Returns
         ----------

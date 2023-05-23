@@ -108,6 +108,54 @@ def primary_sizer(): # Returns the hpwh swing tank
         )
     return hpwh
 
+@pytest.fixture
+def primary_sizer_nls(): 
+    with QuietPrint():
+        hpwh = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            schematic       = 'primary', 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 100,
+            doLoadShift     = False,
+        )
+    return hpwh
+
+@pytest.fixture
+def swing_sizer_nls(): 
+    with QuietPrint():
+        hpwh = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            schematic       = 'swingtank', 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 100,
+            doLoadShift     = False,
+        )
+    return hpwh
+
 ###############################################################################
 ###############################################################################
 # Unit Tests
@@ -136,12 +184,24 @@ def test_swingSizingResult(swing_sizer, sizingResult, magnitude):
     assert swing_sizer.getSizingResults() == sizingResult
     assert swing_sizer.getHWMagnitude() == magnitude
 
+@pytest.mark.parametrize("sizingResult", [
+    ([540.4258388420066, 118.11496284632373, 100, 59.712485, 168])
+])
+def test_swingSizingNLSResult(swing_sizer_nls, sizingResult):
+    assert swing_sizer_nls.getSizingResults() == sizingResult
+
 @pytest.mark.parametrize("sizingResult, magnitude", [
    ([1141.554372892012, 112.45143269230772], 2500)
 ])
 def test_primarySizingResult(primary_sizer, sizingResult, magnitude):
     assert primary_sizer.getSizingResults() == sizingResult
     assert primary_sizer.getHWMagnitude() == magnitude
+
+@pytest.mark.parametrize("sizingResult", [
+    ([467.6418425, 91.3667890625])
+])
+def test_primarySizingNLSResults(primary_sizer_nls, sizingResult):
+    assert primary_sizer_nls.getSizingResults() == sizingResult
 
 @pytest.mark.parametrize("sizingResult, magnitude", [
    ([1141.554372892012, 112.45143269230772, 136.0194559548742, 59.712485], 2500)
