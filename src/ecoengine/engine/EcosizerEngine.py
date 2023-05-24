@@ -81,7 +81,7 @@ class EcosizerEngine:
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None):
         
-        building = createBuilding( incomingT_F     = incomingT_F,
+        self.building = createBuilding( incomingT_F     = incomingT_F,
                                     magnitudeStat  = magnitudeStat, 
                                     supplyT_F       = supplyT_F, 
                                     buildingType   = buildingType,
@@ -96,13 +96,14 @@ class EcosizerEngine:
                                     standardGPD = standardGPD
         )
 
-        system = createSystem(  schematic, 
-                                building, 
+        self.system = createSystem(  
+                                schematic, 
                                 storageT_F, 
                                 defrostFactor, 
                                 percentUseable, 
                                 compRuntime_hr, 
-                                aquaFract, 
+                                aquaFract,
+                                building = self.building, 
                                 aquaFractLoadUp = aquaFractLoadUp,
                                 aquaFractShed = aquaFractShed,
                                 loadUpT_F = loadUpT_F,
@@ -115,8 +116,6 @@ class EcosizerEngine:
                                 TMonTemp_F = TMonTemp_F, 
                                 offTime_hr = offTime_hr
         )
- 
-        self.system = system
     
     def getSizingResults(self):
         """
@@ -148,7 +147,7 @@ class EcosizerEngine:
         recIndex : int
             The index of the recommended heating rate. 
         """
-        return self.system.primaryCurve()
+        return self.system.primaryCurve(self.building)
     
     def plotStorageLoadSim(self, return_as_div=True):
         """
@@ -165,7 +164,7 @@ class EcosizerEngine:
         div/fig
             plot_div
         """
-        return self.system.plotStorageLoadSim(return_as_div)
+        return self.system.plotStorageLoadSim(self.building, return_as_div)
     
     def lsSizedPoints(self):
         """
@@ -181,7 +180,7 @@ class EcosizerEngine:
         N : array
             Array of load up hours tested. Goes from 1 to hour before first shed.
         """
-        return self.system.lsSizedPoints()
+        return self.system.lsSizedPoints(self.building)
 
     def getHWMagnitude(self):
         """
@@ -192,4 +191,4 @@ class EcosizerEngine:
         magnitude : Float
             The total daily hot water for the building the HPWH is being sized for.
         """
-        return self.system.building.magnitude
+        return self.building.magnitude

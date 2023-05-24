@@ -5,14 +5,14 @@ from ecoengine.constants.Constants import *
 from ecoengine.objects.systemConfigUtils import checkLiqudWater
 
 class ParallelLoopTank(SystemConfig):
-    def __init__(self, safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
+    def __init__(self, safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None):
 
 
         if TMonTemp_F == 0:
-            TMonTemp_F = building.incomingT_F + 2
+            TMonTemp_F = building.incomingT_F + 2 # TODO deal with this
         
-        super().__init__(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
+        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)
         
         self._checkParallelLoopInputs(safetyTM, offTime_hr, setpointTM_F, TMonTemp_F)
@@ -21,8 +21,13 @@ class ParallelLoopTank(SystemConfig):
         self.offTime_hr = offTime_hr # Hour
         self.safetyTM = safetyTM # Safety factor
 
-        self.TMVol_G  =  (self.building.recirc_loss / rhoCp) * (self.offTime_hr / (self.setpointTM_F - self.TMonTemp_F))
-        self.TMCap_kBTUhr = self.safetyTM * self.building.recirc_loss / 1000
+        if not building is None:
+            if setpointTM_F <= building.incomingT_F:
+                raise Exception("The temperature maintenance setpoint temperature must be greater than the city cold water temperature")
+            if TMonTemp_F <= building.incomingT_F:
+                raise Exception("The temperature maintenance on temperature must be greater than the city cold water temperature")
+            self.TMVol_G  =  (building.recirc_loss / rhoCp) * (self.offTime_hr / (self.setpointTM_F - self.TMonTemp_F))
+            self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000
 
     def _checkParallelLoopInputs(self, safetyTM, offTime_hr, setpointTM_F, TMonTemp_F):
         # Quick Check to make sure the inputs make sense
@@ -39,10 +44,6 @@ class ParallelLoopTank(SystemConfig):
             raise Exception('Invalid input given for TMonTemp_F, it must be between 32 and 212F.')
         if setpointTM_F <= TMonTemp_F:
             raise Exception("The temperature maintenance setpoint temperature must be greater than the turn on temperature")
-        if setpointTM_F <= self.building.incomingT_F:
-            raise Exception("The temperature maintenance setpoint temperature must be greater than the city cold water temperature")
-        if TMonTemp_F <= self.building.incomingT_F:
-            raise Exception("The temperature maintenance on temperature must be greater than the city cold water temperature")
 
     def getSizingResults(self):
         """

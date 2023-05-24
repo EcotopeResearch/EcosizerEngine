@@ -2,7 +2,7 @@ from ecoengine.objects.SystemConfig import *
 from ecoengine.objects.systems.SwingTank import *
 from ecoengine.objects.systems.ParallelLoopTank import *
 
-def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift = False, 
+def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None, doLoadShift = False, 
                  aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, safetyTM = 1.75, 
                  setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333):
 
@@ -13,8 +13,6 @@ def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable,
     ----------
     schematic : String
         Indicates schematic type. Valid values are 'swingtank', 'paralleltank', and 'primary'
-    building : Building
-        Building object the HPWH system will be sized for.
     storageT_F : float 
         The hot water storage temperature. [°F]
     defrostFactor : float 
@@ -25,6 +23,8 @@ def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable,
         The number of hours the compressor will run on the design day. [Hr]
     aquaFract: float
         The fraction of the total height of the primary hot water tanks at which the Aquastat is located.
+    building : Building
+        Building object the HPWH system will be sized for.
     doLoadShift : boolean
         Set to true if doing loadshift
     aquaFractLoadUp : float
@@ -57,14 +57,14 @@ def createSystem(schematic, building, storageT_F, defrostFactor, percentUseable,
     
     match schematic:
         case 'swingtank':
-            return SwingTank(safetyTM, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
+            return SwingTank(safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                              doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)        
         case 'paralleltank':
-            return ParallelLoopTank(safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)
+            return ParallelLoopTank(safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
+                building, doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)
         case 'primary':
-            return Primary(building, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours,
-                           aquaFractLoadUp, aquaFractShed, loadUpT_F)
+            return Primary(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
+                doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)
         case _:
             raise Exception("Unknown system schematic type.")
         
