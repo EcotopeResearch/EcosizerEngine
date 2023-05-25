@@ -109,7 +109,7 @@ class SwingTank(SystemConfig):
                 / 60 * building.magnitude # to minute
             # Simulate the swing tank assuming it hits the peak just above the supply temperature.
             # Get the volume removed for the primary adjusted by the swing tank
-            [_, _, hw_out_from_swing] = self.simJustSwing(len(hw_out), hw_out, building, building.supplyT_F + 0.1)  
+            [_, _, hw_out_from_swing] = self._simJustSwing(len(hw_out), hw_out, building, building.supplyT_F + 0.1)  
             
             # Get the effective adjusted hot water demand on the primary system at the storage temperature.
             temp_eff_HW_mix_fraction = sum(hw_out_from_swing)/building.magnitude
@@ -184,7 +184,7 @@ class SwingTank(SystemConfig):
                 / 60 * building.magnitude # to minute
         
         # Simulate the swing tank assuming it hits the peak just above the supply temperature.
-        [_, _, hw_out_from_swing] = self.simJustSwing(len(hw_out), hw_out, building, building.supplyT_F + 0.1) #VOLUME OF HOT WATER NEEDED AT STORAGE TEMP
+        [_, _, hw_out_from_swing] = self._simJustSwing(len(hw_out), hw_out, building, building.supplyT_F + 0.1) #VOLUME OF HOT WATER NEEDED AT STORAGE TEMP
         
         # Get the effective adjusted hot water demand on the primary system at the storage temperature.
         eff_HW_mix_fraction = sum(hw_out_from_swing)/building.magnitude
@@ -239,20 +239,20 @@ class SwingTank(SystemConfig):
         
         #get swing tank contribution for shed period
         hw_out = np.array(hrToMinList(loadshape[i] for i in firstShed)) / 60 * building.magnitude 
-        [_, _, hw_out_from_swing] = self.simJustSwing(len(hw_out), hw_out, building, building.supplyT_F + 0.1)
+        [_, _, hw_out_from_swing] = self._simJustSwing(len(hw_out), hw_out, building, building.supplyT_F + 0.1)
         effMixFract = sum(hw_out_from_swing) / Vshift
         Vshift *= effMixFract #volume needed for shift at storage temperature
       
         #get swing tank contribution for load up period
         hw_out = np.array(hrToMinList(loadshape[firstShed[0] - loadUpHours:firstShed[0]])) / 60 * building.magnitude
-        [_, _, hw_out_from_swing] = self.simJustSwing(len(hw_out), hw_out, building, building.supplyT_F + 0.1)
+        [_, _, hw_out_from_swing] = self._simJustSwing(len(hw_out), hw_out, building, building.supplyT_F + 0.1)
         effMixFract = sum(hw_out_from_swing) / VconsumedLU 
         VconsumedLU *= effMixFract
        
         return Vshift, VconsumedLU
 
 
-    def simJustSwing(self, N, hw_out, building, initST = None):
+    def _simJustSwing(self, N, hw_out, building, initST = None):
         """
         Parameters
         ----------
