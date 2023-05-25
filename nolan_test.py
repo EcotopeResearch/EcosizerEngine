@@ -10,7 +10,7 @@ hpwh = EcosizerEngine(
             aquaFract       = 0.4, 
             aquaFractLoadUp = 0.21,
             aquaFractShed   = 0.8,
-            schematic       = 'paralleltank', 
+            schematic       = 'swingtank', 
             buildingType   = 'multi_family',
             returnT_F       = 0, 
             flowRate       = 0,
@@ -23,11 +23,36 @@ hpwh = EcosizerEngine(
             loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
             loadUpHours     = 3,
             doLoadShift     = True,
-            loadShiftPercent       = 0.8,
-            setpointTM_F    = 130,
-            TMonTemp_F      = 120,
-            offTime_hr      = 0.333
+            loadShiftPercent       = 0.8
         )
+
+
+simResult_1 = hpwh.getSimResult()
+simResult_2 = hpwh.getSimResult()
+
+print(simResult_1[0][:10])
+print(simResult_1[1][-10:])
+print(simResult_1[2][-65:-55])
+print(simResult_1[3][800:810])
+print(simResult_1[4][-10:])
+print(simResult_1[5][-200:-190])
+print(simResult_1[6][800:803])
+
+assert simResult_1[0] == simResult_2[0]
+assert simResult_1[1] == simResult_2[1]
+assert simResult_1[2] == simResult_2[2]
+assert simResult_1[3] == simResult_2[3]
+
+simResult_1 = hpwh.plotStorageLoadSim(False)
+simResult_2 = hpwh.plotStorageLoadSim(False)
+# print(simResult_1)
+# print('===============================================================')
+# print(simResult_2)
+assert simResult_1 == simResult_2
+
+
+
+print('well hey hey looks like it worked')
 
 # print(hpwh.getSizingResults())
 # # hpwh = EcosizerEngine(  incomingT_F     = 50,

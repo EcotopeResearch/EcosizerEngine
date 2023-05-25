@@ -1,4 +1,5 @@
 from ecoengine.objects.SystemConfig import SystemConfig
+from ecoengine.objects.SimulationRun import SimulationRun
 import numpy as np
 from ecoengine.objects.Building import Building
 from ecoengine.constants.Constants import *
@@ -133,7 +134,7 @@ class SwingTank(SystemConfig):
                 eff_HW_mix_fraction = temp_eff_HW_mix_fraction
     
         #convert to supply so that we can reuse functionality 
-        storMixedT_F = self._mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)[0]
+        storMixedT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)[0]
         runV_G = runV_G * (storMixedT_F - building.incomingT_F) / (building.supplyT_F - building.incomingT_F) 
         
         return runV_G, eff_HW_mix_fraction
@@ -201,7 +202,7 @@ class SwingTank(SystemConfig):
         runV_G += Vshift
        
         #get mixed storage temp
-        mixedStorT_F = self._mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)[0]
+        mixedStorT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)[0]
         
         #convert from storage to supply volume
         runV_G = runV_G * (mixedStorT_F- building.incomingT_F) / (building.supplyT_F - building.incomingT_F) 
@@ -327,7 +328,7 @@ class SwingTank(SystemConfig):
 
         # Add in heat for a draw
         if hw_out:
-            mixedStorT_F = self._mixStorageTemps(hw_out, building.incomingT_F, building.supplyT_F)[0]
+            mixedStorT_F = self.mixStorageTemps(hw_out, building.incomingT_F, building.supplyT_F)[0]
             Tnew += hw_out * (mixedStorT_F - Tcurr) / self.TMVol_G 
         
         # Check if the element is heating
@@ -403,6 +404,30 @@ class SwingTank(SystemConfig):
                 genRate = LUgenRate
             
         return heatCap, genRate
+    
+    def getInitializedSimulation(self, building : Building, Pcapacity=None, Pvolume=None, initPV=None, initST=None):
+        simRun = super().getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST)
+        simRun.swingT = [simRun.mixedStorT_F] + [0] * (len(simRun.G_hw) - 1)
+        simRun.srun = [0] * (len(simRun.G_hw))
+        simRun.hw_outSwing = [0] * (len(simRun.G_hw))
+        simRun.hw_outSwing[0] = simRun.D_hw[0]
+        if initST:
+            simRun.swingT[0] = initST
+        simRun.swingheating = False
+
+        # next two items are for the resulting plotly plot
+        simRun.storageT_F = self.storageT_F
+        simRun.TMCap_kBTUhr = self.TMCap_kBTUhr
+
+        return simRun
+
+    def runOneSystemStep(self, simRun : SimulationRun, i):
+        simRun.hw_outSwing[i] = mixVolume(simRun.D_hw[i], simRun.swingT[i-1], simRun.building.incomingT_F, simRun.building.supplyT_F)
+            
+        simRun.swingheating, simRun.swingT[i], simRun.srun[i] = self.__runOneSwingStep(simRun.building, simRun.swingheating, simRun.swingT[i-1], simRun.hw_outSwing[i])
+        #Get the mixed generation
+        mixedGHW = mixVolume(simRun.G_hw[i], simRun.mixedStorT_F, simRun.building.incomingT_F, simRun.building.supplyT_F) #replaced self.storageT_F with mixedStorT_F
+        simRun.pheating, simRun.pV[i], simRun.prun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], simRun.hw_outSwing[i], mixedGHW)
    
     def simulate(self, building, initPV=None, initST=None, Pcapacity=None, Pvolume=None):
         """
@@ -425,7 +450,7 @@ class SwingTank(SystemConfig):
         G_hw, D_hw, V0, Vtrig, pV, pheating = self._getInitialSimulationValues(building, Pcapacity, Pvolume)
         
         #get mixed storage temp of usable volume - this is the new 'setpoint'
-        mixedStorT_F = self._mixStorageTemps(pV[0], building.incomingT_F, building.supplyT_F)[0]
+        mixedStorT_F = self.mixStorageTemps(pV[0], building.incomingT_F, building.supplyT_F)[0]
         swingT = [mixedStorT_F] + [0] * (len(G_hw) - 1)
         srun = [0] * (len(G_hw))
         hw_outSwing = [0] * (len(G_hw))

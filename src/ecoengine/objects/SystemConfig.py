@@ -1,5 +1,6 @@
 from ecoengine.constants.Constants import *
 from .Building import Building
+from .SimulationRun import SimulationRun
 import numpy as np
 from scipy.stats import norm #lognorm
 from plotly.graph_objs import Figure, Scatter
@@ -65,7 +66,100 @@ class SystemConfig:
             self.PVol_G_atStorageT, self.PCap_kBTUhr
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr]
+    
+    def getInitializedSimulation(self, building : Building, Pcapacity=None, Pvolume=None, initPV=None, initST=None):
+        """
+        Returns initialized arrays needed for 3-day simulation
 
+        Parameters
+        ----------
+        Pcapacity : float
+            The primary heating capacity in kBTUhr to use for the simulation,
+            default is the sized system
+        Pvolume : float
+            The primary storage volume in gallons to  to use for the simulation,
+            default is the sized system
+
+        Returns
+        -------
+        list [ G_hw, D_hw, V0, V, run, pheating ]
+        G_hw : list
+            The generation of HW with time at the supply temperature
+        D_hw : list
+            The hot water demand with time at the tsupply temperature
+        V0 : float
+            The storage volume of the primary system at the storage temperature
+        Vtrig : list
+            The remaining volume of the primary storage volume when heating is
+            triggered, note this equals V0*(1 - aquaFract[i]) 
+        pV : list 
+            Volume of HW in the tank with time at the storage temperature. Initialized to array of 0s with pV[0] set to V0
+        pheating : boolean 
+            set to false. Simulation starts with a full tank so primary heating starts off
+        prun : list 
+            The actual output in gallons of the HPWH with time
+        """
+        if not Pcapacity:
+            Pcapacity =  self.PCap_kBTUhr
+
+        if not Pvolume:
+            Pvolume =  self.PVol_G_atStorageT
+        
+        loadShapeN = building.loadshape
+        if self.doLoadShift:
+            loadShapeN = building.avgLoadshape
+        
+        # Get the generation rate from the primary capacity
+        G_hw = 1000 * Pcapacity / rhoCp / (building.supplyT_F - building.incomingT_F) \
+               * self.defrostFactor * np.tile(self.loadShiftSchedule, 3)
+
+        
+        # Define the use of DHW with the normalized load shape
+        D_hw = building.magnitude * self.fract_total_vol * np.tile(loadShapeN, 3)
+
+        # Init the "simulation"
+        V0 = np.ceil(Pvolume * self.percentUseable) 
+        
+        Vtrig = np.tile(np.ceil(Pvolume * (1 - self.aquaFract)) + 1, 24) # To prevent negatives with any of that rounding math. TODO Nolan and I don't think we need this mysterious + 1
+        
+        if self.doLoadShift:
+            
+            Vtrig = [Pvolume * (1 - self.aquaFractShed) if x == 0 else Pvolume * (1 - self.aquaFract) for x in self.loadShiftSchedule]
+            
+            #set load up hours pre-shed 1
+            shedHours = [i for i in range(len(self.loadShiftSchedule)) if self.loadShiftSchedule[i] == 0] 
+            Vtrig = [Pvolume * (1 - self.aquaFractLoadUp) if shedHours[0] - self.loadUpHours <= i <= shedHours[0] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
+            
+            #check if there are two sheds, if so set all hours inbetween to load up
+            try:
+                secondShed = [[shedHours[i-1], shedHours[i]] for i in range(1, len(shedHours)) if shedHours[i] - shedHours[i-1] > 1][0]
+                Vtrig = [Pvolume * (1 - self.aquaFractLoadUp) if secondShed[0] <= i <= secondShed[1] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
+            
+            except IndexError:
+                pass
+        
+        # To per minute from per hour
+        G_hw = np.array(hrToMinList(G_hw)) / 60
+        D_hw = np.array(hrToMinList(D_hw)) / 60
+        Vtrig = np.array(hrToMinList(np.tile(Vtrig, 3))) 
+
+        pV = [V0] + [0] * (len(G_hw) - 1)
+
+        pheating = False
+
+        prun = [0] * (len(G_hw))
+
+        mixedStorT_F = self.mixStorageTemps(pV[0], building.incomingT_F, building.supplyT_F)[0]
+        if initPV:
+            pV[0] = initPV
+
+        return SimulationRun(G_hw, D_hw, V0, Vtrig, pV, prun, pheating, mixedStorT_F, building, self.doLoadShift)
+    
+    def runOneSystemStep(self, simRun : SimulationRun, i):
+        mixedDHW = mixVolume(simRun.D_hw[i], simRun.mixedStorT_F, simRun.building.incomingT_F, simRun.building.supplyT_F) 
+        mixedGHW = mixVolume(simRun.G_hw[i], simRun.mixedStorT_F, simRun.building.incomingT_F, simRun.building.supplyT_F)
+        simRun.pheating, simRun.pV[i], simRun.prun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], mixedDHW, mixedGHW) 
+   
     def simulate(self, building, initPV=None, initST=None, Pcapacity=None, Pvolume=None):
         """
         Implimented seperatly for Swink Tank systems 
@@ -98,16 +192,13 @@ class SystemConfig:
         """
 
         G_hw, D_hw, V0, Vtrig, pV, pheating = self._getInitialSimulationValues(building, Pcapacity, Pvolume)
-       
-        hw_outSwing = [0] * (len(G_hw))
-        hw_outSwing[0] = D_hw[0]
         prun = [0] * (len(G_hw))
 
         if initPV:
             pV[0] = initPV
 
         #get mixed storage temp
-        mixedStorT_F = self._mixStorageTemps(pV[0], building.incomingT_F, building.supplyT_F)[0]
+        mixedStorT_F = self.mixStorageTemps(pV[0], building.incomingT_F, building.supplyT_F)[0]
 
         # Run the "simulation"
         for i in range(1, len(G_hw)):
@@ -370,7 +461,7 @@ class SystemConfig:
                 effMixFract = LSeffMixFract
                 
                 #get the average tank volume
-                totalVolAtStorage = self._mixStorageTemps(runningVol_G, building.incomingT_F, building.supplyT_F)[1]
+                totalVolAtStorage = self.mixStorageTemps(runningVol_G, building.incomingT_F, building.supplyT_F)[1]
                 
                 #multiply computed storage by efficiency safety factor (currently set to 1)
                 totalVolAtStorage *=  thermalStorageSF 
@@ -747,7 +838,7 @@ class SystemConfig:
         
         
 
-    def _mixStorageTemps(self, runningVol_G, incomingT_F, supplyT_F):
+    def mixStorageTemps(self, runningVol_G, incomingT_F, supplyT_F):
         """
         Calculates average tank temperature using load up and normal setpoints according to locations of aquastats. 
         Used for load shifting when there are two setpoints. Returns normal storage setpoint if load up and normal
@@ -781,6 +872,7 @@ class SystemConfig:
             return mixStorageT_F, mixVolume(runningVol_G, mixStorageT_F, incomingT_F, supplyT_F) / (self.aquaFractShed - self.aquaFractLoadUp)
         
         return [mixStorageT_F]
+
 
     
 class Primary(SystemConfig):

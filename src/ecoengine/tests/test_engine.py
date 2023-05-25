@@ -224,3 +224,33 @@ def test_primaryCurve(parallel_sizer):
     assert len(primaryCurveInfo) == 4
     assert len(primaryCurveInfo[0]) == len(primaryCurveInfo[1]) == len(primaryCurveInfo[2]) #THIS IS FAILINGG
     assert primaryCurveInfo[3] == 44
+
+def test__parallel_simulationResults(parallel_sizer):
+    simResult = parallel_sizer.getSimResult()
+    assert len(simResult) == 4
+    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 4320
+    assert simResult[0][:10] == [1028.0, 1027.528, 1027.057, 1026.585, 1026.114, 1025.642, 1025.171, 1024.699, 1024.228, 1023.756]
+    assert simResult[1][-10:] == [3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205]
+    assert simResult[2][-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
+    assert simResult[3][800:810] == [2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244]
+
+def test__primary_simulationResults(primary_sizer):
+    simResult = primary_sizer.getSimResult()
+    assert len(simResult) == 4
+    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 4320
+    assert simResult[0][:10] == [1028.0, 1027.528, 1027.057, 1026.585, 1026.114, 1025.642, 1025.171, 1024.699, 1024.228, 1023.756]
+    assert simResult[1][-10:] == [3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205]
+    assert simResult[2][-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
+    assert simResult[3][800:810] == [2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244]
+
+def test__swing_simulationResults(swing_sizer):
+    simResult = swing_sizer.getSimResult()
+    assert len(simResult) == 7
+    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == len(simResult[4]) == len(simResult[5]) == len(simResult[6]) == 4320
+    assert simResult[0][:10] == [1376.0, 1375.528, 1375.054, 1374.576, 1374.094, 1373.61, 1373.122, 1372.63, 1372.135, 1371.637]
+    assert simResult[1][-10:] == [4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297]
+    assert simResult[2][-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
+    assert simResult[3][800:810] == [3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008]
+    assert simResult[4][-10:] == [124.201, 125.002, 125.791, 126.568, 127.334, 128.0, 127.555, 127.115, 126.682, 126.256]
+    assert simResult[5][-200:-190] == [0, 0, 0, 0, 0.013, 1, 1, 1, 1, 1]
+    assert simResult[6][800:803] == [0.9489206357019205, 0.9384794009334938, 0.9283993792885612]

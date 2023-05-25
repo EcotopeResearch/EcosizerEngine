@@ -1,5 +1,7 @@
 from .BuildingCreator import *
 from .SystemCreator import *
+from .Simulator import simulate
+from ecoengine.objects.SimulationRun import *
 
 print("EcosizerEngine Copyright (C) 2023  Ecotope Inc.")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")
@@ -117,6 +119,11 @@ class EcosizerEngine:
                                 offTime_hr = offTime_hr
         )
     
+    def getSimResult(self):
+        simRun = simulate(self.system, self.building)
+        return simRun.returnSimResult()
+        # return self.system.simulate(self.building)
+
     def getSizingResults(self):
         """
         Returns the minimum primary volume and heating capacity sizing results
@@ -164,7 +171,8 @@ class EcosizerEngine:
         div/fig
             plot_div
         """
-        return self.system.plotStorageLoadSim(self.building, return_as_div)
+        simRun = simulate(self.system, self.building)
+        return simRun.plotStorageLoadSim(return_as_div)
     
     def lsSizedPoints(self):
         """
