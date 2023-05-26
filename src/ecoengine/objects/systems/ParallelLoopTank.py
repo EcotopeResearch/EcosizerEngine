@@ -6,7 +6,8 @@ from ecoengine.objects.systemConfigUtils import checkLiqudWater
 
 class ParallelLoopTank(SystemConfig):
     def __init__(self, safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
-                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None):
+                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, aquaFractShed = None, 
+                 loadUpT_F = None, TMVol_G = None, TMCap_kBTUhr = None):
 
 
         if TMonTemp_F == 0:
@@ -21,7 +22,12 @@ class ParallelLoopTank(SystemConfig):
         self.offTime_hr = offTime_hr # Hour
         self.safetyTM = safetyTM # Safety factor
 
-        if not building is None:
+        if building is None:
+           if not (isinstance(TMVol_G, int) or isinstance(TMVol_G, float)) or TMVol_G <= 0: 
+                raise Exception('Invalid input given for T.M. Storage Volume, it must be a number greater than zero.')
+           self.TMVol_G = TMVol_G
+           self.TMCap_kBTUhr = TMCap_kBTUhr # TODO param checking for this?
+        else:
             if setpointTM_F <= building.incomingT_F:
                 raise Exception("The temperature maintenance setpoint temperature must be greater than the city cold water temperature")
             if TMonTemp_F <= building.incomingT_F:

@@ -3,10 +3,7 @@ from ecoengine.objects.SimulationRun import SimulationRun
 import numpy as np
 from ecoengine.objects.Building import Building
 from ecoengine.constants.Constants import *
-from ecoengine.objects.systemConfigUtils import roundList, mixVolume, hrToMinList, getPeakIndices, checkHeatHours
-from plotly.graph_objs import Figure, Scatter
-from plotly.offline import plot
-from plotly.subplots import make_subplots
+from ecoengine.objects.systemConfigUtils import mixVolume, hrToMinList, getPeakIndices, checkHeatHours
 
 class SwingTank(SystemConfig):
 
@@ -17,7 +14,7 @@ class SwingTank(SystemConfig):
 
     def __init__(self, safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None):
+                 aquaFractShed = None, loadUpT_F = None, TMVol_G = None, TMCap_kBTUhr = None):
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
@@ -26,7 +23,13 @@ class SwingTank(SystemConfig):
         self.element_deadband_F = 8.
         
         # size if needed
-        if not building is None:
+        if building is None:
+           if not (isinstance(TMVol_G, int) or isinstance(TMVol_G, float)) or TMVol_G <= 0: 
+                raise Exception('Invalid input given for T.M. Storage Volume, it must be a number greater than zero.')
+           self.TMVol_G = TMVol_G
+           self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= TMVol_G])
+           self.TMCap_kBTUhr = TMCap_kBTUhr # TODO param checking for this?
+        else:
 
             # check building because recirc losses needed before super().__init__()
             if not isinstance(building, Building):
@@ -422,10 +425,10 @@ class SwingTank(SystemConfig):
         return simRun
 
     def runOneSystemStep(self, simRun : SimulationRun, i):
-        simRun.hw_outSwing[i] = mixVolume(simRun.D_hw[i], simRun.swingT[i-1], simRun.building.incomingT_F, simRun.building.supplyT_F)
+        simRun.hw_outSwing[i] = mixVolume(simRun.D_hw[i], simRun.swingT[i-1], simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
             
         simRun.swingheating, simRun.swingT[i], simRun.srun[i] = self.__runOneSwingStep(simRun.building, simRun.swingheating, simRun.swingT[i-1], simRun.hw_outSwing[i])
         #Get the mixed generation
-        mixedGHW = mixVolume(simRun.G_hw[i], simRun.mixedStorT_F, simRun.building.incomingT_F, simRun.building.supplyT_F) #replaced self.storageT_F with mixedStorT_F
+        mixedGHW = mixVolume(simRun.G_hw[i], simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) #replaced self.storageT_F with mixedStorT_F
         simRun.pheating, simRun.pV[i], simRun.prun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], simRun.hw_outSwing[i], mixedGHW)
    

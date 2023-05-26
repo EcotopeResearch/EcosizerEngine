@@ -3,14 +3,12 @@ from .Building import Building
 from .SimulationRun import SimulationRun
 import numpy as np
 from scipy.stats import norm #lognorm
-from plotly.graph_objs import Figure, Scatter
-from plotly.offline import plot
-from .systemConfigUtils import roundList, mixVolume, hrToMinList, getPeakIndices, checkLiqudWater, checkHeatHours
+from .systemConfigUtils import mixVolume, hrToMinList, getPeakIndices, checkLiqudWater, checkHeatHours
 
 class SystemConfig:
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None):
+                 aquaFractShed = None, loadUpT_F = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
         # check inputs. Schedule not checked because it is checked elsewhere
         self._checkInputs(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent)
         self.doLoadShift = doLoadShift
@@ -32,7 +30,12 @@ class SystemConfig:
         self.maxDayRun_hr = min(self.compRuntime_hr, sum(self.loadShiftSchedule))
 
         #size system
-        if not building is None: 
+        if building is None:
+            if not (isinstance(PVol_G_atStorageT, int) or isinstance(PVol_G_atStorageT, float)) or PVol_G_atStorageT <= 0: 
+                raise Exception('Invalid input given for Primary Storage Volume, it must be a number greater than zero.')
+            self.PVol_G_atStorageT = PVol_G_atStorageT
+            self.PCap_kBTUhr = PCap_kBTUhr # TODO: this one will be changing so not sure if needs be checked
+        else: 
             #size system based off of building
             if not isinstance(building, Building):
                 raise Exception("Error: Building is not valid.")
@@ -156,8 +159,8 @@ class SystemConfig:
         return SimulationRun(G_hw, D_hw, V0, Vtrig, pV, prun, pheating, mixedStorT_F, building, self.doLoadShift)
     
     def runOneSystemStep(self, simRun : SimulationRun, i):
-        mixedDHW = mixVolume(simRun.D_hw[i], simRun.mixedStorT_F, simRun.building.incomingT_F, simRun.building.supplyT_F) 
-        mixedGHW = mixVolume(simRun.G_hw[i], simRun.mixedStorT_F, simRun.building.incomingT_F, simRun.building.supplyT_F)
+        mixedDHW = mixVolume(simRun.D_hw[i], simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) 
+        mixedGHW = mixVolume(simRun.G_hw[i], simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
         simRun.pheating, simRun.pV[i], simRun.prun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], mixedDHW, mixedGHW) 
     
     def _setLoadShift(self, loadShiftSchedule, loadUpHours, aquaFract, aquaFractLoadUp, aquaFractShed, storageT_F, loadUpT_F, loadShiftPercent=1):

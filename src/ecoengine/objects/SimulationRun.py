@@ -9,20 +9,10 @@ from plotly.subplots import make_subplots
 class SimulationRun:
     def __init__(self, G_hw, D_hw, V0, Vtrig, pV, prun, pheating, mixedStorT_F, building : Building, doLoadshift = False):
         """
-        Returns initialized arrays needed for 3-day simulation
+        Initializes arrays needed for 3-day simulation
 
         Parameters
         ----------
-        Pcapacity : float
-            The primary heating capacity in kBTUhr to use for the simulation,
-            default is the sized system
-        Pvolume : float
-            The primary storage volume in gallons to  to use for the simulation,
-            default is the sized system
-
-        Returns
-        -------
-        list [ G_hw, D_hw, V0, V, run, pheating ]
         G_hw : list
             The generation of HW with time at the supply temperature
         D_hw : list
@@ -50,6 +40,9 @@ class SimulationRun:
         self.building = building
         self.doLoadShift = doLoadshift
 
+    def getIncomingWaterT(self, i):
+        return self.building.incomingT_F
+
     def returnSimResult(self):
         retList = [roundList(self.pV, 3),
             roundList(self.G_hw, 3),
@@ -72,8 +65,6 @@ class SimulationRun:
 
         Parameters
         ----------
-        building : Building
-            the building object being simulated on
         return_as_div
             A logical on the output, as a div (true) or as a figure (false)
 
