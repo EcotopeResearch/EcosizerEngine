@@ -4,7 +4,7 @@ from ecoengine.objects.systems.ParallelLoopTank import *
 
 def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None, doLoadShift = False, 
                  aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, safetyTM = 1.75, 
-                 setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333):
+                 setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None):
 
     """
     Initializes and sizes the HPWH system. Both primary and tempurature maintenance (for parrallel loop and swing tank) are set up in this function.
@@ -58,13 +58,16 @@ def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRunti
     match schematic:
         case 'swingtank':
             return SwingTank(safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
-                             doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)        
+                doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
+                PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr)        
         case 'paralleltank':
             return ParallelLoopTank(safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
-                building, doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)
+                building, doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
+                PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr)
         case 'primary':
             return Primary(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
-                doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)
+                doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
+                PVol_G_atStorageT, PCap_kBTUhr)
         case _:
             raise Exception("Unknown system schematic type.")
         

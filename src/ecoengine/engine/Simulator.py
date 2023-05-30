@@ -4,7 +4,7 @@ from ecoengine.objects.systemConfigUtils import *
 from ecoengine.objects.SimulationRun import *
 
     
-def simulate(system : SystemConfig, building : Building, initPV=None, initST=None, Pcapacity=None, Pvolume=None):
+def simulate(system : SystemConfig, building : Building, initPV=None, initST=None, Pcapacity=None, Pvolume=None, minuteIntervals = 1, nDays = 3):
     """
     Implimented seperatly for Swink Tank systems 
     Inputs
@@ -35,7 +35,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
         The actual output in gallons of the HPWH with time
     """
 
-    simRun = system.getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST)
+    simRun = system.getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST, minuteIntervals, nDays)
 
     # Run the "simulation"
     for i in range(1, len(simRun.G_hw)):

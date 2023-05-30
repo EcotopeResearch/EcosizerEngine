@@ -3,7 +3,7 @@ from .Building import Building
 from .SimulationRun import SimulationRun
 import numpy as np
 from scipy.stats import norm #lognorm
-from .systemConfigUtils import mixVolume, hrToMinList, getPeakIndices, checkLiqudWater, checkHeatHours
+from .systemConfigUtils import mixVolume, hrToMinList, hrTo15MinList, getPeakIndices, checkLiqudWater, checkHeatHours
 
 class SystemConfig:
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
@@ -70,9 +70,9 @@ class SystemConfig:
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr]
     
-    def getInitializedSimulation(self, building : Building, Pcapacity=None, Pvolume=None, initPV=None, initST=None):
+    def getInitializedSimulation(self, building : Building, Pcapacity=None, Pvolume=None, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
         """
-        Returns initialized arrays needed for 3-day simulation
+        Returns initialized arrays needed for nDay simulation
 
         Parameters
         ----------
@@ -109,16 +109,22 @@ class SystemConfig:
             Pvolume =  self.PVol_G_atStorageT
         
         loadShapeN = building.loadshape
-        if self.doLoadShift:
+        if self.doLoadShift and nDays < 365: #Only for non-annual simulations
             loadShapeN = building.avgLoadshape
         
         # Get the generation rate from the primary capacity
         G_hw = 1000 * Pcapacity / rhoCp / (building.supplyT_F - building.incomingT_F) \
-               * self.defrostFactor * np.tile(self.loadShiftSchedule, 3)
+               * self.defrostFactor * np.tile(self.loadShiftSchedule, nDays)
 
         
         # Define the use of DHW with the normalized load shape
-        D_hw = building.magnitude * self.fract_total_vol * np.tile(loadShapeN, 3)
+        D_hw = building.magnitude * np.tile(loadShapeN, nDays)
+        if nDays < 365:
+            D_hw = D_hw * self.fract_total_vol
+        elif nDays == 365:
+            D_hw = D_hw
+        else:
+            raise Exception("Invalid input given for number of days. Must be <= 365.")
 
         # Init the "simulation"
         V0 = np.ceil(Pvolume * self.percentUseable) 
@@ -141,10 +147,18 @@ class SystemConfig:
             except IndexError:
                 pass
         
-        # To per minute from per hour
-        G_hw = np.array(hrToMinList(G_hw)) / 60
-        D_hw = np.array(hrToMinList(D_hw)) / 60
-        Vtrig = np.array(hrToMinList(np.tile(Vtrig, 3))) 
+        if minuteIntervals == 1:
+            # To per minute from per hour
+            G_hw = np.array(hrToMinList(G_hw)) / 60
+            D_hw = np.array(hrToMinList(D_hw)) / 60
+            Vtrig = np.array(hrToMinList(np.tile(Vtrig, nDays))) 
+        elif minuteIntervals == 15:
+            # To per 15 minute from per hour
+            G_hw = np.array(hrTo15MinList(G_hw)) / 4
+            D_hw = np.array(hrTo15MinList(D_hw)) / 4
+            Vtrig = np.array(hrTo15MinList(np.tile(Vtrig, nDays)))
+        else:
+            raise Exception("Invalid input given for granularity. Must be 1, 15, or 60.")
 
         pV = [V0] + [0] * (len(G_hw) - 1)
 
@@ -681,8 +695,8 @@ class SystemConfig:
 class Primary(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None):
-        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
-                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)
+                 aquaFractShed = None, loadUpT_F = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
+        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, doLoadShift, 
+                loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, PVol_G_atStorageT, PCap_kBTUhr)
 
 

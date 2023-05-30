@@ -14,7 +14,7 @@ class SwingTank(SystemConfig):
 
     def __init__(self, safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, TMVol_G = None, TMCap_kBTUhr = None):
+                 aquaFractShed = None, loadUpT_F = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None):
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
@@ -43,7 +43,7 @@ class SwingTank(SystemConfig):
             self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
         
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
-                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F)
+                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, PVol_G_atStorageT, PCap_kBTUhr)
         
     def getSizingResults(self):
         """
@@ -408,8 +408,8 @@ class SwingTank(SystemConfig):
             
         return heatCap, genRate
     
-    def getInitializedSimulation(self, building : Building, Pcapacity=None, Pvolume=None, initPV=None, initST=None):
-        simRun = super().getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST)
+    def getInitializedSimulation(self, building : Building, Pcapacity=None, Pvolume=None, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
+        simRun = super().getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST, minuteIntervals, nDays)
         simRun.swingT = [simRun.mixedStorT_F] + [0] * (len(simRun.G_hw) - 1)
         simRun.srun = [0] * (len(simRun.G_hw))
         simRun.hw_outSwing = [0] * (len(simRun.G_hw))

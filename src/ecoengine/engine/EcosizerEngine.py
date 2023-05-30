@@ -81,21 +81,24 @@ class EcosizerEngine:
                             aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1,
                             returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
-                            setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None):
+                            setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None,
+                            PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None,
+                            annual = False):
         
-        self.building = createBuilding( incomingT_F     = incomingT_F,
-                                    magnitudeStat  = magnitudeStat, 
+        self.building = createBuilding( incomingT_F = incomingT_F,
+                                    magnitudeStat   = magnitudeStat, 
                                     supplyT_F       = supplyT_F, 
-                                    buildingType   = buildingType,
+                                    buildingType    = buildingType,
                                     loadshape       = loadshape,
                                     avgLoadshape    = avgLoadshape,
                                     returnT_F       = returnT_F, 
-                                    flowRate       = flowRate,
+                                    flowRate        = flowRate,
                                     gpdpp           = gpdpp,
                                     nBR             = nBR,
                                     nApt            = nApt,
                                     Wapt            = Wapt,
-                                    standardGPD = standardGPD
+                                    standardGPD     = standardGPD,
+                                    annual          = annual
         )
 
         self.system = createSystem(  
@@ -105,7 +108,7 @@ class EcosizerEngine:
                                 percentUseable, 
                                 compRuntime_hr, 
                                 aquaFract,
-                                building = self.building, 
+                                building = self.building if PVol_G_atStorageT is None else None, 
                                 aquaFractLoadUp = aquaFractLoadUp,
                                 aquaFractShed = aquaFractShed,
                                 loadUpT_F = loadUpT_F,
@@ -116,11 +119,15 @@ class EcosizerEngine:
                                 safetyTM = safetyTM, 
                                 setpointTM_F = setpointTM_F, 
                                 TMonTemp_F = TMonTemp_F, 
-                                offTime_hr = offTime_hr
+                                offTime_hr = offTime_hr,
+                                PVol_G_atStorageT = PVol_G_atStorageT, 
+                                PCap_kBTUhr = PCap_kBTUhr, 
+                                TMVol_G = TMVol_G, 
+                                TMCap_kBTUhr = TMCap_kBTUhr
         )
     
-    def getSimResult(self):
-        simRun = simulate(self.system, self.building)
+    def getSimResult(self, minuteIntervals = 1, nDays = 3):
+        simRun = simulate(self.system, self.building, minuteIntervals = minuteIntervals, nDays = nDays)
         return simRun.returnSimResult()
         # return self.system.simulate(self.building)
 

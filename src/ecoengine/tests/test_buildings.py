@@ -155,8 +155,14 @@ def test_invalid_building_parameter_errors():
         createBuilding(35, 4, 120, "mens_dorm", loadshape=[1,2,3,4,5])
     with pytest.raises(Exception, match="Sum of the loadshape does not equal 1. Loadshape needs to be normalized."):
         createBuilding(35, 4, 120, "mens_dorm", loadshape=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
-    with pytest.raises(Exception, match="Can not have negative load shape values in loadshape."):
+    with pytest.raises(Exception, match="Can not have negative values in loadshape."):
         createBuilding(35, 4, 120, "mens_dorm", loadshape=[1,2,-3,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+    with pytest.raises(Exception, match="Average loadshape must be of length 24 but instead has length of 5."):
+        createBuilding(35, 4, 120, "mens_dorm", avgLoadshape=[1,2,3,4,5])
+    with pytest.raises(Exception, match="Sum of the average loadshape does not equal 1. Loadshape needs to be normalized."):
+        createBuilding(35, 4, 120, "mens_dorm", avgLoadshape=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
+    with pytest.raises(Exception, match="Can not have negative values in average loadshape."):
+        createBuilding(35, 4, 120, "mens_dorm", avgLoadshape=[1,2,-3,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
     with pytest.raises(Exception, match="Error: Supply temp must be a number."):
         createBuilding(35, 4, "whoops", "mens_dorm")
     with pytest.raises(Exception, match="Error: Return temp must be a number."):

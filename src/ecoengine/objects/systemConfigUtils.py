@@ -81,6 +81,27 @@ def hrToMinList(a_list):
         out_list += [num]*60
     return out_list
 
+def hrTo15MinList(a_list):
+    """
+    Repeats each element of a_list 4 times to go from hourly to 15 minute intervals.
+    Still may need other unit conversions to get data from per hour to per 15 minute
+
+    Parameters
+    ----------
+    a_list : list
+        A list in of values per hour.
+
+    Returns
+    -------
+    out_list : list
+        A list in of values per 15 minute interval created by repeating values per hour 4 times.
+
+    """
+    out_list = []
+    for num in a_list:
+        out_list += [num]*4
+    return out_list
+
 def getPeakIndices(diff1):
     """
     Finds the points of an array where the values go from positive to negative

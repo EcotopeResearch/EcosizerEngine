@@ -2,7 +2,7 @@ from ecoengine.objects.Building import *
 import numpy as np
 
 def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshape = None, avgLoadshape = None,
-                    returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0, standardGPD = None):
+                    returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0, standardGPD = None, annual = False):
     
     """
     Initializes the building in which the HPWH system will be sized for
@@ -69,14 +69,18 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
             raise Exception("buildingType must be a string.")
     
     # check custom loadshape or install standard loadshape
-    if(loadshape is None):
-        loadshape = getLoadShape(buildingType)
-    else:
-        checkLoadShape(loadshape)
-    if(avgLoadshape is None):
-        avgLoadshape = getLoadShape(buildingType, 'Stream_Avg')
-    else:
-        checkLoadShape(avgLoadshape)
+    if annual:
+        loadshape = getLoadShape(buildingType, "Annual_Normalized")
+        avgLoadshape = loadshape
+    else: 
+        if(loadshape is None):
+            loadshape = getLoadShape(buildingType)
+        else:
+            checkLoadShape(loadshape)
+        if(avgLoadshape is None):
+            avgLoadshape = getLoadShape(buildingType, 'Stream_Avg')
+        else:
+            checkLoadShape(avgLoadshape, True)
 
     loadshape = np.array(loadshape) # TODO - this changes values of loadshape a bit, show this to scott
     avgLoadshape = np.array(avgLoadshape) # TODO - this changes values of loadshape a bit, show this to scott
@@ -110,8 +114,10 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
             raise Exception("Unrecognized building type.")
         
 def getLoadShape(file_name, shape = 'Stream'):
-    if shape != 'Stream' and shape != 'Stream_Avg':
+    if shape != 'Stream' and shape != 'Stream_Avg' and shape != "Annual_Normalized":
         raise Exception("Mapping key not found for loadshapes, valid keys are: 'Stream', or 'Stream_Avg'")
+    if file_name != 'multi_family' and shape == "Annual_Normalized":
+        raise Exception("Annual simulation for non-multifamily buildings is not yet available.")
     try:
         with open(os.path.join(os.path.dirname(__file__), '../data/load_shapes/' + file_name + '.json')) as json_file:
             dataDict = json.load(json_file)
@@ -119,10 +125,11 @@ def getLoadShape(file_name, shape = 'Stream'):
     except:
         raise Exception("No default loadshape found for building type " +file_name + ".")
         
-def checkLoadShape(loadshape):
+def checkLoadShape(loadshape, avgLS = False):
     if len(loadshape) != 24:
-        raise Exception("Loadshape must be of length 24 but instead has length of "+str(len(loadshape))+".")
+        raise Exception(("Average loadshape" if avgLS else "Loadshape") + " must be of length 24 but instead has length of "
+                        + str(len(loadshape))+".")
     if sum(loadshape) > 1 + 1e-3 or sum(loadshape) < 1 - 1e-3:
-        raise Exception("Sum of the loadshape does not equal 1. Loadshape needs to be normalized.")
+        raise Exception("Sum of the " + ("average loadshape" if avgLS else "loadshape") + " does not equal 1. Loadshape needs to be normalized.")
     if any(x < 0 for x in loadshape):
-        raise Exception("Can not have negative load shape values in loadshape.")
+        raise Exception("Can not have negative values in " + ("average loadshape" if avgLS else "loadshape") + ".")

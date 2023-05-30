@@ -7,27 +7,17 @@ from ecoengine.constants.Constants import *
 class Building:
     def __init__(self, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
         
-        self._checkParams(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
-
+        self._checkParams(incomingT_F, supplyT_F, returnT_F, flowRate)
+        
+        # Does not check loadshape as that is checked in buildingCreator
         self.loadshape = loadshape
         self.avgLoadshape = avgLoadshape
+        
         self.incomingT_F = incomingT_F
         self.supplyT_F = supplyT_F
         self.recirc_loss = (supplyT_F - returnT_F) * flowRate * rhoCp * 60. #BTU/HR
 
-    def _checkParams(self, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
-        if not isinstance(loadshape, np.ndarray) or len(loadshape) != 24:
-            raise Exception("Error: Loadshape must be a list of length 24.")
-        if sum(loadshape) > 1 + 1e-3 or sum(loadshape) < 1 - 1e-3:
-            raise Exception("Error:  Sum of the loadshape does not equal 1 but "+str(sum(loadshape))+".")
-        if any(x < 0 for x in loadshape):
-            raise Exception("Error:  Can not have negative load shape values in loadshape.")
-        if not isinstance(avgLoadshape, np.ndarray) or len(avgLoadshape) != 24:
-            raise Exception("Error: Average loadshape must be a list of length 24.")
-        if sum(avgLoadshape) > 1 + 1e-3 or sum(avgLoadshape) < 1 - 1e-3:
-            raise Exception("Error:  Sum of the average loadshape does not equal 1 but "+str(sum(loadshape))+".")
-        if any(x < 0 for x in avgLoadshape):
-            raise Exception("Error:  Can not have negative load shape values in average loadshape.")
+    def _checkParams(self, incomingT_F, supplyT_F, returnT_F, flowRate):
         if not (isinstance(supplyT_F, int) or isinstance(supplyT_F, float)):
             raise Exception("Error: Supply temp must be a number.")
         if not (isinstance(returnT_F, int) or isinstance(returnT_F, float)):

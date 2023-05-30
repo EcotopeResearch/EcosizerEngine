@@ -1,5 +1,8 @@
 from ecoengine import EcosizerEngine
-# # import numpy as np
+import time
+
+# regular sizing and 3 day simulation
+
 hpwh = EcosizerEngine(
             incomingT_F     = 50,
             magnitudeStat  = 100,
@@ -26,116 +29,61 @@ hpwh = EcosizerEngine(
             loadShiftPercent       = 0.8
         )
 
-
+start_time = time.time()
 simResult_1 = hpwh.getSimResult()
-simResult_2 = hpwh.getSimResult()
 
-print(simResult_1[0][:10])
-print(simResult_1[1][-10:])
-print(simResult_1[2][-65:-55])
-print(simResult_1[3][800:810])
-print(simResult_1[4][-10:])
-print(simResult_1[5][-200:-190])
-print(simResult_1[6][800:803])
+end_time = time.time()
+duration = end_time - start_time
+print("Program execution time:", duration, "seconds")
 
-assert simResult_1[0] == simResult_2[0]
-assert simResult_1[1] == simResult_2[1]
-assert simResult_1[2] == simResult_2[2]
-assert simResult_1[3] == simResult_2[3]
+PVol_G_atStorageT = hpwh.getSizingResults()[0] 
+PCap_kBTUhr = hpwh.getSizingResults()[1]  
+TMVol_G = hpwh.getSizingResults()[2] 
+TMCap_kBTUhr = hpwh.getSizingResults()[3] 
 
-simResult_1 = hpwh.plotStorageLoadSim(False)
-simResult_2 = hpwh.plotStorageLoadSim(False)
-# print(simResult_1)
-# print('===============================================================')
-# print(simResult_2)
-assert simResult_1 == simResult_2
+# Annual simulation based on sizing from last:
 
+print("starting next section")
+hpwh = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            loadUpT_F       = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            aquaFractLoadUp = 0.21,
+            aquaFractShed   = 0.8,
+            schematic       = 'swingtank', 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 100,
+            loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadUpHours     = 3,
+            doLoadShift     = True,
+            loadShiftPercent       = 0.8,
+            PVol_G_atStorageT = PVol_G_atStorageT, 
+            PCap_kBTUhr = PCap_kBTUhr, 
+            TMVol_G = TMVol_G, 
+            TMCap_kBTUhr = TMCap_kBTUhr,
+            annual = True
+        )
+start_time = time.time()
+simResult_1 = hpwh.getSimResult(minuteIntervals = 15, nDays = 365)
 
+end_time = time.time()
+duration = end_time - start_time
+print(len(simResult_1[1]))
+print(len(simResult_1[1])/4)
+print("Program execution time:", duration, "seconds")
 
-print('well hey hey looks like it worked')
-
-# print(hpwh.getSizingResults())
-# # hpwh = EcosizerEngine(  incomingT_F     = 50,
-# #                     magnitudeStat  = 1,
-# #                     supplyT_F       = 120,
-# #                     storageT_F      = 180,
-# #                     percentUseable  = .8, 
-# #                     aquaFract       = .4,
-# #                     loadshape= np.array([0,40,0,0,0,0,300,0,0,0,0,0,0,0,0,82,0,0,0,17,0,0,0,0])/439,
-# #                     schematic       = 'swingtank', 
-# #                     buildingType   = 'multi_family',
-# #                     returnT_F       = 100, 
-# #                     flowRate       = 3,
-# #                     gpdpp           = 439,
-# #                     standardGPD = None,
-# #                     safetyTM        = 1.75,
-# #                     defrostFactor   = 1, 
-# #                     compRuntime_hr  = 16, 
-# #                     nApt            = 1, 
-# #                     # Wapt            = 100,
-# #                     # loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1], #loadshift schedule
-# #                     doLoadShift     = False,
-# #                     # loadShiftPercent       = 0.8,
-# #                     offTime_hr = 0.5,
-# #                     TMonTemp_F = 125
-# # )
-
-# # outlist = hpwh.getSizingResults()
-# # hpwh.plotStorageLoadSim()
-# # # [x_data, y_data, hours, recInd] = hpwh.primaryCurve()
-# # # plotSimDiv = hpwh.plotStorageLoadSim()
-
-# # print("Heating capacity (PCap_kBTUhr)", outlist[1])
-# # print("pl Tank Volume (TMVol_G)", outlist[2])
-# # print("Tank Volume (PVol_G_atStorageT)",outlist[0])
-# # print("Swing Resistance Element (TMCap_kBTUhr)", outlist[3])
-# # print("Swing Tank Volume (TMVol_G) CA", outlist[4])
-
-# # # [x_data, y_data, hours, recInd] = swinghpwh.primaryCurve()
-# # # print("x_data",x_data)
-# # # print("y_data",y_data)
-# # # print("hours",hours)
-# # # print("recInd",recInd)
-
-# # # print("========================================================================================================")
-
-# # # parallelhpwh = EcosizerEngine(  incomingT_F     = 50,
-# # #                     magnitudeStat  = 100,
-# # #                     supplyT_F       = 120,
-# # #                     storageT_F      = 150,
-# # #                     percentUseable  = 0.8, 
-# # #                     aquaFract       = 0.4, 
-# # #                     schematic       = 'paralleltank', 
-# # #                     buildingType   = 'multi_family',
-# # #                     returnT_F       = 0, 
-# # #                     flowRate       = 0,
-# # #                     gpdpp           = 25,
-# # #                     safetyTM        = 1.75,
-# # #                     defrostFactor   = 1, 
-# # #                     compRuntime_hr  = 16, 
-# # #                     nApt            = 100, 
-# # #                     Wapt            = 100,
-# # #                     loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
-# # #                     doLoadShift     = True,
-# # #                     loadShiftPercent       = 0.8,
-# # #                     setpointTM_F    = 130,
-# # #                     TMonTemp_F      = 120,
-# # #                     offTime_hr      = 0.333
-
-# # # )
-
-# # # outlist = parallelhpwh.getSizingResults()
-
-# # # print("Heating capacity (PCap_kBTUhr)", outlist[1])
-# # # print("Swing Tank Volume (TMVol_G)", outlist[2])
-# # # print("Tank Volume (PVol_G_atStorageT)",outlist[0])
-# # # print("Swing Resistance Element (TMCap_kBTUhr)", outlist[3])
-
-# # # [x_data, y_data, hours, recInd] = parallelhpwh.primaryCurve()
-# # # print("x_data",x_data)
-# # # print("y_data",y_data)
-# # # print("hours",hours)
-# # # print("recInd",recInd)
+print('well hey hey looks like it worked! All done.')
 
 
 
