@@ -294,7 +294,7 @@ class SwingTank(SystemConfig):
         
         return [swingT, srun, hw_outSwing]
     
-    def __runOneSwingStep(self, building, swingheating, Tcurr, hw_out):
+    def __runOneSwingStep(self, building, swingheating, Tcurr, hw_out, minuteIntervals = 1):
         """
         Runs one step on the swing tank step. Since the swing tank is in series
         with the primary system the temperature needs to be tracked to inform
@@ -325,9 +325,11 @@ class SwingTank(SystemConfig):
         """
         did_run = 0 
 
+        timeDivisor = 60 // minuteIntervals
+
         # Take out the recirc losses
-        Tnew = Tcurr - building.recirc_loss / 60 / rhoCp / self.TMVol_G
-        element_dT = self.TMCap_kBTUhr * 1000  / 60 / rhoCp / self.TMVol_G
+        Tnew = Tcurr - building.recirc_loss / timeDivisor / rhoCp / self.TMVol_G
+        element_dT = self.TMCap_kBTUhr * 1000  / timeDivisor / rhoCp / self.TMVol_G
 
         # Add in heat for a draw
         if hw_out:
@@ -356,8 +358,11 @@ class SwingTank(SystemConfig):
 
         if Tnew < building.supplyT_F: # Check for errors
             raise Exception("The swing tank dropped below the supply temperature! The system is undersized")
+        
+        # multiply did_run to reflect the time durration of the interval.
+        time_run = did_run * minuteIntervals
 
-        return swingheating, Tnew, did_run
+        return swingheating, Tnew, time_run
     
     def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building, effSwingVolFract, primaryCurve = False,):
         """
@@ -410,9 +415,9 @@ class SwingTank(SystemConfig):
     
     def getInitializedSimulation(self, building : Building, Pcapacity=None, Pvolume=None, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
         simRun = super().getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST, minuteIntervals, nDays)
-        simRun.swingT = [simRun.mixedStorT_F] + [0] * (len(simRun.G_hw) - 1)
-        simRun.srun = [0] * (len(simRun.G_hw))
-        simRun.hw_outSwing = [0] * (len(simRun.G_hw))
+        simRun.swingT = [simRun.mixedStorT_F] + [0] * (len(simRun.D_hw) - 1)
+        simRun.srun = [0] * (len(simRun.D_hw))
+        simRun.hw_outSwing = [0] * (len(simRun.D_hw))
         simRun.hw_outSwing[0] = simRun.D_hw[0]
         if initST:
             simRun.swingT[0] = initST
@@ -424,11 +429,11 @@ class SwingTank(SystemConfig):
 
         return simRun
 
-    def runOneSystemStep(self, simRun : SimulationRun, i):
+    def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1):
         simRun.hw_outSwing[i] = mixVolume(simRun.D_hw[i], simRun.swingT[i-1], simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
             
-        simRun.swingheating, simRun.swingT[i], simRun.srun[i] = self.__runOneSwingStep(simRun.building, simRun.swingheating, simRun.swingT[i-1], simRun.hw_outSwing[i])
+        simRun.swingheating, simRun.swingT[i], simRun.srun[i] = self.__runOneSwingStep(simRun.building, simRun.swingheating, simRun.swingT[i-1], simRun.hw_outSwing[i], minuteIntervals = minuteIntervals)
         #Get the mixed generation
-        mixedGHW = mixVolume(simRun.G_hw[i], simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) #replaced self.storageT_F with mixedStorT_F
-        simRun.pheating, simRun.pV[i], simRun.prun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], simRun.hw_outSwing[i], mixedGHW)
+        mixedGHW = mixVolume(simRun.G_hw, simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) #replaced self.storageT_F with mixedStorT_F
+        simRun.pheating, simRun.pV[i], simRun.prun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], simRun.hw_outSwing[i], mixedGHW, simRun.Vtrig[i-1])
    

@@ -114,11 +114,13 @@ class SystemConfig:
         
         # Get the generation rate from the primary capacity
         G_hw = 1000 * Pcapacity / rhoCp / (building.supplyT_F - building.incomingT_F) \
-               * self.defrostFactor * np.tile(self.loadShiftSchedule, nDays)
-
+               * self.defrostFactor #* np.tile(self.loadShiftSchedule, nDays)
+        loadshiftSched = np.tile(self.loadShiftSchedule, nDays) # TODO can we get rid of it?
         
         # Define the use of DHW with the normalized load shape
-        D_hw = building.magnitude * np.tile(loadShapeN, nDays)
+        D_hw = building.magnitude * loadShapeN
+        if (len(D_hw) == 24):
+            D_hw = np.tile(D_hw, nDays)
         if nDays < 365:
             D_hw = D_hw * self.fract_total_vol
         elif nDays == 365:
@@ -127,7 +129,7 @@ class SystemConfig:
             raise Exception("Invalid input given for number of days. Must be <= 365.")
 
         # Init the "simulation"
-        V0 = np.ceil(Pvolume * self.percentUseable) 
+        V0 = np.ceil(Pvolume * self.percentUseable) #TODO idk if this should be so
         
         Vtrig = np.tile(np.ceil(Pvolume * (1 - self.aquaFract)) + 1, 24) # To prevent negatives with any of that rounding math. TODO Nolan and I don't think we need this mysterious + 1
         
@@ -149,33 +151,40 @@ class SystemConfig:
         
         if minuteIntervals == 1:
             # To per minute from per hour
-            G_hw = np.array(hrToMinList(G_hw)) / 60
+            #G_hw = np.array(hrToMinList(G_hw)) / 60
+            G_hw = G_hw / 60
             D_hw = np.array(hrToMinList(D_hw)) / 60
             Vtrig = np.array(hrToMinList(np.tile(Vtrig, nDays))) 
+            loadshiftSched = np.array(hrToMinList(loadshiftSched))
         elif minuteIntervals == 15:
             # To per 15 minute from per hour
-            G_hw = np.array(hrTo15MinList(G_hw)) / 4
+            #G_hw = np.array(hrTo15MinList(G_hw)) / 4
+            G_hw = G_hw / 4
             D_hw = np.array(hrTo15MinList(D_hw)) / 4
             Vtrig = np.array(hrTo15MinList(np.tile(Vtrig, nDays)))
+            loadshiftSched = np.array(hrTo15MinList(loadshiftSched))
         else:
             raise Exception("Invalid input given for granularity. Must be 1, 15, or 60.")
 
-        pV = [V0] + [0] * (len(G_hw) - 1)
+        pV = [V0] + [0] * (len(D_hw) - 1)
 
         pheating = False
 
-        prun = [0] * (len(G_hw))
+        prun = [0] * (len(D_hw))
+
+        print(len(D_hw))
+        print(len(Vtrig))
 
         mixedStorT_F = self.mixStorageTemps(pV[0], building.incomingT_F, building.supplyT_F)[0]
         if initPV:
             pV[0] = initPV
 
-        return SimulationRun(G_hw, D_hw, V0, Vtrig, pV, prun, pheating, mixedStorT_F, building, self.doLoadShift)
+        return SimulationRun(G_hw, D_hw, V0, Vtrig, pV, prun, pheating, mixedStorT_F, building, loadshiftSched, self.doLoadShift)
     
-    def runOneSystemStep(self, simRun : SimulationRun, i):
+    def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1):
         mixedDHW = mixVolume(simRun.D_hw[i], simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) 
-        mixedGHW = mixVolume(simRun.G_hw[i], simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
-        simRun.pheating, simRun.pV[i], simRun.prun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], mixedDHW, mixedGHW) 
+        mixedGHW = mixVolume(simRun.G_hw, simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
+        simRun.pheating, simRun.pV[i], simRun.prun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], mixedDHW, mixedGHW, simRun.Vtrig[i-1]) 
     
     def _setLoadShift(self, loadShiftSchedule, loadUpHours, aquaFract, aquaFractLoadUp, aquaFractShed, storageT_F, loadUpT_F, loadShiftPercent=1):
         """
@@ -568,7 +577,7 @@ class SystemConfig:
         return [volN, capN, N]
 
     
-    def runOnePrimaryStep(self, pheating, V0, Vtrig, Vcurr, hw_out, hw_in):
+    def runOnePrimaryStep(self, pheating, V0, Vtrig, Vcurr, hw_out, hw_in, Vtrig_previous):
         """
         Runs one step on the primary system. This changes the volume of the primary system
         by assuming there is hot water removed at a volume of hw_out and hot water
@@ -583,7 +592,7 @@ class SystemConfig:
             The storage volume of the primary system at the storage temperature
         Vtrig : float
             The remaining volume of the primary storage volume when heating is
-            triggered, note this equals V0*(1 - aquaFract) TODO is that true tho? 
+            triggered, note this equals V0*(1 - aquaFract) 
         Vcurr : float
             The primary volume at the timestep.
         hw_out : float
@@ -591,6 +600,8 @@ class SystemConfig:
             100% of what of what is removed is replaced
         hw_in : float
             The volume of hot water generated in a time step
+        Vtrig_previous : float
+            Trigger from last time step to see if we missed any heating (may have changed if doing load shifting)
 
         Returns
         -------
@@ -598,33 +609,43 @@ class SystemConfig:
             Boolean indicating if the primary system is heating at the end of this step in the simulation 
         Vnew : float
             The new primary volume at the timestep.
-        did_run : float
+        hw_generated : float
             The volume of hot water generated during the time step.
 
         """
-        did_run = 0
+        hw_generated = 0
         Vnew = 0
+        Vtrig_normal = np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFract))
         if pheating:
             Vnew = Vcurr + hw_in - hw_out # If heating, generate HW and lose HW
-            did_run = hw_in
+            hw_generated = hw_in
 
-        else:  # Else not heating, REMOVED TIME MISSED HERE
+        else:
             Vnew = Vcurr - hw_out # So lose HW
             if Vnew < Vtrig: # If should heat
-                Vnew += hw_in # # Start heating
-                did_run = hw_in 
                 pheating = True
+            if Vnew < Vtrig_previous:
+                time_missed = min((Vtrig_previous - Vnew)/hw_out, 1) # Volume below turn on / rate of draw gives time below tigger (aquastat)
+                Vnew += hw_in * time_missed
+                hw_generated = hw_in * time_missed
 
-        if Vnew > V0: # If overflow
+        if Vtrig == np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFractShed)) and Vnew > Vtrig_normal:
+            time_over = (Vnew - Vtrig_normal) / (hw_in - hw_out) # Volume over generated / rate of generation gives time above full
+            Vnew = Vtrig_normal - hw_out * time_over # Make full with missing volume
+            hw_generated = hw_in * (1-time_over)
+            pheating = False # Stop heating
+        elif Vnew > V0: # If overflow
             time_over = (Vnew - V0) / (hw_in - hw_out) # Volume over generated / rate of generation gives time above full
             Vnew = V0 - hw_out * time_over # Make full with missing volume
-            did_run = hw_in * (1-time_over)
+            hw_generated = hw_in * (1-time_over)
             pheating = False # Stop heating
+        elif Vtrig < Vtrig_previous and Vnew > Vtrig: # turn off heating if aquastat changes and we find we are above it.
+            pheating = False
 
         if Vnew < 0:
            raise Exception("Primary storage ran out of Volume!") 
 
-        return pheating, Vnew, did_run
+        return pheating, Vnew, hw_generated
     
     def _calcPrelimVol(self, loadUpHours, loadshape, building):
         '''

@@ -6,6 +6,7 @@ W_TO_BTUMIN = W_TO_BTUHR/60.
 W_TO_TONS = 0.000284345
 TONS_TO_KBTUHR = 12.
 watt_per_gal_recirc_factor = 100 
+KWH_TO_BTU = 3412.14
 
 pCompMinimumRunTime = 10./60.
 tmCompMinimumRunTime = 20./60.

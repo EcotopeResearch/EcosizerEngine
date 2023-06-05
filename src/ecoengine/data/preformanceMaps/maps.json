@@ -1,0 +1,26 @@
+{
+    "MODELS_AOSmithPHPT80" : [
+        {
+            "T_F" : 47,
+            "inputPower_coeffs" : [467.0, 2.81, 0.0072],
+            "COP_coeffs" : [4.86, -0.0222, -0.00001]
+        },
+        {
+            "T_F" : 67,
+            "inputPower_coeffs" : [541.0, 1.47, 0.0176],
+            "COP_coeffs" : [6.58, -0.0392, 0.0000407]
+        }
+    ],
+    "MODELS_AOSmithPHPT60" : [
+        {
+            "T_F" : 47,
+            "inputPower_coeffs" : [467.0, 2.81, 0.0072],
+            "COP_coeffs" : [4.86, -0.0222, -0.00001]
+        },
+        {
+            "T_F" : 67,
+            "inputPower_coeffs" : [541.0, 1.47, 0.0176],
+            "COP_coeffs" : [6.58, -0.0392, 0.0000407]
+        }
+    ]
+}

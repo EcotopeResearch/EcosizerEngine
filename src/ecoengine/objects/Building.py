@@ -30,6 +30,9 @@ class Building:
             raise Exception("Error: Flow rate must be a number.")
         if not hasattr(self, 'magnitude'):
             raise Exception("Magnitude has not been set.")
+        
+    def setToAnnualLS(self):
+        raise Exception("Annual loadshape not available for this building type. This feature is only available for multi-family buildings.")
 
 class MensDorm(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
@@ -125,6 +128,12 @@ class MultiFamily(Building):
         # recalculate recirc_loss with different method if applicable
         if(nApt > 0 and Wapt > 0):
             self.recirc_loss = nApt * Wapt * W_TO_BTUHR
+
+    def setToAnnualLS(self):
+        with open(os.path.join(os.path.dirname(__file__), '../data/load_shapes/multi_family.json')) as json_file:
+            dataDict = json.load(json_file)
+            self.loadshape = dataDict['loadshapes']["Annual_Normalized"]
+            self.avgLoadshape = self.loadshape
 
 class MultiUse(Building):
     def __init__(self, building_list, incomingT_F, supplyT_F, returnT_F, flowRate):

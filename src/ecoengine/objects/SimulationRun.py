@@ -7,7 +7,7 @@ from plotly.offline import plot
 from plotly.subplots import make_subplots
 
 class SimulationRun:
-    def __init__(self, G_hw, D_hw, V0, Vtrig, pV, prun, pheating, mixedStorT_F, building : Building, doLoadshift = False):
+    def __init__(self, G_hw, D_hw, V0, Vtrig, pV, prun, pheating, mixedStorT_F, building : Building, loadShiftSchedule, doLoadshift = False):
         """
         Initializes arrays needed for 3-day simulation
 
@@ -27,7 +27,7 @@ class SimulationRun:
         pheating : boolean 
             set to false. Simulation starts with a full tank so primary heating starts off
         prun : list 
-            The actual output in gallons of the HPWH with time
+            The generation of HW with time at the storage temperature
         """
         self.V0 = V0 
         self.G_hw = G_hw
@@ -39,13 +39,14 @@ class SimulationRun:
         self.mixedStorT_F = mixedStorT_F
         self.building = building
         self.doLoadShift = doLoadshift
+        self.loadShiftSchedule = loadShiftSchedule
 
     def getIncomingWaterT(self, i):
         return self.building.incomingT_F
 
     def returnSimResult(self):
         retList = [roundList(self.pV, 3),
-            roundList(self.G_hw, 3),
+            roundList(self.G_hw * self.loadShiftSchedule, 3),
             roundList(self.D_hw, 3),
             roundList(self.prun, 3)]
         
@@ -76,7 +77,7 @@ class SimulationRun:
         hrind_fromback = 24 # Look at the last 24 hours of the simulation not the whole thing
 
         run = np.array(roundList(self.prun,3)[-(60*hrind_fromback):])*60
-        G_hw = np.array(roundList(self.G_hw,3)[-(60*hrind_fromback):])*60
+        loadShiftSchedule = np.array(self.loadShiftSchedule[-(60*hrind_fromback):])*60
         D_hw = np.array(roundList(self.D_hw,3)[-(60*hrind_fromback):])*60
         V = np.array(roundList(self.pV,3)[-(60*hrind_fromback):])
 
@@ -96,7 +97,7 @@ class SimulationRun:
         x_data = list(range(len(V)))
 
         if self.doLoadShift:
-            ls_off = [int(not x)* max(V)*2 for x in G_hw]
+            ls_off = [int(not x)* max(V)*2 for x in loadShiftSchedule]
             fig.add_trace(Scatter(x=x_data, y=ls_off, name='Load Shift Off Period',
                                   mode='lines', line_shape='hv',
                                   opacity=0.5, marker_color='grey',

@@ -137,6 +137,21 @@ def test_custom_loadshapes(loadShape, buildingType, magnitude, expected):
     )
     assert np.array_equal(np.round(building.loadshape[:3], decimals=5), np.round(expected, decimals=5))
 
+def test_annualLS_for_multi_family(multiFamilyWithBedrooms):
+    assert len(multiFamilyWithBedrooms.loadshape) == 24
+    assert len(multiFamilyWithBedrooms.avgLoadshape) == 24
+    multiFamilyWithBedrooms.setToAnnualLS()
+    assert len(multiFamilyWithBedrooms.loadshape) == 8760
+    assert len(multiFamilyWithBedrooms.avgLoadshape) == 8760
+
+def test_annualLS_for_non_multi_family(nursingHomeAndOffice):
+    assert len(nursingHomeAndOffice.loadshape) == 24
+    assert len(nursingHomeAndOffice.avgLoadshape) == 24
+    with pytest.raises(Exception, match="Annual loadshape not available for this building type. This feature is only available for multi-family buildings."):
+        nursingHomeAndOffice.setToAnnualLS()
+    assert len(nursingHomeAndOffice.loadshape) == 24
+    assert len(nursingHomeAndOffice.avgLoadshape) == 24
+
 # Check for building initialization errors
 def test_invalid_building_parameter_errors():
     with pytest.raises(Exception, match="Error: Number of apartments must be an integer."):
