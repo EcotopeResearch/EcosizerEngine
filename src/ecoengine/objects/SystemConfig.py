@@ -58,7 +58,10 @@ class SystemConfig:
             raise Exception("Invalid input given for loadShiftPercent, must be a number between 0 and 1.")
         if not isinstance(doLoadShift, bool):
             raise Exception("Invalid input given for doLoadShift, must be a boolean.")
-              
+
+    def setCapacity(self, PCap_kBTUhr):
+        self.PCap_kBTUhr = PCap_kBTUhr
+
     def getSizingResults(self):
         """
         Returns the minimum primary volume and heating capacity sizing results. Implimented seperatly in Temp Maintenence systems.
@@ -85,10 +88,10 @@ class SystemConfig:
 
         Returns
         -------
-        list [ G_hw, D_hw, V0, V, run, pheating ]
-        G_hw : list
+        list [ hwGenRate, hwDemand, V0, V, run, pheating ]
+        hwGenRate : list
             The generation of HW with time at the supply temperature
-        D_hw : list
+        hwDemand : list
             The hot water demand with time at the tsupply temperature
         V0 : float
             The storage volume of the primary system at the storage temperature
@@ -99,7 +102,7 @@ class SystemConfig:
             Volume of HW in the tank with time at the storage temperature. Initialized to array of 0s with pV[0] set to V0
         pheating : boolean 
             set to false. Simulation starts with a full tank so primary heating starts off
-        prun : list 
+        pGen : list 
             The actual output in gallons of the HPWH with time
         """
         if not Pcapacity:
@@ -113,18 +116,18 @@ class SystemConfig:
             loadShapeN = building.avgLoadshape
         
         # Get the generation rate from the primary capacity
-        G_hw = 1000 * Pcapacity / rhoCp / (building.supplyT_F - building.incomingT_F) \
+        hwGenRate = 1000 * Pcapacity / rhoCp / (building.supplyT_F - building.incomingT_F) \
                * self.defrostFactor #* np.tile(self.loadShiftSchedule, nDays)
         loadshiftSched = np.tile(self.loadShiftSchedule, nDays) # TODO can we get rid of it?
         
         # Define the use of DHW with the normalized load shape
-        D_hw = building.magnitude * loadShapeN
-        if (len(D_hw) == 24):
-            D_hw = np.tile(D_hw, nDays)
+        hwDemand = building.magnitude * loadShapeN
+        if (len(hwDemand) == 24):
+            hwDemand = np.tile(hwDemand, nDays)
         if nDays < 365:
-            D_hw = D_hw * self.fract_total_vol
+            hwDemand = hwDemand * self.fract_total_vol
         elif nDays == 365:
-            D_hw = D_hw
+            hwDemand = hwDemand
         else:
             raise Exception("Invalid input given for number of days. Must be <= 365.")
 
@@ -151,40 +154,40 @@ class SystemConfig:
         
         if minuteIntervals == 1:
             # To per minute from per hour
-            #G_hw = np.array(hrToMinList(G_hw)) / 60
-            G_hw = G_hw / 60
-            D_hw = np.array(hrToMinList(D_hw)) / 60
+            #hwGenRate = np.array(hrToMinList(hwGenRate)) / 60
+            hwGenRate = hwGenRate / 60
+            hwDemand = np.array(hrToMinList(hwDemand)) / 60
             Vtrig = np.array(hrToMinList(np.tile(Vtrig, nDays))) 
             loadshiftSched = np.array(hrToMinList(loadshiftSched))
         elif minuteIntervals == 15:
             # To per 15 minute from per hour
-            #G_hw = np.array(hrTo15MinList(G_hw)) / 4
-            G_hw = G_hw / 4
-            D_hw = np.array(hrTo15MinList(D_hw)) / 4
+            #hwGenRate = np.array(hrTo15MinList(hwGenRate)) / 4
+            hwGenRate = hwGenRate / 4
+            hwDemand = np.array(hrTo15MinList(hwDemand)) / 4
             Vtrig = np.array(hrTo15MinList(np.tile(Vtrig, nDays)))
             loadshiftSched = np.array(hrTo15MinList(loadshiftSched))
         else:
             raise Exception("Invalid input given for granularity. Must be 1, 15, or 60.")
 
-        pV = [V0] + [0] * (len(D_hw) - 1)
+        pV = [V0] + [0] * (len(hwDemand) - 1)
 
         pheating = False
 
-        prun = [0] * (len(D_hw))
+        pGen = [0] * (len(hwDemand))
 
-        print(len(D_hw))
+        print(len(hwDemand))
         print(len(Vtrig))
 
         mixedStorT_F = self.mixStorageTemps(pV[0], building.incomingT_F, building.supplyT_F)[0]
         if initPV:
             pV[0] = initPV
 
-        return SimulationRun(G_hw, D_hw, V0, Vtrig, pV, prun, pheating, mixedStorT_F, building, loadshiftSched, self.doLoadShift)
+        return SimulationRun(hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pheating, mixedStorT_F, building, loadshiftSched, self.doLoadShift)
     
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1):
-        mixedDHW = mixVolume(simRun.D_hw[i], simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) 
-        mixedGHW = mixVolume(simRun.G_hw, simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
-        simRun.pheating, simRun.pV[i], simRun.prun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], mixedDHW, mixedGHW, simRun.Vtrig[i-1]) 
+        mixedDHW = mixVolume(simRun.hwDemand[i], simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) 
+        mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
+        simRun.pheating, simRun.pV[i], simRun.pGen[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], mixedDHW, mixedGHW, simRun.Vtrig[i-1]) 
     
     def _setLoadShift(self, loadShiftSchedule, loadUpHours, aquaFract, aquaFractLoadUp, aquaFractShed, storageT_F, loadUpT_F, loadShiftPercent=1):
         """

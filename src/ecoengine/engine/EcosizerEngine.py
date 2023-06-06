@@ -126,8 +126,9 @@ class EcosizerEngine:
                                 TMCap_kBTUhr = TMCap_kBTUhr
         )
     
-    def getSimResult(self, initPV=None, initST=None, Pcapacity=None, Pvolume=None, minuteIntervals = 1, nDays = 3):
-        simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, Pcapacity=Pcapacity, Pvolume=Pvolume, minuteIntervals = minuteIntervals, nDays = nDays)
+    def getSimResult(self, initPV=None, initST=None, Pcapacity=None, Pvolume=None, minuteIntervals = 1, nDays = 3, zipCode = None, climateZone = None, hpwhModel = None):
+        simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, Pcapacity=Pcapacity, Pvolume=Pvolume, minuteIntervals = minuteIntervals, nDays = nDays,
+                          zipCode = zipCode, climateZone = climateZone, hpwhModel = hpwhModel)
         return simRun.returnSimResult()
         # return self.system.simulate(self.building)
 

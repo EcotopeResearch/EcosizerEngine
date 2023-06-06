@@ -5,10 +5,11 @@ from ecoengine.objects.SimulationRun import *
 import os
 import json
 from ecoengine.constants.Constants import KWH_TO_BTU
+import csv
 
     
 def simulate(system : SystemConfig, building : Building, initPV=None, initST=None, Pcapacity=None, Pvolume=None, minuteIntervals = 1, nDays = 3,
-             climateZone = None, hpwhModel = None):
+             zipCode = None, climateZone = None, hpwhModel = None):
     """
     Implimented seperatly for Swink Tank systems 
     Inputs
@@ -28,37 +29,49 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
     
     Returns
     -------
-    list [ pV, G_hw, D_hw, prun ]
+    list [ pV, hwGenRate, hwDemand, pGen ]
     pV : list 
         Volume of HW in the tank with time at the strorage temperature.
-    G_hw : list 
+    hwGenRate : list 
         The generation of HW with time at the supply temperature
-    D_hw : list 
+    hwDemand : list 
         The hot water demand with time at the tsupply temperature
-    prun : list 
-        The actual output in gallons of the HPWH with time
+    pGen : list 
+        The actual hot water generation in gallons of the HPWH with time
     """
 
     simRun = system.getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST, minuteIntervals, nDays)
 
-    perfMap = PrefMapTracker(system.PCap_kBTUhr)
-    if not hpwhModel is None:
-        perfMap.setPrefMap(hpwhModel)
-        
+    perfMap = PrefMapTracker(system.PCap_kBTUhr, zipCode = zipCode, climateZone = climateZone, modelName = hpwhModel)    
+    with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
+        csv_reader = csv.reader(oat_file)
+        next(csv_reader)
+        oat_row = next(csv_reader) # now on first hour
+        if not perfMap.climateZone is None:
+            oat_F = oat_row[perfMap.climateZone - 1]
+            system.setCapacity(perfMap.getCapacity(oat_F, 120)) #TODO use a real condesor temp
 
-    # Run the "simulation"
-    for i in range(1, len(simRun.D_hw)):
-        # TODO change capacity based on weather here
-        system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
+        # Run the "simulation"
+        for i in range(1, len(simRun.hwDemand)):
+            # TODO change capacity based on weather here
+            if not perfMap.climateZone is None:
+                if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus take the next OAT
+                    oat_row = next(csv_reader)
+                    oat_F = oat_row[perfMap.climateZone - 1]
+                    # print("at hour " + str(i/(60/minuteIntervals)) +" oat_F is: "+str(oat_F))
+                    system.setCapacity(perfMap.getCapacity(oat_F, 120)) #TODO use a real condesor temp
+
+            system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
 
     return simRun
 
 class PrefMapTracker:
-    def __init__(self, defaultCapacity, modelName = None):
+    def __init__(self, defaultCapacity, zipCode = None, climateZone = None, modelName = None):
         self.defaultCapacity = defaultCapacity
-        if modelName is None: 
-            self.perfMap = None
-        else:
+        self.climateZone = None
+        self.perfMap = None
+        self.setClimateZone(zipCode = zipCode, climateZone = climateZone)
+        if not modelName is None: 
             self.setPrefMap(modelName)
 
     def getCapacity(self, externalT_F, condenserT_F):
@@ -85,7 +98,7 @@ class PrefMapTracker:
                     break
                 else:
                     if i >= len(self.perfMap) - 1:
-                        extrapolate = True
+                        extrapolate = True  # TODO warning message
                         i_prev = i-1
                         i_next = i
                         break
@@ -119,6 +132,21 @@ class PrefMapTracker:
                 self.perfMap = dataDict[modelName]
         except:
             raise Exception("No preformance map found for HPWH model type " + modelName + ".")
+    
+    def setClimateZone(self, zipCode = None, climateZone = None):
+        if not climateZone is None:
+            if not isinstance(climateZone, int) or climateZone < 1 or climateZone > 16:
+                raise Exception("Climate Zone must be a number between 1 and 16.")
+            self.climateZone - climateZone
+        elif not zipCode is None:
+            with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/ZipCode_ClimateZone_Lookup.csv'), 'r') as file:
+                csv_reader = csv.reader(file)                
+                for row in csv_reader:
+                    if str(zipCode) == row[0]:
+                        self.climateZone = int(row[1])
+                        break
+                if self.climateZone is None:
+                    raise Exception(str(zipCode) + " is not a California zip code.")
     
     def linearInterp(self, xnew, x0, x1, y0, y1):
         return y0 + (xnew - x0) * (y1 - y0) / (x1 - x0)
