@@ -1,13 +1,15 @@
 from .Building import Building
 import numpy as np
 from ecoengine.constants.Constants import *
-from .systemConfigUtils import hrToMinList, roundList
+from .systemConfigUtils import hrToMinList, roundList, hrTo15MinList
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots
+import os
+import csv
 
 class SimulationRun:
-    def __init__(self, hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pheating, mixedStorT_F, building : Building, loadShiftSchedule, doLoadshift = False):
+    def __init__(self, hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building : Building, loadShiftSchedule, minuteIntervals, doLoadshift = False):
         """
         Initializes arrays needed for 3-day simulation
 
@@ -36,15 +38,97 @@ class SimulationRun:
         self.pV = pV
         self.pheating = pheating
         self.pGen = pGen
+        self.pRun = pRun # amount of time in interval primary tank is heating
         self.mixedStorT_F = mixedStorT_F
         self.building = building
+        self.minuteIntervals = minuteIntervals
         self.doLoadShift = doLoadshift
         self.loadShiftSchedule = loadShiftSchedule
+        self.monthlyCityWaterT_F = None
+        self.oat = [] # oat by hour
+        self.cap = [] # capacity at every time interval
+        self.kGperkWh = [] # the kG CO2 per kWh at every time interval
 
     def getIncomingWaterT(self, i):
-        return self.building.incomingT_F
+        if self.monthlyCityWaterT_F is None:
+            return self.building.incomingT_F # default city water temp
+        else:
+            dayOfYear = (i // (60/self.minuteIntervals)) // 24
+            if dayOfYear < 31:
+                # jan
+                return self.monthlyCityWaterT_F[0]
+            elif dayOfYear < 59:
+                # feb
+                return self.monthlyCityWaterT_F[1]
+            elif dayOfYear < 90:
+                # mar
+                return self.monthlyCityWaterT_F[2]
+            elif dayOfYear < 120:
+                # apr
+                return self.monthlyCityWaterT_F[3]
+            elif dayOfYear < 151:
+                # may
+                return self.monthlyCityWaterT_F[4]
+            elif dayOfYear < 181:
+                # jun
+                return self.monthlyCityWaterT_F[5]
+            elif dayOfYear < 212:
+                # jul
+                return self.monthlyCityWaterT_F[6]
+            elif dayOfYear < 243:
+                # aug
+                return self.monthlyCityWaterT_F[7]
+            elif dayOfYear < 273:
+                # sep
+                return self.monthlyCityWaterT_F[8]
+            elif dayOfYear < 304:
+                # oct
+                return self.monthlyCityWaterT_F[9]
+            elif dayOfYear < 334:
+                # nov
+                return self.monthlyCityWaterT_F[10]
+            elif dayOfYear < 365:
+                # dec
+                return self.monthlyCityWaterT_F[11]
+            else:
+                raise Exception("Cold water temperature data not available past one year.")
+            
+    def getAvgIncomingWaterT(self):
+        if self.monthlyCityWaterT_F is None:
+            return self.building.incomingT_F # default city water temp
+        else:
+            return ((self.monthlyCityWaterT_F[0]*31) + (self.monthlyCityWaterT_F[1]*28) + (self.monthlyCityWaterT_F[2]*31) + (self.monthlyCityWaterT_F[3]*30) \
+                + (self.monthlyCityWaterT_F[4]*31) + (self.monthlyCityWaterT_F[5]*30) + (self.monthlyCityWaterT_F[6]*31) + (self.monthlyCityWaterT_F[7]*31) \
+                + (self.monthlyCityWaterT_F[8]*30) + (self.monthlyCityWaterT_F[9]*31) + (self.monthlyCityWaterT_F[10]*30) + (self.monthlyCityWaterT_F[11]*31)) / 365
+            # return ((self.monthlyCityWaterT_F[0]) + (self.monthlyCityWaterT_F[1]) + (self.monthlyCityWaterT_F[2]) + (self.monthlyCityWaterT_F[3]) \
+            #     + (self.monthlyCityWaterT_F[4]) + (self.monthlyCityWaterT_F[5]) + (self.monthlyCityWaterT_F[6]) + (self.monthlyCityWaterT_F[7]) \
+            #     + (self.monthlyCityWaterT_F[8]) + (self.monthlyCityWaterT_F[9]) + (self.monthlyCityWaterT_F[10]) + (self.monthlyCityWaterT_F[11])) / 12
+            
+    
+    def setMonthlyCityWaterT_F(self, monthlyCityWaterT_F):
+        if len(monthlyCityWaterT_F) != 12:
+            raise Exception("Monthly city water temperature data must have 12 entries (one for every month).")
+        for i in range(12):
+            if not isinstance(monthlyCityWaterT_F[i], float):
+                raise Exception(str(monthlyCityWaterT_F[i]) + " is an invalid city water tempurature for month "+str(i+1)+".")
+        self.monthlyCityWaterT_F = monthlyCityWaterT_F
 
-    def returnSimResult(self):
+    def addOat(self, oat_value):
+        if not (isinstance(oat_value, float) or isinstance(oat_value, int)):
+            raise Exception(str(oat_value) + " is an invalid outdoor air tempurature.")
+        self.oat.append(oat_value)
+    
+    def addCap(self, cap_value):
+        if not (isinstance(cap_value, float) or isinstance(cap_value, int)):
+            raise Exception(str(cap_value) + " is an invalid system capacity.")
+        self.cap.append(cap_value)
+
+    def addKGperkWh(self, kGperkWh_value):
+        if not (isinstance(kGperkWh_value, float) or isinstance(kGperkWh_value, int)):
+            raise Exception(str(kGperkWh_value) + " is an invalid system kGperkWh value.")
+        self.kGperkWh.append(kGperkWh_value)
+
+    def returnSimResult(self, kWhCalc = False, climateZone = 11):
         retList = [roundList(self.pV, 3),
             roundList(self.hwGenRate * self.loadShiftSchedule, 3),
             roundList(self.hwDemand, 3),
@@ -57,7 +141,19 @@ class SimulationRun:
         if hasattr(self, 'hw_outSwing'):
             retList.append(self.hw_outSwing)
 
+        #TODO this is a temp solution. should not stick around. Only doing for 15 min intervals
+        if kWhCalc and len(self.oat) == 8760:
+            if self.minuteIntervals == 15:
+                retList.append(self.pRun)
+                retList.append(hrTo15MinList(self.oat))
+                retList.append(self.cap)
+                retList.append(self.kGperkWh)
+                retList.append(sum(self.kGperkWh))
+                retList.append(self.getAvgIncomingWaterT())               
         return retList
+    
+    # def getKgCO2perkWh(self):
+
     
     def plotStorageLoadSim(self, return_as_div=True):
         """
@@ -74,6 +170,7 @@ class SimulationRun:
         div/fig
             plot_div
         """
+        # TODO make this function work for not 1 minute intervals
         hrind_fromback = 24 # Look at the last 24 hours of the simulation not the whole thing
 
         run = np.array(roundList(self.pGen,3)[-(60*hrind_fromback):])*60

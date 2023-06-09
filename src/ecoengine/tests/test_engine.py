@@ -254,3 +254,26 @@ def test__swing_simulationResults(swing_sizer):
     assert simResult[4][-10:] == [124.201, 125.002, 125.791, 126.568, 127.334, 128.0, 127.555, 127.115, 126.682, 126.256]
     assert simResult[5][-200:-190] == [0, 0, 0, 0, 0.013, 1, 1, 1, 1, 1]
     assert simResult[6][800:803] == [0.9489206357019205, 0.9384794009334938, 0.9283993792885612]
+
+def test__swing_nls_simulationResults(swing_sizer_nls):
+    simResult = swing_sizer_nls.getSimResult()
+    assert len(simResult) == 7
+    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == len(simResult[4]) == len(simResult[5]) == len(simResult[6]) == 4320
+    assert simResult[0][:2] == [487.0, 486.557]
+    assert simResult[1][-10:-8] == [3.367, 3.367]
+    assert simResult[2][-65:-55] == [2.66, 2.66, 2.66, 2.66, 2.66, 1.013, 1.013, 1.013, 1.013, 1.013]
+    assert simResult[3][800:810] == [2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357]
+    assert simResult[4][-10:-4] == [128.0, 127.519, 127.044, 126.575, 126.111, 125.653]
+    assert simResult[5][-200:-190] == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    assert simResult[6][800:803] == [0.9589199980931171, 0.9491629610090546, 0.9397239536905911]
+
+def test__primary_nls_simulationResults(primary_sizer_nls):
+    simResult = primary_sizer_nls.getSimResult()
+    assert len(simResult) == 4
+    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 4320
+    assert simResult[0][:10] == [421.0, 420.557, 420.113, 419.67, 419.227, 418.784, 418.34, 417.897, 417.454, 417.011]
+    assert simResult[1][-10:] == [2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604]
+    assert simResult[2][-65:-55] == [2.66, 2.66, 2.66, 2.66, 2.66, 1.013, 1.013, 1.013, 1.013, 1.013]
+    assert simResult[3][800:810] == [1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823]
+
+    # TODO add simulation tests for non load shifting

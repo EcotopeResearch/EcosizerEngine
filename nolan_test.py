@@ -3,17 +3,21 @@ import time
 import csv
 
 # regular sizing and 3 day simulation
+aquaFractLoadUp = 0.21
+aquaFractShed   = 0.8
+storageT_F = 150
+
 
 hpwh = EcosizerEngine(
             incomingT_F     = 50,
             magnitudeStat  = 100,
             supplyT_F       = 120,
-            storageT_F      = 150,
+            storageT_F      = storageT_F,
             loadUpT_F       = 150,
             percentUseable  = 0.9, 
             aquaFract       = 0.4, 
-            aquaFractLoadUp = 0.21,
-            aquaFractShed   = 0.8,
+            aquaFractLoadUp = aquaFractLoadUp,
+            aquaFractShed   = aquaFractShed,
             schematic       = 'swingtank', 
             buildingType   = 'multi_family',
             returnT_F       = 0, 
@@ -24,7 +28,7 @@ hpwh = EcosizerEngine(
             compRuntime_hr  = 16, 
             nApt            = 100, 
             Wapt            = 100,
-            loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
             loadUpHours     = 3,
             doLoadShift     = True,
             loadShiftPercent       = 0.8
@@ -49,12 +53,12 @@ hpwh = EcosizerEngine(
             incomingT_F     = 50,
             magnitudeStat  = 100,
             supplyT_F       = 120,
-            storageT_F      = 150,
+            storageT_F      = storageT_F,
             loadUpT_F       = 150,
             percentUseable  = 0.9, 
             aquaFract       = 0.4, 
-            aquaFractLoadUp = 0.21,
-            aquaFractShed   = 0.8,
+            aquaFractLoadUp = aquaFractLoadUp,
+            aquaFractShed   = aquaFractShed,
             schematic       = 'swingtank', 
             buildingType   = 'multi_family',
             returnT_F       = 0, 
@@ -66,7 +70,7 @@ hpwh = EcosizerEngine(
             nApt            = 100, 
             Wapt            = 60,
             nBR             = [0,50,30,20,0,0],
-            loadShiftSchedule        = [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1],
+            loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
             loadUpHours     = 3,
             doLoadShift     = True,
             loadShiftPercent       = 0.8,
@@ -77,7 +81,7 @@ hpwh = EcosizerEngine(
             annual = True
         )
 start_time = time.time()
-simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, zipCode = 94922)
+simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, climateZone = 1, kWhCalc = True)
 # simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135)
 
 end_time = time.time()
@@ -97,23 +101,59 @@ hours = [(i // 4) + 1 for i in range(len(simResult_1[0]))]
 
 # Insert the 'hour' column to simResult_1
 simResult_1.insert(0, hours)
+print('kg_sum is', simResult_1[-2])
+print('average temp is', simResult_1[-1])
 
-transposed_result = zip(*simResult_1)
+#finishing kGperkWh calc
+denom = (8.345*PVol_G_atStorageT*(aquaFractShed-aquaFractLoadUp)*(storageT_F-simResult_1[-1]))/3412
+print('denom',denom)
+kGperkWh = simResult_1[-2]/denom
+
+simResult_1.append(kGperkWh)
+
+transposed_result = zip(*simResult_1[:-3])
 
 # Define the CSV filename
-csv_filename = 'simResult_365_day_resonable_recirc_3.csv'
+csv_filename = 'simResult_365_day_with_ls_4.csv'
+
 
 # Write the transposed_result to a CSV file
-# with open(csv_filename, 'w', newline='') as csvfile:
-    # csvwriter = csv.writer(csvfile)
+with open(csv_filename, 'w', newline='') as csvfile:
+    csvwriter = csv.writer(csvfile)
     
-    # # Write the column headers
-    # csvwriter.writerow(['hour_number','pV', 'hwGenRate', 'hwDemand', 'pGen', 'swingT_F', 'sRun', 'hw_outSwing'])
-    
-    # # Write the data rows
-    # csvwriter.writerows(transposed_result)
+    # Write the column headers
+    csvwriter.writerow(['hour_number','pV', 'hwGenRate', 'hwDemand', 'pGen', 'swingT_F', 'sRun', 'hw_outSwing', 'time_primary_ran', 'OAT', 'Capacity_out', 'KgC02', 'avg_cw_temp','kGperkWh'])
+    csvwriter.writerow(['','', '', '', '', '', '', '', '', '', 'total->', simResult_1[-3], simResult_1[-2],simResult_1[-1]])
+    # Write the data rows
+    csvwriter.writerows(transposed_result)
 
 print("CSV file created successfully.")
+
+
+# parallel_sizer = EcosizerEngine(
+#             incomingT_F     = 50,
+#             magnitudeStat  = 100,
+#             supplyT_F       = 120,
+#             storageT_F      = 150,
+#             percentUseable  = 0.9, 
+#             aquaFract       = 0.4, 
+#             schematic       = 'primary', 
+#             buildingType   = 'multi_family',
+#             returnT_F       = 0, 
+#             flowRate       = 0,
+#             gpdpp           = 25,
+#             safetyTM        = 1.75,
+#             defrostFactor   = 1, 
+#             compRuntime_hr  = 16, 
+#             nApt            = 100, 
+#             Wapt            = 100,
+#             doLoadShift     = False,
+#         )
+# simResult = parallel_sizer.getSimResult()
+# print(simResult[0][:10])
+# print(simResult[1][-10:])
+# print(simResult[2][-65:-55])
+# print(simResult[3][800:810])
 
 
 

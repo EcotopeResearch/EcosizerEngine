@@ -173,7 +173,8 @@ class SystemConfig:
 
         pheating = False
 
-        pGen = [0] * (len(hwDemand))
+        pGen = [0] * len(hwDemand)
+        pRun = [0] * len(hwDemand)
 
         print(len(hwDemand))
         print(len(Vtrig))
@@ -182,12 +183,13 @@ class SystemConfig:
         if initPV:
             pV[0] = initPV
 
-        return SimulationRun(hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pheating, mixedStorT_F, building, loadshiftSched, self.doLoadShift)
+        return SimulationRun(hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building, loadshiftSched, minuteIntervals, self.doLoadShift)
     
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1):
         mixedDHW = mixVolume(simRun.hwDemand[i], simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) 
         mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
-        simRun.pheating, simRun.pV[i], simRun.pGen[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], mixedDHW, mixedGHW, simRun.Vtrig[i-1]) 
+        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], mixedDHW, mixedGHW, simRun.Vtrig[i-1],
+                                                                                               minuteIntervals = minuteIntervals) 
     
     def _setLoadShift(self, loadShiftSchedule, loadUpHours, aquaFract, aquaFractLoadUp, aquaFractShed, storageT_F, loadUpT_F, loadShiftPercent=1):
         """
@@ -580,7 +582,7 @@ class SystemConfig:
         return [volN, capN, N]
 
     
-    def runOnePrimaryStep(self, pheating, V0, Vtrig, Vcurr, hw_out, hw_in, Vtrig_previous):
+    def runOnePrimaryStep(self, pheating, V0, Vtrig, Vcurr, hw_out, hw_in, Vtrig_previous, minuteIntervals = 1):
         """
         Runs one step on the primary system. This changes the volume of the primary system
         by assuming there is hot water removed at a volume of hw_out and hot water
@@ -618,29 +620,34 @@ class SystemConfig:
         """
         hw_generated = 0
         Vnew = 0
+        time_ran = 0
         Vtrig_normal = np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFract))
         if pheating:
             Vnew = Vcurr + hw_in - hw_out # If heating, generate HW and lose HW
             hw_generated = hw_in
+            time_ran = 1
 
         else:
             Vnew = Vcurr - hw_out # So lose HW
             if Vnew < Vtrig: # If should heat
                 pheating = True
             if Vnew < Vtrig_previous:
-                time_missed = min((Vtrig_previous - Vnew)/hw_out, 1) # Volume below turn on / rate of draw gives time below tigger (aquastat)
-                Vnew += hw_in * time_missed
-                hw_generated = hw_in * time_missed
+                time_ran = min((Vtrig_previous - Vnew)/hw_out, 1) # Volume below turn on / rate of draw gives time below tigger (aquastat)
+                Vnew += hw_in * time_ran
+                hw_generated = hw_in * time_ran
 
-        if Vtrig == np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFractShed)) and Vnew > Vtrig_normal:
+        if self.doLoadShift and Vtrig == np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFractShed)) and Vnew > Vtrig_normal:
+            # stop heating if hw has met the normal aquastat fraction during a shed period
             time_over = (Vnew - Vtrig_normal) / (hw_in - hw_out) # Volume over generated / rate of generation gives time above full
             Vnew = Vtrig_normal - hw_out * time_over # Make full with missing volume
-            hw_generated = hw_in * (1-time_over)
+            time_ran = 1-time_over
+            hw_generated = hw_in * time_ran
             pheating = False # Stop heating
         elif Vnew > V0: # If overflow
             time_over = (Vnew - V0) / (hw_in - hw_out) # Volume over generated / rate of generation gives time above full
             Vnew = V0 - hw_out * time_over # Make full with missing volume
-            hw_generated = hw_in * (1-time_over)
+            time_ran = 1-time_over
+            hw_generated = hw_in * time_ran
             pheating = False # Stop heating
         elif Vtrig < Vtrig_previous and Vnew > Vtrig: # turn off heating if aquastat changes and we find we are above it.
             pheating = False
@@ -648,7 +655,7 @@ class SystemConfig:
         if Vnew < 0:
            raise Exception("Primary storage ran out of Volume!") 
 
-        return pheating, Vnew, hw_generated
+        return pheating, Vnew, hw_generated, time_ran * minuteIntervals
     
     def _calcPrelimVol(self, loadUpHours, loadshape, building):
         '''

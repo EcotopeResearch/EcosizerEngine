@@ -435,5 +435,6 @@ class SwingTank(SystemConfig):
         simRun.swingheating, simRun.swingT_F[i], simRun.sRun[i] = self.__runOneSwingStep(simRun.building, simRun.swingheating, simRun.swingT_F[i-1], simRun.hw_outSwing[i], minuteIntervals = minuteIntervals)
         #Get the mixed generation
         mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) #replaced self.storageT_F with mixedStorT_F
-        simRun.pheating, simRun.pV[i], simRun.pGen[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], simRun.hw_outSwing[i], mixedGHW, simRun.Vtrig[i-1])
+        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], simRun.hw_outSwing[i], mixedGHW, simRun.Vtrig[i-1],
+                                                                                               minuteIntervals = minuteIntervals)
    

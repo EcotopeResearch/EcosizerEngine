@@ -42,26 +42,56 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
 
     simRun = system.getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST, minuteIntervals, nDays)
 
-    perfMap = PrefMapTracker(system.PCap_kBTUhr, zipCode = zipCode, climateZone = climateZone, modelName = hpwhModel)    
+    perfMap = PrefMapTracker(system.PCap_kBTUhr, zipCode = zipCode, climateZone = climateZone, modelName = hpwhModel) 
+
+    # add city water tempuratures to simRun
+    if not perfMap.climateZone is None:
+        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as cw_file:
+            csv_reader = csv.reader(cw_file)
+            next(csv_reader) # get past header row
+            cw_temp_by_month = []
+            for i in range(12):
+                cw_row = next(csv_reader)
+                cw_temp_by_month.append(float(cw_row[perfMap.climateZone - 1]))
+            simRun.setMonthlyCityWaterT_F(cw_temp_by_month)
+            
     with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
-        csv_reader = csv.reader(oat_file)
-        next(csv_reader)
-        oat_row = next(csv_reader) # now on first hour
-        if not perfMap.climateZone is None:
-            oat_F = oat_row[perfMap.climateZone - 1]
-            system.setCapacity(perfMap.getCapacity(oat_F, 120)) #TODO use a real condesor temp
+        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/kGperkWh_ByClimateZone.csv'), 'r') as kG_file:
+            oat_reader = csv.reader(oat_file)
+            kG_reader = csv.reader(kG_file)
+            next(oat_reader)
+            next(kG_reader)
+            oat_row = next(oat_reader) # now on first hour
+            kG_row = next(kG_reader) # now on first hour
+            cap = 0 # initialize cap
+            if not perfMap.climateZone is None: # TODO need better check for annual
+                oat_F = float(oat_row[perfMap.climateZone - 1])
+                cap = perfMap.getCapacity(oat_F, 120) #TODO use a real condesor temp
+                simRun.addOat(oat_F)
+                system.setCapacity(cap)
+                simRun.addCap(cap)
+                kG = (float(kG_row[perfMap.climateZone-1])/(60/minuteIntervals))*(cap/2.5)*(simRun.pRun[0]/minuteIntervals)
+                simRun.addKGperkWh(kG)
 
-        # Run the "simulation"
-        for i in range(1, len(simRun.hwDemand)):
-            # TODO change capacity based on weather here
-            if not perfMap.climateZone is None:
-                if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus take the next OAT
-                    oat_row = next(csv_reader)
-                    oat_F = oat_row[perfMap.climateZone - 1]
-                    # print("at hour " + str(i/(60/minuteIntervals)) +" oat_F is: "+str(oat_F))
-                    system.setCapacity(perfMap.getCapacity(oat_F, 120)) #TODO use a real condesor temp
 
-            system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
+            # Run the "simulation"
+            for i in range(1, len(simRun.hwDemand)):
+                # TODO change capacity based on weather here
+                if not perfMap.climateZone is None: # TODO find more elegant way to determine if this is annual sim?
+                    if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus take the next OAT
+                        oat_row = next(oat_reader)
+                        oat_F = float(oat_row[perfMap.climateZone - 1])
+                        simRun.addOat(oat_F)
+                        kG_row = next(kG_reader)
+                        # print("at hour " + str(i/(60/minuteIntervals)) +" oat_F is: "+str(oat_F))
+                        cap = perfMap.getCapacity(oat_F, 120) #TODO use a real condesor temp
+                        system.setCapacity(cap)
+                    system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
+                    kG = (float(kG_row[perfMap.climateZone-1])/(60/minuteIntervals))*(cap/2.5)*(simRun.pRun[i]/minuteIntervals) # TODO 2.5 COP placeholder.
+                    simRun.addKGperkWh(kG)   
+                    simRun.addCap(cap)
+                else:
+                    system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
 
     return simRun
 
@@ -137,7 +167,7 @@ class PrefMapTracker:
         if not climateZone is None:
             if not isinstance(climateZone, int) or climateZone < 1 or climateZone > 16:
                 raise Exception("Climate Zone must be a number between 1 and 16.")
-            self.climateZone - climateZone
+            self.climateZone = climateZone
         elif not zipCode is None:
             with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/ZipCode_ClimateZone_Lookup.csv'), 'r') as file:
                 csv_reader = csv.reader(file)                
