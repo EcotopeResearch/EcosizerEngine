@@ -6,7 +6,8 @@ import csv
 aquaFractLoadUp = 0.21
 aquaFractShed   = 0.8
 storageT_F = 150
-
+loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1]
+csvCreate = False
 
 hpwh = EcosizerEngine(
             incomingT_F     = 50,
@@ -28,7 +29,7 @@ hpwh = EcosizerEngine(
             compRuntime_hr  = 16, 
             nApt            = 100, 
             Wapt            = 100,
-            loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
+            loadShiftSchedule        = loadShiftSchedule,
             loadUpHours     = 3,
             doLoadShift     = True,
             loadShiftPercent       = 0.8
@@ -48,7 +49,7 @@ TMCap_kBTUhr = hpwh.getSizingResults()[3]
 
 # Annual simulation based on sizing from last:
 
-print("starting next section")
+print("starting LS section")
 hpwh = EcosizerEngine(
             incomingT_F     = 50,
             magnitudeStat  = 100,
@@ -70,7 +71,7 @@ hpwh = EcosizerEngine(
             nApt            = 100, 
             Wapt            = 60,
             nBR             = [0,50,30,20,0,0],
-            loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
+            loadShiftSchedule        = loadShiftSchedule,
             loadUpHours     = 3,
             doLoadShift     = True,
             loadShiftPercent       = 0.8,
@@ -86,9 +87,6 @@ simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minute
 
 end_time = time.time()
 duration = end_time - start_time
-print(len(simResult_1))
-print(len(simResult_1[1]))
-print(len(simResult_1[1])/4)
 print("Program execution time for annual:", duration, "seconds")
 print('well hey hey looks like it worked! All done.')
 print("PVol_G_atStorageT",PVol_G_atStorageT)
@@ -113,22 +111,87 @@ simResult_1.append(kGperkWh)
 
 transposed_result = zip(*simResult_1[:-3])
 
-# Define the CSV filename
-csv_filename = 'simResult_365_day_with_ls_4.csv'
+if csvCreate:
+    # Define the CSV filename
+    csv_filename = 'simResult_365_day_with_ls.csv'
+    # Write the transposed_result to a CSV file
+    with open(csv_filename, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        
+        # Write the column headers
+        csvwriter.writerow(['hour_number','pV', 'hwGenRate', 'hwDemand', 'pGen', 'swingT_F', 'sRun', 'hw_outSwing', 'time_primary_ran', 'OAT', 'Capacity_out', 'KgC02', 'avg_cw_temp','kGperkWh'])
+        csvwriter.writerow(['','', '', '', '', '', '', '', '', '', 'total->', simResult_1[-3], simResult_1[-2],simResult_1[-1]])
+        # Write the data rows
+        csvwriter.writerows(transposed_result)
 
+    print("LS CSV file created successfully.")
 
-# Write the transposed_result to a CSV file
-with open(csv_filename, 'w', newline='') as csvfile:
-    csvwriter = csv.writer(csvfile)
-    
-    # Write the column headers
-    csvwriter.writerow(['hour_number','pV', 'hwGenRate', 'hwDemand', 'pGen', 'swingT_F', 'sRun', 'hw_outSwing', 'time_primary_ran', 'OAT', 'Capacity_out', 'KgC02', 'avg_cw_temp','kGperkWh'])
-    csvwriter.writerow(['','', '', '', '', '', '', '', '', '', 'total->', simResult_1[-3], simResult_1[-2],simResult_1[-1]])
-    # Write the data rows
-    csvwriter.writerows(transposed_result)
+print("starting non-LS section")
+hpwh = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = storageT_F,
+            loadUpT_F       = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            aquaFractLoadUp = aquaFractLoadUp,
+            aquaFractShed   = aquaFractShed,
+            schematic       = 'swingtank', 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 60,
+            nBR             = [0,50,30,20,0,0],
+            loadUpHours     = 3,
+            doLoadShift     = False,
+            loadShiftPercent       = 0.8,
+            PVol_G_atStorageT = PVol_G_atStorageT, 
+            PCap_kBTUhr = PCap_kBTUhr, 
+            TMVol_G = TMVol_G, 
+            TMCap_kBTUhr = TMCap_kBTUhr,
+            annual = True
+        )
+start_time = time.time()
+simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, climateZone = 1, kWhCalc = True)
+# simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135)
 
-print("CSV file created successfully.")
+end_time = time.time()
+duration = end_time - start_time
+print("Program execution time for annual:", duration, "seconds")
 
+simResult_1.insert(0, hours)
+print('kg_sum is', simResult_1[-2])
+print('average temp is', simResult_1[-1])
+
+kGperkWh_nonLS = simResult_1[-2]/denom
+
+simResult_1.append(kGperkWh_nonLS)
+
+transposed_result = zip(*simResult_1[:-3])
+
+if csvCreate:
+    # Define the CSV filename
+    csv_filename = 'simResult_365_day_without_ls.csv'
+    # Write the transposed_result to a CSV file
+    with open(csv_filename, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        
+        # Write the column headers
+        csvwriter.writerow(['hour_number','pV', 'hwGenRate', 'hwDemand', 'pGen', 'swingT_F', 'sRun', 'hw_outSwing', 'time_primary_ran', 'OAT', 'Capacity_out', 'KgC02', 'avg_cw_temp','kGperkWh'])
+        csvwriter.writerow(['','', '', '', '', '', '', '', '', '', 'total->', simResult_1[-3], simResult_1[-2],simResult_1[-1]])
+        # Write the data rows
+        csvwriter.writerows(transposed_result)
+
+    print("CSV file created successfully.")
+print("LS kGperkWh", kGperkWh)
+print("non-LS kGperkWh", kGperkWh_nonLS)
+print("LS to non-LS diff:", kGperkWh - kGperkWh_nonLS)
 
 # parallel_sizer = EcosizerEngine(
 #             incomingT_F     = 50,

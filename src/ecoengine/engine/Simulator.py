@@ -42,7 +42,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
 
     simRun = system.getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST, minuteIntervals, nDays)
 
-    perfMap = PrefMapTracker(system.PCap_kBTUhr, zipCode = zipCode, climateZone = climateZone, modelName = hpwhModel) 
+    perfMap = PrefMapTracker(system.PCap_kBTUhr/W_TO_BTUHR, zipCode = zipCode, climateZone = climateZone, modelName = hpwhModel) 
 
     # add city water tempuratures to simRun
     if not perfMap.climateZone is None:
@@ -85,9 +85,13 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
                         kG_row = next(kG_reader)
                         # print("at hour " + str(i/(60/minuteIntervals)) +" oat_F is: "+str(oat_F))
                         cap = perfMap.getCapacity(oat_F, 120) #TODO use a real condesor temp
-                        system.setCapacity(cap)
+                        system.setCapacity(cap*W_TO_BTUHR)
                     system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
-                    kG = (float(kG_row[perfMap.climateZone-1])/(60/minuteIntervals))*(cap/2.5)*(simRun.pRun[i]/minuteIntervals) # TODO 2.5 COP placeholder.
+                    kG = (cap/2.5)*(simRun.pRun[i]/minuteIntervals) # TODO 2.5 COP placeholder.
+                    if(hasattr(simRun, 'sRun')):
+                        # we are keeping track of swingtank power as well
+                        kG += (system.TMCap_kBTUhr/W_TO_BTUHR)*(simRun.sRun[i]/minuteIntervals) # Assume COP of 1, thus input power = capacity
+                    kG *= (float(kG_row[perfMap.climateZone-1])/(60/minuteIntervals))
                     simRun.addKGperkWh(kG)   
                     simRun.addCap(cap)
                 else:
@@ -105,6 +109,7 @@ class PrefMapTracker:
             self.setPrefMap(modelName)
 
     def getCapacity(self, externalT_F, condenserT_F):
+        #returns capacity in kW
         if self.perfMap is None or len(self.perfMap) == 0:
             return self.defaultCapacity
         elif len(self.perfMap) > 1:

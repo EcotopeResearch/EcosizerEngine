@@ -83,7 +83,7 @@ class SystemConfig:
             The primary heating capacity in kBTUhr to use for the simulation,
             default is the sized system
         Pvolume : float
-            The primary storage volume in gallons to  to use for the simulation,
+            The primary storage volume in gallons to use for the simulation,
             default is the sized system
 
         Returns
@@ -132,7 +132,7 @@ class SystemConfig:
             raise Exception("Invalid input given for number of days. Must be <= 365.")
 
         # Init the "simulation"
-        V0 = np.ceil(Pvolume * self.percentUseable) #TODO idk if this should be so
+        V0 = np.ceil(Pvolume * self.percentUseable) #TODO idk if this should be so. I think it should be PVol_G_atStorageT * self.percentUseable
         
         Vtrig = np.tile(np.ceil(Pvolume * (1 - self.aquaFract)) + 1, 24) # To prevent negatives with any of that rounding math. TODO Nolan and I don't think we need this mysterious + 1
         
@@ -427,7 +427,6 @@ class SystemConfig:
         
         # Get the running volume ##############################################
         if len(diffInd) == 0:
-            #TODO but what if it is undersized? Also can this ever be hit? users currently do not have power to change num hours from interface
             raise Exception("ERROR ID 03","The heating rate is greater than the peak volume the system is oversized! Try increasing the hours the heat pump runs in a day",)
         runV_G = 0
         for peakInd in diffInd:
