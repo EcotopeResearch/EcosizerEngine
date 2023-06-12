@@ -5,7 +5,7 @@ import numpy as np
 from ecoengine.constants.Constants import *
 
 class Building:
-    def __init__(self, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):
+    def __init__(self, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, zipCode = None, climateZone = None):
         
         self._checkParams(incomingT_F, supplyT_F, returnT_F, flowRate)
         
@@ -16,6 +16,8 @@ class Building:
         self.incomingT_F = incomingT_F
         self.supplyT_F = supplyT_F
         self.recirc_loss = (supplyT_F - returnT_F) * flowRate * rhoCp * 60. #BTU/HR
+        self.climateZone = None
+        self.setClimateZone(zipCode, climateZone)
 
     def _checkParams(self, incomingT_F, supplyT_F, returnT_F, flowRate):
         if not (isinstance(supplyT_F, int) or isinstance(supplyT_F, float)):
@@ -33,6 +35,21 @@ class Building:
         
     def setToAnnualLS(self):
         raise Exception("Annual loadshape not available for this building type. This feature is only available for multi-family buildings.")
+    
+    def setClimateZone(self, zipCode = None, climateZone = None):
+        if not climateZone is None:
+            if not isinstance(climateZone, int) or climateZone < 1 or climateZone > 16:
+                raise Exception("Climate Zone must be a number between 1 and 16.")
+            self.climateZone = climateZone
+        elif not zipCode is None:
+            with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/ZipCode_ClimateZone_Lookup.csv'), 'r') as file:
+                csv_reader = csv.reader(file)                
+                for row in csv_reader:
+                    if str(zipCode) == row[0]:
+                        self.climateZone = int(row[1])
+                        break
+                if self.climateZone is None:
+                    raise Exception(str(zipCode) + " is not a California zip code.")
 
 class MensDorm(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate):

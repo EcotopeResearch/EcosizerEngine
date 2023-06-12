@@ -14,6 +14,8 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
     Implimented seperatly for Swink Tank systems 
     Inputs
     ------
+    system : SystemConfig
+        the HPWH system object for the annual simulation
     building : Building
         the building object the system configuration is being simulated for.
     initPV : float
@@ -26,18 +28,21 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
     Pvolume : float
         The primary storage volume in gallons to  to use for the simulation,
         default is the sized system
+    minuteIntervals : int
+        the number of minutes the duration each interval timestep for the simulation will be
+    nDays : int
+        the number of days the for duration of the entire simulation will be
+    zipCode : int
+        the CA zipcode the building resides in to determine the climate zone
+    climateZone : int
+        the CA climate zone the building resides in for the simulation
+    hpwhModel : string
+        the real world HPWH model used in the simulation. Used to determina capacity and input power for varrious air temperaturess
     
     Returns
     -------
-    list [ pV, hwGenRate, hwDemand, pGen ]
-    pV : list 
-        Volume of HW in the tank with time at the strorage temperature.
-    hwGenRate : list 
-        The generation of HW with time at the supply temperature
-    hwDemand : list 
-        The hot water demand with time at the tsupply temperature
-    pGen : list 
-        The actual hot water generation in gallons of the HPWH with time
+    simRun : SimulationRun
+        resulting simulation run object containing information from each timestep interval of the simulation for further analysis
     """
 
     simRun = system.getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST, minuteIntervals, nDays)
@@ -45,7 +50,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
     perfMap = PrefMapTracker(system.PCap_kBTUhr/W_TO_BTUHR, zipCode = zipCode, climateZone = climateZone, modelName = hpwhModel) 
 
     # add city water tempuratures to simRun
-    if not perfMap.climateZone is None:
+    if nDays == 365:
         with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as cw_file:
             csv_reader = csv.reader(cw_file)
             next(csv_reader) # get past header row
@@ -64,7 +69,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
             oat_row = next(oat_reader) # now on first hour
             kG_row = next(kG_reader) # now on first hour
             cap = 0 # initialize cap
-            if not perfMap.climateZone is None: # TODO need better check for annual
+            if nDays == 365:
                 oat_F = float(oat_row[perfMap.climateZone - 1])
                 cap = perfMap.getCapacity(oat_F, 120) #TODO use a real condesor temp
                 simRun.addOat(oat_F)
@@ -76,8 +81,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
 
             # Run the "simulation"
             for i in range(1, len(simRun.hwDemand)):
-                # TODO change capacity based on weather here
-                if not perfMap.climateZone is None: # TODO find more elegant way to determine if this is annual sim?
+                if nDays == 365:
                     if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus take the next OAT
                         oat_row = next(oat_reader)
                         oat_F = float(oat_row[perfMap.climateZone - 1])
