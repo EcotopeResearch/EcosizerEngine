@@ -83,7 +83,7 @@ class EcosizerEngine:
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None,
                             PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None,
-                            annual = False):
+                            annual = False, zipCode = None, climateZone = None):
         
         self.building = createBuilding( incomingT_F = incomingT_F,
                                     magnitudeStat   = magnitudeStat, 
@@ -98,7 +98,9 @@ class EcosizerEngine:
                                     nApt            = nApt,
                                     Wapt            = Wapt,
                                     standardGPD     = standardGPD,
-                                    annual          = annual
+                                    annual          = annual,
+                                    zipCode         = zipCode, 
+                                    climateZone     = climateZone
         )
 
         self.system = createSystem(  
@@ -126,10 +128,10 @@ class EcosizerEngine:
                                 TMCap_kBTUhr = TMCap_kBTUhr
         )
     
-    def getSimResult(self, initPV=None, initST=None, Pcapacity=None, Pvolume=None, minuteIntervals = 1, nDays = 3, zipCode = None, climateZone = None, hpwhModel = None, kWhCalc = False):
+    def getSimResult(self, initPV=None, initST=None, Pcapacity=None, Pvolume=None, minuteIntervals = 1, nDays = 3, hpwhModel = None, kWhCalc = False):
         simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, Pcapacity=Pcapacity, Pvolume=Pvolume, minuteIntervals = minuteIntervals, nDays = nDays,
-                          zipCode = zipCode, climateZone = climateZone, hpwhModel = hpwhModel)
-        return simRun.returnSimResult(kWhCalc = kWhCalc, climateZone = climateZone)
+                        hpwhModel = hpwhModel)
+        return simRun.returnSimResult(kWhCalc = kWhCalc)
         # return self.system.simulate(self.building)
 
     def getSizingResults(self):

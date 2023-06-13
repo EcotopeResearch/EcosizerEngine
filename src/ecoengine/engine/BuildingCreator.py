@@ -1,8 +1,10 @@
 from ecoengine.objects.Building import *
 import numpy as np
+import csv
 
 def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshape = None, avgLoadshape = None,
-                    returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0, standardGPD = None, annual = False):
+                    returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0, standardGPD = None,
+                    annual = False, zipCode = None, climateZone = None):
     
     """
     Initializes the building in which the HPWH system will be sized for
@@ -37,6 +39,12 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
         Watts of heat lost in through recirculation piping system. Used with N_apt to determine total recirculation losses. (For multi-falmily buildings)
     standardGPD : string
         indicates whether to use a standard gpdpp specification for multi-family buildings. Set to None if not using a standard gpdpp.
+    annual : boolean
+        indicates whether to use annual loadshape for multi-family buildings
+    zipCode : int
+        the CA zipcode the building resides in to determine the climate zone
+    climateZone : int
+        the CA climate zone the building resides in
 
     Raises
     ----------
@@ -55,8 +63,8 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
             building_list = []
             for i in range(len(buildingType)):
                 building_list.append(createBuilding(incomingT_F, magnitudeStat[i], supplyT_F, buildingType[i], loadshape, avgLoadshape,
-                        returnT_F, flowRate, gpdpp, nBR, nApt, Wapt))
-            return MultiUse(building_list, incomingT_F, supplyT_F, returnT_F, flowRate)
+                        returnT_F, flowRate, gpdpp, nBR, nApt, Wapt, standardGPD, annual, zipCode, climateZone))
+            return MultiUse(building_list, incomingT_F, supplyT_F, returnT_F, flowRate, getClimateZone(zipCode, climateZone))
     
     #only one building type so there should only be one magnitude statistic 
     if isinstance(magnitudeStat, list):
@@ -85,31 +93,33 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
     loadshape = np.array(loadshape) # TODO - this changes values of loadshape a bit, show this to scott
     avgLoadshape = np.array(avgLoadshape) # TODO - this changes values of loadshape a bit, show this to scott
 
+    climate = getClimateZone(zipCode, climateZone)
+
     match buildingType:
         case 'apartment':
-            return Apartment(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
+            return Apartment(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         case 'elementary_school':
-            return ElementarySchool(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
+            return ElementarySchool(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         case 'food_service_a':
-            return FoodServiceA(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
+            return FoodServiceA(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         case 'food_service_b':
-            return FoodServiceB(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
+            return FoodServiceB(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         case 'junior_high':
-            return JuniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
+            return JuniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         case 'mens_dorm':
-            return MensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
+            return MensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         case 'motel':
-            return Motel(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
+            return Motel(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         case 'nursing_home':
-            return NursingHome(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
+            return NursingHome(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         case 'office_building':
-            return OfficeBuilding(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
+            return OfficeBuilding(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         case 'senior_high':
-            return SeniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
+            return SeniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         case 'womens_dorm':
-            return WomensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate)
+            return WomensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         case 'multi_family':
-            return MultiFamily(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, gpdpp, nBR, nApt, Wapt, standardGPD)
+            return MultiFamily(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, gpdpp, nBR, nApt, Wapt, standardGPD)
         case _:
             raise Exception("Unrecognized building type.")
         
@@ -133,3 +143,18 @@ def checkLoadShape(loadshape, avgLS = False):
         raise Exception("Sum of the " + ("average loadshape" if avgLS else "loadshape") + " does not equal 1. Loadshape needs to be normalized.")
     if any(x < 0 for x in loadshape):
         raise Exception("Can not have negative values in " + ("average loadshape" if avgLS else "loadshape") + ".")
+    
+def getClimateZone(zipCode = None, climateZone = None):
+    if not climateZone is None:
+        if not isinstance(climateZone, int) or climateZone < 1 or climateZone > 16:
+            raise Exception("Climate Zone must be a number between 1 and 16.")
+        return climateZone
+    elif not zipCode is None:
+        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/ZipCode_ClimateZone_Lookup.csv'), 'r') as file:
+            csv_reader = csv.reader(file)                
+            for row in csv_reader:
+                if str(zipCode) == row[0]:
+                    return int(row[1])
+            raise Exception(str(zipCode) + " is not a California zip code.")
+    else:
+        return None

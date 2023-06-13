@@ -128,7 +128,7 @@ class SimulationRun:
             raise Exception(str(kGperkWh_value) + " is an invalid system kGperkWh value.")
         self.kGperkWh.append(kGperkWh_value)
 
-    def returnSimResult(self, kWhCalc = False, climateZone = 11):
+    def returnSimResult(self, kWhCalc = False):
         retList = [roundList(self.pV, 3),
             roundList(self.hwGenRate * self.loadShiftSchedule, 3),
             roundList(self.hwDemand, 3),

@@ -8,8 +8,7 @@ from ecoengine.constants.Constants import KWH_TO_BTU
 import csv
 
     
-def simulate(system : SystemConfig, building : Building, initPV=None, initST=None, Pcapacity=None, Pvolume=None, minuteIntervals = 1, nDays = 3,
-             zipCode = None, climateZone = None, hpwhModel = None):
+def simulate(system : SystemConfig, building : Building, initPV=None, initST=None, Pcapacity=None, Pvolume=None, minuteIntervals = 1, nDays = 3, hpwhModel = None):
     """
     Implimented seperatly for Swink Tank systems 
     Inputs
@@ -32,10 +31,6 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
         the number of minutes the duration each interval timestep for the simulation will be
     nDays : int
         the number of days the for duration of the entire simulation will be
-    zipCode : int
-        the CA zipcode the building resides in to determine the climate zone
-    climateZone : int
-        the CA climate zone the building resides in for the simulation
     hpwhModel : string
         the real world HPWH model used in the simulation. Used to determina capacity and input power for varrious air temperaturess
     
@@ -47,17 +42,20 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
 
     simRun = system.getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST, minuteIntervals, nDays)
 
-    perfMap = PrefMapTracker(system.PCap_kBTUhr/W_TO_BTUHR, zipCode = zipCode, climateZone = climateZone, modelName = hpwhModel) 
+    perfMap = PrefMapTracker(system.PCap_kBTUhr/W_TO_BTUHR, modelName = hpwhModel) 
 
-    # add city water tempuratures to simRun
     if nDays == 365:
+        # check for climateZone
+        if building.climateZone is None:
+            raise Exception("Cannot run annual simulation with out setting building climate zone to be a number between 1 and 16.")
+        # add city water tempuratures to simRun
         with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as cw_file:
             csv_reader = csv.reader(cw_file)
             next(csv_reader) # get past header row
             cw_temp_by_month = []
             for i in range(12):
                 cw_row = next(csv_reader)
-                cw_temp_by_month.append(float(cw_row[perfMap.climateZone - 1]))
+                cw_temp_by_month.append(float(cw_row[building.climateZone - 1]))
             simRun.setMonthlyCityWaterT_F(cw_temp_by_month)
             
     with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
@@ -70,12 +68,12 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
             kG_row = next(kG_reader) # now on first hour
             cap = 0 # initialize cap
             if nDays == 365:
-                oat_F = float(oat_row[perfMap.climateZone - 1])
+                oat_F = float(oat_row[building.climateZone - 1])
                 cap = perfMap.getCapacity(oat_F, 120) #TODO use a real condesor temp
                 simRun.addOat(oat_F)
                 system.setCapacity(cap)
                 simRun.addCap(cap)
-                kG = (float(kG_row[perfMap.climateZone-1])/(60/minuteIntervals))*(cap/2.5)*(simRun.pRun[0]/minuteIntervals)
+                kG = (float(kG_row[building.climateZone-1])/(60/minuteIntervals))*(cap/2.5)*(simRun.pRun[0]/minuteIntervals)
                 simRun.addKGperkWh(kG)
 
 
@@ -84,7 +82,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
                 if nDays == 365:
                     if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus take the next OAT
                         oat_row = next(oat_reader)
-                        oat_F = float(oat_row[perfMap.climateZone - 1])
+                        oat_F = float(oat_row[building.climateZone - 1])
                         simRun.addOat(oat_F)
                         kG_row = next(kG_reader)
                         # print("at hour " + str(i/(60/minuteIntervals)) +" oat_F is: "+str(oat_F))
@@ -95,7 +93,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
                     if(hasattr(simRun, 'sRun')):
                         # we are keeping track of swingtank power as well
                         kG += (system.TMCap_kBTUhr/W_TO_BTUHR)*(simRun.sRun[i]/minuteIntervals) # Assume COP of 1, thus input power = capacity
-                    kG *= (float(kG_row[perfMap.climateZone-1])/(60/minuteIntervals))
+                    kG *= (float(kG_row[building.climateZone-1])/(60/minuteIntervals))
                     simRun.addKGperkWh(kG)   
                     simRun.addCap(cap)
                 else:
@@ -104,11 +102,9 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
     return simRun
 
 class PrefMapTracker:
-    def __init__(self, defaultCapacity, zipCode = None, climateZone = None, modelName = None):
+    def __init__(self, defaultCapacity, modelName = None):
         self.defaultCapacity = defaultCapacity
-        self.climateZone = None
         self.perfMap = None
-        self.setClimateZone(zipCode = zipCode, climateZone = climateZone)
         if not modelName is None: 
             self.setPrefMap(modelName)
 
@@ -171,21 +167,6 @@ class PrefMapTracker:
                 self.perfMap = dataDict[modelName]
         except:
             raise Exception("No preformance map found for HPWH model type " + modelName + ".")
-    
-    def setClimateZone(self, zipCode = None, climateZone = None):
-        if not climateZone is None:
-            if not isinstance(climateZone, int) or climateZone < 1 or climateZone > 16:
-                raise Exception("Climate Zone must be a number between 1 and 16.")
-            self.climateZone = climateZone
-        elif not zipCode is None:
-            with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/ZipCode_ClimateZone_Lookup.csv'), 'r') as file:
-                csv_reader = csv.reader(file)                
-                for row in csv_reader:
-                    if str(zipCode) == row[0]:
-                        self.climateZone = int(row[1])
-                        break
-                if self.climateZone is None:
-                    raise Exception(str(zipCode) + " is not a California zip code.")
     
     def linearInterp(self, xnew, x0, x1, y0, y1):
         return y0 + (xnew - x0) * (y1 - y0) / (x1 - x0)

@@ -7,7 +7,7 @@ aquaFractLoadUp = 0.21
 aquaFractShed   = 0.8
 storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1]
-csvCreate = False
+csvCreate = True
 
 hpwh = EcosizerEngine(
             incomingT_F     = 50,
@@ -79,10 +79,11 @@ hpwh = EcosizerEngine(
             PCap_kBTUhr = PCap_kBTUhr, 
             TMVol_G = TMVol_G, 
             TMCap_kBTUhr = TMCap_kBTUhr,
-            annual = True
+            annual = True,
+            climateZone = 1
         )
 start_time = time.time()
-simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, climateZone = 1, kWhCalc = True)
+simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)
 # simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135)
 
 end_time = time.time()
@@ -113,7 +114,7 @@ transposed_result = zip(*simResult_1[:-3])
 
 if csvCreate:
     # Define the CSV filename
-    csv_filename = 'simResult_365_day_with_ls.csv'
+    csv_filename = 'simResult_365_day_with_ls_2.csv'
     # Write the transposed_result to a CSV file
     with open(csv_filename, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
@@ -155,10 +156,11 @@ hpwh = EcosizerEngine(
             PCap_kBTUhr = PCap_kBTUhr, 
             TMVol_G = TMVol_G, 
             TMCap_kBTUhr = TMCap_kBTUhr,
-            annual = True
+            annual = True,
+            climateZone = 1
         )
 start_time = time.time()
-simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, climateZone = 1, kWhCalc = True)
+simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)
 # simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135)
 
 end_time = time.time()
@@ -177,7 +179,7 @@ transposed_result = zip(*simResult_1[:-3])
 
 if csvCreate:
     # Define the CSV filename
-    csv_filename = 'simResult_365_day_without_ls.csv'
+    csv_filename = 'simResult_365_day_without_ls_2.csv'
     # Write the transposed_result to a CSV file
     with open(csv_filename, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
