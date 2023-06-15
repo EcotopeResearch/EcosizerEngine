@@ -30,11 +30,13 @@ class SystemConfig:
         self.maxDayRun_hr = min(self.compRuntime_hr, sum(self.loadShiftSchedule))
 
         #size system
-        if building is None:
+        if not PVol_G_atStorageT is None:
             if not (isinstance(PVol_G_atStorageT, int) or isinstance(PVol_G_atStorageT, float)) or PVol_G_atStorageT <= 0: 
                 raise Exception('Invalid input given for Primary Storage Volume, it must be a number greater than zero.')
+            if not (isinstance(PCap_kBTUhr, int) or isinstance(PCap_kBTUhr, float)) or PCap_kBTUhr <= 0: 
+                raise Exception('Invalid input given for Primary Output Capacity, it must be a number greater than zero.')
             self.PVol_G_atStorageT = PVol_G_atStorageT
-            self.PCap_kBTUhr = PCap_kBTUhr # TODO: this one will be changing so not sure if needs be checked
+            self.PCap_kBTUhr = PCap_kBTUhr
         else: 
             #size system based off of building
             if not isinstance(building, Building):
@@ -73,18 +75,21 @@ class SystemConfig:
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr]
     
-    def getInitializedSimulation(self, building : Building, Pcapacity=None, Pvolume=None, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
+    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
         """
         Returns initialized arrays needed for nDay simulation
 
         Parameters
         ----------
-        Pcapacity : float
-            The primary heating capacity in kBTUhr to use for the simulation,
-            default is the sized system
-        Pvolume : float
-            The primary storage volume in gallons to use for the simulation,
-            default is the sized system
+        building : Building
+            The building for the simulation
+        initPV : float
+            the initial primary tank volume at the start of the simulation
+        initST : float
+        minuteIntervals : int
+            the number of minutes per time interval for the simulation
+        nDays : int
+            the number of days that will be simulated 
 
         Returns
         -------
@@ -105,19 +110,14 @@ class SystemConfig:
         pGen : list 
             The actual output in gallons of the HPWH with time
         """
-        if not Pcapacity:
-            Pcapacity =  self.PCap_kBTUhr
-
-        if not Pvolume:
-            Pvolume =  self.PVol_G_atStorageT
         
         loadShapeN = building.loadshape
         if self.doLoadShift and nDays < 365: #Only for non-annual simulations
             loadShapeN = building.avgLoadshape
         
         # Get the generation rate from the primary capacity
-        hwGenRate = 1000 * Pcapacity / rhoCp / (building.supplyT_F - building.incomingT_F) \
-               * self.defrostFactor #* np.tile(self.loadShiftSchedule, nDays)
+        hwGenRate = 1000 * self.PCap_kBTUhr / rhoCp / (building.supplyT_F - building.incomingT_F) \
+               * self.defrostFactor
         loadshiftSched = np.tile(self.loadShiftSchedule, nDays) # TODO can we get rid of it?
         
         # Define the use of DHW with the normalized load shape
@@ -132,40 +132,40 @@ class SystemConfig:
             raise Exception("Invalid input given for number of days. Must be <= 365.")
 
         # Init the "simulation"
-        V0 = np.ceil(Pvolume * self.percentUseable) #TODO idk if this should be so. I think it should be PVol_G_atStorageT * self.percentUseable
+        V0 = np.ceil(self.PVol_G_atStorageT * self.percentUseable)
         
-        Vtrig = np.tile(np.ceil(Pvolume * (1 - self.aquaFract)) + 1, 24) # To prevent negatives with any of that rounding math. TODO Nolan and I don't think we need this mysterious + 1
+        Vtrig = np.tile(np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFract)) + 1, 24) # To prevent negatives with any of that rounding math. TODO Nolan and I don't think we need this mysterious + 1
         
         if self.doLoadShift:
             
-            Vtrig = [Pvolume * (1 - self.aquaFractShed) if x == 0 else Pvolume * (1 - self.aquaFract) for x in self.loadShiftSchedule]
+            Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFractShed) if x == 0 else self.PVol_G_atStorageT * (1 - self.aquaFract) for x in self.loadShiftSchedule]
             
             #set load up hours pre-shed 1
             shedHours = [i for i in range(len(self.loadShiftSchedule)) if self.loadShiftSchedule[i] == 0] 
-            Vtrig = [Pvolume * (1 - self.aquaFractLoadUp) if shedHours[0] - self.loadUpHours <= i <= shedHours[0] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
+            Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFractLoadUp) if shedHours[0] - self.loadUpHours <= i <= shedHours[0] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
             
             #check if there are two sheds, if so set all hours inbetween to load up
             try:
                 secondShed = [[shedHours[i-1], shedHours[i]] for i in range(1, len(shedHours)) if shedHours[i] - shedHours[i-1] > 1][0]
-                Vtrig = [Pvolume * (1 - self.aquaFractLoadUp) if secondShed[0] <= i <= secondShed[1] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
+                Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFractLoadUp) if secondShed[0] <= i <= secondShed[1] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
             
             except IndexError:
                 pass
         
         if minuteIntervals == 1:
             # To per minute from per hour
-            #hwGenRate = np.array(hrToMinList(hwGenRate)) / 60
             hwGenRate = hwGenRate / 60
             hwDemand = np.array(hrToMinList(hwDemand)) / 60
             Vtrig = np.array(hrToMinList(np.tile(Vtrig, nDays))) 
             loadshiftSched = np.array(hrToMinList(loadshiftSched))
         elif minuteIntervals == 15:
             # To per 15 minute from per hour
-            #hwGenRate = np.array(hrTo15MinList(hwGenRate)) / 4
             hwGenRate = hwGenRate / 4
             hwDemand = np.array(hrTo15MinList(hwDemand)) / 4
             Vtrig = np.array(hrTo15MinList(np.tile(Vtrig, nDays)))
             loadshiftSched = np.array(hrTo15MinList(loadshiftSched))
+        elif minuteIntervals == 60:
+            Vtrig = np.array(np.tile(Vtrig, nDays))
         else:
             raise Exception("Invalid input given for granularity. Must be 1, 15, or 60.")
 

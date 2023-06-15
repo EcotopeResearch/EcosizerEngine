@@ -6,8 +6,9 @@ import csv
 aquaFractLoadUp = 0.21
 aquaFractShed   = 0.8
 storageT_F = 150
-loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1]
-csvCreate = True
+loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1] #assume this loadshape for annual simulation every day
+csvCreate = False
+hpwhModel = None #'MODELS_NyleC250A_SP'
 
 hpwh = EcosizerEngine(
             incomingT_F     = 50,
@@ -83,7 +84,7 @@ hpwh = EcosizerEngine(
             climateZone = 1
         )
 start_time = time.time()
-simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)
+simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True, hpwhModel = hpwhModel)
 # simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135)
 
 end_time = time.time()
@@ -95,6 +96,12 @@ print("PCap_kBTUhr",PCap_kBTUhr)
 print("TMVol_G",TMVol_G)
 print("TMCap_kBTUhr",TMCap_kBTUhr)
 print("building magnitude", hpwh.getHWMagnitude())
+print('==========================================')
+print(simResult_1[0][:10])
+print(simResult_1[1][-10:])
+print(simResult_1[2][-65:-55])
+print(simResult_1[3][800:810])
+print('==========================================')
 
 hours = [(i // 4) + 1 for i in range(len(simResult_1[0]))]
 
@@ -160,7 +167,7 @@ hpwh = EcosizerEngine(
             climateZone = 1
         )
 start_time = time.time()
-simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)
+simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True, hpwhModel = hpwhModel)
 # simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135)
 
 end_time = time.time()
@@ -194,6 +201,7 @@ if csvCreate:
 print("LS kGperkWh", kGperkWh)
 print("non-LS kGperkWh", kGperkWh_nonLS)
 print("LS to non-LS diff:", kGperkWh - kGperkWh_nonLS)
+print("dafault cap", PCap_kBTUhr / 3.412142)
 
 # parallel_sizer = EcosizerEngine(
 #             incomingT_F     = 50,

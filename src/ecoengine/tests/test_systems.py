@@ -24,7 +24,7 @@ default_building = createBuilding(
 
 # Fixtures
 @pytest.fixture
-def simplePrimary(): # Returns the hpwh swing tank
+def simplePrimary():
     with QuietPrint():
         system = createSystem(
             schematic   = 'primary', 
@@ -38,7 +38,7 @@ def simplePrimary(): # Returns the hpwh swing tank
     return system
 
 @pytest.fixture
-def parallellTank(): # Returns the hpwh swing tank
+def parallellTank(): 
     with QuietPrint():
         system = createSystem(
             schematic   = 'paralleltank', 
@@ -52,7 +52,7 @@ def parallellTank(): # Returns the hpwh swing tank
     return system
 
 @pytest.fixture
-def swingTank(): # Returns the hpwh swing tank
+def swingTank():
     with QuietPrint():
         system = createSystem(
             schematic   = 'swingtank', 
@@ -83,40 +83,150 @@ def LSprimary():
             doLoadShift = True,
             loadUpHours = 2
         )
-    return system 
+    return system
+
+@pytest.fixture
+def sizedPrimary():
+    with QuietPrint():
+        system = createSystem(
+            schematic   = 'primary', 
+            building    = default_building, 
+            storageT_F  = 150, 
+            defrostFactor   = 1, 
+            percentUseable  = .8, 
+            compRuntime_hr  = 16, 
+            aquaFract   = 0.4,
+            PVol_G_atStorageT = 500,
+            PCap_kBTUhr = 95
+        )
+    return system
+
+@pytest.fixture
+def sizedSwing():
+    with QuietPrint():
+        system = createSystem(
+            schematic   = 'swingtank', 
+            storageT_F  = 150, 
+            defrostFactor   = 1, 
+            percentUseable  = .8, 
+            compRuntime_hr  = 16, 
+            aquaFract   = 0.4,
+            PVol_G_atStorageT = 500,
+            PCap_kBTUhr = 95,
+            TMVol_G = 100,
+            TMCap_kBTUhr = 60
+        )
+    return system
+
+@pytest.fixture
+def sizedParallel():
+    with QuietPrint():
+        system = createSystem(
+            schematic   = 'paralleltank', 
+            storageT_F  = 150, 
+            defrostFactor   = 1, 
+            percentUseable  = .8, 
+            compRuntime_hr  = 16, 
+            aquaFract   = 0.4,
+            PVol_G_atStorageT = 500,
+            PCap_kBTUhr = 95,
+            TMVol_G = 100,
+            TMCap_kBTUhr = 60
+        )
+    return system
 
 
 ###############################################################################
 ###############################################################################
 # Unit Tests
 
-@pytest.mark.parametrize("expected", [
-   ([467.6418425, 91.3667890625, [1]*24, 16])
-])
-def test_primaryResults(simplePrimary, expected):
-    assert [simplePrimary.PVol_G_atStorageT, simplePrimary.PCap_kBTUhr, simplePrimary.loadShiftSchedule, simplePrimary.maxDayRun_hr] == expected
+def test_primaryResults(simplePrimary):
+    assert [simplePrimary.PVol_G_atStorageT, simplePrimary.PCap_kBTUhr, simplePrimary.loadShiftSchedule, simplePrimary.maxDayRun_hr] == [467.6418425, 91.3667890625, [1]*24, 16]
 
-@pytest.mark.parametrize("expected", [
-   ([467.6418425, 91.3667890625, [1]*24, 16, 90.67963730324946, 59.712485])
-])
-def test_parallelResults(parallellTank, expected):
+def test_parallelResults(parallellTank):
     assert [parallellTank.PVol_G_atStorageT, parallellTank.PCap_kBTUhr, 
             parallellTank.loadShiftSchedule, parallellTank.maxDayRun_hr,
-            parallellTank.TMVol_G, parallellTank.TMCap_kBTUhr] == expected
+            parallellTank.TMVol_G, parallellTank.TMCap_kBTUhr] == [467.6418425, 91.3667890625, [1]*24, 16, 90.67963730324946, 59.712485]
     
-@pytest.mark.parametrize("expected", [
-   ([540.4258388420066, 118.11496284632373, [1]*24, 16, 100, 59.712485]) 
-])
-def test_swingResults(swingTank, expected):
+def test_swingResults(swingTank):
     assert [swingTank.PVol_G_atStorageT, swingTank.PCap_kBTUhr, 
             swingTank.loadShiftSchedule, swingTank.maxDayRun_hr,
-            swingTank.TMVol_G, swingTank.TMCap_kBTUhr] == expected
+            swingTank.TMVol_G, swingTank.TMCap_kBTUhr] == [540.4258388420066, 118.11496284632373, [1]*24, 16, 100, 59.712485]
 
-@pytest.mark.parametrize("expected", [
-    ([841.0350199999997, 91.3667890625])
-])
-def test_LSprimary(LSprimary, expected):
-    assert [LSprimary.PVol_G_atStorageT, LSprimary.PCap_kBTUhr] == expected
+def test_LSprimary(LSprimary):
+    assert [LSprimary.PVol_G_atStorageT, LSprimary.PCap_kBTUhr] == [841.0350199999997, 91.3667890625]
+
+def test_sizedPrimaryResults(sizedPrimary):
+    assert [sizedPrimary.PVol_G_atStorageT, sizedPrimary.PCap_kBTUhr, sizedPrimary.loadShiftSchedule, sizedPrimary.maxDayRun_hr] == [500, 95, [1]*24, 16]
+
+def test_sizedSwingResults(sizedSwing):
+    assert [sizedSwing.PVol_G_atStorageT, sizedSwing.PCap_kBTUhr, 
+            sizedSwing.loadShiftSchedule, sizedSwing.maxDayRun_hr,
+            sizedSwing.TMVol_G, sizedSwing.TMCap_kBTUhr, sizedSwing.CA_TMVol_G] == [500, 95, [1]*24, 16, 100, 60, 168]
+    
+def test_sizedParallelResults(sizedParallel):
+    assert [sizedParallel.PVol_G_atStorageT, sizedParallel.PCap_kBTUhr, 
+            sizedParallel.loadShiftSchedule, sizedParallel.maxDayRun_hr,
+            sizedParallel.TMVol_G, sizedParallel.TMCap_kBTUhr] == [500, 95, [1]*24, 16, 100, 60]
+
+def test_change_capacity(sizedPrimary):
+    sizedPrimary.setCapacity(100)
+    assert sizedPrimary.PCap_kBTUhr == 100
+    sizedPrimary.setCapacity(95)
+    assert sizedPrimary.PCap_kBTUhr == 95
+
+@pytest.mark.parametrize("minuteIntervals, nDays, outputArrayLength, initPV", [
+   (1,3,4320, None), (60,365,8760, None), (15,365,35040, None),
+   (1,3,4320, 80), (60,365,8760, 300), (15,365,35040, 14) 
+])   
+def test_initialize_sim(simplePrimary, minuteIntervals, nDays, outputArrayLength, initPV):
+    initSim = simplePrimary.getInitializedSimulation(default_building, minuteIntervals=minuteIntervals, nDays=nDays, initPV=initPV)
+    assert initSim.hwGenRate == 1000 * simplePrimary.PCap_kBTUhr / rhoCp / (default_building.supplyT_F - default_building.incomingT_F) \
+               * simplePrimary.defrostFactor / (60/minuteIntervals)
+    assert len(initSim.hwDemand) == outputArrayLength
+    if initPV is None:
+        assert initSim.pV[0] == 375
+    else:
+        assert initSim.pV[0] == initPV
+    assert len(initSim.Vtrig) == outputArrayLength
+    assert len(initSim.pV) == outputArrayLength
+    assert initSim.V0 == 375
+    assert len(initSim.pGen) == outputArrayLength
+    assert len(initSim.pRun) == outputArrayLength
+    assert initSim.pheating == False
+    assert initSim.mixedStorT_F == 150
+    assert len(initSim.oat) == 0
+    assert len(initSim.cap) == 0
+    assert len(initSim.kGperkWh) == 0
+
+@pytest.mark.parametrize("minuteIntervals, nDays, outputArrayLength, initPV", [
+   (1,3,4320, None), (60,365,8760, None), (15,365,35040, None),
+   (1,3,4320, 80), (60,365,8760, 300), (15,365,35040, 14) 
+])   
+def test_initialize_sim_swing(swingTank, minuteIntervals, nDays, outputArrayLength, initPV):
+    initSim = swingTank.getInitializedSimulation(default_building, minuteIntervals=minuteIntervals, nDays=nDays, initPV=initPV)
+    assert initSim.hwGenRate == 1000 * swingTank.PCap_kBTUhr / rhoCp / (default_building.supplyT_F - default_building.incomingT_F) \
+               * swingTank.defrostFactor / (60/minuteIntervals)
+    assert len(initSim.hwDemand) == outputArrayLength
+    if initPV is None:
+        assert initSim.pV[0] == 433.0
+    else:
+        assert initSim.pV[0] == initPV
+    assert len(initSim.Vtrig) == outputArrayLength
+    assert len(initSim.pV) == outputArrayLength
+    assert initSim.V0 == 433.0
+    assert len(initSim.pGen) == outputArrayLength
+    assert len(initSim.pRun) == outputArrayLength
+    assert initSim.pheating == False
+    assert initSim.mixedStorT_F == 150
+    assert len(initSim.oat) == 0
+    assert len(initSim.cap) == 0
+    assert len(initSim.kGperkWh) == 0
+    assert len(initSim.swingT_F) == outputArrayLength
+    assert len(initSim.sRun) == outputArrayLength
+    assert len(initSim.hw_outSwing) == outputArrayLength
+    assert initSim.storageT_F == swingTank.storageT_F
+    assert initSim.TMCap_kBTUhr == swingTank.TMCap_kBTUhr
 
 # Check for system initialization errors
 def test_invalid_building():
@@ -201,3 +311,22 @@ def test_invalid_loadshift_vars():
     with pytest.raises(Exception, match = "Invalid input given for load up hours, must be an integer less than or equal to hours in day before first shed period."):
         createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, aquaFractLoadUp = 0.3, aquaFractShed = 0.8,
                      loadShiftSchedule = [1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], loadUpT_F = 160, loadUpHours = 2)
+def test_invalid_sizing():
+    with pytest.raises(Exception, match = "Invalid input given for Primary Storage Volume, it must be a number greater than zero."):
+        createSystem('primary', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 'lol', PCap_kBTUhr = 95)
+    with pytest.raises(Exception, match = "Invalid input given for Primary Storage Volume, it must be a number greater than zero."):
+        createSystem('primary', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 0, PCap_kBTUhr = 95)
+    with pytest.raises(Exception, match = "Invalid input given for Primary Storage Volume, it must be a number greater than zero."):
+        createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 0, PCap_kBTUhr = 95, TMVol_G=12,TMCap_kBTUhr=15)
+    with pytest.raises(Exception, match = "Invalid input given for Primary Storage Volume, it must be a number greater than zero."):
+        createSystem('swingtank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 0, PCap_kBTUhr = 95, TMVol_G=12,TMCap_kBTUhr=15)
+    with pytest.raises(Exception, match = "Invalid input given for Primary Output Capacity, it must be a number greater than zero."):
+        createSystem('swingtank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 0, TMVol_G=12,TMCap_kBTUhr=15)
+    with pytest.raises(Exception, match = "Invalid input given for Temperature Maintenance Storage Volume, it must be a number greater than zero."):
+        createSystem('swingtank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 20, TMVol_G=0,TMCap_kBTUhr=15)
+    with pytest.raises(Exception, match = "Invalid input given for Temperature Maintenance Output Capacity, it must be a number greater than zero."):
+        createSystem('swingtank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 20, TMVol_G=10,TMCap_kBTUhr='lol')
+    with pytest.raises(Exception, match = "Invalid input given for Temperature Maintenance Storage Volume, it must be a number greater than zero."):
+        createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 20, TMVol_G=0,TMCap_kBTUhr=15)
+    with pytest.raises(Exception, match = "Invalid input given for Temperature Maintenance Output Capacity, it must be a number greater than zero."):
+        createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 20, TMVol_G=10,TMCap_kBTUhr='lol')

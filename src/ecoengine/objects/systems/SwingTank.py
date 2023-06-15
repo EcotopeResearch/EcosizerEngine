@@ -23,12 +23,14 @@ class SwingTank(SystemConfig):
         self.element_deadband_F = 8.
         
         # size if needed
-        if building is None:
+        if not PVol_G_atStorageT is None: # indicates system is sized
            if not (isinstance(TMVol_G, int) or isinstance(TMVol_G, float)) or TMVol_G <= 0: 
-                raise Exception('Invalid input given for T.M. Storage Volume, it must be a number greater than zero.')
+                raise Exception('Invalid input given for Temperature Maintenance Storage Volume, it must be a number greater than zero.')
+           if not (isinstance(TMCap_kBTUhr, int) or isinstance(TMCap_kBTUhr, float)) or TMCap_kBTUhr <= 0: 
+                raise Exception('Invalid input given for Temperature Maintenance Output Capacity, it must be a number greater than zero.')
            self.TMVol_G = TMVol_G
            self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= TMVol_G])
-           self.TMCap_kBTUhr = TMCap_kBTUhr # TODO param checking for this?
+           self.TMCap_kBTUhr = TMCap_kBTUhr
         else:
 
             # check building because recirc losses needed before super().__init__()
@@ -413,8 +415,8 @@ class SwingTank(SystemConfig):
             
         return heatCap, genRate
     
-    def getInitializedSimulation(self, building : Building, Pcapacity=None, Pvolume=None, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
-        simRun = super().getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST, minuteIntervals, nDays)
+    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
+        simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
         simRun.swingT_F = [simRun.mixedStorT_F] + [0] * (len(simRun.hwDemand) - 1)
         simRun.sRun = [0] * (len(simRun.hwDemand))
         simRun.hw_outSwing = [0] * (len(simRun.hwDemand))

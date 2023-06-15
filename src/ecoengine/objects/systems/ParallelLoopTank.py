@@ -22,11 +22,14 @@ class ParallelLoopTank(SystemConfig):
         self.offTime_hr = offTime_hr # Hour
         self.safetyTM = safetyTM # Safety factor
 
-        if building is None:
+        # size if needed
+        if not PVol_G_atStorageT is None: # indicates system is sized
            if not (isinstance(TMVol_G, int) or isinstance(TMVol_G, float)) or TMVol_G <= 0: 
-                raise Exception('Invalid input given for T.M. Storage Volume, it must be a number greater than zero.')
+                raise Exception('Invalid input given for Temperature Maintenance Storage Volume, it must be a number greater than zero.')
+           if not (isinstance(TMCap_kBTUhr, int) or isinstance(TMCap_kBTUhr, float)) or TMCap_kBTUhr <= 0: 
+                raise Exception('Invalid input given for Temperature Maintenance Output Capacity, it must be a number greater than zero.')
            self.TMVol_G = TMVol_G
-           self.TMCap_kBTUhr = TMCap_kBTUhr # TODO param checking for this?
+           self.TMCap_kBTUhr = TMCap_kBTUhr
         else:
             if setpointTM_F <= building.incomingT_F:
                 raise Exception("The temperature maintenance setpoint temperature must be greater than the city cold water temperature")

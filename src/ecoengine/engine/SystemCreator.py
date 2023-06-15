@@ -48,6 +48,14 @@ def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRunti
         Defaults to 120 °F.
     offTime_hr: integer
         Maximum hours per day the temperature maintenance equipment can run.
+    PVol_G_atStorageT : float
+        For pre-sized systems, the total/maximum storage volume for water at storage temperature for the system in gallons
+    PCap_kBTUhr : float
+        For pre-sized systems, the output capacity for the system in kBTUhr
+    TMVol_G : float
+        For applicable pre-sized systems, the temperature maintenance volume for the system in gallons
+    TMCap_kBTUhr : float
+        For applicable pre-sized systems, the output capacity for temperature maintenance for the system in kBTUhr
 
     Raises
     ----------

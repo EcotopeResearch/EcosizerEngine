@@ -108,7 +108,8 @@ def test_magnitudes(buildingType, magnitude, expected):
    ("apartment",100,np.array([0.046728972, 0.044392523, 0.037383178])),
    (["food_service_a", "nursing_home"],[100,50],np.array([0.0, 0.00237169, 0.00237169])),
    (["womens_dorm", "junior_high"],[100,5],np.array([0.30189875, 0.1208078 , 0.0362846])),
-   (["womens_dorm", "junior_high"],[5,100],np.array([0.06356968, 0.02933985, 0.01222494]))
+   (["womens_dorm", "junior_high"],[5,100],np.array([0.06356968, 0.02933985, 0.01222494])),
+   (["womens_dorm", "junior_high", "food_service_a", "nursing_home", "apartment"],[5,100, 50, 200, 500],np.array([0.03889, 0.03722, 0.03127]))
 ])
 def test_default_loadshapes(buildingType, magnitude, expected):
     building = createBuilding(
@@ -151,6 +152,37 @@ def test_annualLS_for_non_multi_family(nursingHomeAndOffice):
         nursingHomeAndOffice.setToAnnualLS()
     assert len(nursingHomeAndOffice.loadshape) == 24
     assert len(nursingHomeAndOffice.avgLoadshape) == 24
+
+def test_annualLS_from_instantiation(nursingHomeAndOffice):
+    building = createBuilding(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            buildingType   = 'multi_family',
+            nApt            = 100, 
+            Wapt            = 100,
+            gpdpp           = 25,
+            annual          = True
+        )
+    assert len(building.loadshape) == 8760
+    assert len(building.avgLoadshape) == 8760
+
+@pytest.mark.parametrize("zipCode, climateZone, buildingType, magnitude", [
+   (94922,1,"apartment", 100),
+   (94565,12,["womens_dorm", "junior_high"], [100,50]),
+   (None,None,"multi_family", 100)
+])
+def test_zipCodes_to_climateZones(zipCode, climateZone, buildingType, magnitude):
+    building = createBuilding(
+            incomingT_F     = 50,
+            magnitudeStat  = magnitude,
+            supplyT_F       = 120,
+            buildingType   = buildingType,
+            flowRate       = 5,
+            returnT_F       = 100,
+            zipCode         = zipCode
+    )
+    assert building.climateZone == climateZone
 
 # Check for building initialization errors
 def test_invalid_building_parameter_errors():
@@ -196,3 +228,17 @@ def test_invalid_building_parameter_errors():
         createBuilding(35, [4,7,8] , 120, ["mens_dorm"])
     with pytest.raises(Exception, match="No default loadshape found for building type yep."):
         createBuilding(35, [1,2], 120, ["mens_dorm","yep"])
+    with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 16."):
+        createBuilding(35, 4, 120, "mens_dorm", climateZone = 18)
+    with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 16."):
+        createBuilding(35, 4, 120, "mens_dorm", climateZone = 'yes')
+    with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 16."):
+        createBuilding(35, 4, 120, "mens_dorm", climateZone = 0)
+    with pytest.raises(Exception, match="18 is not a California zip code."):
+        createBuilding(35, 4, 120, "mens_dorm", zipCode = 18)
+    with pytest.raises(Exception, match="98122 is not a California zip code."):
+        createBuilding(35, 4, 120, "mens_dorm", zipCode = 98122)
+    with pytest.raises(Exception, match="the surf spot is not a California zip code."):
+        createBuilding(35, 4, 120, "mens_dorm", zipCode = 'the surf spot')
+    with pytest.raises(Exception, match="Annual simulation for non-multifamily buildings is not yet available."):
+        createBuilding(35, 4, 120, "mens_dorm", annual=True)

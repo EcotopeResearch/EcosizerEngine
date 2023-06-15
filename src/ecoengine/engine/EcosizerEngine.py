@@ -128,8 +128,24 @@ class EcosizerEngine:
                                 TMCap_kBTUhr = TMCap_kBTUhr
         )
     
-    def getSimResult(self, initPV=None, initST=None, Pcapacity=None, Pvolume=None, minuteIntervals = 1, nDays = 3, hpwhModel = None, kWhCalc = False):
-        simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, Pcapacity=Pcapacity, Pvolume=Pvolume, minuteIntervals = minuteIntervals, nDays = nDays,
+    def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, hpwhModel = None, kWhCalc = False):
+        """
+        Returns the result of a simulation of a HPWH system in a building
+
+        Inputs
+        ------
+        initPV : float
+            Primary volume at start of the simulation
+        initST : float
+            Swing tank temperature at start of the simulation. Not used in this instance of the function
+        minuteIntervals : int
+            the number of minutes the duration each interval timestep for the simulation will be
+        nDays : int
+            the number of days the for duration of the entire simulation will be
+        hpwhModel : string
+            the real world HPWH model used in the simulation. Used to determina capacity and input power for varrious air temperaturess
+        """
+        simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays,
                         hpwhModel = hpwhModel)
         return simRun.returnSimResult(kWhCalc = kWhCalc)
         # return self.system.simulate(self.building)

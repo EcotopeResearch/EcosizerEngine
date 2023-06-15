@@ -8,7 +8,7 @@ from ecoengine.constants.Constants import KWH_TO_BTU
 import csv
 
     
-def simulate(system : SystemConfig, building : Building, initPV=None, initST=None, Pcapacity=None, Pvolume=None, minuteIntervals = 1, nDays = 3, hpwhModel = None):
+def simulate(system : SystemConfig, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, hpwhModel = None):
     """
     Implimented seperatly for Swink Tank systems 
     Inputs
@@ -21,12 +21,6 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
         Primary volume at start of the simulation
     initST : float
         Swing tank temperature at start of the simulation. Not used in this instance of the function
-    Pcapacity : float
-        The primary heating capacity in kBTUhr to use for the simulation,
-        default is the sized system
-    Pvolume : float
-        The primary storage volume in gallons to  to use for the simulation,
-        default is the sized system
     minuteIntervals : int
         the number of minutes the duration each interval timestep for the simulation will be
     nDays : int
@@ -40,7 +34,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
         resulting simulation run object containing information from each timestep interval of the simulation for further analysis
     """
 
-    simRun = system.getInitializedSimulation(building, Pcapacity, Pvolume, initPV, initST, minuteIntervals, nDays)
+    simRun = system.getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
 
     perfMap = PrefMapTracker(system.PCap_kBTUhr/W_TO_BTUHR, modelName = hpwhModel) 
 
@@ -69,7 +63,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
             cap = 0 # initialize cap
             if nDays == 365:
                 oat_F = float(oat_row[building.climateZone - 1])
-                cap = perfMap.getCapacity(oat_F, 120) #TODO use a real condesor temp
+                cap = perfMap.getCapacity(oat_F, simRun.getIncomingWaterT(0), system.storageT_F) #TODO use a real condesor temp
                 simRun.addOat(oat_F)
                 system.setCapacity(cap)
                 simRun.addCap(cap)
@@ -86,7 +80,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
                         simRun.addOat(oat_F)
                         kG_row = next(kG_reader)
                         # print("at hour " + str(i/(60/minuteIntervals)) +" oat_F is: "+str(oat_F))
-                        cap = perfMap.getCapacity(oat_F, 120) #TODO use a real condesor temp
+                        cap = perfMap.getCapacity(oat_F, simRun.getIncomingWaterT(i), system.storageT_F) #TODO use a real condesor temp
                         system.setCapacity(cap*W_TO_BTUHR)
                     system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
                     kG = (cap/2.5)*(simRun.pRun[i]/minuteIntervals) # TODO 2.5 COP placeholder.
@@ -108,8 +102,22 @@ class PrefMapTracker:
         if not modelName is None: 
             self.setPrefMap(modelName)
 
-    def getCapacity(self, externalT_F, condenserT_F):
-        #returns capacity in kW
+    def getCapacity(self, externalT_F, condenserT_F, outT_F):
+        """
+        Returns the current output capacity of of the HPWH model for the simulation given external and condesor temperatures.
+        If no HPWH model has been set, returns the default output capacity of the system.
+        
+        Inputs
+        ------
+        externalT_F : float
+            The external air temperature in fahrenheit
+        condenserT_F : float
+            The condenser temperature in fahrenheit
+        
+        Returns
+        -------
+        The output capacity of the primary HPWH in kW as a float
+        """
         if self.perfMap is None or len(self.perfMap) == 0:
             return self.defaultCapacity
         elif len(self.perfMap) > 1:
@@ -154,11 +162,18 @@ class PrefMapTracker:
             inputPower_T2_Watts += self.perfMap[i_next]['inputPower_coeffs'][1] * condenserT_F
             inputPower_T2_Watts += self.perfMap[i_next]['inputPower_coeffs'][2] * condenserT_F * condenserT_F
 
-            cop = self.linearInterp(externalT_F, self.perfMap[i_prev].T_F, self.perfMap[i_next].T_F, COP_T1, COP_T2)
-            input_BTUperHr = (self.linearInterp(externalT_F, self.perfMap[i_prev].T_F, self.perfMap[i_next].T_F, inputPower_T1_Watts, inputPower_T2_Watts) / 1000.0) * KWH_TO_BTU
+            cop = self._linearInterp(externalT_F, self.perfMap[i_prev].T_F, self.perfMap[i_next].T_F, COP_T1, COP_T2)
+            input_kWperHr = (self._linearInterp(externalT_F, self.perfMap[i_prev].T_F, self.perfMap[i_next].T_F, inputPower_T1_Watts, inputPower_T2_Watts))
 
-            return cop * input_BTUperHr
-
+            return cop * input_kWperHr
+        
+        else:
+            if(externalT_F > self.perfMap[0]['T_F']):
+                extrapolate = True
+            input_kWperHr = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs']) # TODO check for ToutF, may need to be plus 10 for QAHV
+            cop = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['COP_coeffs'])
+            #print("inlet " + str(condenserT_F) + ", storage " + str(outT_F) +", OAT : "+str(externalT_F) + ", capacity " + str(cop * input_kWperHr)+ ", input_kWperHr " + str(input_kWperHr) + ", COP " + str(cop))
+            return cop * input_kWperHr 
 
     def setPrefMap(self, modelName):
         try:
@@ -168,5 +183,19 @@ class PrefMapTracker:
         except:
             raise Exception("No preformance map found for HPWH model type " + modelName + ".")
     
-    def linearInterp(self, xnew, x0, x1, y0, y1):
+    def _linearInterp(self, xnew, x0, x1, y0, y1):
         return y0 + (xnew - x0) * (y1 - y0) / (x1 - x0)
+    
+    def _regressedMethod(self, x1, x2, x3, coefficents):
+        ynew = coefficents[0]
+        ynew += coefficents[1] * x1
+        ynew += coefficents[2] * x2
+        ynew += coefficents[3] * x3
+        ynew += coefficents[4] * x1 * x1
+        ynew += coefficents[5] * x2 * x2
+        ynew += coefficents[6] * x3 * x3
+        ynew += coefficents[7] * x1 * x2
+        ynew += coefficents[8] * x1 * x3
+        ynew += coefficents[9] * x2 * x3
+        ynew += coefficents[10] * x1 * x2 * x3
+        return ynew

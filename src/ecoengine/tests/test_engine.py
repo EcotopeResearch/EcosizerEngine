@@ -156,6 +156,43 @@ def swing_sizer_nls():
         )
     return hpwh
 
+@pytest.fixture
+def annual_swing_sizer(): # Returns the hpwh swing tank
+    with QuietPrint():
+        hpwh = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            loadUpT_F       = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            aquaFractLoadUp = 0.21,
+            aquaFractShed   = 0.8,
+            schematic       = 'swingtank', 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 60,
+            nBR             = [0,50,30,20,0,0],
+            loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
+            loadUpHours     = 3,
+            doLoadShift     = True,
+            loadShiftPercent       = 0.8,
+            PVol_G_atStorageT = 944.972083230641, 
+            PCap_kBTUhr = 122.61152083930925, 
+            TMVol_G = 100, 
+            TMCap_kBTUhr = 59.712485,
+            annual = True,
+            climateZone = 1
+        )
+    return hpwh
+
 ###############################################################################
 ###############################################################################
 # Unit Tests
@@ -276,4 +313,13 @@ def test__primary_nls_simulationResults(primary_sizer_nls):
     assert simResult[2][-65:-55] == [2.66, 2.66, 2.66, 2.66, 2.66, 1.013, 1.013, 1.013, 1.013, 1.013]
     assert simResult[3][800:810] == [1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823]
 
-    # TODO add simulation tests for non load shifting
+# annual simulations
+
+def test__parallel_simulationResults(annual_swing_sizer):
+    simResult = annual_swing_sizer.getSimResult(initPV=0.4*944.972083230641, initST=135, minuteIntervals = 15, nDays = 365)
+    assert len(simResult) == 7
+    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 35040
+    assert simResult[0][:10] == [377.989, 394.655, 410.557, 425.841, 453.144, 479.932, 506.222, 532.483, 564.487, 596.164]
+    assert simResult[1][-10:] == [0.0, 0.0, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421]
+    assert simResult[2][-65:-55] == [29.514, 55.556, 55.556, 55.556, 55.556, 32.986, 32.986, 32.986, 32.986, 29.514]
+    assert simResult[3][800:810] == [0, 28.04, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677]

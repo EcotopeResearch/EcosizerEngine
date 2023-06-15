@@ -94,6 +94,9 @@ class SimulationRun:
                 raise Exception("Cold water temperature data not available past one year.")
             
     def getAvgIncomingWaterT(self):
+        """
+        Returns the average incoming water temperature for the year in fahrenheit as a float
+        """
         if self.monthlyCityWaterT_F is None:
             return self.building.incomingT_F # default city water temp
         else:
