@@ -8,7 +8,7 @@ aquaFractShed   = 0.8
 storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1] #assume this loadshape for annual simulation every day
 csvCreate = False
-hpwhModel = None #'MODELS_NyleC250A_SP'
+hpwhModel ='MODELS_NyleC250A_SP'
 
 hpwh = EcosizerEngine(
             incomingT_F     = 50,
@@ -81,10 +81,11 @@ hpwh = EcosizerEngine(
             TMVol_G = TMVol_G, 
             TMCap_kBTUhr = TMCap_kBTUhr,
             annual = True,
-            climateZone = 1
+            climateZone = 1,
+            systemModel = hpwhModel
         )
 start_time = time.time()
-simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True, hpwhModel = hpwhModel)
+simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)
 # simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135)
 
 end_time = time.time()
@@ -111,7 +112,7 @@ print('kg_sum is', simResult_1[-2])
 print('average temp is', simResult_1[-1])
 
 #finishing kGperkWh calc
-denom = (8.345*PVol_G_atStorageT*(aquaFractShed-aquaFractLoadUp)*(storageT_F-simResult_1[-1]))/3412
+denom = (8.345*PVol_G_atStorageT*(aquaFractShed-aquaFractLoadUp)*(storageT_F-simResult_1[-1]))/3412 # stored energy, not input energy
 print('denom',denom)
 kGperkWh = simResult_1[-2]/denom
 
@@ -164,10 +165,11 @@ hpwh = EcosizerEngine(
             TMVol_G = TMVol_G, 
             TMCap_kBTUhr = TMCap_kBTUhr,
             annual = True,
-            climateZone = 1
+            climateZone = 1,
+            systemModel = hpwhModel
         )
 start_time = time.time()
-simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True, hpwhModel = hpwhModel)
+simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)
 # simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135)
 
 end_time = time.time()
@@ -202,6 +204,7 @@ print("LS kGperkWh", kGperkWh)
 print("non-LS kGperkWh", kGperkWh_nonLS)
 print("LS to non-LS diff:", kGperkWh - kGperkWh_nonLS)
 print("dafault cap", PCap_kBTUhr / 3.412142)
+print('starting v',0.4*PVol_G_atStorageT)
 
 # parallel_sizer = EcosizerEngine(
 #             incomingT_F     = 50,

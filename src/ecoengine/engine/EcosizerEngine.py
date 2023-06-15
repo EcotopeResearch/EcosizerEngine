@@ -83,24 +83,25 @@ class EcosizerEngine:
                             defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None,
                             PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None,
-                            annual = False, zipCode = None, climateZone = None):
+                            annual = False, zipCode = None, climateZone = None, systemModel = None):
         
-        self.building = createBuilding( incomingT_F = incomingT_F,
-                                    magnitudeStat   = magnitudeStat, 
-                                    supplyT_F       = supplyT_F, 
-                                    buildingType    = buildingType,
-                                    loadshape       = loadshape,
-                                    avgLoadshape    = avgLoadshape,
-                                    returnT_F       = returnT_F, 
-                                    flowRate        = flowRate,
-                                    gpdpp           = gpdpp,
-                                    nBR             = nBR,
-                                    nApt            = nApt,
-                                    Wapt            = Wapt,
-                                    standardGPD     = standardGPD,
-                                    annual          = annual,
-                                    zipCode         = zipCode, 
-                                    climateZone     = climateZone
+        self.building = createBuilding( 
+                                incomingT_F     = incomingT_F,
+                                magnitudeStat   = magnitudeStat, 
+                                supplyT_F       = supplyT_F, 
+                                buildingType    = buildingType,
+                                loadshape       = loadshape,
+                                avgLoadshape    = avgLoadshape,
+                                returnT_F       = returnT_F, 
+                                flowRate        = flowRate,
+                                gpdpp           = gpdpp,
+                                nBR             = nBR,
+                                nApt            = nApt,
+                                Wapt            = Wapt,
+                                standardGPD     = standardGPD,
+                                annual          = annual,
+                                zipCode         = zipCode, 
+                                climateZone     = climateZone
         )
 
         self.system = createSystem(  
@@ -125,10 +126,11 @@ class EcosizerEngine:
                                 PVol_G_atStorageT = PVol_G_atStorageT, 
                                 PCap_kBTUhr = PCap_kBTUhr, 
                                 TMVol_G = TMVol_G, 
-                                TMCap_kBTUhr = TMCap_kBTUhr
+                                TMCap_kBTUhr = TMCap_kBTUhr,
+                                systemModel = systemModel
         )
     
-    def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, hpwhModel = None, kWhCalc = False):
+    def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False):
         """
         Returns the result of a simulation of a HPWH system in a building
 
@@ -145,8 +147,7 @@ class EcosizerEngine:
         hpwhModel : string
             the real world HPWH model used in the simulation. Used to determina capacity and input power for varrious air temperaturess
         """
-        simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays,
-                        hpwhModel = hpwhModel)
+        simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
         return simRun.returnSimResult(kWhCalc = kWhCalc)
         # return self.system.simulate(self.building)
 

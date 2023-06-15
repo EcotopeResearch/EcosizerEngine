@@ -1,6 +1,7 @@
 from ecoengine.constants.Constants import *
 from .Building import Building
 from .SimulationRun import SimulationRun
+from .PrefMapTracker import PrefMapTracker
 import numpy as np
 from scipy.stats import norm #lognorm
 from .systemConfigUtils import mixVolume, hrToMinList, hrTo15MinList, getPeakIndices, checkLiqudWater, checkHeatHours
@@ -8,7 +9,7 @@ from .systemConfigUtils import mixVolume, hrToMinList, hrTo15MinList, getPeakInd
 class SystemConfig:
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
+                 aquaFractShed = None, loadUpT_F = None, systemModel = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
         # check inputs. Schedule not checked because it is checked elsewhere
         self._checkInputs(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent)
         self.doLoadShift = doLoadShift
@@ -18,6 +19,7 @@ class SystemConfig:
         self.compRuntime_hr = compRuntime_hr
         self.aquaFract = aquaFract
         self.loadUpHours = None
+        # self.perfMap = None
 
         if doLoadShift and not loadShiftSchedule is None:
             self._setLoadShift(loadShiftSchedule, loadUpHours, aquaFract, aquaFractLoadUp, aquaFractShed, storageT_F, loadUpT_F, loadShiftPercent)
@@ -44,6 +46,8 @@ class SystemConfig:
             self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr, self.loadUpHours, building)
             self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, building, 
                 effSwingVolFract = self.effSwingFract, primaryCurve = False)[0]
+            
+        self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, kBTUhr = True)
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):
         if not (isinstance(storageT_F, int) or isinstance(storageT_F, float)) or not checkLiqudWater(storageT_F): 
@@ -61,8 +65,18 @@ class SystemConfig:
         if not isinstance(doLoadShift, bool):
             raise Exception("Invalid input given for doLoadShift, must be a boolean.")
 
-    def setCapacity(self, PCap_kBTUhr):
-        self.PCap_kBTUhr = PCap_kBTUhr
+    def setCapacity(self, PCap_kBTUhr = None, oat = None, incomingWater_T = None):
+        if not PCap_kBTUhr is None:
+            self.PCap_kBTUhr = PCap_kBTUhr
+        elif not (oat is None or incomingWater_T is None or self.perfMap is None):
+            self.PCap_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
+        else:
+           raise Exception("No capacity given or preformance map has not been set.") 
+
+    def getCapacity(self, kW = False):
+        if kW:
+            return self.PCap_kBTUhr/W_TO_BTUHR
+        return self.PCap_kBTUhr
 
     def getSizingResults(self):
         """
@@ -185,9 +199,13 @@ class SystemConfig:
 
         return SimulationRun(hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building, loadshiftSched, minuteIntervals, self.doLoadShift)
     
-    def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1):
-        mixedDHW = mixVolume(simRun.hwDemand[i], simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) 
-        mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
+    def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
+        incomingWater_T = simRun.getIncomingWaterT(i)
+        if not (oat is None or self.perfMap is None):
+            # set primary system capacity based on outdoor ait temp and incoming water temp 
+            self.PCap_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
+        mixedDHW = mixVolume(simRun.hwDemand[i], simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F) 
+        mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F)
         simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], mixedDHW, mixedGHW, simRun.Vtrig[i-1],
                                                                                                minuteIntervals = minuteIntervals) 
     
@@ -725,8 +743,8 @@ class SystemConfig:
 class Primary(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
+                 aquaFractShed = None, loadUpT_F = None, systemModel = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, doLoadShift, 
-                loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, PVol_G_atStorageT, PCap_kBTUhr)
+                loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, systemModel, PVol_G_atStorageT, PCap_kBTUhr)
 
 

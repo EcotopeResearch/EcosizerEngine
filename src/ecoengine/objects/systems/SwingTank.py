@@ -14,7 +14,8 @@ class SwingTank(SystemConfig):
 
     def __init__(self, safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None):
+                 aquaFractShed = None, loadUpT_F = None, systemModel = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, 
+                 TMCap_kBTUhr = None):
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
@@ -45,7 +46,8 @@ class SwingTank(SystemConfig):
             self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
         
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
-                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, PVol_G_atStorageT, PCap_kBTUhr)
+                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
+                 loadUpT_F, systemModel, PVol_G_atStorageT, PCap_kBTUhr)
         
     def getSizingResults(self):
         """
@@ -431,12 +433,17 @@ class SwingTank(SystemConfig):
 
         return simRun
 
-    def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1):
-        simRun.hw_outSwing[i] = mixVolume(simRun.hwDemand[i], simRun.swingT_F[i-1], simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
+    def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
+        incomingWater_T = simRun.getIncomingWaterT(i)
+        if not (oat is None or self.perfMap is None):
+            # set primary system capacity based on outdoor ait temp and incoming water temp 
+            self.PCap_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
+
+        simRun.hw_outSwing[i] = mixVolume(simRun.hwDemand[i], simRun.swingT_F[i-1], incomingWater_T, simRun.building.supplyT_F)
             
         simRun.swingheating, simRun.swingT_F[i], simRun.sRun[i] = self.__runOneSwingStep(simRun.building, simRun.swingheating, simRun.swingT_F[i-1], simRun.hw_outSwing[i], minuteIntervals = minuteIntervals)
         #Get the mixed generation
-        mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) #replaced self.storageT_F with mixedStorT_F
+        mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F) #replaced self.storageT_F with mixedStorT_F
         simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], simRun.hw_outSwing[i], mixedGHW, simRun.Vtrig[i-1],
                                                                                                minuteIntervals = minuteIntervals)
    

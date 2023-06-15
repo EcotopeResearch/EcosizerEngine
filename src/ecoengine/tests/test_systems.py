@@ -170,9 +170,9 @@ def test_sizedParallelResults(sizedParallel):
             sizedParallel.TMVol_G, sizedParallel.TMCap_kBTUhr] == [500, 95, [1]*24, 16, 100, 60]
 
 def test_change_capacity(sizedPrimary):
-    sizedPrimary.setCapacity(100)
+    sizedPrimary.setCapacity(PCap_kBTUhr=100)
     assert sizedPrimary.PCap_kBTUhr == 100
-    sizedPrimary.setCapacity(95)
+    sizedPrimary.setCapacity(PCap_kBTUhr=95)
     assert sizedPrimary.PCap_kBTUhr == 95
 
 @pytest.mark.parametrize("minuteIntervals, nDays, outputArrayLength, initPV", [
