@@ -266,7 +266,7 @@ def test__parallel_simulationResults(parallel_sizer):
     simResult = parallel_sizer.getSimResult()
     assert len(simResult) == 4
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 4320
-    assert simResult[0][:10] == [1028.0, 1027.528, 1027.057, 1026.585, 1026.114, 1025.642, 1025.171, 1024.699, 1024.228, 1023.756]
+    assert simResult[0][:10] == [1027.528, 1027.057, 1026.585, 1026.114, 1025.642, 1025.171, 1024.699, 1024.228, 1023.756, 1023.284]
     assert simResult[1][-10:] == [3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205]
     assert simResult[2][-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
     assert simResult[3][800:810] == [2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244]
@@ -275,7 +275,7 @@ def test__primary_simulationResults(primary_sizer):
     simResult = primary_sizer.getSimResult()
     assert len(simResult) == 4
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 4320
-    assert simResult[0][:10] == [1028.0, 1027.528, 1027.057, 1026.585, 1026.114, 1025.642, 1025.171, 1024.699, 1024.228, 1023.756]
+    assert simResult[0][:10] == [1027.528, 1027.057, 1026.585, 1026.114, 1025.642, 1025.171, 1024.699, 1024.228, 1023.756, 1023.284]
     assert simResult[1][-10:] == [3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205]
     assert simResult[2][-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
     assert simResult[3][800:810] == [2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244]
@@ -284,7 +284,7 @@ def test__swing_simulationResults(swing_sizer):
     simResult = swing_sizer.getSimResult()
     assert len(simResult) == 7
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == len(simResult[4]) == len(simResult[5]) == len(simResult[6]) == 4320
-    assert simResult[0][:10] == [1376.0, 1375.528, 1375.054, 1374.576, 1374.094, 1373.61, 1373.122, 1372.63, 1372.135, 1371.637]
+    assert simResult[0][:10] == [1375.528, 1375.054, 1374.576, 1374.094, 1373.61, 1373.122, 1372.63, 1372.135, 1371.637, 1371.135]
     assert simResult[1][-10:] == [4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297]
     assert simResult[2][-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
     assert simResult[3][800:810] == [3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008]
@@ -296,7 +296,7 @@ def test__swing_nls_simulationResults(swing_sizer_nls):
     simResult = swing_sizer_nls.getSimResult()
     assert len(simResult) == 7
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == len(simResult[4]) == len(simResult[5]) == len(simResult[6]) == 4320
-    assert simResult[0][:2] == [487.0, 486.557]
+    assert simResult[0][:2] == [486.557, 486.11]
     assert simResult[1][-10:-8] == [3.367, 3.367]
     assert simResult[2][-65:-55] == [2.66, 2.66, 2.66, 2.66, 2.66, 1.013, 1.013, 1.013, 1.013, 1.013]
     assert simResult[3][800:810] == [2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357]
@@ -308,18 +308,18 @@ def test__primary_nls_simulationResults(primary_sizer_nls):
     simResult = primary_sizer_nls.getSimResult()
     assert len(simResult) == 4
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 4320
-    assert simResult[0][:10] == [421.0, 420.557, 420.113, 419.67, 419.227, 418.784, 418.34, 417.897, 417.454, 417.011]
+    assert simResult[0][:10] == [420.557, 420.113, 419.67, 419.227, 418.784, 418.34, 417.897, 417.454, 417.011, 416.567]
     assert simResult[1][-10:] == [2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604]
     assert simResult[2][-65:-55] == [2.66, 2.66, 2.66, 2.66, 2.66, 1.013, 1.013, 1.013, 1.013, 1.013]
     assert simResult[3][800:810] == [1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823]
 
 # annual simulations
 
-def test__parallel_simulationResults(annual_swing_sizer):
+def test__annual_swing_simulationResults(annual_swing_sizer):
     simResult = annual_swing_sizer.getSimResult(initPV=0.4*944.972083230641, initST=135, minuteIntervals = 15, nDays = 365)
     assert len(simResult) == 7
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 35040
-    assert simResult[0][:10] == [377.989, 394.655, 410.557, 425.841, 453.144, 479.932, 506.222, 532.483, 564.487, 596.164]
+    assert simResult[0][:10] == [397.66, 416.221, 433.757, 450.391, 478.153, 505.395, 532.123, 558.384, 590.388, 622.065]
     assert simResult[1][-10:] == [0.0, 0.0, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421]
     assert simResult[2][-65:-55] == [29.514, 55.556, 55.556, 55.556, 55.556, 32.986, 32.986, 32.986, 32.986, 29.514]
     assert simResult[3][800:810] == [0, 28.04, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677]

@@ -318,14 +318,17 @@ class SwingTank(SystemConfig):
             The volume of DHW removed from the swing tank system.
         hw_in : float
             The volume of DHW added to the system.
+        swingheating : float
+            True if tank is heating at the begining of this time step
 
         Returns
         -------
         Tnew : float
-            The new swing tank tempeature the timestep assuming the tank is well mixed.
+            The new swing tank tempeature for the timestep assuming the tank is well mixed.
         did_run : int
             Logic if heated during time step (1) or not (0)
-
+        swingheating : float
+            True if tank is heating at the end of this time step
         """
         did_run = 0 
 
@@ -419,7 +422,7 @@ class SwingTank(SystemConfig):
     
     def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
         simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
-        simRun.swingT_F = [simRun.mixedStorT_F] + [0] * (len(simRun.hwDemand) - 1)
+        simRun.swingT_F = [0] * (len(simRun.hwDemand) - 1) + [simRun.mixedStorT_F]
         simRun.sRun = [0] * (len(simRun.hwDemand))
         simRun.hw_outSwing = [0] * (len(simRun.hwDemand))
         simRun.hw_outSwing[0] = simRun.hwDemand[0]

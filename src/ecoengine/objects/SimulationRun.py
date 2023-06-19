@@ -9,7 +9,7 @@ import os
 import csv
 
 class SimulationRun:
-    def __init__(self, hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building : Building, loadShiftSchedule, minuteIntervals, doLoadshift = False):
+    def __init__(self, hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building : Building, loadShiftSchedule, minuteIntervals = 1, doLoadshift = False):
         """
         Initializes arrays needed for 3-day simulation
 

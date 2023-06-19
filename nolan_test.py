@@ -206,30 +206,35 @@ print("LS to non-LS diff:", kGperkWh - kGperkWh_nonLS)
 print("dafault cap", PCap_kBTUhr / 3.412142)
 print('starting v',0.4*PVol_G_atStorageT)
 
-# parallel_sizer = EcosizerEngine(
-#             incomingT_F     = 50,
-#             magnitudeStat  = 100,
-#             supplyT_F       = 120,
-#             storageT_F      = 150,
-#             percentUseable  = 0.9, 
-#             aquaFract       = 0.4, 
-#             schematic       = 'primary', 
-#             buildingType   = 'multi_family',
-#             returnT_F       = 0, 
-#             flowRate       = 0,
-#             gpdpp           = 25,
-#             safetyTM        = 1.75,
-#             defrostFactor   = 1, 
-#             compRuntime_hr  = 16, 
-#             nApt            = 100, 
-#             Wapt            = 100,
-#             doLoadShift     = False,
-#         )
-# simResult = parallel_sizer.getSimResult()
-# print(simResult[0][:10])
-# print(simResult[1][-10:])
-# print(simResult[2][-65:-55])
-# print(simResult[3][800:810])
+parallel_sizer = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            schematic       = 'swingtank', 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 100,
+            doLoadShift     = False,
+        )
+simResult = parallel_sizer.getSimResult()
+print(simResult[0][:2])
+print(simResult[1][-10:-8])
+print(simResult[2][-65:-55])
+print(simResult[3][800:810])
+print(simResult[4][-10:-4])
+print(simResult[5][-200:-190])
+print(simResult[6][800:803])
+print("===============================================")
+#print(hpwh.plotStorageLoadSim(minuteIntervals = 15, nDays = 365, return_as_div = False))
 
 
 

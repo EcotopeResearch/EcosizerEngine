@@ -183,7 +183,7 @@ class EcosizerEngine:
         """
         return self.system.primaryCurve(self.building)
     
-    def plotStorageLoadSim(self, return_as_div=True):
+    def plotStorageLoadSim(self, return_as_div=True, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False):
         """
         Returns a plot of the of the simulation for the minimum sized primary
         system as a div or plotly figure. Can plot the minute level simulation
@@ -198,7 +198,7 @@ class EcosizerEngine:
         div/fig
             plot_div
         """
-        simRun = simulate(self.system, self.building)
+        simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
         return simRun.plotStorageLoadSim(return_as_div)
     
     def lsSizedPoints(self):

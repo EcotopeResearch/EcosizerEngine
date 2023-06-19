@@ -58,22 +58,10 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
             kG_reader = csv.reader(kG_file)
             next(oat_reader)
             next(kG_reader)
-            oat_row = next(oat_reader) # now on first hour
-            kG_row = next(kG_reader) # now on first hour
             oat_F = None
-            if nDays == 365:
-                oat_F = float(oat_row[building.climateZone - 1])
-                simRun.addOat(oat_F)
-                system.setCapacity(oat = oat_F, incomingWater_T = simRun.getIncomingWaterT(0))
-                simRun.addCap(system.getCapacity(kW=True))
-                kG = (float(kG_row[building.climateZone-1])/(60/minuteIntervals))*(system.getCapacity(kW=True)/2.5)*(simRun.pRun[0]/minuteIntervals)
-                if(hasattr(simRun, 'sRun')):
-                    # we are keeping track of swingtank power as well
-                    kG += (system.TMCap_kBTUhr/W_TO_BTUHR)*(simRun.sRun[i]/minuteIntervals) # Assume COP of 1, thus input power = capacity
-                simRun.addKGperkWh(kG)
 
             # Run the "simulation"
-            for i in range(1, len(simRun.hwDemand)):
+            for i in range(len(simRun.hwDemand)):
                 if nDays == 365:
                     if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus take the next OAT
                         oat_row = next(oat_reader)

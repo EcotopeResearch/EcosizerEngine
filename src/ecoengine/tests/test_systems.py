@@ -185,9 +185,9 @@ def test_initialize_sim(simplePrimary, minuteIntervals, nDays, outputArrayLength
                * simplePrimary.defrostFactor / (60/minuteIntervals)
     assert len(initSim.hwDemand) == outputArrayLength
     if initPV is None:
-        assert initSim.pV[0] == 375
+        assert initSim.pV[-1] == 375
     else:
-        assert initSim.pV[0] == initPV
+        assert initSim.pV[-1] == initPV
     assert len(initSim.Vtrig) == outputArrayLength
     assert len(initSim.pV) == outputArrayLength
     assert initSim.V0 == 375
@@ -209,9 +209,9 @@ def test_initialize_sim_swing(swingTank, minuteIntervals, nDays, outputArrayLeng
                * swingTank.defrostFactor / (60/minuteIntervals)
     assert len(initSim.hwDemand) == outputArrayLength
     if initPV is None:
-        assert initSim.pV[0] == 433.0
+        assert initSim.pV[-1] == 433.0
     else:
-        assert initSim.pV[0] == initPV
+        assert initSim.pV[-1] == initPV
     assert len(initSim.Vtrig) == outputArrayLength
     assert len(initSim.pV) == outputArrayLength
     assert initSim.V0 == 433.0

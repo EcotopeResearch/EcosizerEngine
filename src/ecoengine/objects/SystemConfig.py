@@ -183,7 +183,7 @@ class SystemConfig:
         else:
             raise Exception("Invalid input given for granularity. Must be 1, 15, or 60.")
 
-        pV = [V0] + [0] * (len(hwDemand) - 1)
+        pV = [0] * (len(hwDemand) - 1) + [V0]
 
         pheating = False
 
@@ -193,9 +193,9 @@ class SystemConfig:
         print(len(hwDemand))
         print(len(Vtrig))
 
-        mixedStorT_F = self.mixStorageTemps(pV[0], building.incomingT_F, building.supplyT_F)[0]
+        mixedStorT_F = self.mixStorageTemps(V0, building.incomingT_F, building.supplyT_F)[0]
         if initPV:
-            pV[0] = initPV
+            pV[-1] = initPV
 
         return SimulationRun(hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building, loadshiftSched, minuteIntervals, self.doLoadShift)
     
