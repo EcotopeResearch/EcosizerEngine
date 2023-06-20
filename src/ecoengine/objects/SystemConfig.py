@@ -60,10 +60,10 @@ class SystemConfig:
             raise Exception("Invalid input given for compRuntime_hr, must be an integer between 0 and 24.")
         if not (isinstance(aquaFract, int) or isinstance(aquaFract, float)) or aquaFract > 1 or aquaFract <= 0:
             raise Exception("Invalid input given for aquaFract must, be a number between 0 and 1.")
-        if not (isinstance(loadShiftPercent, int) or isinstance(loadShiftPercent, float)) or loadShiftPercent > 1 or loadShiftPercent < 0:
-            raise Exception("Invalid input given for loadShiftPercent, must be a number between 0 and 1.")
         if not isinstance(doLoadShift, bool):
             raise Exception("Invalid input given for doLoadShift, must be a boolean.")
+        if doLoadShift and (not (isinstance(loadShiftPercent, int) or isinstance(loadShiftPercent, float)) or loadShiftPercent > 1 or loadShiftPercent < 0):
+            raise Exception("Invalid input given for loadShiftPercent, must be a number between 0 and 1.")
 
     def setCapacity(self, PCap_kBTUhr = None, oat = None, incomingWater_T = None):
         if not PCap_kBTUhr is None:

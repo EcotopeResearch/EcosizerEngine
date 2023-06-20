@@ -19,8 +19,6 @@ class Building:
         self.recirc_loss = (supplyT_F - returnT_F) * flowRate * rhoCp * 60. #BTU/HR
         if(self.recirc_loss > RECIRC_LOSS_MAX_BTUHR):
             raise Exception("Error: Recirculation losses may not exceed 108 kW, consider using multiple central plants.")
-        if not (isinstance(supplyT_F, int) or isinstance(supplyT_F, float)):
-            raise Exception("Error: Supply temp must be a number.")
         self.climateZone = climate
 
     def _checkParams(self, incomingT_F, supplyT_F, returnT_F, flowRate):
@@ -98,9 +96,9 @@ class SeniorHigh(Building):
 class MultiFamily(Building):
     def __init__(self, n_people, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, gpdpp, nBR, nApt, Wapt, standardGPD):
         # check inputs
-        if not (isinstance(nApt, int)):
+        if not nApt is None and not (isinstance(nApt, int)):
             raise Exception("Error: Number of apartments must be an integer.")
-        if not (isinstance(Wapt, int)):
+        if not Wapt is None and not (isinstance(Wapt, int)):
             raise Exception("Error: WATTs per apt must be an integer.")
         if standardGPD is None:
             if not (isinstance(gpdpp, int) or isinstance(gpdpp, float)):
@@ -130,10 +128,13 @@ class MultiFamily(Building):
             
         self.magnitude = gpdpp * n_people # gpdpp * number_of_people
 
-        super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
         # recalculate recirc_loss with different method if applicable
-        if(nApt > 0 and Wapt > 0):
+        if not nApt is None and not Wapt is None and (nApt > 0 and Wapt > 0):
+            # nApt * Wapt will overwrite recirc_loss so it doesn't matter what numbers we put in for returnT_F, flowRate
+            super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, 1, 1, climate)
             self.recirc_loss = nApt * Wapt * W_TO_BTUHR
+        else:
+            super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate)
 
     def setToAnnualLS(self):
         with open(os.path.join(os.path.dirname(__file__), '../data/load_shapes/multi_family.json')) as json_file:

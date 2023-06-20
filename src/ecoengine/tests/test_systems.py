@@ -256,11 +256,11 @@ def test_invalid_aquaFrac():
         createSystem("swingtank", 150, 1, 0.8, 16, 0., default_building)
 def test_invalid_loadShiftPercent():
     with pytest.raises(Exception, match="Invalid input given for loadShiftPercent, must be a number between 0 and 1."):
-        createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, loadShiftPercent = 'eighteen')
+        createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, loadShiftPercent = 'eighteen', doLoadShift= True)
     with pytest.raises(Exception, match="Invalid input given for loadShiftPercent, must be a number between 0 and 1."):
-        createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, loadShiftPercent = -1.)
+        createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, loadShiftPercent = -1., doLoadShift= True)
     with pytest.raises(Exception, match="Invalid input given for loadShiftPercent, must be a number between 0 and 1."):
-        createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, loadShiftPercent = 1.1)
+        createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, loadShiftPercent = 1.1, doLoadShift= True)
 def test_invalid_doLoadShift():
     with pytest.raises(Exception, match="Invalid input given for doLoadShift, must be a boolean."):
         createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, doLoadShift = 'eighteen')
