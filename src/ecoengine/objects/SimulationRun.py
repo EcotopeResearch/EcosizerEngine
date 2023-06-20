@@ -7,7 +7,8 @@ from plotly.offline import plot
 from plotly.subplots import make_subplots
 import os
 import csv
-
+ # TODO add initial values to csv output?
+ #TODO csv output?
 class SimulationRun:
     def __init__(self, hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building : Building, loadShiftSchedule, minuteIntervals = 1, doLoadshift = False):
         """

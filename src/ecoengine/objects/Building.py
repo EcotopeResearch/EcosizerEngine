@@ -17,6 +17,10 @@ class Building:
         self.incomingT_F = incomingT_F
         self.supplyT_F = supplyT_F
         self.recirc_loss = (supplyT_F - returnT_F) * flowRate * rhoCp * 60. #BTU/HR
+        if(self.recirc_loss > RECIRC_LOSS_MAX_BTUHR):
+            raise Exception("Error: Recirculation losses may not exceed 108 kW, consider using multiple central plants.")
+        if not (isinstance(supplyT_F, int) or isinstance(supplyT_F, float)):
+            raise Exception("Error: Supply temp must be a number.")
         self.climateZone = climate
 
     def _checkParams(self, incomingT_F, supplyT_F, returnT_F, flowRate):

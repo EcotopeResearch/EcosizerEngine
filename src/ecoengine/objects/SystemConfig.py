@@ -190,9 +190,6 @@ class SystemConfig:
         pGen = [0] * len(hwDemand)
         pRun = [0] * len(hwDemand)
 
-        print(len(hwDemand))
-        print(len(Vtrig))
-
         mixedStorT_F = self.mixStorageTemps(V0, building.incomingT_F, building.supplyT_F)[0]
         if initPV:
             pV[-1] = initPV
@@ -389,8 +386,8 @@ class SystemConfig:
             if minRunVol_G > LUcyclingVol_G:
                 min_AF = minRunVol_G / totalVolAtStorage + (1 - self.percentUseable)
                 if min_AF < 1:
-                    raise ValueError("01", "The load up aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: ", round(min_AF,3))
-                raise ValueError("02", "The minimum aquastat fraction is greater than 1. This is due to the storage efficency and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )
+                    raise Exception("The load up aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: " + str(round(min_AF,3)))
+                raise Exception("The minimum load up aquastat fraction is greater than 1. This is due to the storage efficency and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )
 
         cyclingVol_G = totalVolAtStorage * (self.aquaFract - (1 - self.percentUseable))
         minRunVol_G = pCompMinimumRunTime * (building.magnitude / heatHrs) # (generation rate - no usage)  #REMOVED EFFMIXFRACT

@@ -235,6 +235,25 @@ print(simResult[5][-200:-190])
 print(simResult[6][800:803])
 print("===============================================")
 #print(hpwh.plotStorageLoadSim(minuteIntervals = 15, nDays = 365, return_as_div = False))
+# parallel_sizer = EcosizerEngine(
+#             incomingT_F     = 50,
+#             magnitudeStat  = 500,
+#             supplyT_F       = 120,
+#             storageT_F      = 150,
+#             percentUseable  = 0.9, 
+#             aquaFract       = 0.4, 
+#             schematic       = 'swingtank', 
+#             buildingType   = 'multi_family',
+#             returnT_F       = 0, 
+#             flowRate       = 0,
+#             gpdpp           = 25,
+#             safetyTM        = 1.75,
+#             defrostFactor   = 1, 
+#             compRuntime_hr  = 16, 
+#             nApt            = 351, 
+#             Wapt            = 100,
+#             doLoadShift     = False,
+#         )
 
 
 

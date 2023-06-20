@@ -77,8 +77,7 @@ class PrefMapTracker:
                 extrapolate = True
             input_kWperHr = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs']) # TODO check for ToutF, may need to be plus 10 for QAHV
             cop = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['COP_coeffs'])
-            #print("inlet " + str(condenserT_F) + ", storage " + str(outT_F) +", OAT : "+str(externalT_F) + ", capacity " + str(cop * input_kWperHr)+ ", input_kWperHr " + str(input_kWperHr) + ", COP " + str(cop))
-        
+            
         returnValue = cop * input_kWperHr
         if self.kBTUhr:
             returnValue *= W_TO_BTUHR # convert kW to kBTU
