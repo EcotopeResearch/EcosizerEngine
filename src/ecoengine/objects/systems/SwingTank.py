@@ -9,7 +9,7 @@ class SwingTank(SystemConfig):
 
     #Assuming that these swing sizing methodologies will be dropped in next code cycle so they likely can be removed, it not we will need to implement additional swing sizing
     Table_Napts = [0, 12, 24, 48, 96]
-    sizingTable = [40, 50, 80, 100, 120, 160, 175, 240, 350] #multiples of standard tank sizes TODO increase to past 1000
+    sizingTable = [40, 50, 80, 100, 120, 160, 175, 240, 350, 400, 500, 600, 800, 1000, 1250] #multiples of standard tank sizes 
     sizingTable_CA = [80, 96, 168, 288, 480]
 
     def __init__(self, safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
