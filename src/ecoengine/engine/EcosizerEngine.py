@@ -85,6 +85,11 @@ class EcosizerEngine:
                             PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None,
                             annual = False, zipCode = None, climateZone = None, systemModel = None):
         
+        ignoreRecirc = False
+        if schematic == 'primary':
+            # recirculation does not matter because there is no temperature maintinence
+            ignoreRecirc = True
+
         self.building = createBuilding( 
                                 incomingT_F     = incomingT_F,
                                 magnitudeStat   = magnitudeStat, 
@@ -101,7 +106,8 @@ class EcosizerEngine:
                                 standardGPD     = standardGPD,
                                 annual          = annual,
                                 zipCode         = zipCode, 
-                                climateZone     = climateZone
+                                climateZone     = climateZone,
+                                ignoreRecirc    = ignoreRecirc
         )
 
         self.system = createSystem(  

@@ -330,3 +330,20 @@ def test_invalid_sizing():
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 20, TMVol_G=0,TMCap_kBTUhr=15)
     with pytest.raises(Exception, match = "Invalid input given for Temperature Maintenance Output Capacity, it must be a number greater than zero."):
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 20, TMVol_G=10,TMCap_kBTUhr='lol')
+def test_too_small_lu_aq_sizing():
+    with pytest.raises(Exception, match = "The load up aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: 0.546 or increase your drawdown factor"):
+        createSystem(
+            schematic   = 'primary', 
+            building    = default_building, 
+            storageT_F  = 150, 
+            defrostFactor   = 1, 
+            percentUseable  = .5, 
+            compRuntime_hr  = 16, 
+            aquaFract   = 0.4,
+            aquaFractLoadUp = 0.01,
+            aquaFractShed = 0.8,
+            loadUpT_F = 150,
+            loadShiftSchedule = [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            doLoadShift = True,
+            loadUpHours = 2
+        )
