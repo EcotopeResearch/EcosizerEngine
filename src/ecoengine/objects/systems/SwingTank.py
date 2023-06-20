@@ -30,7 +30,7 @@ class SwingTank(SystemConfig):
            if not (isinstance(TMCap_kBTUhr, int) or isinstance(TMCap_kBTUhr, float)) or TMCap_kBTUhr <= 0: 
                 raise Exception('Invalid input given for Temperature Maintenance Output Capacity, it must be a number greater than zero.')
            self.TMVol_G = TMVol_G
-           self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= TMVol_G])
+           self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= TMVol_G]) if TMVol_G < 480 else 480
            self.TMCap_kBTUhr = TMCap_kBTUhr
         else:
 
@@ -42,7 +42,7 @@ class SwingTank(SystemConfig):
                 raise Exception("Recirculation losses are too high, consider using multiple central plants.")
 
             self.TMVol_G = min([x for x in self.sizingTable if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))]) 
-            self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))])
+            self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))]) if self.TMVol_G < 480 else 480
             self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
         
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
