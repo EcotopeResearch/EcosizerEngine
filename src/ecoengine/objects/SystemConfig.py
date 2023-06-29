@@ -72,6 +72,9 @@ class SystemConfig:
             self.PCap_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
         else:
            raise Exception("No capacity given or preformance map has not been set.") 
+        
+    def resetToDefaultCapacity(self):
+        self.PCap_kBTUhr = self.perfMap.getDefaultCapacity()
 
     def getCapacity(self, kW = False):
         if kW:

@@ -79,4 +79,5 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
                 else:
                     system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
 
+    system.resetToDefaultCapacity()
     return simRun

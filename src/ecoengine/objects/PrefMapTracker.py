@@ -10,6 +10,9 @@ class PrefMapTracker:
         if not modelName is None: 
             self.setPrefMap(modelName)
 
+    def getDefaultCapacity(self):
+        return self.defaultCapacity
+
     def getCapacity(self, externalT_F, condenserT_F, outT_F):
         """
         Returns the current output capacity of of the HPWH model for the simulation given external and condesor temperatures.

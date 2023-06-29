@@ -9,6 +9,7 @@ storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1] #assume this loadshape for annual simulation every day
 csvCreate = True
 hpwhModel ='MODELS_NyleC250A_SP'
+minuteIntervals = 60
 
 hpwh = EcosizerEngine(
             incomingT_F     = 50,
@@ -85,10 +86,10 @@ hpwh_ls = EcosizerEngine(
             systemModel = hpwhModel
         )
 start_time = time.time()
-print('sim2', hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)[-2])
-simResult_1 = hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)
-print('sim3', hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)[-2])
-print('sim4', hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)[-2])
+# print('sim2', hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)[-2])
+simResult_1 = hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, kWhCalc = True)
+# print('sim3', hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)[-2])
+# print('sim4', hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)[-2])
 print('sim1', simResult_1[-2])
 # simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135)
 
@@ -108,7 +109,7 @@ print(simResult_1[2][-65:-55])
 print(simResult_1[3][800:810])
 print('==========================================')
 
-hours = [(i // 4) + 1 for i in range(len(simResult_1[0]))]
+hours = [(i // (60/minuteIntervals)) + 1 for i in range(len(simResult_1[0]))]
 
 # Insert the 'hour' column to simResult_1
 simResult_1.insert(0, hours)
@@ -173,7 +174,7 @@ hpwh = EcosizerEngine(
             systemModel = hpwhModel
         )
 start_time = time.time()
-simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)
+simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, kWhCalc = True)
 # simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135)
 
 end_time = time.time()

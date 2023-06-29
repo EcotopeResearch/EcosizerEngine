@@ -165,13 +165,17 @@ class SimulationRun:
 
         #TODO this is a temp solution. should not stick around. Only doing for 15 min intervals
         if kWhCalc and len(self.oat) == 8760:
+            retList.append(self.pRun)
             if self.minuteIntervals == 15:
-                retList.append(self.pRun)
                 retList.append(hrTo15MinList(self.oat))
-                retList.append(self.cap)
-                retList.append(self.kGperkWh)
-                retList.append(sum(self.kGperkWh))
-                retList.append(self.getAvgIncomingWaterT())               
+            elif self.minuteIntervals == 1:
+                retList.append(hrToMinList(self.oat))
+            else:
+                retList.append(self.oat)
+            retList.append(self.cap)
+            retList.append(self.kGperkWh)
+            retList.append(sum(self.kGperkWh))
+            retList.append(self.getAvgIncomingWaterT())               
         return retList
     
     # def getKgCO2perkWh(self):
