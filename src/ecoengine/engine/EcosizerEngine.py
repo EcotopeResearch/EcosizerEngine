@@ -136,7 +136,7 @@ class EcosizerEngine:
                                 systemModel = systemModel
         )
     
-    def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False):
+    def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False):
         """
         Returns the result of a simulation of a HPWH system in a building
 
@@ -152,10 +152,37 @@ class EcosizerEngine:
             the number of days the for duration of the entire simulation will be
         hpwhModel : string
             the real world HPWH model used in the simulation. Used to determina capacity and input power for varrious air temperaturess
+        kWhCalc : boolean
+            set to true to add the kgCO2/kWh calculation to the result. Only available for loadshifting systems with annual loadshapes
         """
-        simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
-        return simRun.returnSimResult(kWhCalc = kWhCalc)
-        # return self.system.simulate(self.building)
+        if kGDiff:
+            if not self.system.doLoadShift:
+                raise Exception('Cannot preform kgCO2/kWh calculation on non-loadshifting systems.')
+            if nDays != 365 or len(self.building.loadshape) != 8760:
+                raise Exception('kgCO2/kWh calculation is only available for annual simulations.')
+            
+            simRun_ls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+            simResult_ls = simRun_ls.returnSimResult(kWhCalc = kWhCalc)
+            
+            denom = (8.345*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.storageT_F-simResult_ls[-1]))/3412 # stored energy, not input energy
+            print('denom is:',denom)
+            kGperkWh_ls = simResult_ls[-2]/denom
+            print('total kg',simResult_ls[-2])
+            print('kGperkWh_ls:',kGperkWh_ls)
+
+            self.system.setDoLoadShift(False)
+            simRun_nls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+            simResult_nls = simRun_nls.returnSimResult(kWhCalc = kWhCalc)
+            kGperkWh_nls = simResult_nls[-2]/denom
+            print('kGperkWh_nls:',kGperkWh_nls)
+
+            kGperkWh_saved = kGperkWh_nls - kGperkWh_ls
+            self.system.setDoLoadShift(True)
+            simResult_ls.append(kGperkWh_saved)
+            return simResult_ls
+        else:
+            simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+            return simRun.returnSimResult(kWhCalc = kWhCalc)
 
     def getSizingResults(self):
         """

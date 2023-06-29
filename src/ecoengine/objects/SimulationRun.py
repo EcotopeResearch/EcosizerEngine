@@ -49,6 +49,20 @@ class SimulationRun:
         self.oat = [] # oat by hour
         self.cap = [] # capacity at every time interval
         self.kGperkWh = [] # the kG CO2 per kWh at every time interval
+        self.hwGen = []
+
+    def initializeSwingValue(self, initST, storageT_F, TMCap_kBTUhr):
+        self.swingT_F = [0] * (len(self.hwDemand) - 1) + [self.mixedStorT_F]
+        self.sRun = [0] * (len(self.hwDemand))
+        self.hw_outSwing = [0] * (len(self.hwDemand))
+        self.hw_outSwing[0] = self.hwDemand[0]
+        if initST:
+            self.swingT_F[-1] = initST
+        self.swingheating = False
+
+        # next two items are for the resulting plotly plot
+        self.storageT_F = storageT_F
+        self.TMCap_kBTUhr = TMCap_kBTUhr
 
     def getIncomingWaterT(self, i):
         if self.monthlyCityWaterT_F is None:
@@ -104,10 +118,6 @@ class SimulationRun:
             return ((self.monthlyCityWaterT_F[0]*31) + (self.monthlyCityWaterT_F[1]*28) + (self.monthlyCityWaterT_F[2]*31) + (self.monthlyCityWaterT_F[3]*30) \
                 + (self.monthlyCityWaterT_F[4]*31) + (self.monthlyCityWaterT_F[5]*30) + (self.monthlyCityWaterT_F[6]*31) + (self.monthlyCityWaterT_F[7]*31) \
                 + (self.monthlyCityWaterT_F[8]*30) + (self.monthlyCityWaterT_F[9]*31) + (self.monthlyCityWaterT_F[10]*30) + (self.monthlyCityWaterT_F[11]*31)) / 365
-            # return ((self.monthlyCityWaterT_F[0]) + (self.monthlyCityWaterT_F[1]) + (self.monthlyCityWaterT_F[2]) + (self.monthlyCityWaterT_F[3]) \
-            #     + (self.monthlyCityWaterT_F[4]) + (self.monthlyCityWaterT_F[5]) + (self.monthlyCityWaterT_F[6]) + (self.monthlyCityWaterT_F[7]) \
-            #     + (self.monthlyCityWaterT_F[8]) + (self.monthlyCityWaterT_F[9]) + (self.monthlyCityWaterT_F[10]) + (self.monthlyCityWaterT_F[11])) / 12
-            
     
     def setMonthlyCityWaterT_F(self, monthlyCityWaterT_F):
         if len(monthlyCityWaterT_F) != 12:
@@ -132,9 +142,17 @@ class SimulationRun:
             raise Exception(str(kGperkWh_value) + " is an invalid system kGperkWh value.")
         self.kGperkWh.append(kGperkWh_value)
 
+    def addHWGen(self, hwGen):
+        if not (isinstance(hwGen, float) or isinstance(hwGen, int)):
+            raise Exception(str(hwGen) + " is an invalid hot water generation value.")
+        self.hwGen.append(hwGen)
+        self.hwGenRate = hwGen
+
     def returnSimResult(self, kWhCalc = False):
+        if len(self.hwGen) == 0:
+            self.hwGen = self.hwGenRate * self.loadShiftSchedule
         retList = [roundList(self.pV, 3),
-            roundList(self.hwGenRate * self.loadShiftSchedule, 3),
+            roundList(self.hwGen, 3),
             roundList(self.hwDemand, 3),
             roundList(self.pGen, 3)]
         

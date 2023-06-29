@@ -6,8 +6,8 @@ import csv
 aquaFractLoadUp = 0.21
 aquaFractShed   = 0.8
 storageT_F = 150
-loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1] #assume this loadshape for annual simulation every day
-csvCreate = False
+loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1] #assume this loadshape for annual simulation every day
+csvCreate = True
 hpwhModel ='MODELS_NyleC250A_SP'
 
 hpwh = EcosizerEngine(
@@ -51,7 +51,7 @@ TMCap_kBTUhr = hpwh.getSizingResults()[3]
 # Annual simulation based on sizing from last:
 
 print("starting LS section")
-hpwh = EcosizerEngine(
+hpwh_ls = EcosizerEngine(
             incomingT_F     = 50,
             magnitudeStat  = 100,
             supplyT_F       = 120,
@@ -85,7 +85,11 @@ hpwh = EcosizerEngine(
             systemModel = hpwhModel
         )
 start_time = time.time()
-simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)
+print('sim2', hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)[-2])
+simResult_1 = hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)
+print('sim3', hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)[-2])
+print('sim4', hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)[-2])
+print('sim1', simResult_1[-2])
 # simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135)
 
 end_time = time.time()
@@ -96,7 +100,7 @@ print("PVol_G_atStorageT",PVol_G_atStorageT)
 print("PCap_kBTUhr",PCap_kBTUhr)
 print("TMVol_G",TMVol_G)
 print("TMCap_kBTUhr",TMCap_kBTUhr)
-print("building magnitude", hpwh.getHWMagnitude())
+print("building magnitude", hpwh_ls.getHWMagnitude())
 print('==========================================')
 print(simResult_1[0][:10])
 print(simResult_1[1][-10:])
@@ -108,7 +112,7 @@ hours = [(i // 4) + 1 for i in range(len(simResult_1[0]))]
 
 # Insert the 'hour' column to simResult_1
 simResult_1.insert(0, hours)
-print('kg_sum is', simResult_1[-2])
+print('ls kg_sum is', simResult_1[-2])
 print('average temp is', simResult_1[-1])
 
 #finishing kGperkWh calc
@@ -206,42 +210,18 @@ print("LS to non-LS diff:", kGperkWh - kGperkWh_nonLS)
 print("dafault cap", PCap_kBTUhr / 3.412142)
 print('starting v',0.4*PVol_G_atStorageT)
 
-parallel_sizer = EcosizerEngine(
-            incomingT_F     = 50,
-            magnitudeStat  = 100,
-            supplyT_F       = 120,
-            storageT_F      = 150,
-            percentUseable  = 0.9, 
-            aquaFract       = 0.4, 
-            schematic       = 'swingtank', 
-            buildingType   = 'multi_family',
-            returnT_F       = 0, 
-            flowRate       = 0,
-            gpdpp           = 25,
-            safetyTM        = 1.75,
-            defrostFactor   = 1, 
-            compRuntime_hr  = 16, 
-            nApt            = 100, 
-            Wapt            = 100,
-            doLoadShift     = False,
-        )
-simResult = parallel_sizer.getSimResult()
-print(simResult[0][:2])
-print(simResult[1][-10:-8])
-print(simResult[2][-65:-55])
-print(simResult[3][800:810])
-print(simResult[4][-10:-4])
-print(simResult[5][-200:-190])
-print(simResult[6][800:803])
-print("===============================================")
-#print(hpwh.plotStorageLoadSim(minuteIntervals = 15, nDays = 365, return_as_div = False))
+print(hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True, kGDiff=True)[-1])
+
 # parallel_sizer = EcosizerEngine(
 #             incomingT_F     = 50,
-#             magnitudeStat  = 500,
+#             magnitudeStat  = 100,
 #             supplyT_F       = 120,
 #             storageT_F      = 150,
+#             loadUpT_F       = 150,
 #             percentUseable  = 0.9, 
 #             aquaFract       = 0.4, 
+#             aquaFractLoadUp = 0.21,
+#             aquaFractShed   = 0.8,
 #             schematic       = 'swingtank', 
 #             buildingType   = 'multi_family',
 #             returnT_F       = 0, 
@@ -250,10 +230,49 @@ print("===============================================")
 #             safetyTM        = 1.75,
 #             defrostFactor   = 1, 
 #             compRuntime_hr  = 16, 
-#             nApt            = 351, 
-#             Wapt            = 100,
-#             doLoadShift     = False,
+#             nApt            = 100, 
+#             Wapt            = 60,
+#             nBR             = [0,50,30,20,0,0],
+#             loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1],
+#             loadUpHours     = 3,
+#             doLoadShift     = True,
+#             loadShiftPercent       = 0.8,
+#             PVol_G_atStorageT = 944.972083230641, 
+#             PCap_kBTUhr = 122.61152083930925, 
+#             TMVol_G = 100, 
+#             TMCap_kBTUhr = 59.712485,
+#             annual = True,
+#             climateZone = 1
 #         )
+# simResult = parallel_sizer.getSimResult(initPV=0.4*944.972083230641, initST=135, minuteIntervals = 15, nDays = 365)
+# print(simResult[0][:10])
+# print(simResult[1][-10:])
+# print(simResult[2][-65:-55])
+# print(simResult[3][800:810])
+# print(simResult[4][-10:-4])
+# print(simResult[5][-200:-190])
+# print(simResult[6][800:803])
+# print("===============================================")
+# #print(hpwh.plotStorageLoadSim(minuteIntervals = 15, nDays = 365, return_as_div = False))
+# # parallel_sizer = EcosizerEngine(
+# #             incomingT_F     = 50,
+# #             magnitudeStat  = 500,
+# #             supplyT_F       = 120,
+# #             storageT_F      = 150,
+# #             percentUseable  = 0.9, 
+# #             aquaFract       = 0.4, 
+# #             schematic       = 'swingtank', 
+# #             buildingType   = 'multi_family',
+# #             returnT_F       = 0, 
+# #             flowRate       = 0,
+# #             gpdpp           = 25,
+# #             safetyTM        = 1.75,
+# #             defrostFactor   = 1, 
+# #             compRuntime_hr  = 16, 
+# #             nApt            = 351, 
+# #             Wapt            = 100,
+# #             doLoadShift     = False,
+# #         )
 
 
 

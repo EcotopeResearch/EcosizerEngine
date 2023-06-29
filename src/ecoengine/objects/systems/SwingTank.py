@@ -422,18 +422,7 @@ class SwingTank(SystemConfig):
     
     def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
         simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
-        simRun.swingT_F = [0] * (len(simRun.hwDemand) - 1) + [simRun.mixedStorT_F]
-        simRun.sRun = [0] * (len(simRun.hwDemand))
-        simRun.hw_outSwing = [0] * (len(simRun.hwDemand))
-        simRun.hw_outSwing[0] = simRun.hwDemand[0]
-        if initST:
-            simRun.swingT_F[0] = initST
-        simRun.swingheating = False
-
-        # next two items are for the resulting plotly plot
-        simRun.storageT_F = self.storageT_F
-        simRun.TMCap_kBTUhr = self.TMCap_kBTUhr
-
+        simRun.initializeSwingValue(initST, self.storageT_F, self.TMCap_kBTUhr)
         return simRun
 
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
@@ -441,6 +430,8 @@ class SwingTank(SystemConfig):
         if not (oat is None or self.perfMap is None):
             # set primary system capacity based on outdoor ait temp and incoming water temp 
             self.PCap_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
+            simRun.addHWGen((1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - simRun.building.incomingT_F) \
+               * self.defrostFactor)/(60/minuteIntervals))
 
         simRun.hw_outSwing[i] = mixVolume(simRun.hwDemand[i], simRun.swingT_F[i-1], incomingWater_T, simRun.building.supplyT_F)
             

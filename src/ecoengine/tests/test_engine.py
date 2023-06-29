@@ -319,7 +319,7 @@ def test__annual_swing_simulationResults(annual_swing_sizer):
     simResult = annual_swing_sizer.getSimResult(initPV=0.4*944.972083230641, initST=135, minuteIntervals = 15, nDays = 365)
     assert len(simResult) == 7
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 35040
-    assert simResult[0][:10] == [397.66, 416.221, 433.757, 450.391, 478.153, 505.395, 532.123, 558.384, 590.388, 622.065]
-    assert simResult[1][-10:] == [0.0, 0.0, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421]
+    assert simResult[0][:10] == [394.655, 410.557, 425.841, 440.645, 467.792, 494.429, 520.69, 548.021, 579.767, 611.236]
+    assert simResult[1][-10:] == [52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421]
     assert simResult[2][-65:-55] == [29.514, 55.556, 55.556, 55.556, 55.556, 32.986, 32.986, 32.986, 32.986, 29.514]
     assert simResult[3][800:810] == [0, 28.04, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677]

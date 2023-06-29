@@ -78,6 +78,12 @@ class SystemConfig:
             return self.PCap_kBTUhr/W_TO_BTUHR
         return self.PCap_kBTUhr
 
+    def setDoLoadShift(self, doLoadShift):
+        if not isinstance(doLoadShift, bool):
+            raise Exception("Invalid input given for doLoadShift, must be a boolean.")
+
+        self.doLoadShift = doLoadShift
+
     def getSizingResults(self):
         """
         Returns the minimum primary volume and heating capacity sizing results. Implimented seperatly in Temp Maintenence systems.
@@ -201,6 +207,8 @@ class SystemConfig:
         if not (oat is None or self.perfMap is None):
             # set primary system capacity based on outdoor ait temp and incoming water temp 
             self.PCap_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
+            simRun.addHWGen((1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - simRun.building.incomingT_F) \
+               * self.defrostFactor)/(60/minuteIntervals))
         mixedDHW = mixVolume(simRun.hwDemand[i], simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F) 
         mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F)
         simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], mixedDHW, mixedGHW, simRun.Vtrig[i-1],
