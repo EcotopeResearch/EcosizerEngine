@@ -73,6 +73,24 @@ class EcosizerEngine:
         Defaults to 120 °F.
     offTime_hr: integer
         Maximum hours per day the temperature maintenance equipment can run.
+    standardGPD : string
+        indicates whether to use a standard gpdpp specification for multi-family buildings. Set to None if not using a standard gpdpp.
+    PVol_G_atStorageT : float
+        For pre-sized systems, the total/maximum storage volume for water at storage temperature for the system in gallons
+    PCap_kBTUhr : float
+        For pre-sized systems, the output capacity for the system in kBTUhr
+    TMVol_G : float
+        For applicable pre-sized systems, the temperature maintenance volume for the system in gallons
+    TMCap_kBTUhr : float
+        For applicable pre-sized systems, the output capacity for temperature maintenance for the system in kBTUhr
+    annual : boolean
+        indicates whether to use annual loadshape for multi-family buildings
+    zipCode : int
+        the CA zipcode the building resides in to determine the climate zone
+    climateZone : int
+        the CA climate zone the building resides in
+    systemModel : String
+        The make/model of the HPWH being used.
 
     """
 
@@ -83,7 +101,7 @@ class EcosizerEngine:
                             defrostFactor = 1, compRuntime_hr = 16, nApt = None, Wapt = None, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None,
                             PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None,
-                            annual = False, zipCode = None, climateZone = None, systemModel = None):
+                            annual = False, zipCode = None, climateZone = None, systemModel = None, numHeatPumps = None):
         
         ignoreRecirc = False
         if schematic == 'primary':
@@ -133,7 +151,8 @@ class EcosizerEngine:
                                 PCap_kBTUhr = PCap_kBTUhr, 
                                 TMVol_G = TMVol_G, 
                                 TMCap_kBTUhr = TMCap_kBTUhr,
-                                systemModel = systemModel
+                                systemModel = systemModel,
+                                numHeatPumps = numHeatPumps
         )
     
     def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False):
@@ -202,14 +221,14 @@ class EcosizerEngine:
                 raise Exception('kgCO2/kWh calculation is only available for annual simulations.')
             
             simRun_ls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
-            simResult_ls = simRun_ls.returnSimResult(kWhCalc = kWhCalc)
+            simResult_ls = simRun_ls.returnSimResult(kWhCalc = True)
             
             loadshift_capacity = (8.345*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.storageT_F-simResult_ls[-1]))/3412 # stored energy, not input energy
             kGperkWh_ls = simResult_ls[-2]/loadshift_capacity
 
             self.system.setDoLoadShift(False)
             simRun_nls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
-            simResult_nls = simRun_nls.returnSimResult(kWhCalc = kWhCalc)
+            simResult_nls = simRun_nls.returnSimResult(kWhCalc = True)
             kGperkWh_nls = simResult_nls[-2]/loadshift_capacity
 
             kGperkWh_saved = kGperkWh_nls - kGperkWh_ls

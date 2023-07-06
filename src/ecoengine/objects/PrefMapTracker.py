@@ -1,12 +1,15 @@
 import os
 import json
 from ecoengine.constants.Constants import KWH_TO_BTU, W_TO_BTUHR
+import math
 
 class PrefMapTracker:
-    def __init__(self, defaultCapacity, modelName = None, kBTUhr = False):
+    def __init__(self, defaultCapacity, modelName = None, kBTUhr = False, numHeatPumps = None):
         self.defaultCapacity = defaultCapacity
         self.perfMap = None
         self.kBTUhr = kBTUhr
+        # TODO parameter checking and unit tests for this
+        self.numHeatPumps = numHeatPumps
         if not modelName is None: 
             self.setPrefMap(modelName)
 
@@ -84,7 +87,14 @@ class PrefMapTracker:
         returnValue = cop * input_kWperHr
         if self.kBTUhr:
             returnValue *= W_TO_BTUHR # convert kW to kBTU
+        if self.numHeatPumps is None:
+            self._autoSetNumHeatPumps(returnValue)
+        returnValue *= self.numHeatPumps
         return returnValue
+
+    def _autoSetNumHeatPumps(self, modelCapacity):
+        heatPumps = round(self.defaultCapacity/modelCapacity)
+        self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
     def setPrefMap(self, modelName):
         try:

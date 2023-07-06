@@ -9,7 +9,7 @@ from .systemConfigUtils import mixVolume, hrToMinList, hrTo15MinList, getPeakInd
 class SystemConfig:
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, systemModel = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
+                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
         # check inputs. Schedule not checked because it is checked elsewhere
         self._checkInputs(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent)
         self.doLoadShift = doLoadShift
@@ -47,7 +47,7 @@ class SystemConfig:
             self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, building, 
                 effSwingVolFract = self.effSwingFract, primaryCurve = False)[0]
             
-        self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, kBTUhr = True)
+        self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True)
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):
         if not (isinstance(storageT_F, int) or isinstance(storageT_F, float)) or not checkLiqudWater(storageT_F): 
@@ -751,8 +751,9 @@ class SystemConfig:
 class Primary(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, systemModel = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
+                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, doLoadShift, 
-                loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, systemModel, PVol_G_atStorageT, PCap_kBTUhr)
+                loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, systemModel, 
+                numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr)
 
 

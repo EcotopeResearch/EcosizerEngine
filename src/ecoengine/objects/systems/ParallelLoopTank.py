@@ -7,7 +7,7 @@ from ecoengine.objects.systemConfigUtils import checkLiqudWater
 class ParallelLoopTank(SystemConfig):
     def __init__(self, safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, aquaFractShed = None, 
-                 loadUpT_F = None, systemModel = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None):
+                 loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None):
 
 
         if TMonTemp_F == 0:
@@ -15,7 +15,7 @@ class ParallelLoopTank(SystemConfig):
         
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
-                 loadUpT_F, systemModel, PVol_G_atStorageT, PCap_kBTUhr)
+                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr)
         
         self._checkParallelLoopInputs(safetyTM, offTime_hr, setpointTM_F, TMonTemp_F)
         self.setpointTM_F = setpointTM_F

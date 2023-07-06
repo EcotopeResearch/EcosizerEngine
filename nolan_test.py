@@ -9,7 +9,7 @@ storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1] #assume this loadshape for annual simulation every day
 csvCreate = True
 hpwhModel ='MODELS_NyleC250A_SP'
-minuteIntervals = 60
+minuteIntervals = 15
 
 hpwh = EcosizerEngine(
             incomingT_F     = 50,
@@ -45,7 +45,7 @@ duration = end_time - start_time
 print("Program execution time:", duration, "seconds")
 
 PVol_G_atStorageT = hpwh.getSizingResults()[0] 
-PCap_kBTUhr = hpwh.getSizingResults()[1]  
+PCap_kBTUhr = hpwh.getSizingResults()[1]
 TMVol_G = hpwh.getSizingResults()[2] 
 TMCap_kBTUhr = hpwh.getSizingResults()[3] 
 
@@ -211,7 +211,7 @@ print("LS to non-LS diff:", kGperkWh - kGperkWh_nonLS)
 print("dafault cap", PCap_kBTUhr / 3.412142)
 print('starting v',0.4*PVol_G_atStorageT)
 
-print(hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True, kGDiff=True)[-1])
+print(hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, kWhCalc = True, kGDiff=True)[-1])
 
 # parallel_sizer = EcosizerEngine(
 #             incomingT_F     = 50,

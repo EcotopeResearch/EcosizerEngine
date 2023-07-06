@@ -14,7 +14,7 @@ class SwingTank(SystemConfig):
 
     def __init__(self, safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, systemModel = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, 
+                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, 
                  TMCap_kBTUhr = None):
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
@@ -47,7 +47,7 @@ class SwingTank(SystemConfig):
         
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
-                 loadUpT_F, systemModel, PVol_G_atStorageT, PCap_kBTUhr)
+                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr)
         
     def getSizingResults(self):
         """
