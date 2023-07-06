@@ -23,7 +23,7 @@ class SwingTank(SystemConfig):
         self.safetyTM = safetyTM
         self.element_deadband_F = 8.
         
-        # size if needed
+        # size if needed, else all sizing is taken care of in super().__init__
         if not PVol_G_atStorageT is None: # indicates system is sized
            if not (isinstance(TMVol_G, int) or isinstance(TMVol_G, float)) or TMVol_G <= 0: 
                 raise Exception('Invalid input given for Temperature Maintenance Storage Volume, it must be a number greater than zero.')
@@ -32,19 +32,7 @@ class SwingTank(SystemConfig):
            self.TMVol_G = TMVol_G
            self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= TMVol_G]) if TMVol_G < 480 else 480
            self.TMCap_kBTUhr = TMCap_kBTUhr
-        else:
 
-            # check building because recirc losses needed before super().__init__()
-            if not isinstance(building, Building):
-                raise Exception("Error: Building is not valid.")
-            #check if recirc losses require tank larger than 350 gallons
-            if building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR) > max(self.sizingTable):
-                raise Exception("Recirculation losses are too high, consider using multiple central plants.")
-
-            self.TMVol_G = min([x for x in self.sizingTable if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))]) 
-            self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))]) if self.TMVol_G < 480 else 480
-            self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
-        
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
                  loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr)
@@ -60,6 +48,27 @@ class SwingTank(SystemConfig):
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr, self.TMVol_G, self.TMCap_kBTUhr, self.CA_TMVol_G]
     
+    def sizeSystem(self, building):
+        """
+        Resizes the system with a new building.
+        Also used for resizing the system after it has changed its loadshift settings using the original building the system was sized for
+
+        Parameters
+        ----------
+        building : Building
+            The building to size with
+        """
+        if not isinstance(building, Building):
+            raise Exception("Error: Building is not valid.")
+        #check if recirc losses require tank larger than 350 gallons
+        if building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR) > max(self.sizingTable):
+            raise Exception("Recirculation losses are too high, consider using multiple central plants.")
+
+        self.TMVol_G = min([x for x in self.sizingTable if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))]) 
+        self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))]) if self.TMVol_G < 480 else 480
+        self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
+        super().sizeSystem(building)
+
     def _calcRunningVol(self, heatHrs, onOffArr, loadshape, building, effMixFract = 0.):
         """
         Function to find the running volume for the hot water storage tank, which

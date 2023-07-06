@@ -2,6 +2,7 @@ from .BuildingCreator import *
 from .SystemCreator import *
 from .Simulator import simulate
 from ecoengine.objects.SimulationRun import *
+import copy
 
 print("EcosizerEngine Copyright (C) 2023  Ecotope Inc.")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")
@@ -155,7 +156,7 @@ class EcosizerEngine:
                                 numHeatPumps = numHeatPumps
         )
     
-    def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False):
+    def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False, optimizeNLS = False):
         """
         Returns the result of a simulation of a HPWH system in a building
 
@@ -175,7 +176,9 @@ class EcosizerEngine:
             set to true to add the kgCO2/kWh calculation to the result.
         kGDiff : boolean
             set to True if you want to include the kGCO2/kWh saved in the result. Will also include loadshift capacity. Only available for loadshifting systems with annual loadshapes
-
+        optimizeNLS : boolean
+            set to True to optimize non-loadshift sizing. Only applies if kGDiff = True
+            
         Returns
         -------
         simResult : List
@@ -226,13 +229,20 @@ class EcosizerEngine:
             loadshift_capacity = (8.345*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.storageT_F-simResult_ls[-1]))/3412 # stored energy, not input energy
             kGperkWh_ls = simResult_ls[-2]/loadshift_capacity
 
-            self.system.setDoLoadShift(False)
-            simRun_nls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+            nls_system = copy.copy(self.system)
+
+            nls_system.setDoLoadShift(False)
+            if optimizeNLS:
+                # resize system for most optimized system without loadshifting
+                self.building.setToDailyLS()
+                nls_system.sizeSystem(self.building)
+                self.building.setToAnnualLS()
+
+            simRun_nls = simulate(nls_system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
             simResult_nls = simRun_nls.returnSimResult(kWhCalc = True)
             kGperkWh_nls = simResult_nls[-2]/loadshift_capacity
 
             kGperkWh_saved = kGperkWh_nls - kGperkWh_ls
-            self.system.setDoLoadShift(True)
             simResult_ls.append(loadshift_capacity)
             simResult_ls.append(kGperkWh_saved)
             return simResult_ls

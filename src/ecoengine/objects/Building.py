@@ -41,6 +41,8 @@ class Building:
         
     def setToAnnualLS(self):
         raise Exception("Annual loadshape not available for this building type. This feature is only available for multi-family buildings.")
+    def setToDailyLS(self):
+        raise Exception("setToDailyLS() feature is not available for this building type. This feature is only available for multi-family buildings.")
 
 class MensDorm(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
@@ -143,8 +145,14 @@ class MultiFamily(Building):
     def setToAnnualLS(self):
         with open(os.path.join(os.path.dirname(__file__), '../data/load_shapes/multi_family.json')) as json_file:
             dataDict = json.load(json_file)
-            self.loadshape = dataDict['loadshapes']["Annual_Normalized"]
+            self.loadshape = np.array(dataDict['loadshapes']["Annual_Normalized"])
             self.avgLoadshape = self.loadshape
+    
+    def setToDailyLS(self):
+        with open(os.path.join(os.path.dirname(__file__), '../data/load_shapes/multi_family.json')) as json_file:
+            dataDict = json.load(json_file)
+            self.loadshape = np.array(dataDict['loadshapes']["Stream"])
+            self.avgLoadshape = np.array(dataDict['loadshapes']["Stream_Avg"])
 
 class MultiUse(Building):
     def __init__(self, building_list, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):

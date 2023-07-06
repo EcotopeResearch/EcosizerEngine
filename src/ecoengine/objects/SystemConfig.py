@@ -41,11 +41,7 @@ class SystemConfig:
             self.PCap_kBTUhr = PCap_kBTUhr
         else: 
             #size system based off of building
-            if not isinstance(building, Building):
-                raise Exception("Error: Building is not valid.")
-            self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr, self.loadUpHours, building)
-            self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, building, 
-                effSwingVolFract = self.effSwingFract, primaryCurve = False)[0]
+            self.sizeSystem(building)
             
         self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True)
 
@@ -87,6 +83,22 @@ class SystemConfig:
 
         self.doLoadShift = doLoadShift
 
+    def sizeSystem(self, building):
+        """
+        Resizes the system with a new building.
+        Also used for resizing the system after it has changed its loadshift settings using the original building the system was sized for
+
+        Parameters
+        ----------
+        building : Building
+            The building to size with
+        """
+        if not isinstance(building, Building):
+                raise Exception("Error: Building is not valid.")
+        self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr, self.loadUpHours, building)
+        self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, building, 
+            effSwingVolFract = self.effSwingFract, primaryCurve = False)[0]
+        
     def getSizingResults(self):
         """
         Returns the minimum primary volume and heating capacity sizing results. Implimented seperatly in Temp Maintenence systems.

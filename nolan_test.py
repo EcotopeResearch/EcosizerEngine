@@ -7,7 +7,7 @@ aquaFractLoadUp = 0.21
 aquaFractShed   = 0.8
 storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1] #assume this loadshape for annual simulation every day
-csvCreate = True
+csvCreate = False
 hpwhModel ='MODELS_NyleC250A_SP'
 minuteIntervals = 15
 
@@ -211,7 +211,7 @@ print("LS to non-LS diff:", kGperkWh - kGperkWh_nonLS)
 print("dafault cap", PCap_kBTUhr / 3.412142)
 print('starting v',0.4*PVol_G_atStorageT)
 
-print(hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, kWhCalc = True, kGDiff=True)[-1])
+print(hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, kWhCalc = True, kGDiff=True, optimizeNLS = True)[-1])
 
 # parallel_sizer = EcosizerEngine(
 #             incomingT_F     = 50,

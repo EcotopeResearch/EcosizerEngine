@@ -9,21 +9,20 @@ class ParallelLoopTank(SystemConfig):
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, aquaFractShed = None, 
                  loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None):
 
-
         if TMonTemp_F == 0:
             TMonTemp_F = building.incomingT_F + 2 # TODO deal with this
-        
-        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
-                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
-                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr)
-        
+            
         self._checkParallelLoopInputs(safetyTM, offTime_hr, setpointTM_F, TMonTemp_F)
         self.setpointTM_F = setpointTM_F
         self.TMonTemp_F = TMonTemp_F
         self.offTime_hr = offTime_hr # Hour
         self.safetyTM = safetyTM # Safety factor
 
-        # size if needed
+        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
+                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
+                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr)
+
+        # size if needed, else all sizing is taken care of in super().__init__
         if not PVol_G_atStorageT is None: # indicates system is sized
            if not (isinstance(TMVol_G, int) or isinstance(TMVol_G, float)) or TMVol_G <= 0: 
                 raise Exception('Invalid input given for Temperature Maintenance Storage Volume, it must be a number greater than zero.')
@@ -31,13 +30,6 @@ class ParallelLoopTank(SystemConfig):
                 raise Exception('Invalid input given for Temperature Maintenance Output Capacity, it must be a number greater than zero.')
            self.TMVol_G = TMVol_G
            self.TMCap_kBTUhr = TMCap_kBTUhr
-        else:
-            if setpointTM_F <= building.incomingT_F:
-                raise Exception("The temperature maintenance setpoint temperature must be greater than the city cold water temperature")
-            if TMonTemp_F <= building.incomingT_F:
-                raise Exception("The temperature maintenance on temperature must be greater than the city cold water temperature")
-            self.TMVol_G  =  (building.recirc_loss / rhoCp) * (self.offTime_hr / (self.setpointTM_F - self.TMonTemp_F))
-            self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000
 
     def _checkParallelLoopInputs(self, safetyTM, offTime_hr, setpointTM_F, TMonTemp_F):
         # Quick Check to make sure the inputs make sense
@@ -54,6 +46,24 @@ class ParallelLoopTank(SystemConfig):
             raise Exception('Invalid input given for TMonTemp_F, it must be between 32 and 212F.')
         if setpointTM_F <= TMonTemp_F:
             raise Exception("The temperature maintenance setpoint temperature must be greater than the turn on temperature")
+
+    def sizeSystem(self, building):
+        """
+        Resizes the system with a new building.
+        Also used for resizing the system after it has changed its loadshift settings using the original building the system was sized for
+
+        Parameters
+        ----------
+        building : Building
+            The building to size with
+        """
+        super().sizeSystem(building)
+        if self.setpointTM_F <= building.incomingT_F:
+            raise Exception("The temperature maintenance setpoint temperature must be greater than the city cold water temperature")
+        if self.TMonTemp_F <= building.incomingT_F:
+            raise Exception("The temperature maintenance on temperature must be greater than the city cold water temperature")
+        self.TMVol_G  =  (building.recirc_loss / rhoCp) * (self.offTime_hr / (self.setpointTM_F - self.TMonTemp_F))
+        self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000
 
     def getSizingResults(self):
         """
