@@ -320,7 +320,7 @@ def test_invalid_sizing():
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 0, PCap_kBTUhr = 95, TMVol_G=12,TMCap_kBTUhr=15)
     with pytest.raises(Exception, match = "Invalid input given for Primary Storage Volume, it must be a number greater than zero."):
         createSystem('swingtank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 0, PCap_kBTUhr = 95, TMVol_G=12,TMCap_kBTUhr=15)
-    with pytest.raises(Exception, match = "Invalid input given for Primary Output Capacity, it must be a number greater than zero."):
+    with pytest.raises(Exception, match = "Invalid input given for Primary Output Capacity, must be a number greater than zero."):
         createSystem('swingtank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 0, TMVol_G=12,TMCap_kBTUhr=15)
     with pytest.raises(Exception, match = "Invalid input given for Temperature Maintenance Storage Volume, it must be a number greater than zero."):
         createSystem('swingtank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 20, TMVol_G=0,TMCap_kBTUhr=15)
@@ -330,6 +330,15 @@ def test_invalid_sizing():
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 20, TMVol_G=0,TMCap_kBTUhr=15)
     with pytest.raises(Exception, match = "Invalid input given for Temperature Maintenance Output Capacity, it must be a number greater than zero."):
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 20, TMVol_G=10,TMCap_kBTUhr='lol')
+def test_invalid_prefomance_map():
+    with pytest.raises(Exception, match = "Invalid input given for Primary Output Capacity, must be a number greater than zero."):
+        createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, TMVol_G=10, TMCap_kBTUhr=10)
+    with pytest.raises(Exception, match = "Invalid input given for numHeatPumps, must be a number greater than zero"):
+        createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, TMVol_G=10, TMCap_kBTUhr=10, systemModel = 'model', numHeatPumps = -3)
+    with pytest.raises(Exception, match = "Invalid input given for Primary Output Capacity, must be a number greater than zero."):
+        createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, TMVol_G=10, TMCap_kBTUhr=10, systemModel = 'model')
+    with pytest.raises(Exception, match = "No preformance map found for HPWH model type model."):
+        createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, TMVol_G=10, TMCap_kBTUhr=10, systemModel = 'model', numHeatPumps = 4.0)
 def test_too_small_lu_aq_sizing():
     with pytest.raises(Exception, match = "The load up aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: 0.546 or increase your drawdown factor"):
         createSystem(

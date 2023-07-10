@@ -216,8 +216,12 @@ class EcosizerEngine:
                     The loadshift capacity for the entire simulation (kWh)
                 kGperKwH_saved : Float
                     The kGCO2 saved by using load shifting in the simulation. (kGCO2/kWh)
+                ***NOTE*** If kGDiff == True, the return value will be an array of size [2][x], where x is the length
+                return values for one simulation result and array[0] will be the simulation result with load shifting
+                and array[1] will be the result without load shifting.
         """
         if kGDiff:
+            # TODO unit tests
             if not self.system.doLoadShift:
                 raise Exception('Cannot preform kgCO2/kWh calculation on non-loadshifting systems.')
             if nDays != 365 or len(self.building.loadshape) != 8760:
@@ -245,7 +249,8 @@ class EcosizerEngine:
             kGperkWh_saved = kGperkWh_nls - kGperkWh_ls
             simResult_ls.append(loadshift_capacity)
             simResult_ls.append(kGperkWh_saved)
-            return simResult_ls
+            bothResults = [simResult_ls, simResult_nls]
+            return bothResults
         else:
             simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
             return simRun.returnSimResult(kWhCalc = kWhCalc)

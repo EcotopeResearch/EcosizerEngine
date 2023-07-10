@@ -211,7 +211,7 @@ print("LS to non-LS diff:", kGperkWh - kGperkWh_nonLS)
 print("dafault cap", PCap_kBTUhr / 3.412142)
 print('starting v',0.4*PVol_G_atStorageT)
 
-print(hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, kWhCalc = True, kGDiff=True, optimizeNLS = True)[-1])
+print(hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, kWhCalc = True, kGDiff=True, optimizeNLS = False)[0][-1])
 
 # parallel_sizer = EcosizerEngine(
 #             incomingT_F     = 50,

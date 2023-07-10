@@ -4,11 +4,14 @@ from ecoengine.constants.Constants import KWH_TO_BTU, W_TO_BTUHR
 import math
 
 class PrefMapTracker:
-    def __init__(self, defaultCapacity, modelName = None, kBTUhr = False, numHeatPumps = None):
+    def __init__(self, defaultCapacity = None, modelName = None, kBTUhr = False, numHeatPumps = None):
         self.defaultCapacity = defaultCapacity
         self.perfMap = None
         self.kBTUhr = kBTUhr
-        # TODO parameter checking and unit tests for this
+        if defaultCapacity is None and numHeatPumps is None:
+            raise Exception("Invalid input given for preformance map, requires either defaultCapacity or numHeatPumps.")
+        elif not numHeatPumps is None and not ((isinstance(numHeatPumps, int) or isinstance(numHeatPumps, float)) and numHeatPumps > 0):
+            raise Exception("Invalid input given for numHeatPumps, must be a number greater than zero")
         self.numHeatPumps = numHeatPumps
         if not modelName is None: 
             self.setPrefMap(modelName)

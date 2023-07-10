@@ -35,8 +35,10 @@ class SystemConfig:
         if not PVol_G_atStorageT is None:
             if not (isinstance(PVol_G_atStorageT, int) or isinstance(PVol_G_atStorageT, float)) or PVol_G_atStorageT <= 0: 
                 raise Exception('Invalid input given for Primary Storage Volume, it must be a number greater than zero.')
-            if not (isinstance(PCap_kBTUhr, int) or isinstance(PCap_kBTUhr, float)) or PCap_kBTUhr <= 0: 
-                raise Exception('Invalid input given for Primary Output Capacity, it must be a number greater than zero.')
+            if not (isinstance(PCap_kBTUhr, int) or isinstance(PCap_kBTUhr, float)) or PCap_kBTUhr <= 0:
+                # if systemModel and numHeatPumps are defined we do not nessesarily need PCap_kBTUhr
+                if systemModel is None or numHeatPumps is None:
+                    raise Exception('Invalid input given for Primary Output Capacity, must be a number greater than zero.')
             self.PVol_G_atStorageT = PVol_G_atStorageT
             self.PCap_kBTUhr = PCap_kBTUhr
         else: 
