@@ -1,4 +1,4 @@
-from ecoengine import EcosizerEngine
+from ecoengine import EcosizerEngine, getListOfModels
 import time
 import csv
 
@@ -8,7 +8,7 @@ aquaFractShed   = 0.8
 storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1] #assume this loadshape for annual simulation every day
 csvCreate = False
-hpwhModel ='MODELS_NyleC250A_SP'
+hpwhModel ='MODELS_RHEEM_HPHD135HNU_483_MP'
 minuteIntervals = 15
 
 hpwh = EcosizerEngine(
@@ -84,6 +84,8 @@ hpwh_ls = EcosizerEngine(
             annual = True,
             climateZone = 1,
             systemModel = hpwhModel
+            # ,
+            # numHeatPumps = 1
         )
 start_time = time.time()
 # print('sim2', hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365, kWhCalc = True)[-2])
@@ -172,6 +174,8 @@ hpwh = EcosizerEngine(
             annual = True,
             climateZone = 1,
             systemModel = hpwhModel
+            # ,
+            # numHeatPumps = 1
         )
 start_time = time.time()
 simResult_1 = hpwh.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, kWhCalc = True)
@@ -208,11 +212,11 @@ if csvCreate:
 print("LS kGperkWh", kGperkWh)
 print("non-LS kGperkWh", kGperkWh_nonLS)
 print("LS to non-LS diff:", kGperkWh - kGperkWh_nonLS)
-print("dafault cap", PCap_kBTUhr / 3.412142)
+# print("dafault cap", PCap_kBTUhr / 3.412142)
 print('starting v',0.4*PVol_G_atStorageT)
 
-print(hpwh_ls.getSimResult(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, kWhCalc = True, kGDiff=True, optimizeNLS = False)[0][-1])
-
+print(hpwh_ls.getSimRunWithkWCalc(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, optimizeNLS = False)[-1])
+# print(getListOfModels())
 # parallel_sizer = EcosizerEngine(
 #             incomingT_F     = 50,
 #             magnitudeStat  = 100,

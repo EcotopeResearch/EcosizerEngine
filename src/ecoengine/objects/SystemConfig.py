@@ -5,6 +5,7 @@ from .PrefMapTracker import PrefMapTracker
 import numpy as np
 from scipy.stats import norm #lognorm
 from .systemConfigUtils import mixVolume, hrToMinList, hrTo15MinList, getPeakIndices, checkLiqudWater, checkHeatHours
+import os
 
 class SystemConfig:
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
@@ -153,8 +154,13 @@ class SystemConfig:
             loadShapeN = building.avgLoadshape
         
         # Get the generation rate from the primary capacity
-        hwGenRate = 1000 * self.PCap_kBTUhr / rhoCp / (building.supplyT_F - building.incomingT_F) \
-               * self.defrostFactor
+        hwGenRate = None
+        if self.PCap_kBTUhr is None:
+            if building.climateZone is None:
+                raise Exception("Cannot run a simulation of this kind without either a climate zone or defined output capacity")
+        else:
+            hwGenRate = 1000 * self.PCap_kBTUhr / rhoCp / (building.supplyT_F - building.incomingT_F) \
+                * self.defrostFactor
         loadshiftSched = np.tile(self.loadShiftSchedule, nDays) # TODO can we get rid of it?
         
         # Define the use of DHW with the normalized load shape
@@ -191,13 +197,15 @@ class SystemConfig:
         
         if minuteIntervals == 1:
             # To per minute from per hour
-            hwGenRate = hwGenRate / 60
+            if not hwGenRate is None:
+                hwGenRate = hwGenRate / 60
             hwDemand = np.array(hrToMinList(hwDemand)) / 60
             Vtrig = np.array(hrToMinList(np.tile(Vtrig, nDays))) 
             loadshiftSched = np.array(hrToMinList(loadshiftSched))
         elif minuteIntervals == 15:
             # To per 15 minute from per hour
-            hwGenRate = hwGenRate / 4
+            if not hwGenRate is None:
+                hwGenRate = hwGenRate / 4
             hwDemand = np.array(hrTo15MinList(hwDemand)) / 4
             Vtrig = np.array(hrTo15MinList(np.tile(Vtrig, nDays)))
             loadshiftSched = np.array(hrTo15MinList(loadshiftSched))
@@ -223,7 +231,7 @@ class SystemConfig:
         incomingWater_T = simRun.getIncomingWaterT(i)
         if not (oat is None or self.perfMap is None):
             # set primary system capacity based on outdoor ait temp and incoming water temp 
-            self.PCap_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
+            self.PCap_kBTUhr = self.setCapacity(oat = oat, incomingWater_T = incomingWater_T)
             simRun.addHWGen((1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - simRun.building.incomingT_F) \
                * self.defrostFactor)/(60/minuteIntervals))
         mixedDHW = mixVolume(simRun.hwDemand[i], simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F) 

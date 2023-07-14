@@ -33,7 +33,7 @@ class SimulationRun:
             The generation of HW with time at the storage temperature
         """
         self.V0 = V0 
-        self.hwGenRate = hwGenRate
+        self.hwGenRate = hwGenRate # Can be initialized to None if hwGen is found dynamically
         self.hwDemand = hwDemand
         self.Vtrig = Vtrig
         self.pV = pV
@@ -148,6 +148,97 @@ class SimulationRun:
         self.hwGen.append(hwGen)
         self.hwGenRate = hwGen
 
+    def getPrimaryVolume(self):
+        """
+        Returns a list from the simulation of the volume of the primary tank by timestep
+        """
+        return roundList(self.pV, 3)
+
+    def getHWDemand(self):
+        """
+        Returns a list from the simulation of the hot water demand by timestep
+        """
+        return roundList(self.hwDemand, 3)
+    
+    def getHWGeneration(self):
+        """
+        Returns a list from the simulation of the theoretical hot water generation of the primary tank by timestep
+        """
+        if len(self.hwGen) == 0:
+            self.hwGen = self.hwGenRate * self.loadShiftSchedule
+        return roundList(self.hwGen, 3)
+    
+    def getPrimaryGeneration(self):
+        """
+        Returns a list from the simulation of the actual hot water generation of the primary tank by timestep
+        """
+        return roundList(self.pGen, 3)
+    
+    def getPrimaryRun(self):
+        """
+        Returns a list from the simulation of the amount of time the primary tank is running in minutes per timestep
+        """
+        return self.pRun
+    
+    def getSwingTemp(self):
+        """
+        Returns a list from the simulation of the swing tank temperature in (F) by timestep
+        """
+        if hasattr(self, 'swingT_F'):
+            return roundList(self.swingT_F, 3)
+        else:
+            return []
+        
+    def getSwingRun(self):
+        """
+        Returns a list from the simulation of the amount of time the swing tank is running in minutes per timestep
+        """
+        if hasattr(self, 'sRun'):
+            return roundList(self.sRun, 3)
+        else:
+            return []
+        
+    def getSwingTemp(self):
+        """
+        Returns a list from the simulation of the amount of water coming out of the swing tank in gallons by timestep
+        """
+        if hasattr(self, 'hw_outSwing'):
+            return self.hw_outSwing
+        else:
+            return []
+        
+    def getOAT(self):
+        """
+        Returns a list from the simulation of the Outdoor Air Temperature in (F) by timestep
+        """
+        if len(self.oat) == 8760:
+            if self.minuteIntervals == 15:
+                return hrTo15MinList(self.oat)
+            elif self.minuteIntervals == 1:
+                return hrToMinList(self.oat)
+            else:
+                return self.oat
+        else:
+            return []
+        
+    def getPrimaryOutputCapacity(self):
+        """
+        Returns a list from the simulation of the get Primary Output Capacity in kW by timestep
+        """
+        return self.cap
+    
+    def getkGCO2perkWh(self):
+        """
+        Returns a list from the simulation of the get output of kG CO2 per kWh by timestep
+        """
+        return self.kGperkWh
+    
+    def getkGCO2perkWhSum(self):
+        """
+        Returns the sum from the simulation of the get output of kG CO2 per kWh by timestep
+        """
+        return sum(self.kGperkWh)
+
     def returnSimResult(self, kWhCalc = False):
         if len(self.hwGen) == 0:
             self.hwGen = self.hwGenRate * self.loadShiftSchedule
@@ -163,8 +254,7 @@ class SimulationRun:
         if hasattr(self, 'hw_outSwing'):
             retList.append(self.hw_outSwing)
 
-        #TODO this is a temp solution. should not stick around. Only doing for 15 min intervals
-        if kWhCalc and len(self.oat) == 8760:
+        if kWhCalc and len(self.oat) == 8760: #Year long calc
             retList.append(self.pRun)
             if self.minuteIntervals == 15:
                 retList.append(hrTo15MinList(self.oat))
@@ -177,9 +267,6 @@ class SimulationRun:
             retList.append(sum(self.kGperkWh))
             retList.append(self.getAvgIncomingWaterT())               
         return retList
-    
-    # def getKgCO2perkWh(self):
-
     
     def plotStorageLoadSim(self, return_as_div=True):
         """

@@ -232,28 +232,35 @@ def test_initialize_sim_swing(swingTank, minuteIntervals, nDays, outputArrayLeng
 def test_invalid_building():
     with pytest.raises(Exception, match="Error: Building is not valid."):
         createSystem("swingtank", 150, 1, 0.8, 16, 0.4, 5)
+
 def test_invalid_storage_temp():
     with pytest.raises(Exception, match="Invalid input given for Storage temp, it must be between 32 and 212F."):
         createSystem("swingtank", 15, 1, 0.8, 16, 0.4, default_building)
+
 def test_invalid_schematic():
     with pytest.raises(Exception, match="Unknown system schematic type."):
         createSystem("fakesystem", 150, 1, 0.8, 16, 0.4, default_building)
+
 def test_invalid_defrost():
     with pytest.raises(Exception, match="Invalid input given for Defrost Factor, must be a number between 0 and 1."):
         createSystem("swingtank", 150, 3, 0.8, 16, 0.4, default_building)
+
 def test_invalid_percent_usable():
     with pytest.raises(Exception, match="Invalid input given for percentUseable, must be a number between 0 and 1."):
         createSystem("swingtank", 150, 1, 1.8, 16, 0.4, default_building)
     with pytest.raises(Exception, match="Invalid input given for percentUseable, must be a number between 0 and 1."):
         createSystem("swingtank", 150, 1, 'zebrah', 16, 0.4, default_building)
+
 def test_invalid_compRuntime_hr():
     with pytest.raises(Exception, match="Invalid input given for compRuntime_hr, must be an integer between 0 and 24."):
         createSystem("swingtank", 150, 1, 0.8, '16', 0.4, default_building)
     with pytest.raises(Exception, match="Invalid input given for compRuntime_hr, must be an integer between 0 and 24."):
         createSystem("swingtank", 150, 1, 0.8, 25, 0.4, default_building)
+
 def test_invalid_aquaFrac():
     with pytest.raises(Exception, match="Invalid input given for aquaFract must, be a number between 0 and 1."):
         createSystem("swingtank", 150, 1, 0.8, 16, 0., default_building)
+
 def test_invalid_loadShiftPercent():
     with pytest.raises(Exception, match="Invalid input given for loadShiftPercent, must be a number between 0 and 1."):
         createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, loadShiftPercent = 'eighteen', doLoadShift= True)
@@ -261,19 +268,23 @@ def test_invalid_loadShiftPercent():
         createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, loadShiftPercent = -1., doLoadShift= True)
     with pytest.raises(Exception, match="Invalid input given for loadShiftPercent, must be a number between 0 and 1."):
         createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, loadShiftPercent = 1.1, doLoadShift= True)
+
 def test_invalid_doLoadShift():
     with pytest.raises(Exception, match="Invalid input given for doLoadShift, must be a boolean."):
         createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, doLoadShift = 'eighteen')
+
 def test_invalid_safteyTM():
     with pytest.raises(Exception, match="The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses."):
         createSystem("swingtank", 150, 1, 0.8, 16, 0.4, default_building, safetyTM = 0.2)
     with pytest.raises(Exception, match="The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses."):
         createSystem("paralleltank", 150, 1, 0.8, 16, 0.4, default_building, safetyTM = 0.2)
+
 def test_invalid_offTime_hr():
     with pytest.raises(Exception, match="The One Cycle Off Time the temperature maintenance system must be a float bigger than zero and less than or equal to one hour."):
         createSystem("paralleltank", 150, 1, 0.8, 16, 0.4, default_building, offTime_hr = 0.)
     with pytest.raises(Exception, match="The expected run time of the parallel tank is less time the minimum runtime for a HPWH of " + str(tmCompMinimumRunTime*60)+ " minutes."):
         createSystem("paralleltank", 150, 1, 0.8, 16, 0.4, default_building, offTime_hr = 0.1, safetyTM = 5)
+
 def test_invalid_setpoints():
     with pytest.raises(Exception, match="Invalid input given for setpointTM_F, it must be between 32 and 212F."):
         createSystem("paralleltank", 150, 1, 0.8, 16, 0.4, default_building, setpointTM_F = 5)
@@ -289,6 +300,7 @@ def test_invalid_setpoints():
         createSystem("paralleltank", 150, 1, 0.8, 16, 0.4, default_building, setpointTM_F = 34, TMonTemp_F = 33)
     with pytest.raises(Exception, match="The temperature maintenance on temperature must be greater than the city cold water temperature"):
         createSystem("paralleltank", 150, 1, 0.8, 16, 0.4, default_building, TMonTemp_F = 34)
+
 def test_invalid_ls_schedule():
     with pytest.raises(Exception, match="Load shift is not of length 24 but instead has length of 0."):
         createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [])
@@ -298,6 +310,7 @@ def test_invalid_ls_schedule():
         createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [0]*24)
     with pytest.raises(Exception, match="Load shift only available for above 25 percent of days."):
         createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, loadShiftPercent = 0.23, loadShiftSchedule = [1]*24)
+
 def test_invalid_loadshift_vars():
     with pytest.raises(Exception, match = "Invalid input given for load up aquastat fraction, must be a number between 0 and normal aquastat fraction."):
         createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, aquaFractLoadUp = 0.5, aquaFractShed = 0.8,
@@ -311,6 +324,7 @@ def test_invalid_loadshift_vars():
     with pytest.raises(Exception, match = "Invalid input given for load up hours, must be an integer less than or equal to hours in day before first shed period."):
         createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, aquaFractLoadUp = 0.3, aquaFractShed = 0.8,
                      loadShiftSchedule = [1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], loadUpT_F = 160, loadUpHours = 2)
+
 def test_invalid_sizing():
     with pytest.raises(Exception, match = "Invalid input given for Primary Storage Volume, it must be a number greater than zero."):
         createSystem('primary', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 'lol', PCap_kBTUhr = 95)
@@ -330,6 +344,7 @@ def test_invalid_sizing():
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 20, TMVol_G=0,TMCap_kBTUhr=15)
     with pytest.raises(Exception, match = "Invalid input given for Temperature Maintenance Output Capacity, it must be a number greater than zero."):
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, PCap_kBTUhr = 20, TMVol_G=10,TMCap_kBTUhr='lol')
+
 def test_invalid_prefomance_map():
     with pytest.raises(Exception, match = "Invalid input given for Primary Output Capacity, must be a number greater than zero."):
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, TMVol_G=10, TMCap_kBTUhr=10)
@@ -339,6 +354,7 @@ def test_invalid_prefomance_map():
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, TMVol_G=10, TMCap_kBTUhr=10, systemModel = 'model')
     with pytest.raises(Exception, match = "No preformance map found for HPWH model type model."):
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, TMVol_G=10, TMCap_kBTUhr=10, systemModel = 'model', numHeatPumps = 4.0)
+
 def test_too_small_lu_aq_sizing():
     with pytest.raises(Exception, match = "The load up aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: 0.546 or increase your drawdown factor"):
         createSystem(

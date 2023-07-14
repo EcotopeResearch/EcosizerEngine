@@ -3,9 +3,23 @@ from .SystemCreator import *
 from .Simulator import simulate
 from ecoengine.objects.SimulationRun import *
 import copy
+import json
 
 print("EcosizerEngine Copyright (C) 2023  Ecotope Inc.")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")
+
+def getListOfModels():
+    """
+    Static Method to Return all Model Names as a list of strings
+    """
+    returnList = []
+    with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
+        data = json.load(json_file)
+        for model_name, value in data.items():
+            returnList.append(model_name)
+    return returnList
+
+
 
 class EcosizerEngine:
     """
@@ -158,6 +172,7 @@ class EcosizerEngine:
     
     def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False, optimizeNLS = False):
         """
+        LEGACY FUNCTION.
         Returns the result of a simulation of a HPWH system in a building
 
         Inputs
@@ -170,8 +185,6 @@ class EcosizerEngine:
             the number of minutes the duration each interval timestep for the simulation will be
         nDays : int
             the number of days the for duration of the entire simulation will be
-        hpwhModel : string
-            the real world HPWH model used in the simulation. Used to determina capacity and input power for varrious air temperaturess
         kWhCalc : boolean
             set to true to add the kgCO2/kWh calculation to the result.
         kGDiff : boolean
@@ -254,6 +267,70 @@ class EcosizerEngine:
         else:
             simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
             return simRun.returnSimResult(kWhCalc = kWhCalc)
+        
+    def getSimRun(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3) -> SimulationRun:
+        """
+        Returns a simulationRun object for a simulation of the Ecosizer's building and system object
+
+        Inputs
+        ------
+        initPV : float
+            Primary volume at start of the simulation
+        initST : float
+            Swing tank temperature at start of the simulation. Not used in this instance of the function
+        minuteIntervals : int
+            the number of minutes the duration each interval timestep for the simulation will be
+        nDays : int
+            the number of days the for duration of the entire simulation will be
+        """
+        return simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+    
+    def getSimRunWithkWCalc(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, optimizeNLS = False):
+        """
+        Returns a list that includes a simulationRun object for a simulation of the Ecosizer's building and system object with load shifting and without load shifting,
+        also includes the loadshift_capacity and the kGperkWh_saved
+
+        Inputs
+        ------
+        initPV : float
+            Primary volume at start of the simulation
+        initST : float
+            Swing tank temperature at start of the simulation. Not used in this instance of the function
+        minuteIntervals : int
+            the number of minutes the duration each interval timestep for the simulation will be
+        nDays : int
+            the number of days the for duration of the entire simulation will be
+        optimizeNLS : boolean
+            set to True to optimize non-loadshift sizing. Only applies if kGDiff = True
+
+        Returns
+        -------
+        [simRun_ls, simRun_nls, loadshift_capacity, kGperkWh_saved]
+        """
+        if not self.system.doLoadShift:
+            raise Exception('Cannot preform kgCO2/kWh calculation on non-loadshifting systems.')
+        if nDays != 365 or len(self.building.loadshape) != 8760:
+            raise Exception('kgCO2/kWh calculation is only available for annual simulations.')
+        
+        simRun_ls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+        
+        loadshift_capacity = (8.345*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.storageT_F-simRun_ls.getAvgIncomingWaterT()))/3412 # stored energy, not input energy
+        kGperkWh_ls = simRun_ls.getkGCO2perkWhSum()/loadshift_capacity
+
+        nls_system = copy.copy(self.system)
+
+        nls_system.setDoLoadShift(False)
+        if optimizeNLS:
+            # resize system for most optimized system without loadshifting
+            self.building.setToDailyLS()
+            nls_system.sizeSystem(self.building)
+            self.building.setToAnnualLS()
+
+        simRun_nls = simulate(nls_system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+        kGperkWh_nls = simRun_nls.getkGCO2perkWhSum()/loadshift_capacity
+
+        kGperkWh_saved = kGperkWh_nls - kGperkWh_ls
+        return [simRun_ls, simRun_nls, loadshift_capacity, kGperkWh_saved]
 
     def getSizingResults(self):
         """
