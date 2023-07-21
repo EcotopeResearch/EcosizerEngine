@@ -8,7 +8,7 @@ import json
 print("EcosizerEngine Copyright (C) 2023  Ecotope Inc.")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")
 
-def getListOfModels():
+def getListOfModels(multiPass = False):
     """
     Static Method to Return all Model Names as a list of strings
     """
@@ -16,7 +16,10 @@ def getListOfModels():
     with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
         data = json.load(json_file)
         for model_name, value in data.items():
-            returnList.append(model_name)
+            if multiPass and model_name[-2:] == 'MP':
+                returnList.append(model_name)
+            elif not multiPass and model_name[-2:] != 'MP':
+                returnList.append(model_name)
     return returnList
 
 
@@ -105,7 +108,15 @@ class EcosizerEngine:
     climateZone : int
         the CA climate zone the building resides in
     systemModel : String
-        The make/model of the HPWH being used.
+        The make/model of the HPWH being used for the primary system.
+    numHeatPumps : int
+        The number of heat pumps on the primary system
+    tmModel : String
+        The make/model of the HPWH being used for the temperature maintenance system.
+    tmNumHeatPumps : int
+        The number of heat pumps on the temperature maintenance system
+    inletWaterAdjustment : float
+        adjustment for inlet water temperature fraction for primary recirculation systems
 
     """
 
@@ -116,7 +127,8 @@ class EcosizerEngine:
                             defrostFactor = 1, compRuntime_hr = 16, nApt = None, Wapt = None, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None,
                             PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None,
-                            annual = False, zipCode = None, climateZone = None, systemModel = None, numHeatPumps = None):
+                            annual = False, zipCode = None, climateZone = None, systemModel = None, numHeatPumps = None, 
+                            tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None):
         
         ignoreRecirc = False
         if schematic == 'primary':
@@ -167,7 +179,10 @@ class EcosizerEngine:
                                 TMVol_G = TMVol_G, 
                                 TMCap_kBTUhr = TMCap_kBTUhr,
                                 systemModel = systemModel,
-                                numHeatPumps = numHeatPumps
+                                numHeatPumps = numHeatPumps,
+                                tmModel = tmModel,
+                                tmNumHeatPumps = tmNumHeatPumps,
+                                inletWaterAdjustment = inletWaterAdjustment
         )
     
     def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False, optimizeNLS = False):
@@ -207,8 +222,8 @@ class EcosizerEngine:
             If the system is a swing tank, the following fields will appear in the result in this order:
                 swingT_F : List
                     Tempurature of water in the swing tank at every simulation interval. (F)
-                sRun : List
-                    Amount of time the swing tank is on during every simulation interval. (Minutes)
+                tmRun : List
+                    Amount of time the temperature maintenance is on during every simulation interval. (Minutes)
                 hw_outSwing : List
                     Hot water exiting swing tank at swing tank temperature at every simulation interval. (Gallons)
             If kWhCalc == True, the following fields will appear in the result in this order:
@@ -314,8 +329,8 @@ class EcosizerEngine:
         
         simRun_ls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
         
-        loadshift_capacity = (8.345*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.storageT_F-simRun_ls.getAvgIncomingWaterT()))/3412 # stored energy, not input energy
-        kGperkWh_ls = simRun_ls.getkGCO2perkWhSum()/loadshift_capacity
+        loadshift_capacity = (rhoCp*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.storageT_F-simRun_ls.getAvgIncomingWaterT()))/KWH_TO_BTU # stored energy, not input energy
+        kGperkWh_ls = simRun_ls.getkGCO2Sum()/loadshift_capacity
 
         nls_system = copy.copy(self.system)
 
@@ -327,7 +342,7 @@ class EcosizerEngine:
             self.building.setToAnnualLS()
 
         simRun_nls = simulate(nls_system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
-        kGperkWh_nls = simRun_nls.getkGCO2perkWhSum()/loadshift_capacity
+        kGperkWh_nls = simRun_nls.getkGCO2Sum()/loadshift_capacity
 
         kGperkWh_saved = kGperkWh_nls - kGperkWh_ls
         return [simRun_ls, simRun_nls, loadshift_capacity, kGperkWh_saved]

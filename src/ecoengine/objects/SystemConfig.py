@@ -67,18 +67,30 @@ class SystemConfig:
     def setCapacity(self, PCap_kBTUhr = None, oat = None, incomingWater_T = None):
         if not PCap_kBTUhr is None:
             self.PCap_kBTUhr = PCap_kBTUhr
+            self.PCap_input_kBTUhr = self.PCap_kBTUhr / 2.5 # Assume COP of 2.5
         elif not (oat is None or incomingWater_T is None or self.perfMap is None):
-            self.PCap_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
+            self.PCap_kBTUhr, self.PCap_input_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
         else:
            raise Exception("No capacity given or preformance map has not been set.") 
         
     def resetToDefaultCapacity(self):
         self.PCap_kBTUhr = self.perfMap.getDefaultCapacity()
 
-    def getCapacity(self, kW = False):
+    def getOutputCapacity(self, kW = False):
         if kW:
             return self.PCap_kBTUhr/W_TO_BTUHR
         return self.PCap_kBTUhr
+    
+    def getInputCapacity(self, kW = False):
+        if hasattr(self, 'PCap_input_kBTUhr'):
+            if kW:
+                return self.PCap_input_kBTUhr / W_TO_BTUHR
+            return self.PCap_input_kBTUhr
+        
+        # else assume COP of 2.5
+        if kW:
+            return (self.PCap_kBTUhr / 2.5) / W_TO_BTUHR
+        return self.PCap_kBTUhr / 2.5
 
     def setDoLoadShift(self, doLoadShift):
         if not isinstance(doLoadShift, bool):
@@ -157,7 +169,7 @@ class SystemConfig:
         hwGenRate = None
         if self.PCap_kBTUhr is None:
             if building.climateZone is None:
-                raise Exception("Cannot run a simulation of this kind without either a climate zone or defined output capacity")
+                raise Exception("Cannot run a simulation of this kind without either a climate zone or a default output capacity")
         else:
             hwGenRate = 1000 * self.PCap_kBTUhr / rhoCp / (building.supplyT_F - building.incomingT_F) \
                 * self.defrostFactor
@@ -231,13 +243,22 @@ class SystemConfig:
         incomingWater_T = simRun.getIncomingWaterT(i)
         if not (oat is None or self.perfMap is None):
             # set primary system capacity based on outdoor ait temp and incoming water temp 
-            self.PCap_kBTUhr = self.setCapacity(oat = oat, incomingWater_T = incomingWater_T)
-            simRun.addHWGen((1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - simRun.building.incomingT_F) \
+            self.setCapacity(oat = oat, incomingWater_T = incomingWater_T)
+            simRun.addHWGen((1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - incomingWater_T) \
                * self.defrostFactor)/(60/minuteIntervals))
-        mixedDHW = mixVolume(simRun.hwDemand[i], simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F) 
+        
+        # Get exiting and generating water volumes at storage temp
+        mixedDHW = mixVolume(simRun.hwDemand[i], simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F)
         mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F)
-        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], mixedDHW, mixedGHW, simRun.Vtrig[i-1],
-                                                                                               minuteIntervals = minuteIntervals) 
+
+        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating, 
+                                                                                            V0 = simRun.V0, 
+                                                                                            Vtrig = simRun.Vtrig[i], 
+                                                                                            Vcurr = simRun.pV[i-1], 
+                                                                                            hw_out = mixedDHW, 
+                                                                                            hw_in = mixedGHW, 
+                                                                                            Vtrig_previous = simRun.Vtrig[i-1],
+                                                                                            minuteIntervals = minuteIntervals) 
     
     def _setLoadShift(self, loadShiftSchedule, loadUpHours, aquaFract, aquaFractLoadUp, aquaFractShed, storageT_F, loadUpT_F, loadShiftPercent=1):
         """
@@ -646,12 +667,12 @@ class SystemConfig:
             The remaining volume of the primary storage volume when heating is
             triggered, note this equals V0*(1 - aquaFract) 
         Vcurr : float
-            The primary volume at the timestep.
+            The primary volume at the beginning of the interval.
         hw_out : float
-            The volume of DHW removed from the primary system, assumed that
+            The volume of DHW removed from the primary system at storage temp, assumed that
             100% of what of what is removed is replaced
         hw_in : float
-            The volume of hot water generated in a time step
+            The volume of hot water that could be generated in a time step at storage temp if the primary tank was running the entire time
         Vtrig_previous : float
             Trigger from last time step to see if we missed any heating (may have changed if doing load shifting)
 
@@ -663,44 +684,51 @@ class SystemConfig:
             The new primary volume at the timestep.
         hw_generated : float
             The volume of hot water generated during the time step.
+        time_ran : 
+            The amount of time the primary tank ran
 
         """
-        hw_generated = 0
-        Vnew = 0
-        time_ran = 0
-        Vtrig_normal = np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFract))
-        if pheating:
-            Vnew = Vcurr + hw_in - hw_out # If heating, generate HW and lose HW
-            hw_generated = hw_in
-            time_ran = 1
-
-        else:
-            Vnew = Vcurr - hw_out # So lose HW
-            if Vnew < Vtrig: # If should heat
-                pheating = True
-            if Vnew < Vtrig_previous:
-                time_ran = min((Vtrig_previous - Vnew)/hw_out, 1) # Volume below turn on / rate of draw gives time below tigger (aquastat)
-                Vnew += hw_in * time_ran
-                hw_generated = hw_in * time_ran
-
-        if self.doLoadShift and Vtrig == np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFractShed)) and Vnew > Vtrig_normal:
-            # stop heating if hw has met the normal aquastat fraction during a shed period
-            time_over = (Vnew - Vtrig_normal) / (hw_in - hw_out) # Volume over generated / rate of generation gives time above full
-            Vnew = Vtrig_normal - hw_out * time_over # Make full with missing volume
-            time_ran = 1-time_over
-            hw_generated = hw_in * time_ran
-            pheating = False # Stop heating
-        elif Vnew > V0: # If overflow
-            time_over = (Vnew - V0) / (hw_in - hw_out) # Volume over generated / rate of generation gives time above full
-            Vnew = V0 - hw_out * time_over # Make full with missing volume
-            time_ran = 1-time_over
-            hw_generated = hw_in * time_ran
-            pheating = False # Stop heating
-        elif Vtrig < Vtrig_previous and Vnew > Vtrig: # turn off heating if aquastat changes and we find we are above it.
+        if Vcurr > Vtrig:
+            # ensure we stop heating if we start the interval above the aquastat
             pheating = False
 
+        Vnew = Vcurr - hw_out
+        time_ran = 0
+        Vtrig_normal = np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFract))
+
+        # figure out if we needed to start heating in the interval
+        if pheating:
+            time_ran = 1
+        elif Vnew < Vtrig: # If should heat
+            pheating = True
+            if hw_out == 0:
+                time_ran = 1
+            else:    
+                time_ran = min((Vtrig - Vnew)/hw_out, 1) # Volume below turn on / rate of draw gives time below tigger (aquastat)
+
+        # calculate hw water generated and add to tank
+        hw_generated = hw_in * time_ran
+        Vnew_potential = Vnew + hw_generated
+
+        # figure out if we need to stop heating in the interval if we are heating
+        if pheating:
+            if self.doLoadShift and Vtrig == np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFractShed)) and Vnew_potential > Vtrig_normal:
+                # stop heating if hw has met the normal aquastat fraction during a shed period
+                time_over = min((Vnew_potential - Vtrig_normal)/hw_in, 1) # Volume over trigger / hot water generation rate gives percent of interval it takes to generate that much water
+                time_ran -= time_over
+                pheating = False # Stop heating
+            elif Vnew_potential > V0: # If overflow
+                time_over = min((Vnew_potential - V0)/hw_in, 1) # Volume over trigger / hot water generation rate gives percent of interval it takes to generate that much water
+                time_ran -= time_over
+                pheating = False # Stop heating
+
+        hw_generated = hw_in * time_ran
+        Vnew += hw_generated
+        
         if Vnew < 0:
-           raise Exception("Primary storage ran out of Volume!") 
+           raise Exception("Primary storage ran out of Volume!")
+        if time_ran < 0:
+           raise Exception("Internal system error. time_ran was negative")
 
         return pheating, Vnew, hw_generated, time_ran * minuteIntervals
     

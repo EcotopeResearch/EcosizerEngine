@@ -21,7 +21,7 @@ class SwingTank(SystemConfig):
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
         
         self.safetyTM = safetyTM
-        self.element_deadband_F = 8.
+        self.element_deadband_F = 8.0
         
         # size if needed, else all sizing is taken care of in super().__init__
         if not PVol_G_atStorageT is None: # indicates system is sized
@@ -298,16 +298,17 @@ class SwingTank(SystemConfig):
         # Run the "simulation"
         hw_outSwing = [0] * N
         hw_outSwing[0] = hwDemand[0]
-        sRun = [0] * N
+        tmRun = [0] * N
         swingheating = False
 
         for i in range(1, N):
             hw_outSwing[i] = mixVolume(hwDemand[i], swingT_F[i-1], building.incomingT_F, building.supplyT_F)
-            swingheating, swingT_F[i], sRun[i] = self.__runOneSwingStep(building, swingheating, swingT_F[i-1], hw_outSwing[i])
+            primaryStorageT_F = self.mixStorageTemps(hw_outSwing[i], building.incomingT_F, building.supplyT_F)[0]
+            swingheating, swingT_F[i], tmRun[i] = self._runOneSwingStep(building, swingheating, swingT_F[i-1], hw_outSwing[i], primaryStorageT_F)
         
-        return [swingT_F, sRun, hw_outSwing]
+        return [swingT_F, tmRun, hw_outSwing]
     
-    def __runOneSwingStep(self, building, swingheating, Tcurr, hw_out, minuteIntervals = 1):
+    def _runOneSwingStep(self, building : Building, swingheating, Tcurr, hw_out, primaryStorageT_F, minuteIntervals = 1):
         """
         Runs one step on the swing tank step. Since the swing tank is in series
         with the primary system the temperature needs to be tracked to inform
@@ -321,25 +322,27 @@ class SwingTank(SystemConfig):
         ----------
         building : Building
             the building object for the simulation
-        Tcurr : float
-            The current temperature at the timestep.
-        hw_out : float
-            The volume of DHW removed from the swing tank system.
-        hw_in : float
-            The volume of DHW added to the system.
         swingheating : float
             True if tank is heating at the begining of this time step
+        Tcurr : float
+            The temperature at the begining of the timestep.
+        hw_out : float
+            The volume of DHW removed from the swing tank system.
+        primaryStorageT_F : float
+            Temperature of the hot water in th primary storage tank (F)
+        minuteIntervals : float
+            The number of minutes in the interval.
 
         Returns
         -------
-        Tnew : float
-            The new swing tank tempeature for the timestep assuming the tank is well mixed.
-        did_run : int
-            Logic if heated during time step (1) or not (0)
         swingheating : float
             True if tank is heating at the end of this time step
+        Tnew : float
+            The new swing tank tempeature for the timestep assuming the tank is well mixed.
+        time_run : int
+            The amount of thime the swing tank ran during the interval
         """
-        did_run = 0 
+        time_running = 0 
 
         timeDivisor = 60 // minuteIntervals
 
@@ -349,34 +352,31 @@ class SwingTank(SystemConfig):
 
         # Add in heat for a draw
         if hw_out:
-            mixedStorT_F = self.mixStorageTemps(hw_out, building.incomingT_F, building.supplyT_F)[0]
-            Tnew += hw_out * (mixedStorT_F - Tcurr) / self.TMVol_G 
+            Tnew += hw_out * (primaryStorageT_F - Tcurr) / self.TMVol_G 
         
         # Check if the element is heating
         if swingheating:
             Tnew += element_dT #If heating, generate HW and lose HW
-            did_run = 1
+            time_running = 1
 
             # Check if the element should turn off
             if Tnew > building.supplyT_F + self.element_deadband_F: # If too hot
                 time_over = (Tnew - (building.supplyT_F + self.element_deadband_F)) / element_dT # Temp below turn on / rate of element heating gives time above trigger plus deadband
                 Tnew -= element_dT * time_over # Make full with miss volume
-                did_run = (1-time_over)
-
+                time_running = (1-time_over)
                 swingheating = False
-        else:
-            if Tnew <= building.supplyT_F: # If the element should turn on
-                time_missed = (building.supplyT_F - Tnew)/element_dT # Temp below turn on / rate of element heating gives time below tigger
-                Tnew += element_dT * time_missed # Start heating 
 
-                did_run = time_missed
-                swingheating = True # Start heating
+        elif Tnew <= building.supplyT_F: # If the element should turn on
+            time_missed = (building.supplyT_F - Tnew)/element_dT # Temp below turn on / rate of element heating gives time below tigger
+            Tnew += element_dT * time_missed # Start heating 
+            time_running = time_missed
+            swingheating = True # Start heating
 
         if Tnew < building.supplyT_F: # Check for errors
             raise Exception("The swing tank dropped below the supply temperature! The system is undersized")
         
-        # multiply did_run to reflect the time durration of the interval.
-        time_run = did_run * minuteIntervals
+        # multiply time_running to reflect the time durration of the interval.
+        time_run = time_running * minuteIntervals
 
         return swingheating, Tnew, time_run
     
@@ -431,22 +431,42 @@ class SwingTank(SystemConfig):
     
     def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
         simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
-        simRun.initializeSwingValue(initST, self.storageT_F, self.TMCap_kBTUhr)
+        simRun.initializeTMValue(initST, self.storageT_F, self.TMCap_kBTUhr)
         return simRun
 
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         incomingWater_T = simRun.getIncomingWaterT(i)
         if not (oat is None or self.perfMap is None):
             # set primary system capacity based on outdoor ait temp and incoming water temp 
-            self.PCap_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
-            simRun.addHWGen((1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - simRun.building.incomingT_F) \
+            self.setCapacity(oat = oat, incomingWater_T = incomingWater_T)
+            simRun.addHWGen((1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - incomingWater_T) \
                * self.defrostFactor)/(60/minuteIntervals))
-
-        simRun.hw_outSwing[i] = mixVolume(simRun.hwDemand[i], simRun.swingT_F[i-1], incomingWater_T, simRun.building.supplyT_F)
             
-        simRun.swingheating, simRun.swingT_F[i], simRun.sRun[i] = self.__runOneSwingStep(simRun.building, simRun.swingheating, simRun.swingT_F[i-1], simRun.hw_outSwing[i], minuteIntervals = minuteIntervals)
+        # aquire draw amount for time step
+        simRun.hw_outSwing[i] = mixVolume(simRun.hwDemand[i], simRun.tmT_F[i-1], incomingWater_T, simRun.building.supplyT_F)
+            
+        simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, simRun.tmheating, simRun.tmT_F[i-1], simRun.hw_outSwing[i], simRun.mixedStorT_F, minuteIntervals = minuteIntervals)
+        
         #Get the mixed generation
-        mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F) #replaced self.storageT_F with mixedStorT_F
-        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(simRun.pheating, simRun.V0, simRun.Vtrig[i], simRun.pV[i-1], simRun.hw_outSwing[i], mixedGHW, simRun.Vtrig[i-1],
+        mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F)
+
+        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating, 
+                                                                                               V0 = simRun.V0, 
+                                                                                               Vtrig = simRun.Vtrig[i], 
+                                                                                               Vcurr = simRun.pV[i-1], 
+                                                                                               hw_out = simRun.hw_outSwing[i], 
+                                                                                               hw_in = mixedGHW, 
+                                                                                               Vtrig_previous = simRun.Vtrig[i-1],
                                                                                                minuteIntervals = minuteIntervals)
+    
+    def getTMOutputCapacity(self, kW = False):
+        if kW:
+            return self.TMCap_kBTUhr/W_TO_BTUHR
+        return self.TMCap_kBTUhr
+    
+    def getTMInputCapacity(self, kW = False):
+        # assume COP of 1
+        if kW:
+            return (self.TMCap_kBTUhr) / W_TO_BTUHR
+        return self.TMCap_kBTUhr
    

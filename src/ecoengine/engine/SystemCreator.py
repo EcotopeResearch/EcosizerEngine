@@ -1,18 +1,20 @@
 from ecoengine.objects.SystemConfig import *
 from ecoengine.objects.systems.SwingTank import *
 from ecoengine.objects.systems.ParallelLoopTank import *
+from ecoengine.objects.systems.MultiPass import *
+from ecoengine.objects.systems.PrimaryWithRecirc import *
 
 def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None, doLoadShift = False, 
                  aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, safetyTM = 1.75, 
                  setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None,
-                 systemModel = None, numHeatPumps = None):
+                 systemModel = None, numHeatPumps = None, tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None):
     """
     Initializes and sizes the HPWH system. Both primary and tempurature maintenance (for parrallel loop and swing tank) are set up in this function.
 
     Attributes
     ----------
     schematic : String
-        Indicates schematic type. Valid values are 'swingtank', 'paralleltank', and 'primary'
+        Indicates schematic type. Valid values are 'swingtank', 'paralleltank', 'multipass', and 'primary'
     storageT_F : float 
         The hot water storage temperature. [°F]
     defrostFactor : float 
@@ -60,6 +62,12 @@ def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRunti
         The make/model of the HPWH being used.
     numHeatPumps : int
         The number of heatpumps the HPWH model is using
+    tmModel : String
+        The make/model of the HPWH being used for the temperature maintenance system.
+    tmNumHeatPumps : int
+        The number of heat pumps on the temperature maintenance system
+    inletWaterAdjustment : float
+        adjustment for inlet water temperature fraction for primary recirculation systems
 
     Raises
     ----------
@@ -75,11 +83,23 @@ def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRunti
         case 'paralleltank':
             return ParallelLoopTank(safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                 building, doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
-                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr)
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr, tmModel, tmNumHeatPumps)
+        case 'multipass':
+            if inletWaterAdjustment is None:
+                inletWaterAdjustment = 0.5
+            return MultiPass(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
+                doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, inletWaterAdjustment)
         case 'primary':
             return Primary(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
                 systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr)
+        case 'primaryrecirc':
+            if inletWaterAdjustment is None:
+                inletWaterAdjustment = 0.25
+            return PrimaryWithRecirc(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
+                doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, inletWaterAdjustment)
         case _:
-            raise Exception("Unknown system schematic type.")
+            raise Exception("Unknown system schematic type: "+str(schematic))
         

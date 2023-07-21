@@ -37,7 +37,7 @@ class PrefMapTracker:
         The output capacity of the primary HPWH in kW as a float
         """
         if self.perfMap is None or len(self.perfMap) == 0:
-            return self.defaultCapacity
+            return self.defaultCapacity, self.defaultCapacity / 2.5 # assume COP of 2.5 for input_capactiy calculation
         elif len(self.perfMap) > 1:
             # cop at ambient temperatures T1 and T2
             COP_T1 = 0 
@@ -84,24 +84,26 @@ class PrefMapTracker:
             inputPower_T2_kW = inputPower_T2_Watts / 1000.0
 
             cop = self._linearInterp(externalT_F, self.perfMap[i_prev]['T_F'], self.perfMap[i_next]['T_F'], COP_T1, COP_T2)
-            input_kWperHr = (self._linearInterp(externalT_F, self.perfMap[i_prev]['T_F'], self.perfMap[i_next]['T_F'], inputPower_T1_kW, inputPower_T2_kW))
+            input_kW = (self._linearInterp(externalT_F, self.perfMap[i_prev]['T_F'], self.perfMap[i_next]['T_F'], inputPower_T1_kW, inputPower_T2_kW))
         else:
             if(externalT_F > self.perfMap[0]['T_F']):
                 extrapolate = True
             if self.isMultiPass:
-                input_kWperHr = self._regressedMethodMP(externalT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs'])
+                input_kW = self._regressedMethodMP(externalT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs'])
                 cop = self._regressedMethodMP(externalT_F, condenserT_F, self.perfMap[0]['COP_coeffs'])
             else:
-                input_kWperHr = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs']) # TODO check for outT_F, may need to be plus 10 for QAHV
+                input_kW = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs']) # TODO check for outT_F, may need to be plus 10 for QAHV
                 cop = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['COP_coeffs'])
             
-        returnValue = cop * input_kWperHr
+        output_kW = cop * input_kW
         if self.kBTUhr:
-            returnValue *= W_TO_BTUHR # convert kW to kBTU
+            output_kW *= W_TO_BTUHR # convert kW to kBTU
+            input_kW *= W_TO_BTUHR
         if self.numHeatPumps is None:
-            self._autoSetNumHeatPumps(returnValue)
-        returnValue *= self.numHeatPumps
-        return returnValue
+            self._autoSetNumHeatPumps(output_kW)
+        output_kW *= self.numHeatPumps
+        input_kW *= self.numHeatPumps
+        return [output_kW, input_kW]
 
     def _autoSetNumHeatPumps(self, modelCapacity):
         heatPumps = round(self.defaultCapacity/modelCapacity)

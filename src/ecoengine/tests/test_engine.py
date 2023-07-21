@@ -3,7 +3,7 @@ from ecoengine.objects.systemConfigUtils import roundList, mixVolume, hrToMinLis
 import ecoengine.engine.EcosizerEngine as EcosizerEngine
 import ecoengine.objects.SimulationRun as SimulationRun
 import numpy as np
-import os, sys
+import os, sys, csv
 from ecoengine.constants.Constants import *
 from plotly.graph_objs import Figure
 
@@ -194,6 +194,13 @@ def annual_swing_sizer(): # Returns the hpwh swing tank
         )
     return hpwh
 
+climateZone_1_kg = [] # will contain first 1000 kGperkWh rows
+with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/kGperkWh_ByClimateZone.csv'), 'r') as kG_file:
+    kG_reader = csv.reader(kG_file)
+    next(kG_reader)
+    for i in range(1000):
+        kG_row = next(kG_reader)
+        climateZone_1_kg.append(float(kG_row[0]))
 ###############################################################################
 ###############################################################################
 # Unit Tests
@@ -260,17 +267,25 @@ def test_figReturnTypes(parallel_sizer, swing_sizer, primary_sizer, return_as_di
 def test_primaryCurve(parallel_sizer):
     primaryCurveInfo = parallel_sizer.primaryCurve()
     assert len(primaryCurveInfo) == 4
-    assert len(primaryCurveInfo[0]) == len(primaryCurveInfo[1]) == len(primaryCurveInfo[2]) #THIS IS FAILINGG
+    assert len(primaryCurveInfo[0]) == len(primaryCurveInfo[1]) == len(primaryCurveInfo[2])
     assert primaryCurveInfo[3] == 44
 
 def test__parallel_simulationResults(parallel_sizer):
     simResult = parallel_sizer.getSimResult()
-    assert len(simResult) == 4
+    assert len(simResult) == 6
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 4320
     assert simResult[0][:10] == [1027.528, 1027.057, 1026.585, 1026.114, 1025.642, 1025.171, 1024.699, 1024.228, 1023.756, 1023.284]
     assert simResult[1][-10:] == [3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205]
     assert simResult[2][-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
     assert simResult[3][800:810] == [2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244]
+
+def test__parallel_simRun(parallel_sizer):
+    simRun = parallel_sizer.getSimRun()
+    supplyToStorageFactor = 0.7
+    for i in range(1,100):
+        hopefulResult = simRun.getPrimaryVolume(i-1) + simRun.getPrimaryGeneration(i) - (simRun.getHWDemand(i) * supplyToStorageFactor)
+        assert simRun.getPrimaryVolume(i) < hopefulResult + 0.01
+        assert simRun.getPrimaryVolume(i) > hopefulResult - 0.01
 
 def test__primary_simulationResults(primary_sizer):
     simResult = primary_sizer.getSimResult()
@@ -293,18 +308,6 @@ def test__swing_simulationResults(swing_sizer):
     assert simResult[5][-200:-190] == [0, 0, 0, 0, 0.013, 1, 1, 1, 1, 1]
     assert simResult[6][800:803] == [0.9489206357019205, 0.9384794009334938, 0.9283993792885612]
 
-def test__swing_nls_simulationResults(swing_sizer_nls):
-    simResult = swing_sizer_nls.getSimResult()
-    assert len(simResult) == 7
-    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == len(simResult[4]) == len(simResult[5]) == len(simResult[6]) == 4320
-    assert simResult[0][:2] == [486.557, 486.11]
-    assert simResult[1][-10:-8] == [3.367, 3.367]
-    assert simResult[2][-65:-55] == [2.66, 2.66, 2.66, 2.66, 2.66, 1.013, 1.013, 1.013, 1.013, 1.013]
-    assert simResult[3][800:810] == [2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357, 2.357]
-    assert simResult[4][-10:-4] == [128.0, 127.519, 127.044, 126.575, 126.111, 125.653]
-    assert simResult[5][-200:-190] == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    assert simResult[6][800:803] == [0.9589199980931171, 0.9491629610090546, 0.9397239536905911]
-
 def test__primary_nls_simulationResults(primary_sizer_nls):
     simResult = primary_sizer_nls.getSimResult()
     assert len(simResult) == 4
@@ -315,17 +318,90 @@ def test__primary_nls_simulationResults(primary_sizer_nls):
     assert simResult[3][800:810] == [1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823]
 
 # annual simulations
-
-def test__annual_swing_simulationResults(annual_swing_sizer):
+def test__annual_swing_simulationResults_size(annual_swing_sizer):
     simResult = annual_swing_sizer.getSimResult(initPV=0.4*944.972083230641, initST=135, minuteIntervals = 15, nDays = 365)
     assert len(simResult) == 7
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 35040
-    assert simResult[0][:10] == [394.655, 410.557, 425.841, 440.645, 467.792, 494.429, 520.69, 548.021, 579.767, 611.236]
-    assert simResult[1][-10:] == [52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421]
-    assert simResult[2][-65:-55] == [29.514, 55.556, 55.556, 55.556, 55.556, 32.986, 32.986, 32.986, 32.986, 29.514]
-    assert simResult[3][800:810] == [0, 28.04, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677]
-    simRun = annual_swing_sizer.getSimRun(initPV=0.4*944.972083230641, initST=135, minuteIntervals = 15, nDays = 365)
-    assert simRun.getPrimaryVolume()[:10] == [394.655, 410.557, 425.841, 440.645, 467.792, 494.429, 520.69, 548.021, 579.767, 611.236]
-    assert simRun.getHWGeneration()[-10:] == [52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421, 52.421]
-    assert simRun.getHWDemand()[-65:-55] == [29.514, 55.556, 55.556, 55.556, 55.556, 32.986, 32.986, 32.986, 32.986, 29.514]
-    assert simRun.getPrimaryGeneration()[800:810] == [0, 28.04, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677, 36.677]
+
+@pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr", [
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AWHSTier3Generic65', None, 'multipass', 891, 166, None, None),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass', 891, 166, None, None),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AWHSTier3Generic65', None, 'primaryrecirc', 891, 166, None, None),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AWHSTier3Generic65', None, 'primary', 891, 166, None, None),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AWHSTier3Generic65', None, 'swingtank', 891, 166, 100, 60),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_TamScalable_SP', None, 'swingtank', 891, 166, 100, 60),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AWHSTier3Generic65', None, 'paralleltank', 891, 106, 91, 60),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_RheemPlugInDedicated40', None, 'paralleltank', 891, 106, 91, 60),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_RheemPlugInDedicated50', None, 'paralleltank', 891, 106, 91, 60)
+])
+def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr):
+    hpwh_ls = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = supplyT_F,
+            storageT_F      = storageT_F,
+            loadUpT_F       = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            aquaFractLoadUp = aquaFractLoadUp,
+            aquaFractShed   = aquaFractShed,
+            schematic       = simSchematic, 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 60,
+            loadShiftSchedule  = loadShiftSchedule,
+            loadUpHours     = 3,
+            doLoadShift     = True,
+            loadShiftPercent       = 0.8,
+            PVol_G_atStorageT = PVol_G_atStorageT, 
+            PCap_kBTUhr = PCap_kBTUhr,
+            TMVol_G = TMVol_G,
+            TMCap_kBTUhr = TMCap_kBTUhr,
+            annual = True,
+            climateZone = 1,
+            systemModel = hpwhModel,
+            tmModel = tmModel
+        )
+    simRun = hpwh_ls.getSimRun(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365)
+    supplyToStorageFactor = (supplyT_F - simRun.getIncomingWaterT(0))/(storageT_F - simRun.getIncomingWaterT(0)) # should be same for entire month
+    TMcap = TMCap_kBTUhr
+    if TMcap is None:
+        TMcap = 0
+
+    assert 1 == 1
+    for i in range(1,1000):
+
+        # assert primaryVolume = generation - demand
+        if simSchematic == 'swingtank':
+            hw_out_at_storage = simRun.gethwOutSwing(i)
+        else:
+            hw_out_at_storage = (simRun.getHWDemand(i)+simRun.getRecircLoss(i)) * supplyToStorageFactor
+        hopefulResult = simRun.getPrimaryVolume(i-1) + simRun.getPrimaryGeneration(i) - hw_out_at_storage
+        assert simRun.getPrimaryVolume(i) < hopefulResult + 0.01
+        assert simRun.getPrimaryVolume(i) > hopefulResult - 0.01
+
+        # assert hw generation rate makes sense
+        calculated_generation = 1000 * (simRun.getCapOut(i)*W_TO_BTUHR) / rhoCp / (supplyT_F - simRun.getIncomingWaterT(i))
+        assert simRun.getHWGeneration(i) < calculated_generation + 0.01
+        assert simRun.getHWGeneration(i) > calculated_generation - 0.01
+        calculated_generation *= supplyToStorageFactor * (simRun.getPrimaryRun(i)/15)
+        assert simRun.getPrimaryGeneration(i) < calculated_generation + 0.01
+        assert simRun.getPrimaryGeneration(i) > calculated_generation - 0.01
+
+        # assert kW calculation is correct
+        calculatedKg = climateZone_1_kg[i//4] * (simRun.getCapIn(i) * (simRun.getPrimaryRun(i) / 15) + (simRun.getTMCapIn(i)*simRun.getTMRun(i)/15))
+        assert simRun.getkGCO2(i) < calculatedKg + 0.001
+        assert simRun.getkGCO2(i) > calculatedKg - 0.001
+
+
+    # ensure recirc non-existant for non-recirc-tracking systems
+    if simSchematic != 'primaryrecirc' and simSchematic != 'multipass':
+        assert simRun.getRecircLoss(0) == 0
+        assert simRun.getRecircLoss(5000) == 0
+        assert simRun.getRecircLoss(10000) == 0

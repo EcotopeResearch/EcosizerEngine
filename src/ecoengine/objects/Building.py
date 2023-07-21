@@ -1,7 +1,6 @@
 import os
 import json
 import numpy as np
-import csv
 
 from ecoengine.constants.Constants import *
 

@@ -196,8 +196,9 @@ def test_initialize_sim(simplePrimary, minuteIntervals, nDays, outputArrayLength
     assert initSim.pheating == False
     assert initSim.mixedStorT_F == 150
     assert len(initSim.oat) == 0
-    assert len(initSim.cap) == 0
-    assert len(initSim.kGperkWh) == 0
+    assert len(initSim.cap_out) == 0
+    assert len(initSim.cap_in) == 0
+    assert len(initSim.kGCO2) == 0
 
 @pytest.mark.parametrize("minuteIntervals, nDays, outputArrayLength, initPV", [
    (1,3,4320, None), (60,365,8760, None), (15,365,35040, None),
@@ -220,10 +221,11 @@ def test_initialize_sim_swing(swingTank, minuteIntervals, nDays, outputArrayLeng
     assert initSim.pheating == False
     assert initSim.mixedStorT_F == 150
     assert len(initSim.oat) == 0
-    assert len(initSim.cap) == 0
-    assert len(initSim.kGperkWh) == 0
-    assert len(initSim.swingT_F) == outputArrayLength
-    assert len(initSim.sRun) == outputArrayLength
+    assert len(initSim.cap_out) == 0
+    assert len(initSim.cap_in) == 0
+    assert len(initSim.kGCO2) == 0
+    assert len(initSim.tmT_F) == outputArrayLength
+    assert len(initSim.tmRun) == outputArrayLength
     assert len(initSim.hw_outSwing) == outputArrayLength
     assert initSim.storageT_F == swingTank.storageT_F
     assert initSim.TMCap_kBTUhr == swingTank.TMCap_kBTUhr

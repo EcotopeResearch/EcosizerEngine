@@ -37,12 +37,13 @@ def checkLiqudWater(var_F):
 def mixVolume(vol, hotT, coldT, outT):
     """
     Adjusts the volume of water such that the hotT water and outT water have the
-    same amount of energy, meaning different volumes.
+    same amount of energy, meaning different volumes. The returned value is the 
+    volume at hotT required.
 
     Parameters
     ----------
     vol : float
-        The reference volume to convert.
+        The reference volume (at outT) to convert.
     hotT : float
         The hot water temperature used for mixing.
     coldT : float
@@ -53,7 +54,7 @@ def mixVolume(vol, hotT, coldT, outT):
     Returns
     -------
     float
-        Temperature adjusted volume.
+        The volume at hotT, which, mixed with water at coldT, will produce the needed volume of water at outT.
 
     """
     fraction = (outT - coldT) / (hotT - coldT)
