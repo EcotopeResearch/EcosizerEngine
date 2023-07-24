@@ -1,6 +1,5 @@
 from ecoengine import EcosizerEngine, getListOfModels, SimulationRun
 import time
-import csv
 
 rhoCp = 8.353535 
 W_TO_BTUHR = 3.412142
@@ -21,8 +20,8 @@ csvCreate = False
 hpwhModel ='MODELS_AWHSTier3Generic65'
 tmModel ='MODELS_AWHSTier3Generic65'
 minuteIntervals = 15
-sizingSchematic = 'paralleltank'
-simSchematic = 'paralleltank'
+sizingSchematic = 'primary'
+simSchematic = 'multipass'
 
 def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, start_vol):
     csv_filename = simSchematic+'_LS_simResult_5.csv'
@@ -142,6 +141,7 @@ kGperkWh = simRun_ls.getkGCO2Sum()/loadshift_capacity
 print('ls kg_sum is', simRun_ls.getkGCO2Sum())
 print('ls kGperkWh is', kGperkWh)
 print('annual COP:', simRun_ls.getAnnualCOP())
+print('annual COP (boundry):', simRun_ls.getAnnualCOP(True))
 
 if csvCreate:
     createCSV(simRun_ls, simSchematic, kGperkWh, True, start_vol)
@@ -153,6 +153,7 @@ kGperkWh_nonLS = simRun_nls.getkGCO2Sum()/loadshift_capacity
 print('non-ls kg_sum is', simRun_nls.getkGCO2Sum())
 print('non-ls kGperkWh is', kGperkWh_nonLS)
 print('annual COP:', simRun_nls.getAnnualCOP())
+print('annual COP (boundry):', simRun_nls.getAnnualCOP(True))
 
 if csvCreate:
     createCSV(simRun_nls, simSchematic, kGperkWh_nonLS, False, start_vol)

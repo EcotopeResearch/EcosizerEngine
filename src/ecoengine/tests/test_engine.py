@@ -330,9 +330,9 @@ def test__annual_swing_simulationResults_size(annual_swing_sizer):
    (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AWHSTier3Generic65', None, 'primary', 891, 166, None, None),
    (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AWHSTier3Generic65', None, 'swingtank', 891, 166, 100, 60),
    (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_TamScalable_SP', None, 'swingtank', 891, 166, 100, 60),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AWHSTier3Generic65', None, 'paralleltank', 891, 106, 91, 60),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_RheemPlugInDedicated40', None, 'paralleltank', 891, 106, 91, 60),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_RheemPlugInDedicated50', None, 'paralleltank', 891, 106, 91, 60)
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AWHSTier3Generic65', 'MODELS_NyleC185A_SP', 'paralleltank', 891, 106, 91, 60),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_RheemPlugInDedicated40', 'MODELS_RheemHB50', 'paralleltank', 891, 106, 91, 60),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_RheemPlugInDedicated50', 'MODELS_AWHSTier3Generic65', 'paralleltank', 891, 106, 91, 60)
 ])
 def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr):
     hpwh_ls = EcosizerEngine(
@@ -405,3 +405,9 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
         assert simRun.getRecircLoss(0) == 0
         assert simRun.getRecircLoss(5000) == 0
         assert simRun.getRecircLoss(10000) == 0
+
+    # assert COP calculations are the same (within rounding error of 0.002)
+    equip_method_cop = simRun.getAnnualCOP()
+    boundry_method_cop = simRun.getAnnualCOP(boundryMethod = True)
+    assert equip_method_cop < boundry_method_cop + 0.002
+    assert equip_method_cop > boundry_method_cop - 0.002

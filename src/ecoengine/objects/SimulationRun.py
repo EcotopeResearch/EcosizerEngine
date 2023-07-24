@@ -266,7 +266,7 @@ class SimulationRun:
     
     def getHWGeneration(self, i = None):
         """
-        Returns a list from the simulation of the theoretical hot water generation of the primary tank by timestep
+        Returns a list from the simulation of the theoretical hot water generation of the primary tank at supply temperature by timestep
         or, if i is defined, returns index i of that list
         """
         if len(self.hwGen) == 0:
@@ -356,15 +356,21 @@ class SimulationRun:
         """
         return sum(self.kGCO2)
     
-    def getAnnualCOP(self):
+    def getAnnualCOP(self, boundryMethod = False):
         """
         Returns annual COP for the simulation
         """
-        heatOutputTotal = 0
         heatInputTotal = 0
-        for i in range(len(self.hwDemand)):
-            heatOutputTotal += (self.getCapOut(i)*self.getPrimaryRun(i)) + (self.getTMCapOut(i)*self.getTMRun(i))
-            heatInputTotal += (self.getCapIn(i)*self.getPrimaryRun(i)) + (self.getTMCapIn(i)*self.getTMRun(i))
+        heatOutputTotal = 0
+        if boundryMethod:
+            recirc_const = self.building.recirc_loss / (60/self.minuteIntervals)
+            for i in range(len(self.hwDemand)):
+                heatOutputTotal += (rhoCp*self.hwDemand[i]*(self.building.supplyT_F - self.getIncomingWaterT(i))) + (recirc_const)
+                heatInputTotal += ((self.getCapIn(i)*self.getPrimaryRun(i)/self.minuteIntervals) + (self.getTMCapIn(i)*self.getTMRun(i)/self.minuteIntervals))*KWH_TO_BTU
+        else:
+            for i in range(len(self.hwDemand)):
+                heatOutputTotal += (self.getCapOut(i)*self.getPrimaryRun(i)/self.minuteIntervals) + (self.getTMCapOut(i)*self.getTMRun(i)/self.minuteIntervals)
+                heatInputTotal += (self.getCapIn(i)*self.getPrimaryRun(i)/self.minuteIntervals) + (self.getTMCapIn(i)*self.getTMRun(i)/self.minuteIntervals)
         return heatOutputTotal/heatInputTotal
 
 
@@ -495,15 +501,15 @@ class SimulationRun:
     def writeCSV(self, file_path):
         
         hours = [(i // (60/self.minuteIntervals)) + 1 for i in range(len(self.getPrimaryVolume()))]
-        column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'HW Generation (Gallons Supply Temp)', 'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)','Primary Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'OAT (F)', 'Input Capacity (kW)', 'Output Capacity (kW)']
+        column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'Primary Generation (Gallons Storage Temp)', 'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)','Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'OAT (F)', 'Input Capacity (kW)', 'Output Capacity (kW)']
         columns = [
             hours,
             self.getPrimaryVolume(),
-            self.getHWGeneration(),
+            self.getPrimaryRun(),
             self.getHWDemand(),
             self.getRecircLoss(),
             self.getPrimaryGeneration(),
-            self.getPrimaryRun(),
+            self.getHWGeneration(),
             self.getOAT(),
             self.getCapIn(),
             self.getCapOut()

@@ -16,7 +16,7 @@ class Building:
         self.incomingT_F = incomingT_F
         self.supplyT_F = supplyT_F
         if ignoreRecirc:
-            self.recirc_loss = None
+            self.recirc_loss = 0
         else:
             self.recirc_loss = (supplyT_F - returnT_F) * flowRate * rhoCp * 60. #BTU/HR
             if(self.recirc_loss > RECIRC_LOSS_MAX_BTUHR):
@@ -134,7 +134,7 @@ class MultiFamily(Building):
         self.magnitude = gpdpp * n_people # gpdpp * number_of_people
 
         # recalculate recirc_loss with different method if applicable
-        if not nApt is None and not Wapt is None and (nApt > 0 and Wapt > 0):
+        if not ignoreRecirc and not nApt is None and not Wapt is None and (nApt > 0 and Wapt > 0):
             # nApt * Wapt will overwrite recirc_loss so it doesn't matter what numbers we put in for returnT_F, flowRate
             super().__init__(loadshape, avgLoadshape, incomingT_F, supplyT_F, None, None, climate, ignoreRecirc = True)
             self.recirc_loss = nApt * Wapt * W_TO_BTUHR
