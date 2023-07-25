@@ -354,7 +354,7 @@ class SystemConfig:
         genRate
             The generation rate in [gal/hr] when the heat pump is on. 
             If loadshifting this is the maximum between normal calculation
-            and what is necessary to complete first load up.
+            and what is necessary to complete first load up. 
         """
         checkHeatHours(heathours)
         genRate = building.magnitude * effSwingVolFract / heathours
