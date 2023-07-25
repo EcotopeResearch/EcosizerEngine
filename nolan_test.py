@@ -17,8 +17,8 @@ aquaFractShed   = 0.8
 storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1] #assume this loadshape for annual simulation every day
 csvCreate = False
-hpwhModel ='MODELS_AWHSTier3Generic65'
-tmModel ='MODELS_AWHSTier3Generic65'
+hpwhModel ='MODELS_NyleC250A_C_SP'
+tmModel ='MODELS_NyleC250A_C_SP'
 minuteIntervals = 15
 sizingSchematic = 'primary'
 simSchematic = 'primary'
@@ -161,7 +161,7 @@ if csvCreate:
 print('=========================================================')
 print("LS to non-LS diff:", kGperkWh_nonLS - kGperkWh, "=", simResultArray[3])
 
-# print(getListOfModels())
+print(getListOfModels())
 # parallel_sizer = EcosizerEngine(
 #             incomingT_F     = 50,
 #             magnitudeStat  = 100,

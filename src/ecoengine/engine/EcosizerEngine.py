@@ -17,9 +17,9 @@ def getListOfModels(multiPass = False):
         data = json.load(json_file)
         for model_name, value in data.items():
             if multiPass and model_name[-2:] == 'MP':
-                returnList.append(model_name)
+                returnList.append([model_name,value["name"]])
             elif not multiPass and model_name[-2:] != 'MP':
-                returnList.append(model_name)
+                returnList.append([model_name,value["name"]])
     return returnList
 
 

@@ -113,7 +113,7 @@ class PrefMapTracker:
         try:
             with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
                 dataDict = json.load(json_file)
-                self.perfMap = dataDict[modelName]
+                self.perfMap = dataDict[modelName]["perfmap"]
                 if modelName[-2:] == 'MP':
                     self.isMultiPass = True
         except:
