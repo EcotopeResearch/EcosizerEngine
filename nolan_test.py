@@ -21,7 +21,7 @@ hpwhModel ='MODELS_AWHSTier3Generic65'
 tmModel ='MODELS_AWHSTier3Generic65'
 minuteIntervals = 15
 sizingSchematic = 'primary'
-simSchematic = 'multipass'
+simSchematic = 'primary'
 
 def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, start_vol):
     csv_filename = simSchematic+'_LS_simResult_5.csv'
@@ -31,7 +31,7 @@ def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, s
 
 hpwh_for_sizing = EcosizerEngine(
             incomingT_F     = 50,
-            magnitudeStat  = 100,
+            magnitudeStat  = 150,
             supplyT_F       = 120,
             storageT_F      = storageT_F,
             loadUpT_F       = 150,
@@ -47,8 +47,8 @@ hpwh_for_sizing = EcosizerEngine(
             safetyTM        = 1.75,
             defrostFactor   = 1, 
             compRuntime_hr  = 16, 
-            nApt            = 100, 
-            Wapt            = 100,
+            nApt            = 110, 
+            Wapt            = 60,
             loadShiftSchedule        = loadShiftSchedule,
             loadUpHours     = 3,
             doLoadShift     = True,
@@ -87,7 +87,7 @@ print('+++++++++++++++++++++++++++++++++++++++')
 print("starting LS section using sizes")
 hpwh_ls = EcosizerEngine(
             incomingT_F     = 50,
-            magnitudeStat  = 100,
+            magnitudeStat  = 150,
             supplyT_F       = 120,
             storageT_F      = storageT_F,
             loadUpT_F       = 150,
@@ -103,7 +103,7 @@ hpwh_ls = EcosizerEngine(
             safetyTM        = 1.75,
             defrostFactor   = 1, 
             compRuntime_hr  = 16, 
-            nApt            = 100, 
+            nApt            = 110, 
             Wapt            = 60,
             nBR             = [0,50,30,20,0,0],
             loadShiftSchedule        = loadShiftSchedule,
@@ -124,6 +124,8 @@ start_vol = 0.4*PVol_G_atStorageT
 start_time = time.time()
 
 simResultArray = hpwh_ls.getSimRunWithkWCalc(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, optimizeNLS = False)
+# simResultArray = hpwh_ls.getSimRun(minuteIntervals = 1, nDays = 3, optimizeNLS = False)
+
 
 end_time = time.time()
 duration = end_time - start_time
@@ -131,7 +133,6 @@ print("Program execution time for annual simulation:", duration, "seconds")
 
 simRun_ls = simResultArray[0]
 
-hours = [(i // (60/minuteIntervals)) + 1 for i in range(len(simRun_ls.getPrimaryVolume()))]
 
 print('=========================================================')
 print('average city watertemp is', simRun_ls.getAvgIncomingWaterT())

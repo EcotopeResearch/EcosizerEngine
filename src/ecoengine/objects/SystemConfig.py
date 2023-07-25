@@ -257,6 +257,7 @@ class SystemConfig:
                                                                                             Vcurr = simRun.pV[i-1], 
                                                                                             hw_out = mixedDHW, 
                                                                                             hw_in = mixedGHW, 
+                                                                                            Vtrig_previous = simRun.Vtrig[i-1],
                                                                                             minuteIntervals = minuteIntervals) 
     
     def _setLoadShift(self, loadShiftSchedule, loadUpHours, aquaFract, aquaFractLoadUp, aquaFractShed, storageT_F, loadUpT_F, loadShiftPercent=1):
@@ -649,7 +650,7 @@ class SystemConfig:
         return [volN, capN, N]
 
     
-    def runOnePrimaryStep(self, pheating, V0, Vtrig, Vcurr, hw_out, hw_in, minuteIntervals = 1):
+    def runOnePrimaryStep(self, pheating, V0, Vtrig, Vcurr, hw_out, hw_in, Vtrig_previous, minuteIntervals = 1):
         """
         Runs one step on the primary system. This changes the volume of the primary system
         by assuming there is hot water removed at a volume of hw_out and hot water
@@ -672,6 +673,8 @@ class SystemConfig:
             100% of what of what is removed is replaced
         hw_in : float
             The volume of hot water that could be generated in a time step at storage temp if the primary tank was running the entire time
+        Vtrig_previous : float
+            Trigger from last time step to see if we missed any heating (may have changed if doing load shifting)
 
         Returns
         -------
@@ -685,8 +688,8 @@ class SystemConfig:
             The amount of time the primary tank ran
 
         """
-        if Vcurr > Vtrig:
-            # ensure we stop heating if we start the interval above the aquastat
+        if Vcurr > Vtrig and Vtrig < Vtrig_previous:
+            # ensure we stop heating if we start the interval above the aquastat after the aquastat changes
             pheating = False
 
         Vnew = Vcurr - hw_out

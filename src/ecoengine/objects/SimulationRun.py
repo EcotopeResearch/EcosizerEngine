@@ -505,11 +505,11 @@ class SimulationRun:
         columns = [
             hours,
             self.getPrimaryVolume(),
-            self.getPrimaryRun(),
+            self.getPrimaryGeneration(),
             self.getHWDemand(),
             self.getRecircLoss(),
-            self.getPrimaryGeneration(),
             self.getHWGeneration(),
+            self.getPrimaryRun(),
             self.getOAT(),
             self.getCapIn(),
             self.getCapOut()

@@ -456,6 +456,7 @@ class SwingTank(SystemConfig):
                                                                                                Vcurr = simRun.pV[i-1], 
                                                                                                hw_out = simRun.hw_outSwing[i], 
                                                                                                hw_in = mixedGHW,
+                                                                                               Vtrig_previous = simRun.Vtrig[i-1],
                                                                                                minuteIntervals = minuteIntervals)
     
     def getTMOutputCapacity(self, kW = False):

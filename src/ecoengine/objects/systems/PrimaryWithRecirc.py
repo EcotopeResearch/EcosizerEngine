@@ -37,4 +37,5 @@ class PrimaryWithRecirc(SystemConfig):
                                                                                                Vcurr = simRun.pV[i-1], 
                                                                                                hw_out = mixedDHW, 
                                                                                                hw_in = mixedGHW,
+                                                                                               Vtrig_previous = simRun.Vtrig[i-1],
                                                                                                minuteIntervals = minuteIntervals)
