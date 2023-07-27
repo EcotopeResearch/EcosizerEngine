@@ -23,6 +23,7 @@ from .systemConfigUtils import *
 from .systems.ParallelLoopTank import *
 from .systems.SwingTank import *
 from .systems.MultiPass import *
+from .systems.MultiPassRecirc import *
 from .systems.PrimaryWithRecirc import *
 from .SimulationRun import *
 from .PrefMapTracker import *

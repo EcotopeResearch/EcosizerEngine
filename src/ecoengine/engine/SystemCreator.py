@@ -2,6 +2,7 @@ from ecoengine.objects.SystemConfig import *
 from ecoengine.objects.systems.SwingTank import *
 from ecoengine.objects.systems.ParallelLoopTank import *
 from ecoengine.objects.systems.MultiPass import *
+from ecoengine.objects.systems.MultiPassRecirc import *
 from ecoengine.objects.systems.PrimaryWithRecirc import *
 
 def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None, doLoadShift = False, 
@@ -84,17 +85,33 @@ def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRunti
             return ParallelLoopTank(safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                 building, doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
                 systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr, tmModel, tmNumHeatPumps)
-        case 'multipass':
+        case 'multipass_norecirc': # same as multipass
             if inletWaterAdjustment is None:
                 inletWaterAdjustment = 0.5
             return MultiPass(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
                 systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, inletWaterAdjustment)
-        case 'primary':
+        case 'multipass': # same as multipass_norecirc
+            if inletWaterAdjustment is None:
+                inletWaterAdjustment = 0.5
+            return MultiPass(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
+                doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, inletWaterAdjustment)
+        case 'multipass_rtp':
+            if inletWaterAdjustment is None:
+                inletWaterAdjustment = 0.5
+            return MultiPassRecirc(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
+                doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, inletWaterAdjustment)
+        case 'primary': # same as singlepass_norecirc
             return Primary(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
                 systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr)
-        case 'primaryrecirc':
+        case 'singlepass_norecirc': # same as primary
+            return Primary(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
+                doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr)
+        case 'singlepass_rtp':
             if inletWaterAdjustment is None:
                 inletWaterAdjustment = 0.25
             return PrimaryWithRecirc(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 

@@ -1,3 +1,4 @@
 include src/ecoengine/data/load_shapes/*.json
 include src/ecoengine/data/preformanceMaps/*.json
+include src/ecoengine/data/preformanceMaps/pkls/*.pkl
 include src/ecoengine/data/climate_data/*.csv

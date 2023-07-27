@@ -1,10 +1,15 @@
 import os
 import json
 from ecoengine.constants.Constants import KWH_TO_BTU, W_TO_BTUHR
-import math
+import pickle
+from scipy.interpolate import LinearNDInterpolator
 
 class PrefMapTracker:
     def __init__(self, defaultCapacity = None, modelName = None, kBTUhr = False, numHeatPumps = None, isMultiPass = False):
+        self.isQAHV = False
+        self.output_cap_interpolator = None
+        self.cop_interpolator = None
+        self.input_cap_interpolator = None
         self.defaultCapacity = defaultCapacity
         self.perfMap = None
         self.kBTUhr = kBTUhr
@@ -30,13 +35,22 @@ class PrefMapTracker:
         externalT_F : float
             The external air temperature in fahrenheit
         condenserT_F : float
-            The condenser temperature in fahrenheit
-        
+            The condenser temperature (incoming water temperature) in fahrenheit
+        outT_F : float
+            The temperature of water leaving the system in fahrenheit
         Returns
         -------
-        The output capacity of the primary HPWH in kW as a float
+        output_kW
+            The output capacity of the primary HPWH in kW as a float
+        input_kW
+            The input capacity of the primary HPWH in kW as a float
         """
-        if self.perfMap is None or len(self.perfMap) == 0:
+        if self.isQAHV:
+            #use pickled interpolation functions
+            input_array = [condenserT_F+10, outT_F, externalT_F] # add 10 degrees to inlet water temp for QAHV
+            output_kW = self.output_cap_interpolator(input_array)[0][0]
+            input_kW = self.input_cap_interpolator(input_array)[0][0]
+        elif self.perfMap is None or len(self.perfMap) == 0:
             return self.defaultCapacity, self.defaultCapacity / 2.5 # assume COP of 2.5 for input_capactiy calculation
         elif len(self.perfMap) > 1:
             # cop at ambient temperatures T1 and T2
@@ -85,6 +99,7 @@ class PrefMapTracker:
 
             cop = self._linearInterp(externalT_F, self.perfMap[i_prev]['T_F'], self.perfMap[i_next]['T_F'], COP_T1, COP_T2)
             input_kW = (self._linearInterp(externalT_F, self.perfMap[i_prev]['T_F'], self.perfMap[i_next]['T_F'], inputPower_T1_kW, inputPower_T2_kW))
+            output_kW = cop * input_kW
         else:
             if(externalT_F > self.perfMap[0]['T_F']):
                 extrapolate = True
@@ -94,8 +109,8 @@ class PrefMapTracker:
             else:
                 input_kW = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs']) # TODO check for outT_F, may need to be plus 10 for QAHV
                 cop = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['COP_coeffs'])
-            
-        output_kW = cop * input_kW
+            output_kW = cop * input_kW
+
         if self.kBTUhr:
             output_kW *= W_TO_BTUHR # convert kW to kBTU
             input_kW *= W_TO_BTUHR
@@ -110,14 +125,24 @@ class PrefMapTracker:
         self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
     def setPrefMap(self, modelName):
-        try:
-            with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
-                dataDict = json.load(json_file)
-                self.perfMap = dataDict[modelName]["perfmap"]
-                if modelName[-2:] == 'MP':
-                    self.isMultiPass = True
-        except:
-            raise Exception("No preformance map found for HPWH model type " + modelName + ".")
+        if modelName == "MODELS_Mitsubishi_QAHV":
+            self.isQAHV = True
+            filepath = "../data/preformanceMaps/pkls/"
+            with open(os.path.join(os.path.dirname(__file__), f"{filepath}QAHV_capacity_interpolator.pkl"), 'rb') as f:
+                self.output_cap_interpolator = pickle.load(f)
+            with open(os.path.join(os.path.dirname(__file__), f"{filepath}QAHV_cop_interpolator.pkl"), 'rb') as f:
+                self.cop_interpolator = pickle.load(f)
+            with open(os.path.join(os.path.dirname(__file__), f"{filepath}QAHV_power_in_interpolator.pkl"), 'rb') as f:
+                self.input_cap_interpolator = pickle.load(f)
+        else:
+            try:
+                with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
+                    dataDict = json.load(json_file)
+                    self.perfMap = dataDict[modelName]["perfmap"]
+                    if modelName[-2:] == 'MP':
+                        self.isMultiPass = True
+            except:
+                raise Exception("No preformance map found for HPWH model type " + modelName + ".")
     
     def _linearInterp(self, xnew, x0, x1, y0, y1):
         return y0 + (xnew - x0) * (y1 - y0) / (x1 - x0)

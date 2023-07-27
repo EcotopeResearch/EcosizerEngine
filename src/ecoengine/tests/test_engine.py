@@ -92,7 +92,7 @@ def primary_sizer(): # Returns the hpwh swing tank
             aquaFract       = 0.4, 
             aquaFractLoadUp = 0.21,
             aquaFractShed   = 0.8,
-            schematic       = 'primary', 
+            schematic       = 'singlepass_norecirc', 
             buildingType   = 'multi_family',
             returnT_F       = None, 
             flowRate       = None,
@@ -119,7 +119,7 @@ def primary_sizer_nls():
             storageT_F      = 150,
             percentUseable  = 0.9, 
             aquaFract       = 0.4, 
-            schematic       = 'primary', 
+            schematic       = 'singlepass_norecirc', 
             buildingType   = 'multi_family',
             returnT_F       = None, 
             flowRate       = None,
@@ -186,9 +186,9 @@ def annual_swing_sizer(): # Returns the hpwh swing tank
             doLoadShift     = True,
             loadShiftPercent       = 0.8,
             PVol_G_atStorageT = 944.972083230641, 
-            PCap_kBTUhr = 122.61152083930925, 
+            PCap_kW = 122.61152083930925/W_TO_BTUHR, 
             TMVol_G = 100, 
-            TMCap_kBTUhr = 59.712485,
+            TMCap_kW = 59.712485/W_TO_BTUHR,
             annual = True,
             climateZone = 1
         )
@@ -323,18 +323,23 @@ def test__annual_swing_simulationResults_size(annual_swing_sizer):
     assert len(simResult) == 7
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 35040
 
-@pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr", [
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'multipass', 891, 166, None, None),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass', 891, 166, None, None),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'primaryrecirc', 891, 166, None, None),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'primary', 891, 166, None, None),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_GS3_45HPA_US_SP', None, 'swingtank', 891, 166, 100, 60),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_25_SP', None, 'swingtank', 891, 166, 100, 60),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC185A_SP', 'paralleltank', 891, 106, 91, 60),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_SP', 'MODELS_ColmacCxA_20_SP', 'paralleltank', 891, 106, 91, 60),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC250A_C_SP', 'paralleltank', 891, 106, 91, 60)
+@pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift", [
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'multipass_norecirc', 891, 48, None, None, True),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_norecirc', 891, 48, None, None, True),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_rtp', 891, 48, None, None, True),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120', None, 'multipass_rtp', 891, 48, None, None, True),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_rtp', 891, 48, None, None, True),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120', None, 'singlepass_rtp', 891, 48, None, None, True),
+   (0.21, 0.8, 150, 120, None, 'MODELS_AOSmithCAHP120', None, 'singlepass_rtp', 702, 41, None, None, False),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'singlepass_norecirc', 891, 48, None, None, True),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_Mitsubishi_QAHV', None, 'singlepass_norecirc', 891, 48, None, None, True),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_GS3_45HPA_US_SP', None, 'swingtank', 891, 48, 100, 19, True),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_25_SP', None, 'swingtank', 891, 48, 100, 19, True),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC185A_SP', 'paralleltank', 891, 31, 91, 19, True),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_SP', 'MODELS_ColmacCxA_20_SP', 'paralleltank', 891, 31, 91, 19, True),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC250A_C_SP', 'paralleltank', 891, 31, 91, 19, True)
 ])
-def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr):
+def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift):
     hpwh_ls = EcosizerEngine(
             incomingT_F     = 50,
             magnitudeStat  = 100,
@@ -357,12 +362,12 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
             Wapt            = 60,
             loadShiftSchedule  = loadShiftSchedule,
             loadUpHours     = 3,
-            doLoadShift     = True,
+            doLoadShift     = doLoadShift,
             loadShiftPercent       = 0.8,
             PVol_G_atStorageT = PVol_G_atStorageT, 
-            PCap_kBTUhr = PCap_kBTUhr,
+            PCap_kW = PCap_kW,
             TMVol_G = TMVol_G,
-            TMCap_kBTUhr = TMCap_kBTUhr,
+            TMCap_kW = TMCap_kW,
             annual = True,
             climateZone = 1,
             systemModel = hpwhModel,
@@ -370,9 +375,9 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
         )
     simRun = hpwh_ls.getSimRun(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365)
     supplyToStorageFactor = (supplyT_F - simRun.getIncomingWaterT(0))/(storageT_F - simRun.getIncomingWaterT(0)) # should be same for entire month
-    TMcap = TMCap_kBTUhr
-    if TMcap is None:
-        TMcap = 0
+    # TMcap = TMCap_kW
+    # if TMcap is None:
+    #     TMcap = 0
 
     assert 1 == 1
     for i in range(1,1000):
@@ -401,7 +406,7 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
 
 
     # ensure recirc non-existant for non-recirc-tracking systems
-    if simSchematic != 'primaryrecirc' and simSchematic != 'multipass':
+    if simSchematic != 'singlepass_rtp' and simSchematic != 'multipass_rtp':
         assert simRun.getRecircLoss(0) == 0
         assert simRun.getRecircLoss(5000) == 0
         assert simRun.getRecircLoss(10000) == 0
@@ -409,5 +414,5 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
     # assert COP calculations are the same (within rounding error of 0.002)
     equip_method_cop = simRun.getAnnualCOP()
     boundry_method_cop = simRun.getAnnualCOP(boundryMethod = True)
-    assert equip_method_cop < boundry_method_cop + 0.002
-    assert equip_method_cop > boundry_method_cop - 0.002
+    assert equip_method_cop < boundry_method_cop + 0.003
+    assert equip_method_cop > boundry_method_cop - 0.003

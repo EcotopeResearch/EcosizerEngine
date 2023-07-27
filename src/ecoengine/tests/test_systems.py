@@ -27,7 +27,7 @@ default_building = createBuilding(
 def simplePrimary():
     with QuietPrint():
         system = createSystem(
-            schematic   = 'primary', 
+            schematic   = 'singlepass_norecirc', 
             building    = default_building, 
             storageT_F  = 150, 
             defrostFactor   = 1, 
@@ -69,7 +69,7 @@ def swingTank():
 def LSprimary():
     with QuietPrint():
        system = createSystem(
-            schematic   = 'primary', 
+            schematic   = 'singlepass_norecirc', 
             building    = default_building, 
             storageT_F  = 150, 
             defrostFactor   = 1, 
@@ -89,7 +89,7 @@ def LSprimary():
 def sizedPrimary():
     with QuietPrint():
         system = createSystem(
-            schematic   = 'primary', 
+            schematic   = 'singlepass_norecirc', 
             building    = default_building, 
             storageT_F  = 150, 
             defrostFactor   = 1, 
@@ -305,33 +305,33 @@ def test_invalid_setpoints():
 
 def test_invalid_ls_schedule():
     with pytest.raises(Exception, match="Load shift is not of length 24 but instead has length of 0."):
-        createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [])
+        createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [])
     with pytest.raises(Exception, match="Load shift is not of length 24 but instead has length of 25."):
-        createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [0]*25)
+        createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [0]*25)
     with pytest.raises(Exception, match="When using Load shift the HPWH's must run for at least 1 hour each day."):
-        createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [0]*24)
+        createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, loadShiftPercent = 1, loadShiftSchedule = [0]*24)
     with pytest.raises(Exception, match="Load shift only available for above 25 percent of days."):
-        createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, loadShiftPercent = 0.23, loadShiftSchedule = [1]*24)
+        createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, loadShiftPercent = 0.23, loadShiftSchedule = [1]*24)
 
 def test_invalid_loadshift_vars():
     with pytest.raises(Exception, match = "Invalid input given for load up aquastat fraction, must be a number between 0 and normal aquastat fraction."):
-        createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, aquaFractLoadUp = 0.5, aquaFractShed = 0.8,
+        createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, aquaFractLoadUp = 0.5, aquaFractShed = 0.8,
                      loadShiftSchedule = [1]*24, loadUpT_F = 160, loadUpHours = 0)
     with pytest.raises(Exception, match = "Invalid input given for shed aquastat fraction, must be a number between normal aquastat fraction and 1."):
-        createSystem('primary', 150, 1, .8, 16, 0.5, default_building, doLoadShift = True, aquaFractLoadUp = 0.3, aquaFractShed = 0.4,
+        createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.5, default_building, doLoadShift = True, aquaFractLoadUp = 0.3, aquaFractShed = 0.4,
                      loadShiftSchedule = [1]*24, loadUpT_F = 160, loadUpHours = 0)
     with pytest.raises(Exception, match = "Invalid input given for load up storage temp, it must be a number between normal storage temp and 212F."):
-        createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, aquaFractLoadUp = 0.3, aquaFractShed = 0.8,
+        createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, aquaFractLoadUp = 0.3, aquaFractShed = 0.8,
                      loadShiftSchedule = [1]*24, loadUpT_F = 140, loadUpHours = 0)
     with pytest.raises(Exception, match = "Invalid input given for load up hours, must be an integer less than or equal to hours in day before first shed period."):
-        createSystem('primary', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, aquaFractLoadUp = 0.3, aquaFractShed = 0.8,
+        createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, default_building, doLoadShift = True, aquaFractLoadUp = 0.3, aquaFractShed = 0.8,
                      loadShiftSchedule = [1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], loadUpT_F = 160, loadUpHours = 2)
 
 def test_invalid_sizing():
     with pytest.raises(Exception, match = "Invalid input given for Primary Storage Volume, it must be a number greater than zero."):
-        createSystem('primary', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 'lol', PCap_kBTUhr = 95)
+        createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 'lol', PCap_kBTUhr = 95)
     with pytest.raises(Exception, match = "Invalid input given for Primary Storage Volume, it must be a number greater than zero."):
-        createSystem('primary', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 0, PCap_kBTUhr = 95)
+        createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 0, PCap_kBTUhr = 95)
     with pytest.raises(Exception, match = "Invalid input given for Primary Storage Volume, it must be a number greater than zero."):
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 0, PCap_kBTUhr = 95, TMVol_G=12,TMCap_kBTUhr=15)
     with pytest.raises(Exception, match = "Invalid input given for Primary Storage Volume, it must be a number greater than zero."):
@@ -360,7 +360,7 @@ def test_invalid_prefomance_map():
 def test_too_small_lu_aq_sizing():
     with pytest.raises(Exception, match = "The load up aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: 0.546 or increase your drawdown factor"):
         createSystem(
-            schematic   = 'primary', 
+            schematic   = 'singlepass_norecirc', 
             building    = default_building, 
             storageT_F  = 150, 
             defrostFactor   = 1, 

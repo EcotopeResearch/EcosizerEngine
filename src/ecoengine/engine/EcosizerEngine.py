@@ -95,12 +95,12 @@ class EcosizerEngine:
         indicates whether to use a standard gpdpp specification for multi-family buildings. Set to None if not using a standard gpdpp.
     PVol_G_atStorageT : float
         For pre-sized systems, the total/maximum storage volume for water at storage temperature for the system in gallons
-    PCap_kBTUhr : float
-        For pre-sized systems, the output capacity for the system in kBTUhr
+    PCap_kW : float
+        For pre-sized systems, the output capacity for the system in kW
     TMVol_G : float
         For applicable pre-sized systems, the temperature maintenance volume for the system in gallons
-    TMCap_kBTUhr : float
-        For applicable pre-sized systems, the output capacity for temperature maintenance for the system in kBTUhr
+    TMCap_kW : float
+        For applicable pre-sized systems, the output capacity for temperature maintenance for the system in kW
     annual : boolean
         indicates whether to use annual loadshape for multi-family buildings
     zipCode : int
@@ -126,14 +126,22 @@ class EcosizerEngine:
                             returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
                             defrostFactor = 1, compRuntime_hr = 16, nApt = None, Wapt = None, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None,
-                            PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None,
+                            PVol_G_atStorageT = None, PCap_kW = None, TMVol_G = None, TMCap_kW = None,
                             annual = False, zipCode = None, climateZone = None, systemModel = None, numHeatPumps = None, 
                             tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None):
         
         ignoreRecirc = False
-        if schematic == 'primary':
+        if schematic == 'singlepass_norecirc' or schematic == 'primary' or schematic == 'multipass_norecirc' or schematic == 'multipass':
             # recirculation does not matter because there is no temperature maintinence
             ignoreRecirc = True
+
+        # convert kW inputs to kBTUhr
+        PCap_kBTUhr = None
+        if not PCap_kW is None:
+            PCap_kBTUhr = PCap_kW * W_TO_BTUHR
+        TMCap_kBTUhr = None
+        if not TMCap_kW is None:
+            TMCap_kBTUhr = TMCap_kW * W_TO_BTUHR
 
         self.building = createBuilding( 
                                 incomingT_F     = incomingT_F,

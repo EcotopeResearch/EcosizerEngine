@@ -17,16 +17,16 @@ aquaFractShed   = 0.8
 storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1] #assume this loadshape for annual simulation every day
 csvCreate = False
-hpwhModel ='MODELS_NyleC250A_C_SP'
+hpwhModel ='MODELS_Mitsubishi_QAHV'
 tmModel ='MODELS_NyleC250A_C_SP'
 minuteIntervals = 15
-sizingSchematic = 'primary'
-simSchematic = 'primary'
+sizingSchematic = 'singlepass_norecirc'
+simSchematic = 'singlepass_norecirc'
 
 def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, start_vol):
-    csv_filename = simSchematic+'_LS_simResult_5.csv'
+    csv_filename = f'{simSchematic}_LS_simResult_{hpwhModel}.csv'
     if loadshift_title == False:
-        csv_filename = simSchematic+'_NON_LS_simResult_3.csv'
+        csv_filename = f'{simSchematic}_NON_LS_simResult_{hpwhModel}.csv'
     simRun.writeCSV(csv_filename)
 
 hpwh_for_sizing = EcosizerEngine(
@@ -51,7 +51,7 @@ hpwh_for_sizing = EcosizerEngine(
             Wapt            = 60,
             loadShiftSchedule        = loadShiftSchedule,
             loadUpHours     = 3,
-            doLoadShift     = True,
+            doLoadShift     = False,
             loadShiftPercent       = 0.8
         )
 
@@ -74,12 +74,12 @@ print('PVol_G_atStorageT = ',PVol_G_atStorageT)
 print('PCap_kBTUhr = ',PCap_kBTUhr)
 
 TMVol_G = None
-TMCap_kBTUhr = None
+TMCap_kW = None
 if sizingSchematic == 'swingtank' or sizingSchematic == 'paralleltank':
     TMVol_G = hpwh_for_sizing.getSizingResults()[2] 
-    TMCap_kBTUhr = hpwh_for_sizing.getSizingResults()[3]
+    TMCap_kW = hpwh_for_sizing.getSizingResults()[3]/W_TO_BTUHR
     print('TMVol_G = ',TMVol_G)
-    print('TMCap_kBTUhr = ',TMCap_kBTUhr)
+    print('TMCap_kW = ',TMCap_kW)
 print('+++++++++++++++++++++++++++++++++++++++')
 
 # Annual simulation based on sizing from last:
@@ -111,9 +111,9 @@ hpwh_ls = EcosizerEngine(
             doLoadShift     = True,
             loadShiftPercent       = 0.8,
             PVol_G_atStorageT = PVol_G_atStorageT, 
-            PCap_kBTUhr = PCap_kBTUhr, 
+            PCap_kW = PCap_kBTUhr/W_TO_BTUHR, 
             TMVol_G = TMVol_G, 
-            TMCap_kBTUhr = TMCap_kBTUhr,
+            TMCap_kW = TMCap_kW,
             annual = True,
             climateZone = 1,
             systemModel = hpwhModel,
