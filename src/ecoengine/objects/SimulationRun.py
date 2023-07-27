@@ -464,7 +464,7 @@ class SimulationRun:
                           height=700)
         
         # Swing tank
-        if hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'storageT_F'):
+        if hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'storageT_F') and hasattr(self, 'hw_outSwing'):
 
             # Do Swing Tank components:
             tmT_F = np.array(roundList(self.tmT_F,3)[-(60*hrind_fromback):])
