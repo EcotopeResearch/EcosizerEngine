@@ -1,4 +1,4 @@
-from ecoengine import EcosizerEngine, getListOfModels, SimulationRun
+from ecoengine import EcosizerEngine, getListOfModels, SimulationRun, getAnnualSimLSComparison
 import time
 
 rhoCp = 8.353535 
@@ -16,12 +16,12 @@ aquaFractLoadUp = 0.21
 aquaFractShed   = 0.8
 storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1] #assume this loadshape for annual simulation every day
-csvCreate = False
+csvCreate = True
 hpwhModel ='MODELS_Mitsubishi_QAHV'
 tmModel ='MODELS_NyleC250A_C_SP'
 minuteIntervals = 15
 sizingSchematic = 'singlepass_norecirc'
-simSchematic = 'singlepass_norecirc'
+simSchematic = 'singlepass_rtp'
 
 def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, start_vol):
     csv_filename = f'{simSchematic}_LS_simResult_{hpwhModel}.csv'
@@ -51,7 +51,7 @@ hpwh_for_sizing = EcosizerEngine(
             Wapt            = 60,
             loadShiftSchedule        = loadShiftSchedule,
             loadUpHours     = 3,
-            doLoadShift     = False,
+            doLoadShift     = True,
             loadShiftPercent       = 0.8
         )
 
@@ -161,7 +161,33 @@ if csvCreate:
 print('=========================================================')
 print("LS to non-LS diff:", kGperkWh_nonLS - kGperkWh, "=", simResultArray[3])
 
-print(getListOfModels())
+# print(getListOfModels())
+
+if csvCreate:
+# Generate the content for the HTML div
+    content = getAnnualSimLSComparison(simRun_ls, simRun_nls)
+
+    # Create the HTML content
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>My Webpage</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+<div>
+{content}
+</div>
+</body>
+</html>
+"""
+
+    # Write the HTML content to the file
+    file_name = f'{simSchematic}_simResult_{hpwhModel}.html'
+    with open(file_name, 'w') as file:
+        file.write(html_content)
+
+
 # parallel_sizer = EcosizerEngine(
 #             incomingT_F     = 50,
 #             magnitudeStat  = 100,

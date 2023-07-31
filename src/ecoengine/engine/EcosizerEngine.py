@@ -4,25 +4,12 @@ from .Simulator import simulate
 from ecoengine.objects.SimulationRun import *
 import copy
 import json
+from plotly.graph_objs import Figure, Scatter
+from plotly.offline import plot
+from plotly.subplots import make_subplots
 
 print("EcosizerEngine Copyright (C) 2023  Ecotope Inc.")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")
-
-def getListOfModels(multiPass = False):
-    """
-    Static Method to Return all Model Names as a list of strings
-    """
-    returnList = []
-    with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
-        data = json.load(json_file)
-        for model_name, value in data.items():
-            if multiPass and model_name[-2:] == 'MP':
-                returnList.append([model_name,value["name"]])
-            elif not multiPass and model_name[-2:] != 'MP':
-                returnList.append([model_name,value["name"]])
-    return returnList
-
-
 
 class EcosizerEngine:
     """
@@ -308,7 +295,7 @@ class EcosizerEngine:
         """
         return simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
     
-    def getSimRunWithkWCalc(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, optimizeNLS = False):
+    def getSimRunWithkWCalc(self, initPV=None, initST=None, minuteIntervals = 15, nDays = 365, optimizeNLS = False):
         """
         Returns a list that includes a simulationRun object for a simulation of the Ecosizer's building and system object with load shifting and without load shifting,
         also includes the loadshift_capacity and the kGperkWh_saved
@@ -328,7 +315,7 @@ class EcosizerEngine:
 
         Returns
         -------
-        [simRun_ls, simRun_nls, loadshift_capacity, kGperkWh_saved]
+        [simRun_ls, simRun_nls, loadshift_capacity, kGperkWh_saved, annual_kGCO2_saved]
         """
         if not self.system.doLoadShift:
             raise Exception('Cannot preform kgCO2/kWh calculation on non-loadshifting systems.')
@@ -338,7 +325,8 @@ class EcosizerEngine:
         simRun_ls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
         
         loadshift_capacity = (rhoCp*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.storageT_F-simRun_ls.getAvgIncomingWaterT()))/KWH_TO_BTU # stored energy, not input energy
-        kGperkWh_ls = simRun_ls.getkGCO2Sum()/loadshift_capacity
+        kG_sum_ls = simRun_ls.getkGCO2Sum()
+        kGperkWh_ls = kG_sum_ls/loadshift_capacity
 
         nls_system = copy.copy(self.system)
 
@@ -350,10 +338,12 @@ class EcosizerEngine:
             self.building.setToAnnualLS()
 
         simRun_nls = simulate(nls_system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
-        kGperkWh_nls = simRun_nls.getkGCO2Sum()/loadshift_capacity
+        kG_sum_nls = simRun_nls.getkGCO2Sum()
+        kGperkWh_nls = kG_sum_nls/loadshift_capacity
 
+        annual_kGCO2_saved = kG_sum_nls - kG_sum_ls
         kGperkWh_saved = kGperkWh_nls - kGperkWh_ls
-        return [simRun_ls, simRun_nls, loadshift_capacity, kGperkWh_saved]
+        return [simRun_ls, simRun_nls, loadshift_capacity, kGperkWh_saved, annual_kGCO2_saved]
 
     def getSizingResults(self):
         """
@@ -431,3 +421,83 @@ class EcosizerEngine:
             The total daily hot water for the building the HPWH is being sized for.
         """
         return self.building.magnitude
+    
+    def getClimateZone(self):
+        """
+        Returns climate zone of the simulation building as an int or None if it has not been set.
+        """
+        # TODO unit test
+        return self.building.getClimateZone()
+    
+##############################################################
+# STATIC FUNCTIONS
+##############################################################
+    
+def getListOfModels(multiPass = False):
+    """
+    Static Method to Return all Model Names as a list of strings
+    """
+    returnList = []
+    with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
+        data = json.load(json_file)
+        for model_name, value in data.items():
+            if multiPass and model_name[-2:] == 'MP':
+                returnList.append([model_name,value["name"]])
+            elif not multiPass and model_name[-2:] != 'MP':
+                returnList.append([model_name,value["name"]])
+    return returnList
+
+def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationRun, return_as_div=True):
+    """
+    Returns comparison graph of the input power by hour for an annual load shifting and non loadshifting HPWH simulation
+    """
+    if simRun_ls.minuteIntervals != 15 or simRun_nls.minuteIntervals != 15 or len(simRun_ls.oat) != 8760 or len(simRun_nls.oat) != 8760:
+        raise Exception("Both simulation runs needs to be annual with 15 minute intervals to generate comparison graph.")
+        # TODO make useful for non-15 min intervals
+
+    energy_ls = [0] * 96
+    energy_nls = [0] * 96
+    minute_axis = [0] * 96
+    
+    for i in range(8760*4):
+        energy_ls[i % 96] += (simRun_ls.getCapIn(i) * simRun_ls.getPrimaryRun(i)/15) + (simRun_ls.getTMCapIn(i) * simRun_ls.getTMRun(i)/15)
+        energy_nls[i % 96] += (simRun_nls.getCapIn(i) * simRun_nls.getPrimaryRun(i)/15) + (simRun_nls.getTMCapIn(i) * simRun_nls.getTMRun(i)/15)
+
+    # need to shift energy_ls and energy_nls by one spot soi that they line up with x axis
+    valueHolder_ls =  energy_ls[-1]
+    valueHolder_nls =  energy_nls[-1]   
+    for i in range(96):
+        minute_axis[i] = i*15
+        
+        tempHolder = energy_ls[i]
+        energy_ls[i] = valueHolder_ls/365
+        valueHolder_ls = tempHolder
+
+        tempHolder = energy_nls[i]
+        energy_nls[i] = valueHolder_nls/365
+        valueHolder_nls = tempHolder
+
+    fig = Figure()
+    fig.add_trace(Scatter(
+        x = minute_axis,
+        y = energy_ls,
+        name = 'Load Shift'))
+    fig.add_trace(Scatter(
+        x = minute_axis,
+        y = energy_nls,
+        name = 'Baseline'))
+    
+    fig.update_xaxes(title_text='Minute of the Day')
+    fig.update_yaxes(title_text='Energy Use (kW per minute)')
+    fig.update_layout(title_text='Energy Usage Comparison')
+    
+    if return_as_div:
+        plot_div = plot(fig, output_type='div', show_link=False, link_text="",
+                    include_plotlyjs = False)
+        return plot_div
+    return fig 
+
+    
+    
+
+

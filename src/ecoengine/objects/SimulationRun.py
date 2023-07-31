@@ -197,7 +197,7 @@ class SimulationRun:
     
     def getCapIn(self, i : int = None):
         """
-        Returns a list from the out put capacity for the primary system at every timestep
+        Returns a list from the input capacity for the primary system at every timestep
         or, if i is defined, returns index i of that list
         """
         if i is None:

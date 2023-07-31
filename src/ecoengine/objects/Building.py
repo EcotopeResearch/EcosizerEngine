@@ -42,6 +42,8 @@ class Building:
         raise Exception("Annual loadshape not available for this building type. This feature is only available for multi-family buildings.")
     def setToDailyLS(self):
         raise Exception("setToDailyLS() feature is not available for this building type. This feature is only available for multi-family buildings.")
+    def getClimateZone(self):
+        return self.climateZone
 
 class MensDorm(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
