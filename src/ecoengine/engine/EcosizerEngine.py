@@ -455,40 +455,31 @@ def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationR
         raise Exception("Both simulation runs needs to be annual with 15 minute intervals to generate comparison graph.")
         # TODO make useful for non-15 min intervals
 
-    energy_ls = [0] * 96
-    energy_nls = [0] * 96
-    minute_axis = [0] * 96
+    energy_ls = [0] * 24
+    energy_nls = [0] * 24
+    hour_axis = [0] * 24
     
     for i in range(8760*4):
-        energy_ls[i % 96] += (simRun_ls.getCapIn(i) * simRun_ls.getPrimaryRun(i)/15) + (simRun_ls.getTMCapIn(i) * simRun_ls.getTMRun(i)/15)
-        energy_nls[i % 96] += (simRun_nls.getCapIn(i) * simRun_nls.getPrimaryRun(i)/15) + (simRun_nls.getTMCapIn(i) * simRun_nls.getTMRun(i)/15)
+        energy_ls[(i % 96) // 4] += ((simRun_ls.getCapIn(i) * simRun_ls.getPrimaryRun(i)) + (simRun_ls.getTMCapIn(i) * simRun_ls.getTMRun(i)))/60
+        energy_nls[(i % 96) // 4] += ((simRun_nls.getCapIn(i) * simRun_nls.getPrimaryRun(i)) + (simRun_nls.getTMCapIn(i) * simRun_nls.getTMRun(i)))/60
 
-    # need to shift energy_ls and energy_nls by one spot soi that they line up with x axis
-    valueHolder_ls =  energy_ls[-1]
-    valueHolder_nls =  energy_nls[-1]   
-    for i in range(96):
-        minute_axis[i] = i*15
-        
-        tempHolder = energy_ls[i]
-        energy_ls[i] = valueHolder_ls/365
-        valueHolder_ls = tempHolder
-
-        tempHolder = energy_nls[i]
-        energy_nls[i] = valueHolder_nls/365
-        valueHolder_nls = tempHolder
+    for i in range(24):
+        hour_axis[i] = i
+        energy_ls[i] = energy_ls[i]/365
+        energy_nls[i] = energy_nls[i]/365
 
     fig = Figure()
     fig.add_trace(Scatter(
-        x = minute_axis,
+        x = hour_axis,
         y = energy_ls,
         name = 'Load Shift'))
     fig.add_trace(Scatter(
-        x = minute_axis,
+        x = hour_axis,
         y = energy_nls,
         name = 'Baseline'))
     
-    fig.update_xaxes(title_text='Minute of the Day')
-    fig.update_yaxes(title_text='Energy Use (kW per minute)')
+    fig.update_xaxes(title_text='Hour')
+    fig.update_yaxes(title_text='Energy Use (kWh)')
     fig.update_layout(title_text='Energy Usage Comparison')
     
     if return_as_div:

@@ -17,11 +17,11 @@ aquaFractShed   = 0.8
 storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1] #assume this loadshape for annual simulation every day
 csvCreate = True
-hpwhModel ='MODELS_Mitsubishi_QAHV'
-tmModel ='MODELS_NyleC250A_C_SP'
+hpwhModel ='MODELS_NyleC90A_SP'
+tmModel ='MODELS_ColmacCxA_10_MP'
 minuteIntervals = 15
-sizingSchematic = 'singlepass_norecirc'
-simSchematic = 'singlepass_rtp'
+sizingSchematic = 'paralleltank'
+simSchematic = 'paralleltank'
 
 def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, start_vol):
     csv_filename = f'{simSchematic}_LS_simResult_{hpwhModel}.csv'
