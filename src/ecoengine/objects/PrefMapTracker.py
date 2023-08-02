@@ -3,6 +3,7 @@ import json
 from ecoengine.constants.Constants import KWH_TO_BTU, W_TO_BTUHR
 import pickle
 from scipy.interpolate import LinearNDInterpolator
+import math
 
 class PrefMapTracker:
     def __init__(self, defaultCapacity = None, modelName = None, kBTUhr = False, numHeatPumps = None, isMultiPass = False):
@@ -46,12 +47,39 @@ class PrefMapTracker:
             The input capacity of the primary HPWH in kW as a float
         """
         if self.isQAHV:
+            # edit incoming values to extrapolate if need be
+            extrapolate = False
+            condenserT_F += 10 # add 10 degrees to incoming water temp for QAHV only
+            
+            if condenserT_F > 120:
+                condenserT_F = 120
+                extrapolate = True
+            elif condenserT_F < 41:
+                condenserT_F = 120
+                extrapolate = True
+            
+            if outT_F > 170:
+                outT_F = 170
+                extrapolate = True
+            elif outT_F < 149:
+                outT_F = 149
+                extrapolate = True
+            
+            if externalT_F > 100.0:
+                externalT_F = 100.0
+                extrapolate = True
+            elif externalT_F < -13.0:
+                externalT_F = -13.0
+                extrapolate = True
+
             #use pickled interpolation functions
-            input_array = [condenserT_F+10, outT_F, externalT_F] # add 10 degrees to inlet water temp for QAHV
+            input_array = [condenserT_F, outT_F, externalT_F] # add 10 degrees to inlet water temp for QAHV
             output_kW = self.output_cap_interpolator(input_array)[0][0]
             input_kW = self.input_cap_interpolator(input_array)[0][0]
+
         elif self.perfMap is None or len(self.perfMap) == 0:
             return self.defaultCapacity, self.defaultCapacity / 2.5 # assume COP of 2.5 for input_capactiy calculation
+        
         elif len(self.perfMap) > 1:
             # cop at ambient temperatures T1 and T2
             COP_T1 = 0 

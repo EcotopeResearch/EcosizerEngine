@@ -426,7 +426,6 @@ class EcosizerEngine:
         """
         Returns climate zone of the simulation building as an int or None if it has not been set.
         """
-        # TODO unit test
         return self.building.getClimateZone()
     
 ##############################################################

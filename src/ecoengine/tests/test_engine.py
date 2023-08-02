@@ -200,7 +200,22 @@ with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/kGperkWh
     next(kG_reader)
     for i in range(1000):
         kG_row = next(kG_reader)
-        climateZone_1_kg.append(float(kG_row[0]))
+        climateZone_1_kg.append([float(kG_row[0]),
+                                 float(kG_row[1]),
+                                 float(kG_row[2]),
+                                 float(kG_row[3]),
+                                 float(kG_row[4]),
+                                 float(kG_row[5]),
+                                 float(kG_row[6]),
+                                 float(kG_row[7]),
+                                 float(kG_row[8]),
+                                 float(kG_row[9]),
+                                 float(kG_row[10]),
+                                 float(kG_row[11]),
+                                 float(kG_row[12]),
+                                 float(kG_row[13]),
+                                 float(kG_row[14]),
+                                 float(kG_row[15])])
 ###############################################################################
 ###############################################################################
 # Unit Tests
@@ -323,23 +338,24 @@ def test__annual_swing_simulationResults_size(annual_swing_sizer):
     assert len(simResult) == 7
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 35040
 
-@pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift", [
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'multipass_norecirc', 891, 48, None, None, True),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_norecirc', 891, 48, None, None, True),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_rtp', 891, 48, None, None, True),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120', None, 'multipass_rtp', 891, 48, None, None, True),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_rtp', 891, 48, None, None, True),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120', None, 'singlepass_rtp', 891, 48, None, None, True),
-   (0.21, 0.8, 150, 120, None, 'MODELS_AOSmithCAHP120', None, 'singlepass_rtp', 702, 41, None, None, False),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'singlepass_norecirc', 891, 48, None, None, True),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_Mitsubishi_QAHV', None, 'singlepass_norecirc', 891, 48, None, None, True),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_GS3_45HPA_US_SP', None, 'swingtank', 891, 48, 100, 19, True),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_25_SP', None, 'swingtank', 891, 48, 100, 19, True),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC185A_SP', 'paralleltank', 891, 31, 91, 19, True),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_SP', 'MODELS_ColmacCxA_20_SP', 'paralleltank', 891, 31, 91, 19, True),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC250A_C_SP', 'paralleltank', 891, 31, 91, 19, True)
+@pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, climateZone", [
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'multipass_norecirc', 891, 48, None, None, True, 94503,2),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_norecirc', 891, 48, None, None, True, 93901,3),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_rtp', 891, 48, None, None, True, 93254,4),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120_MP', None, 'multipass_rtp', 891, 48, None, None, True, 93130,5),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_rtp', 891, 48, None, None, True, 90009,6),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120_MP', None, 'singlepass_rtp', 891, 48, None, None, True, 91902,7),
+   (0.21, 0.8, 150, 120, None, 'MODELS_AOSmithCAHP120_MP', None, 'singlepass_rtp', 702, 41, None, None, False, 90003,8),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'singlepass_norecirc', 891, 48, None, None, True, 90006,9),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_Mitsubishi_QAHV', None, 'singlepass_norecirc', 891, 48, None, None, True, 91701,10),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_GS3_45HPA_US_SP', None, 'swingtank', 891, 48, 100, 19, True, 95603,11),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_25_SP', None, 'swingtank', 891, 48, 100, 19, True, 93620,12),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC185A_SP', 'paralleltank', 891, 31, 91, 19, True, 93203,13),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_SP', 'MODELS_ColmacCxA_20_SP', 'paralleltank', 891, 31, 91, 19, True, 91916,14),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC250A_C_SP', 'paralleltank', 891, 31, 91, 19, True, 92004,15)
 ])
-def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift):
+def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, 
+                              simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, climateZone):
     hpwh_ls = EcosizerEngine(
             incomingT_F     = 50,
             magnitudeStat  = 100,
@@ -369,17 +385,14 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
             TMVol_G = TMVol_G,
             TMCap_kW = TMCap_kW,
             annual = True,
-            climateZone = 1,
+            zipCode = zipCode,
             systemModel = hpwhModel,
             tmModel = tmModel
         )
     simRun = hpwh_ls.getSimRun(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365)
     supplyToStorageFactor = (supplyT_F - simRun.getIncomingWaterT(0))/(storageT_F - simRun.getIncomingWaterT(0)) # should be same for entire month
-    # TMcap = TMCap_kW
-    # if TMcap is None:
-    #     TMcap = 0
 
-    assert 1 == 1
+    assert hpwh_ls.getClimateZone() == climateZone
     for i in range(1,1000):
 
         # assert primaryVolume = generation - demand
@@ -400,7 +413,7 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
         assert simRun.getPrimaryGeneration(i) > calculated_generation - 0.01
 
         # assert kW calculation is correct
-        calculatedKg = climateZone_1_kg[i//4] * (simRun.getCapIn(i) * (simRun.getPrimaryRun(i) / 15) + (simRun.getTMCapIn(i)*simRun.getTMRun(i)/15))
+        calculatedKg = climateZone_1_kg[i//4][climateZone-1] * (simRun.getCapIn(i) * (simRun.getPrimaryRun(i) / 15) + (simRun.getTMCapIn(i)*simRun.getTMRun(i)/15))
         assert simRun.getkGCO2(i) < calculatedKg + 0.001
         assert simRun.getkGCO2(i) > calculatedKg - 0.001
 
@@ -410,6 +423,103 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
         assert simRun.getRecircLoss(0) == 0
         assert simRun.getRecircLoss(5000) == 0
         assert simRun.getRecircLoss(10000) == 0
+
+    # assert COP calculations are the same (within rounding error of 0.002)
+    equip_method_cop = simRun.getAnnualCOP()
+    boundry_method_cop = simRun.getAnnualCOP(boundryMethod = True)
+    assert equip_method_cop < boundry_method_cop + 0.003
+    assert equip_method_cop > boundry_method_cop - 0.003
+
+@pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, zipCode, climateZone", [
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'multipass_norecirc', 891, 48, None, None, 94922,1),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_rtp', 891, 48, None, None, 90001,8),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_rtp', 891, 48, None, None, 90254,6),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'singlepass_norecirc', 891, 48, None, None, 90255,8),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_GS3_45HPA_US_SP', None, 'swingtank', 891, 48, 100, 19, 91380,16),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_SP', 'MODELS_ColmacCxA_20_MP', 'paralleltank', 891, 31, 91, 19, 91730,10),
+])
+def test_annual_simRun_comparison_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, 
+                                         tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, zipCode, climateZone):
+    hpwh_ls = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = supplyT_F,
+            storageT_F      = storageT_F,
+            loadUpT_F       = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            aquaFractLoadUp = aquaFractLoadUp,
+            aquaFractShed   = aquaFractShed,
+            schematic       = simSchematic, 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 60,
+            loadShiftSchedule  = loadShiftSchedule,
+            loadUpHours     = 3,
+            doLoadShift     = True,
+            loadShiftPercent       = 0.8,
+            PVol_G_atStorageT = PVol_G_atStorageT, 
+            PCap_kW = PCap_kW,
+            TMVol_G = TMVol_G,
+            TMCap_kW = TMCap_kW,
+            annual = True,
+            zipCode = zipCode,
+            systemModel = hpwhModel,
+            tmModel = tmModel
+        )
+    simRunsAndCalcs = hpwh_ls.getSimRunWithkWCalc(initPV=0.4*PVol_G_atStorageT, initST=135)
+    assert len(simRunsAndCalcs) == 5
+    assert hpwh_ls.getClimateZone() == climateZone
+    simRun_ls = simRunsAndCalcs[0]
+    simRun_nls = simRunsAndCalcs[1]
+    for i in range(1,1000):
+        # these always be the same because they are the same system model in the same building
+        assert simRun_ls.getCapOut(i) == simRun_nls.getCapOut(i)
+        assert simRun_ls.getCapIn(i) == simRun_nls.getCapIn(i)
+        assert simRun_ls.getTMCapOut(i) == simRun_nls.getTMCapOut(i)
+        assert simRun_ls.getTMCapIn(i) == simRun_nls.getTMCapIn(i)
+        assert simRun_ls.getHWDemand(i) == simRun_nls.getHWDemand(i)
+        assert simRun_ls.getRecircLoss(i) == simRun_nls.getRecircLoss(i)
+        assert simRun_ls.getIncomingWaterT(i) == simRun_nls.getIncomingWaterT(i)
+
+def test_invalid_prefomance_map(swing_sizer):
+    with pytest.raises(Exception, match = "kgCO2/kWh calculation is only available for annual simulations."):
+        swing_sizer.getSimRunWithkWCalc()
+
+@pytest.mark.parametrize("climateZone", [
+   (1),(2),(3),(4),(5),(6),(7),(8),(9),(10),(11),(12),(13),(14),(15),(16)
+])
+def test_annual_QAVH_for_all_climates(climateZone):
+    hpwh = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4,
+            schematic       = "singlepass_norecirc", 
+            buildingType   = 'multi_family',
+            gpdpp           = 25,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 60,
+            doLoadShift     = False,
+            PVol_G_atStorageT = 891,
+            PCap_kW = 48,
+            annual = True,
+            climateZone = climateZone,
+            systemModel = "MODELS_Mitsubishi_QAHV"
+        )
+    simRun = hpwh.getSimRun(minuteIntervals = 15, nDays = 365)
+
+    assert hpwh.getClimateZone() == climateZone
 
     # assert COP calculations are the same (within rounding error of 0.002)
     equip_method_cop = simRun.getAnnualCOP()

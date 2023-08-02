@@ -2,7 +2,7 @@
     "MODELS_Mitsubishi_QAHV" : {
         "name" : "Mitsubishi QAHV"
     },
-    "MODELS_AOSmithCAHP120" : {
+    "MODELS_AOSmithCAHP120_MP" : {
         "name" : "120 gallon AOSmith CAHP commercial grade",
         "perfmap": [
             {
