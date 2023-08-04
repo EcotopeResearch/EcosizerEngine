@@ -1,5 +1,12 @@
 from .BuildingCreator import *
 from .SystemCreator import *
+from .Simulator import simulate
+from ecoengine.objects.SimulationRun import *
+import copy
+import json
+from plotly.graph_objs import Figure, Scatter
+from plotly.offline import plot
+from plotly.subplots import make_subplots
 
 print("EcosizerEngine Copyright (C) 2023  Ecotope Inc.")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")
@@ -71,6 +78,32 @@ class EcosizerEngine:
         Defaults to 120 °F.
     offTime_hr: integer
         Maximum hours per day the temperature maintenance equipment can run.
+    standardGPD : string
+        indicates whether to use a standard gpdpp specification for multi-family buildings. Set to None if not using a standard gpdpp.
+    PVol_G_atStorageT : float
+        For pre-sized systems, the total/maximum storage volume for water at storage temperature for the system in gallons
+    PCap_kW : float
+        For pre-sized systems, the output capacity for the system in kW
+    TMVol_G : float
+        For applicable pre-sized systems, the temperature maintenance volume for the system in gallons
+    TMCap_kW : float
+        For applicable pre-sized systems, the output capacity for temperature maintenance for the system in kW
+    annual : boolean
+        indicates whether to use annual loadshape for multi-family buildings
+    zipCode : int
+        the CA zipcode the building resides in to determine the climate zone
+    climateZone : int
+        the CA climate zone the building resides in
+    systemModel : String
+        The make/model of the HPWH being used for the primary system.
+    numHeatPumps : int
+        The number of heat pumps on the primary system
+    tmModel : String
+        The make/model of the HPWH being used for the temperature maintenance system.
+    tmNumHeatPumps : int
+        The number of heat pumps on the temperature maintenance system
+    inletWaterAdjustment : float
+        adjustment for inlet water temperature fraction for primary recirculation systems
 
     """
 
@@ -78,31 +111,53 @@ class EcosizerEngine:
                             schematic, buildingType, loadshape = None, avgLoadshape = None, loadShiftSchedule = None, loadUpHours = None,
                             aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1,
                             returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
-                            defrostFactor = 1, compRuntime_hr = 16, nApt = 0, Wapt = 0, doLoadShift = False,
-                            setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None):
+                            defrostFactor = 1, compRuntime_hr = 16, nApt = None, Wapt = None, doLoadShift = False,
+                            setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None,
+                            PVol_G_atStorageT = None, PCap_kW = None, TMVol_G = None, TMCap_kW = None,
+                            annual = False, zipCode = None, climateZone = None, systemModel = None, numHeatPumps = None, 
+                            tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None):
         
-        building = createBuilding( incomingT_F     = incomingT_F,
-                                    magnitudeStat  = magnitudeStat, 
-                                    supplyT_F       = supplyT_F, 
-                                    buildingType   = buildingType,
-                                    loadshape       = loadshape,
-                                    avgLoadshape    = avgLoadshape,
-                                    returnT_F       = returnT_F, 
-                                    flowRate       = flowRate,
-                                    gpdpp           = gpdpp,
-                                    nBR             = nBR,
-                                    nApt            = nApt,
-                                    Wapt            = Wapt,
-                                    standardGPD = standardGPD
+        ignoreRecirc = False
+        if schematic == 'singlepass_norecirc' or schematic == 'primary' or schematic == 'multipass_norecirc' or schematic == 'multipass':
+            # recirculation does not matter because there is no temperature maintinence
+            ignoreRecirc = True
+
+        # convert kW inputs to kBTUhr
+        PCap_kBTUhr = None
+        if not PCap_kW is None:
+            PCap_kBTUhr = PCap_kW * W_TO_BTUHR
+        TMCap_kBTUhr = None
+        if not TMCap_kW is None:
+            TMCap_kBTUhr = TMCap_kW * W_TO_BTUHR
+
+        self.building = createBuilding( 
+                                incomingT_F     = incomingT_F,
+                                magnitudeStat   = magnitudeStat, 
+                                supplyT_F       = supplyT_F, 
+                                buildingType    = buildingType,
+                                loadshape       = loadshape,
+                                avgLoadshape    = avgLoadshape,
+                                returnT_F       = returnT_F, 
+                                flowRate        = flowRate,
+                                gpdpp           = gpdpp,
+                                nBR             = nBR,
+                                nApt            = nApt,
+                                Wapt            = Wapt,
+                                standardGPD     = standardGPD,
+                                annual          = annual,
+                                zipCode         = zipCode, 
+                                climateZone     = climateZone,
+                                ignoreRecirc    = ignoreRecirc
         )
 
-        system = createSystem(  schematic, 
-                                building, 
+        self.system = createSystem(  
+                                schematic, 
                                 storageT_F, 
                                 defrostFactor, 
                                 percentUseable, 
                                 compRuntime_hr, 
-                                aquaFract, 
+                                aquaFract,
+                                building = self.building if PVol_G_atStorageT is None else None, 
                                 aquaFractLoadUp = aquaFractLoadUp,
                                 aquaFractShed = aquaFractShed,
                                 loadUpT_F = loadUpT_F,
@@ -113,11 +168,183 @@ class EcosizerEngine:
                                 safetyTM = safetyTM, 
                                 setpointTM_F = setpointTM_F, 
                                 TMonTemp_F = TMonTemp_F, 
-                                offTime_hr = offTime_hr
+                                offTime_hr = offTime_hr,
+                                PVol_G_atStorageT = PVol_G_atStorageT, 
+                                PCap_kBTUhr = PCap_kBTUhr, 
+                                TMVol_G = TMVol_G, 
+                                TMCap_kBTUhr = TMCap_kBTUhr,
+                                systemModel = systemModel,
+                                numHeatPumps = numHeatPumps,
+                                tmModel = tmModel,
+                                tmNumHeatPumps = tmNumHeatPumps,
+                                inletWaterAdjustment = inletWaterAdjustment
         )
- 
-        self.system = system
     
+    def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False, optimizeNLS = False):
+        """
+        LEGACY FUNCTION.
+        Returns the result of a simulation of a HPWH system in a building
+
+        Inputs
+        ------
+        initPV : float
+            Primary volume at start of the simulation
+        initST : float
+            Swing tank temperature at start of the simulation. Not used in this instance of the function
+        minuteIntervals : int
+            the number of minutes the duration each interval timestep for the simulation will be
+        nDays : int
+            the number of days the for duration of the entire simulation will be
+        kWhCalc : boolean
+            set to true to add the kgCO2/kWh calculation to the result.
+        kGDiff : boolean
+            set to True if you want to include the kGCO2/kWh saved in the result. Will also include loadshift capacity. Only available for loadshifting systems with annual loadshapes
+        optimizeNLS : boolean
+            set to True to optimize non-loadshift sizing. Only applies if kGDiff = True
+            
+        Returns
+        -------
+        simResult : List
+            contains the following items in this order:
+                pV : List 
+                    Volume of HW in the tank at the storage temperature at every simulation interval. (Gallons)
+                hwGen : List
+                    The theoretical amount of HW at storage tempurature that can be generated at every simulation interval. (Gallons)
+                hwDemand : List
+                    The amount of HW used by the building (loadshape) at every simulation interval. (Gallons)
+                pGen : List
+                    The actual amount of HW at storage tempurature generated by the primary system at every simulation interval. (Gallons)
+            If the system is a swing tank, the following fields will appear in the result in this order:
+                swingT_F : List
+                    Tempurature of water in the swing tank at every simulation interval. (F)
+                tmRun : List
+                    Amount of time the temperature maintenance is on during every simulation interval. (Minutes)
+                hw_outSwing : List
+                    Hot water exiting swing tank at swing tank temperature at every simulation interval. (Gallons)
+            If kWhCalc == True, the following fields will appear in the result in this order:
+                pRun : List
+                    Amount of time the primary tank is on during every simulation interval. (Minutes)
+                oat : List
+                    Tempurature of outdoor air at every simulation interval. (F)
+                cap : List
+                    The capacity of the primary system at every simulation interval. (kW)
+                kGperkWh : List
+                    The kGCO2 used in every simulation interval. (kGCO2)
+                sum_of_kGperkWh : Float
+                    Sum of kGCO2 used in the simulation. (kGCO2)
+                avgIncomingWaterT_F : Float
+                    Average incoming water temperature for the entire simulation. (F)
+            If kGDiff == True, the following fields will appear in the result in this order:
+                loadshift_capacity : Float
+                    The loadshift capacity for the entire simulation (kWh)
+                kGperKwH_saved : Float
+                    The kGCO2 saved by using load shifting in the simulation. (kGCO2/kWh)
+                ***NOTE*** If kGDiff == True, the return value will be an array of size [2][x], where x is the length
+                return values for one simulation result and array[0] will be the simulation result with load shifting
+                and array[1] will be the result without load shifting.
+        """
+        if kGDiff:
+            # TODO unit tests
+            if not self.system.doLoadShift:
+                raise Exception('Cannot preform kgCO2/kWh calculation on non-loadshifting systems.')
+            if nDays != 365 or len(self.building.loadshape) != 8760:
+                raise Exception('kgCO2/kWh calculation is only available for annual simulations.')
+            
+            simRun_ls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+            simResult_ls = simRun_ls.returnSimResult(kWhCalc = True)
+            
+            loadshift_capacity = (8.345*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.storageT_F-simResult_ls[-1]))/3412 # stored energy, not input energy
+            kGperkWh_ls = simResult_ls[-2]/loadshift_capacity
+
+            nls_system = copy.copy(self.system)
+
+            nls_system.setDoLoadShift(False)
+            if optimizeNLS:
+                # resize system for most optimized system without loadshifting
+                self.building.setToDailyLS()
+                nls_system.sizeSystem(self.building)
+                self.building.setToAnnualLS()
+
+            simRun_nls = simulate(nls_system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+            simResult_nls = simRun_nls.returnSimResult(kWhCalc = True)
+            kGperkWh_nls = simResult_nls[-2]/loadshift_capacity
+
+            kGperkWh_saved = kGperkWh_nls - kGperkWh_ls
+            simResult_ls.append(loadshift_capacity)
+            simResult_ls.append(kGperkWh_saved)
+            bothResults = [simResult_ls, simResult_nls]
+            return bothResults
+        else:
+            simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+            return simRun.returnSimResult(kWhCalc = kWhCalc)
+        
+    def getSimRun(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3) -> SimulationRun:
+        """
+        Returns a simulationRun object for a simulation of the Ecosizer's building and system object
+
+        Inputs
+        ------
+        initPV : float
+            Primary volume at start of the simulation
+        initST : float
+            Swing tank temperature at start of the simulation. Not used in this instance of the function
+        minuteIntervals : int
+            the number of minutes the duration each interval timestep for the simulation will be
+        nDays : int
+            the number of days the for duration of the entire simulation will be
+        """
+        return simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+    
+    def getSimRunWithkWCalc(self, initPV=None, initST=None, minuteIntervals = 15, nDays = 365, optimizeNLS = False):
+        """
+        Returns a list that includes a simulationRun object for a simulation of the Ecosizer's building and system object with load shifting and without load shifting,
+        also includes the loadshift_capacity and the kGperkWh_saved
+
+        Inputs
+        ------
+        initPV : float
+            Primary volume at start of the simulation
+        initST : float
+            Swing tank temperature at start of the simulation. Not used in this instance of the function
+        minuteIntervals : int
+            the number of minutes the duration each interval timestep for the simulation will be
+        nDays : int
+            the number of days the for duration of the entire simulation will be
+        optimizeNLS : boolean
+            set to True to optimize non-loadshift sizing. Only applies if kGDiff = True
+
+        Returns
+        -------
+        [simRun_ls, simRun_nls, loadshift_capacity, kGperkWh_saved, annual_kGCO2_saved]
+        """
+        if not self.system.doLoadShift:
+            raise Exception('Cannot preform kgCO2/kWh calculation on non-loadshifting systems.')
+        if nDays != 365 or len(self.building.loadshape) != 8760:
+            raise Exception('kgCO2/kWh calculation is only available for annual simulations.')
+        
+        simRun_ls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+        
+        loadshift_capacity = (rhoCp*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.storageT_F-simRun_ls.getAvgIncomingWaterT()))/KWH_TO_BTU # stored energy, not input energy
+        kG_sum_ls = simRun_ls.getkGCO2Sum()
+        kGperkWh_ls = kG_sum_ls/loadshift_capacity
+
+        nls_system = copy.copy(self.system)
+
+        nls_system.setDoLoadShift(False)
+        if optimizeNLS:
+            # resize system for most optimized system without loadshifting
+            self.building.setToDailyLS()
+            nls_system.sizeSystem(self.building)
+            self.building.setToAnnualLS()
+
+        simRun_nls = simulate(nls_system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+        kG_sum_nls = simRun_nls.getkGCO2Sum()
+        kGperkWh_nls = kG_sum_nls/loadshift_capacity
+
+        annual_kGCO2_saved = kG_sum_nls - kG_sum_ls
+        kGperkWh_saved = kGperkWh_nls - kGperkWh_ls
+        return [simRun_ls, simRun_nls, loadshift_capacity, kGperkWh_saved, annual_kGCO2_saved]
+
     def getSizingResults(self):
         """
         Returns the minimum primary volume and heating capacity sizing results
@@ -148,9 +375,9 @@ class EcosizerEngine:
         recIndex : int
             The index of the recommended heating rate. 
         """
-        return self.system.primaryCurve()
+        return self.system.primaryCurve(self.building)
     
-    def plotStorageLoadSim(self, return_as_div=True):
+    def plotStorageLoadSim(self, return_as_div=True, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False):
         """
         Returns a plot of the of the simulation for the minimum sized primary
         system as a div or plotly figure. Can plot the minute level simulation
@@ -165,7 +392,8 @@ class EcosizerEngine:
         div/fig
             plot_div
         """
-        return self.system.plotStorageLoadSim(return_as_div)
+        simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+        return simRun.plotStorageLoadSim(return_as_div)
     
     def lsSizedPoints(self):
         """
@@ -181,7 +409,7 @@ class EcosizerEngine:
         N : array
             Array of load up hours tested. Goes from 1 to hour before first shed.
         """
-        return self.system.lsSizedPoints()
+        return self.system.lsSizedPoints(self.building)
 
     def getHWMagnitude(self):
         """
@@ -192,4 +420,74 @@ class EcosizerEngine:
         magnitude : Float
             The total daily hot water for the building the HPWH is being sized for.
         """
-        return self.system.building.magnitude
+        return self.building.magnitude
+    
+    def getClimateZone(self):
+        """
+        Returns climate zone of the simulation building as an int or None if it has not been set.
+        """
+        return self.building.getClimateZone()
+    
+##############################################################
+# STATIC FUNCTIONS
+##############################################################
+    
+def getListOfModels(multiPass = False):
+    """
+    Static Method to Return all Model Names as a list of strings
+    """
+    returnList = []
+    with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
+        data = json.load(json_file)
+        for model_name, value in data.items():
+            if multiPass and model_name[-2:] == 'MP':
+                returnList.append([model_name,value["name"]])
+            elif not multiPass and model_name[-2:] != 'MP':
+                returnList.append([model_name,value["name"]])
+    return returnList
+
+def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationRun, return_as_div=True):
+    """
+    Returns comparison graph of the input power by hour for an annual load shifting and non loadshifting HPWH simulation
+    """
+    if simRun_ls.minuteIntervals != 15 or simRun_nls.minuteIntervals != 15 or len(simRun_ls.oat) != 8760 or len(simRun_nls.oat) != 8760:
+        raise Exception("Both simulation runs needs to be annual with 15 minute intervals to generate comparison graph.")
+        # TODO make useful for non-15 min intervals
+
+    energy_ls = [0] * 24
+    energy_nls = [0] * 24
+    hour_axis = [0] * 24
+    
+    for i in range(8760*4):
+        energy_ls[(i % 96) // 4] += ((simRun_ls.getCapIn(i) * simRun_ls.getPrimaryRun(i)) + (simRun_ls.getTMCapIn(i) * simRun_ls.getTMRun(i)))/60
+        energy_nls[(i % 96) // 4] += ((simRun_nls.getCapIn(i) * simRun_nls.getPrimaryRun(i)) + (simRun_nls.getTMCapIn(i) * simRun_nls.getTMRun(i)))/60
+
+    for i in range(24):
+        hour_axis[i] = i
+        energy_ls[i] = energy_ls[i]/365
+        energy_nls[i] = energy_nls[i]/365
+
+    fig = Figure()
+    fig.add_trace(Scatter(
+        x = hour_axis,
+        y = energy_ls,
+        name = 'Load Shift'))
+    fig.add_trace(Scatter(
+        x = hour_axis,
+        y = energy_nls,
+        name = 'Baseline'))
+    
+    fig.update_xaxes(title_text='Hour')
+    fig.update_yaxes(title_text='Energy Use (kWh)')
+    fig.update_layout(title_text='Energy Usage Comparison')
+    
+    if return_as_div:
+        plot_div = plot(fig, output_type='div', show_link=False, link_text="",
+                    include_plotlyjs = False)
+        return plot_div
+    return fig 
+
+    
+    
+
+

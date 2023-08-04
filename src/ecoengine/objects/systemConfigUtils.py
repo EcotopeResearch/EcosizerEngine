@@ -37,12 +37,13 @@ def checkLiqudWater(var_F):
 def mixVolume(vol, hotT, coldT, outT):
     """
     Adjusts the volume of water such that the hotT water and outT water have the
-    same amount of energy, meaning different volumes.
+    same amount of energy, meaning different volumes. The returned value is the 
+    volume at hotT required.
 
     Parameters
     ----------
     vol : float
-        The reference volume to convert.
+        The reference volume (at outT) to convert.
     hotT : float
         The hot water temperature used for mixing.
     coldT : float
@@ -53,7 +54,7 @@ def mixVolume(vol, hotT, coldT, outT):
     Returns
     -------
     float
-        Temperature adjusted volume.
+        The volume at hotT, which, mixed with water at coldT, will produce the needed volume of water at outT.
 
     """
     fraction = (outT - coldT) / (hotT - coldT)
@@ -79,6 +80,27 @@ def hrToMinList(a_list):
     out_list = []
     for num in a_list:
         out_list += [num]*60
+    return out_list
+
+def hrTo15MinList(a_list):
+    """
+    Repeats each element of a_list 4 times to go from hourly to 15 minute intervals.
+    Still may need other unit conversions to get data from per hour to per 15 minute
+
+    Parameters
+    ----------
+    a_list : list
+        A list in of values per hour.
+
+    Returns
+    -------
+    out_list : list
+        A list in of values per 15 minute interval created by repeating values per hour 4 times.
+
+    """
+    out_list = []
+    for num in a_list:
+        out_list += [num]*4
     return out_list
 
 def getPeakIndices(diff1):

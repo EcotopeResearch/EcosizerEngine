@@ -8,11 +8,11 @@ This software requires a python version greater than or equal to 3.11 to be inst
 
 1. Install the package with pip
 
-	$ pip install ecosizer-engine
+	$ pip install ecoengine
 
 2. To import and use the tools in this package, add the following import statement to your script:
 
-	from ecosizer_engine_package import *
+	from ecoengine import *
 
 You should now be able to use the features of EcosizerEngine in your script
 

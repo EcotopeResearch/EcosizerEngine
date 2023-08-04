@@ -130,3 +130,7 @@ dmypy.json
 
 #sizing combinations comparison
 sizingCombinations.py
+
+simResult_365_day_with_ls_2.csv
+simResult_365_day_without_ls_2.csv
+checkem.py
