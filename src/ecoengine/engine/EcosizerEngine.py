@@ -459,8 +459,8 @@ def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationR
     hour_axis = [0] * 24
     
     for i in range(8760*4):
-        energy_ls[(i % 96) // 4] += ((simRun_ls.getCapIn(i) * simRun_ls.getPrimaryRun(i)) + (simRun_ls.getTMCapIn(i) * simRun_ls.getTMRun(i)))/60
-        energy_nls[(i % 96) // 4] += ((simRun_nls.getCapIn(i) * simRun_nls.getPrimaryRun(i)) + (simRun_nls.getTMCapIn(i) * simRun_nls.getTMRun(i)))/60
+        energy_ls[(i % 96) // 4] += ((simRun_ls.getCapIn(i) * simRun_ls.getPrimaryRun(i)) + (simRun_ls.getTMCapIn(i) * simRun_ls.getTMRun(i)))/15
+        energy_nls[(i % 96) // 4] += ((simRun_nls.getCapIn(i) * simRun_nls.getPrimaryRun(i)) + (simRun_nls.getTMCapIn(i) * simRun_nls.getTMRun(i)))/15
 
     for i in range(24):
         hour_axis[i] = i
