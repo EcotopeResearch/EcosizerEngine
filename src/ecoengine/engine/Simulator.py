@@ -9,7 +9,7 @@ from ecoengine.constants.Constants import KWH_TO_BTU, W_TO_BTUHR
 import csv
 
     
-def simulate(system : SystemConfig, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
+def simulate(system : SystemConfig, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, exceptOnWaterShortage = True):
     """
     Implimented seperatly for Swink Tank systems 
     Inputs
@@ -26,6 +26,8 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
         the number of minutes the duration each interval timestep for the simulation will be
     nDays : int
         the number of days the for duration of the entire simulation will be
+    exceptOnWaterShortage : boolean
+        Throws an exception if Primary Storage runs out of water. Otherwise returns failed simulation run
     
     Returns
     -------
@@ -61,24 +63,31 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
             oat_F = None
 
             # Run the "simulation"
-            for i in range(len(simRun.hwDemand)):
-                if nDays == 365:
-                    if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus take the next OAT
-                        oat_row = next(oat_reader)
-                        oat_F = float(oat_row[building.climateZone - 1])
-                        simRun.addOat(oat_F)
-                        kG_row = next(kG_reader)
-                    system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals, oat = oat_F)
-                    simRun.addCap(system.getOutputCapacity(kW=True)/(60/minuteIntervals), system.getInputCapacity(kW=True)/(60/minuteIntervals))
-                    kGofCO2 = simRun.getCapIn(i)*(simRun.pRun[i]/minuteIntervals)
-                    if(hasattr(simRun, 'tmRun')):
-                        # we are keeping track of temperature maintenance power as well
-                        simRun.addTMCap(system.getTMOutputCapacity(kW=True)/(60/minuteIntervals), system.getTMInputCapacity(kW=True)/(60/minuteIntervals))
-                        kGofCO2 += simRun.getTMCapIn(i)*(simRun.tmRun[i]/minuteIntervals)
-                    kGofCO2 *= float(kG_row[building.climateZone-1])
-                    simRun.addKGCO2(kGofCO2)   
+            try:
+                for i in range(len(simRun.hwDemand)):
+                    if nDays == 365:
+                        if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus take the next OAT
+                            oat_row = next(oat_reader)
+                            oat_F = float(oat_row[building.climateZone - 1])
+                            simRun.addOat(oat_F)
+                            kG_row = next(kG_reader)
+                        system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals, oat = oat_F)
+                        simRun.addCap(system.getOutputCapacity(kW=True)/(60/minuteIntervals), system.getInputCapacity(kW=True)/(60/minuteIntervals))
+                        kGofCO2 = simRun.getCapIn(i)*(simRun.pRun[i]/minuteIntervals)
+                        if(hasattr(simRun, 'tmRun')):
+                            # we are keeping track of temperature maintenance power as well
+                            simRun.addTMCap(system.getTMOutputCapacity(kW=True)/(60/minuteIntervals), system.getTMInputCapacity(kW=True)/(60/minuteIntervals))
+                            kGofCO2 += simRun.getTMCapIn(i)*(simRun.tmRun[i]/minuteIntervals)
+                        kGofCO2 *= float(kG_row[building.climateZone-1])
+                        simRun.addKGCO2(kGofCO2)   
+                    else:
+                        system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
+            
+            except Exception as e:
+                if not exceptOnWaterShortage and str(e) == "Primary storage ran out of Volume!":
+                    print(f"{str(e)} Returning simulation result for analysis.")
                 else:
-                    system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
+                    raise
 
     system.resetToDefaultCapacity()
     return simRun

@@ -331,15 +331,12 @@ class SimulationRun:
         """
         Returns a list from the simulation of the Outdoor Air Temperature in (F) by timestep
         """
-        if len(self.oat) == 8760:
-            if self.minuteIntervals == 15:
-                return hrTo15MinList(self.oat)
-            elif self.minuteIntervals == 1:
-                return hrToMinList(self.oat)
-            else:
-                return self.oat
+        if self.minuteIntervals == 15:
+            return hrTo15MinList(self.oat)
+        elif self.minuteIntervals == 1:
+            return hrToMinList(self.oat)
         else:
-            return []
+            return self.oat
     
     def getkGCO2(self, i : int = None):
         """

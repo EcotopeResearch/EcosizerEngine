@@ -202,11 +202,11 @@ class SystemConfig:
             #check if there are two sheds, if so set all hours inbetween to load up
             try:
                 secondShed = [[shedHours[i-1], shedHours[i]] for i in range(1, len(shedHours)) if shedHours[i] - shedHours[i-1] > 1][0]
-                Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFractLoadUp) if secondShed[0] <= i <= secondShed[1] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
+                Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFractLoadUp) if secondShed[0] < i <= secondShed[1] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
             
             except IndexError:
                 pass
-        
+            
         if minuteIntervals == 1:
             # To per minute from per hour
             if not hwGenRate is None:

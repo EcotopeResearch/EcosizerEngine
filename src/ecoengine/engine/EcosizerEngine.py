@@ -278,7 +278,7 @@ class EcosizerEngine:
             simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
             return simRun.returnSimResult(kWhCalc = kWhCalc)
         
-    def getSimRun(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3) -> SimulationRun:
+    def getSimRun(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, exceptOnWaterShortage = True) -> SimulationRun:
         """
         Returns a simulationRun object for a simulation of the Ecosizer's building and system object
 
@@ -292,8 +292,10 @@ class EcosizerEngine:
             the number of minutes the duration each interval timestep for the simulation will be
         nDays : int
             the number of days the for duration of the entire simulation will be
+        exceptOnWaterShortage : boolean
+            Throws an exception if Primary Storage runs out of water. Otherwise returns failed simulation run
         """
-        return simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
+        return simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays, exceptOnWaterShortage = exceptOnWaterShortage)
     
     def getSimRunWithkWCalc(self, initPV=None, initST=None, minuteIntervals = 15, nDays = 365, optimizeNLS = False):
         """
