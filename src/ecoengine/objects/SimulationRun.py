@@ -9,7 +9,7 @@ import os
 import csv
 
 class SimulationRun:
-    def __init__(self, hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building : Building, loadShiftSchedule, minuteIntervals = 1, doLoadshift = False):
+    def __init__(self, hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building : Building, loadShiftSchedule, minuteIntervals = 1, doLoadshift = False, LS_sched = []):
         """
         Initializes arrays needed for 3-day simulation
 
@@ -46,7 +46,7 @@ class SimulationRun:
         self.building = building
         self.minuteIntervals = minuteIntervals
         self.doLoadShift = doLoadshift
-        self.loadShiftSchedule = loadShiftSchedule
+        self.loadShiftSchedule = loadShiftSchedule # TODO get rid of this if you can
         self.monthlyCityWaterT_F = None
         self.oat = [] # oat by hour
         self.cap_out = [] # output capacity at every time interval
@@ -55,6 +55,7 @@ class SimulationRun:
         self.hwGen = []
         self.hwGean_at_storage_t = []
         self.recircLoss = []
+        self.LS_sched = LS_sched
 
     def initializeTMValue(self, initST, storageT_F, TMCap_kBTUhr, swingOut = True):
         self.tmT_F = [0] * (len(self.hwDemand) - 1) + [self.mixedStorT_F]
@@ -72,6 +73,9 @@ class SimulationRun:
         # next two items are for the resulting plotly plot
         self.storageT_F = storageT_F
         self.TMCap_kBTUhr = TMCap_kBTUhr
+
+    def getLoadShiftMode(self, i):
+        return self.LS_sched[int((i//(60/self.minuteIntervals))%24)] # returns 'N', 'L', or 'S' for normal, load, or shed mode respectively
 
     def getIncomingWaterT(self, i):
         if self.monthlyCityWaterT_F is None:

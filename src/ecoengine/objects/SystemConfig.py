@@ -190,23 +190,27 @@ class SystemConfig:
         V0 = np.ceil(self.PVol_G_atStorageT * self.percentUseable)
         
         Vtrig = np.tile(np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFract)) + 1, 24) # To prevent negatives with any of that rounding math. TODO Nolan and I don't think we need this mysterious + 1
-        
+        LS_sched = ['N'] * 24
+
         if self.doLoadShift:
             
             Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFractShed) if x == 0 else self.PVol_G_atStorageT * (1 - self.aquaFract) for x in self.loadShiftSchedule]
+            LS_sched = ['S' if x == 0 else "N" for x in self.loadShiftSchedule]
             
             #set load up hours pre-shed 1
             shedHours = [i for i in range(len(self.loadShiftSchedule)) if self.loadShiftSchedule[i] == 0] 
             Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFractLoadUp) if shedHours[0] - self.loadUpHours <= i <= shedHours[0] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
-            
+            LS_sched = ['L' if shedHours[0] - self.loadUpHours <= i <= shedHours[0] - 1 else LS_sched[i] for i, x in enumerate(LS_sched)]
+
             #check if there are two sheds, if so set all hours inbetween to load up
             try:
                 secondShed = [[shedHours[i-1], shedHours[i]] for i in range(1, len(shedHours)) if shedHours[i] - shedHours[i-1] > 1][0]
                 Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFractLoadUp) if secondShed[0] < i <= secondShed[1] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
+                LS_sched = ['L' if secondShed[0] < i <= secondShed[1] - 1 else LS_sched[i] for i, x in enumerate(LS_sched)]
             
             except IndexError:
                 pass
-            
+
         if minuteIntervals == 1:
             # To per minute from per hour
             if not hwGenRate is None:
@@ -237,7 +241,7 @@ class SystemConfig:
         if initPV:
             pV[-1] = initPV
 
-        return SimulationRun(hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building, loadshiftSched, minuteIntervals, self.doLoadShift)
+        return SimulationRun(hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building, loadshiftSched, minuteIntervals, self.doLoadShift, LS_sched)
     
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         incomingWater_T = simRun.getIncomingWaterT(i)
@@ -761,8 +765,6 @@ class SystemConfig:
         
         return Vshift, VconsumedLU 
         
-        
-
     def mixStorageTemps(self, runningVol_G, incomingT_F, supplyT_F):
         """
         Calculates average tank temperature using load up and normal setpoints according to locations of aquastats. 
