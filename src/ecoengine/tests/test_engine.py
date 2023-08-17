@@ -1,5 +1,5 @@
 import pytest
-from ecoengine.objects.systemConfigUtils import roundList, mixVolume, hrToMinList, getPeakIndices
+from ecoengine.objects.systemConfigUtils import roundList, convertVolume, hrToMinList, getPeakIndices
 import ecoengine.engine.EcosizerEngine as EcosizerEngine
 import ecoengine.objects.SimulationRun as SimulationRun
 import numpy as np
@@ -228,14 +228,14 @@ with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/kGperkWh
 def test_getPeakIndices( arr, expected):
     assert all(getPeakIndices(arr) == np.array(expected))
 
-@pytest.mark.parametrize("hotT, coldT, outT, expected", [
+@pytest.mark.parametrize("convertToT_F, referenceT_F, convertFromT_F, expected", [
    (125, 50, 120, 93.333),
    (120, 40, 120, 100.0),
    (150, 40, 120, 72.727),
    (100, 40, 120, 133.333)
 ])
-def test_mixVolume(hotT, coldT, outT, expected):
-    assert round(mixVolume(100, hotT, coldT, outT), 3) == expected
+def test_convertVolume(convertToT_F, referenceT_F, convertFromT_F, expected):
+    assert round(convertVolume(100, convertToT_F, referenceT_F, convertFromT_F), 3) == expected
 
 @pytest.mark.parametrize("sizingResult, magnitude", [
    ([1528.0027969823054, 150.75919907543388, 100, 59.712485, 168], 2500)

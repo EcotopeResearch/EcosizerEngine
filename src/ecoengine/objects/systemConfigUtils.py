@@ -34,22 +34,22 @@ def checkLiqudWater(var_F):
         return False
     return True
 
-def mixVolume(vol, hotT, coldT, outT):
+def convertVolume(originalVol, convertToT_F, referenceT_F, convertFromT_F):
     """
-    Adjusts the volume of water such that the hotT water and outT water have the
+    Adjusts the volume of water such that the hotT water and convertFromT water have the
     same amount of energy, meaning different volumes. The returned value is the 
-    volume at hotT required.
+    volume at hotT that has the same energy as the original volume at convertFromT.
 
     Parameters
     ----------
-    vol : float
-        The reference volume (at outT) to convert.
-    hotT : float
-        The hot water temperature used for mixing.
-    coldT : float
-        The cold water tempeature used for mixing.
-    outT : float
-        The out water temperature from mixing.
+    originalVol : float
+        The original volume (at convertFromT) to convert.
+    convertToT_F : float
+        The temperature the volume needs to be converted to.
+    referenceT_F : float
+        The water tempeature used for reference. i.e. The temperature of water when the energy is 0.
+    convertFromT_F : float
+        The temperature the originalVol needs to be converted from.
 
     Returns
     -------
@@ -57,9 +57,9 @@ def mixVolume(vol, hotT, coldT, outT):
         The volume at hotT, which, mixed with water at coldT, will produce the needed volume of water at outT.
 
     """
-    fraction = (outT - coldT) / (hotT - coldT)
+    fraction = (convertFromT_F - referenceT_F) / (convertToT_F - referenceT_F)
 
-    return vol * fraction
+    return originalVol * fraction
 
 def hrToMinList(a_list):
     """

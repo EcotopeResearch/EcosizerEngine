@@ -53,7 +53,9 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
                 cw_row = next(csv_reader)
                 cw_temp_by_month.append(float(cw_row[building.climateZone - 1]))
             simRun.setMonthlyCityWaterT_F(cw_temp_by_month)
-            
+
+        system.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(0)) # set initial load up volume and aquafraction adjusted for useful energy
+
     with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
         with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/kGperkWh_ByClimateZone.csv'), 'r') as kG_file:
             oat_reader = csv.reader(oat_file)

@@ -4,11 +4,11 @@ from .SimulationRun import SimulationRun
 from .PrefMapTracker import PrefMapTracker
 import numpy as np
 from scipy.stats import norm #lognorm
-from .systemConfigUtils import mixVolume, hrToMinList, hrTo15MinList, getPeakIndices, checkLiqudWater, checkHeatHours
+from .systemConfigUtils import convertVolume, hrToMinList, hrTo15MinList, getPeakIndices, checkLiqudWater, checkHeatHours
 import os
 
 class SystemConfig:
-    def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
+    def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building : Building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
                  aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
         # check inputs. Schedule not checked because it is checked elsewhere
@@ -20,9 +20,8 @@ class SystemConfig:
         self.compRuntime_hr = compRuntime_hr
         self.aquaFract = aquaFract
         self.loadUpHours = None
-        # self.perfMap = None
 
-        if doLoadShift and not loadShiftSchedule is None:
+        if doLoadShift:
             self._setLoadShift(loadShiftSchedule, loadUpHours, aquaFract, aquaFractLoadUp, aquaFractShed, storageT_F, loadUpT_F, loadShiftPercent)
         
         else:
@@ -45,7 +44,16 @@ class SystemConfig:
         else: 
             #size system based off of building
             self.sizeSystem(building)
-            
+            if self.doLoadShift:
+                self.PConvertedLoadUPV_G_atStorageT = convertVolume(self.PVol_G_atStorageT, self.storageT_F, building.incomingT_F, self.loadUpT_F)
+                self.adjustedPConvertedLoadUPV_G_atStorageT = np.ceil(self.PConvertedLoadUPV_G_atStorageT * self.percentUseable)
+                self.Vtrig_loadUp = self.PConvertedLoadUPV_G_atStorageT * (1 - self.aquaFractLoadUp)
+
+        self.adjustedPVol_G_atStorageT = np.ceil(self.PVol_G_atStorageT * self.percentUseable)
+        self.Vtrig_normal = self.PVol_G_atStorageT * (1 - self.aquaFract)
+        if self.doLoadShift:
+            self.Vtrig_shed = self.PVol_G_atStorageT * (1 - self.aquaFractShed)
+        
         self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True)
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):
@@ -71,8 +79,15 @@ class SystemConfig:
         elif not (oat is None or incomingWater_T is None or self.perfMap is None):
             self.PCap_kBTUhr, self.PCap_input_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
         else:
-           raise Exception("No capacity given or preformance map has not been set.") 
+           raise Exception("No capacity given or preformance map has not been set.")
         
+    def setLoadUPVolumeAndTrigger(self, incomingWater_T):
+        # if not doing load shift, this is not applicable
+        if self.doLoadShift:
+            self.PConvertedLoadUPV_G_atStorageT = convertVolume(self.PVol_G_atStorageT, self.storageT_F, incomingWater_T, self.loadUpT_F)
+            self.Vtrig_loadUp = self.PConvertedLoadUPV_G_atStorageT * (1 - self.aquaFractLoadUp)
+            self.adjustedPConvertedLoadUPV_G_atStorageT = np.ceil(self.PConvertedLoadUPV_G_atStorageT * self.percentUseable)
+
     def resetToDefaultCapacity(self):
         self.PCap_kBTUhr = self.perfMap.getDefaultCapacity()
 
@@ -98,7 +113,7 @@ class SystemConfig:
 
         self.doLoadShift = doLoadShift
 
-    def sizeSystem(self, building):
+    def sizeSystem(self, building : Building):
         """
         Resizes the system with a new building.
         Also used for resizing the system after it has changed its loadshift settings using the original building the system was sized for
@@ -187,9 +202,9 @@ class SystemConfig:
             raise Exception("Invalid input given for number of days. Must be <= 365.")
 
         # Init the "simulation"
-        V0 = np.ceil(self.PVol_G_atStorageT * self.percentUseable)
+        V0_normal = self.adjustedPVol_G_atStorageT
         
-        Vtrig = np.tile(np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFract)) + 1, 24) # To prevent negatives with any of that rounding math. TODO Nolan and I don't think we need this mysterious + 1
+        Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFract)] * 24
         LS_sched = ['N'] * 24
 
         if self.doLoadShift:
@@ -230,21 +245,23 @@ class SystemConfig:
         else:
             raise Exception("Invalid input given for granularity. Must be 1, 15, or 60.")
 
-        pV = [0] * (len(hwDemand) - 1) + [V0]
+        pV = [0] * (len(hwDemand) - 1) + [V0_normal]
 
         pheating = False
 
         pGen = [0] * len(hwDemand)
         pRun = [0] * len(hwDemand)
 
-        mixedStorT_F = self.mixStorageTemps(V0, building.incomingT_F, building.supplyT_F)[0]
+        mixedStorT_F = self.mixStorageTemps(V0_normal, building.incomingT_F, building.supplyT_F)[0]
         if initPV:
             pV[-1] = initPV
 
-        return SimulationRun(hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building, loadshiftSched, minuteIntervals, self.doLoadShift, LS_sched)
+        return SimulationRun(hwGenRate, hwDemand, V0_normal, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building, loadshiftSched, minuteIntervals, self.doLoadShift, LS_sched)
     
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         incomingWater_T = simRun.getIncomingWaterT(i)
+        if i > 0 and incomingWater_T != simRun.getIncomingWaterT(i-1):
+            self.setLoadUPVolumeAndTrigger(incomingWater_T)
         if not (oat is None or self.perfMap is None):
             # set primary system capacity based on outdoor ait temp and incoming water temp 
             self.setCapacity(oat = oat, incomingWater_T = incomingWater_T)
@@ -252,16 +269,15 @@ class SystemConfig:
                * self.defrostFactor)/(60/minuteIntervals))
         
         # Get exiting and generating water volumes at storage temp
-        mixedDHW = mixVolume(simRun.hwDemand[i], simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F)
-        mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F)
+        mixedDHW = convertVolume(simRun.hwDemand[i], self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
+        mixedGHW = convertVolume(simRun.hwGenRate, self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
 
-        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating, 
-                                                                                            V0 = simRun.V0, 
-                                                                                            Vtrig = simRun.Vtrig[i], 
+        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating,
                                                                                             Vcurr = simRun.pV[i-1], 
                                                                                             hw_out = mixedDHW, 
                                                                                             hw_in = mixedGHW, 
-                                                                                            Vtrig_previous = simRun.Vtrig[i-1],
+                                                                                            mode = simRun.getLoadShiftMode(i),
+                                                                                            modeChanged = (simRun.getLoadShiftMode(i) == simRun.getLoadShiftMode(i-1)),
                                                                                             minuteIntervals = minuteIntervals) 
     
     def _setLoadShift(self, loadShiftSchedule, loadUpHours, aquaFract, aquaFractLoadUp, aquaFractShed, storageT_F, loadUpT_F, loadShiftPercent=1):
@@ -315,7 +331,6 @@ class SystemConfig:
         self.aquaFractLoadUp = aquaFractLoadUp
         self.aquaFractShed = aquaFractShed
         self.loadUpT_F = loadUpT_F
-        self.loadshift = np.array(loadShiftSchedule, dtype = float) # Coerce to numpy array of data type float
         
         # adjust for cdf_shift
         if loadShiftPercent == 1: # meaing 100% of days covered by load shift
@@ -328,7 +343,7 @@ class SystemConfig:
         
         self.doLoadShift = True
 
-    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building, primaryCurve = False, effSwingVolFract=1):
+    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building : Building, primaryCurve = False, effSwingVolFract=1):
         """
         Converts from hours of heating in a day to heating capacity. If loadshifting compares this method to capacity needed to load up
         and takes maximum.
@@ -377,7 +392,7 @@ class SystemConfig:
         return heatCap, genRate
     
 
-    def sizePrimaryTankVolume(self, heatHrs, loadUpHours, building, primaryCurve = False):
+    def sizePrimaryTankVolume(self, heatHrs, loadUpHours, building : Building, primaryCurve = False):
         """
         Calculates the primary storage using the Ecotope sizing methodology. Function is also used
         to generate primary sizing curve, which creates a curve with no load shifting and points
@@ -461,7 +476,7 @@ class SystemConfig:
         
         return totalVolAtStorage, effMixFract
     
-    def _calcRunningVol(self, heatHrs, onOffArr, loadshape, building, effMixFract = 0):
+    def _calcRunningVol(self, heatHrs, onOffArr, loadshape, building : Building, effMixFract = 0):
         """
         Function to find the running volume for the hot water storage tank, which
         is needed for calculating the total volume for primary sizing and in the event of load shift sizing
@@ -508,7 +523,7 @@ class SystemConfig:
             runV_G = max(runV_G, -min(diffCum[diffCum<0.])) #Minimum value less than 0 or 0.
         return runV_G, effMixFract
     
-    def _calcRunningVolLS(self, loadUpHours, loadshape, building, effMixFract = 1):
+    def _calcRunningVolLS(self, loadUpHours, loadshape, building : Building, effMixFract = 1):
         """
         Function to calculate the running volume if load shifting. Using the max generation rate between normal sizing
         and preliminary volume, the deficit between generation and hot water use is then added to the preliminary volume.
@@ -571,9 +586,9 @@ class SystemConfig:
         
         """
         
-        return mixVolume(runningVol_G, self.storageT_F, incomingT_F, supplyT_F) / (1 - self.aquaFract)
+        return convertVolume(runningVol_G, self.storageT_F, incomingT_F, supplyT_F) / (1 - self.aquaFract)
     
-    def primaryCurve(self, building):
+    def primaryCurve(self, building : Building):
         """
         Sizes the primary system curve. Will catch the point at which the aquatstat
         fraction is too small for system and cuts the return arrays to match cutoff point.
@@ -620,7 +635,7 @@ class SystemConfig:
         return [volN, self._primaryHeatHrs2kBTUHR(heatHours, self.loadUpHours, building, 
             effSwingVolFract = effMixFract, primaryCurve = True)[0], heatHours, recIndex]
 
-    def lsSizedPoints(self, building):
+    def lsSizedPoints(self, building : Building):
         """
         Creates points for sizing curve plot based on number of hours in first load up period. If "regular" sizing 
         drives algorithmn, regular sizing will be used. This prevents user from oversizing system by putting 
@@ -654,7 +669,7 @@ class SystemConfig:
         return [volN, capN, N]
 
     
-    def runOnePrimaryStep(self, pheating, V0, Vtrig, Vcurr, hw_out, hw_in, Vtrig_previous, minuteIntervals = 1):
+    def runOnePrimaryStep(self, pheating, Vcurr, hw_out, hw_in, mode, modeChanged, minuteIntervals = 1):
         """
         Runs one step on the primary system. This changes the volume of the primary system
         by assuming there is hot water removed at a volume of hw_out and hot water
@@ -665,8 +680,8 @@ class SystemConfig:
         ----------
         pheating : boolean
             indicates whether system is heating at the beginning of this step
-        V0 : float
-            The storage volume of the primary system at the storage temperature
+        Vfull : float
+            The maximum volume of the primary system at the storage temperature
         Vtrig : float
             The remaining volume of the primary storage volume when heating is
             triggered, note this equals V0*(1 - aquaFract) 
@@ -692,13 +707,18 @@ class SystemConfig:
             The amount of time the primary tank ran
 
         """
-        if Vcurr > Vtrig and Vtrig < Vtrig_previous:
+        Vtrig = self.Vtrig_normal
+        if mode == 'S':
+            Vtrig = self.Vtrig_shed
+        elif mode == 'L':
+            Vtrig = self.Vtrig_loadUp
+
+        if Vcurr > Vtrig and modeChanged:
             # ensure we stop heating if we start the interval above the aquastat after the aquastat changes
             pheating = False
 
         Vnew = Vcurr - hw_out
         time_ran = 0
-        Vtrig_normal = np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFract))
 
         # figure out if we needed to start heating in the interval
         if pheating:
@@ -716,13 +736,17 @@ class SystemConfig:
 
         # figure out if we need to stop heating in the interval if we are heating
         if pheating:
-            if self.doLoadShift and Vtrig == np.ceil(self.PVol_G_atStorageT * (1 - self.aquaFractShed)) and Vnew_potential > Vtrig_normal:
+            if mode == 'S' and Vnew_potential > self.Vtrig_normal:
                 # stop heating if hw has met the normal aquastat fraction during a shed period
-                time_over = min((Vnew_potential - Vtrig_normal)/hw_in, 1) # Volume over trigger / hot water generation rate gives percent of interval it takes to generate that much water
+                time_over = min((Vnew_potential - self.Vtrig_normal)/hw_in, 1) # Volume over trigger / hot water generation rate gives percent of interval it takes to generate that much water
                 time_ran -= time_over
                 pheating = False # Stop heating
-            elif Vnew_potential > V0: # If overflow
-                time_over = min((Vnew_potential - V0)/hw_in, 1) # Volume over trigger / hot water generation rate gives percent of interval it takes to generate that much water
+            elif mode == 'N' and Vnew_potential > self.adjustedPVol_G_atStorageT: # If overflow
+                time_over = min((Vnew_potential - self.adjustedPVol_G_atStorageT)/hw_in, 1) # Volume over trigger / hot water generation rate gives percent of interval it takes to generate that much water
+                time_ran -= time_over
+                pheating = False # Stop heating
+            elif mode == 'L' and Vnew_potential > self.adjustedPConvertedLoadUPV_G_atStorageT: # If overflow
+                time_over = min((Vnew_potential - self.adjustedPConvertedLoadUPV_G_atStorageT)/hw_in, 1) # Volume over trigger / hot water generation rate gives percent of interval it takes to generate that much water
                 time_ran -= time_over
                 pheating = False # Stop heating
 
@@ -736,7 +760,7 @@ class SystemConfig:
 
         return pheating, Vnew, hw_generated, time_ran * minuteIntervals
     
-    def _calcPrelimVol(self, loadUpHours, loadshape, building):
+    def _calcPrelimVol(self, loadUpHours, loadshape, building : Building):
         '''
         Function to calculate volume shifted during first shed period, which is used to calculated generation rate
         needed for load up.
@@ -796,7 +820,7 @@ class SystemConfig:
 
             mixStorageT_F = (self.storageT_F * normV + self.loadUpT_F * loadV) / (normV + loadV)
 
-            return mixStorageT_F, mixVolume(runningVol_G, mixStorageT_F, incomingT_F, supplyT_F) / (self.aquaFractShed - self.aquaFractLoadUp)
+            return mixStorageT_F, convertVolume(runningVol_G, mixStorageT_F, incomingT_F, supplyT_F) / (self.aquaFractShed - self.aquaFractLoadUp)
         
         return [mixStorageT_F]
     
