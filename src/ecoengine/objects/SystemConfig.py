@@ -151,6 +151,7 @@ class SystemConfig:
         initPV : float
             the initial primary tank volume at the start of the simulation
         initST : float
+            Not used in this instance of the function
         minuteIntervals : int
             the number of minutes per time interval for the simulation
         nDays : int
@@ -158,22 +159,7 @@ class SystemConfig:
 
         Returns
         -------
-        list [ hwGenRate, hwDemand, V0, V, run, pheating ]
-        hwGenRate : list
-            The generation of HW with time at the supply temperature
-        hwDemand : list
-            The hot water demand with time at the tsupply temperature
-        V0 : float
-            The storage volume of the primary system at the storage temperature
-        Vtrig : list
-            The remaining volume of the primary storage volume when heating is
-            triggered, note this equals V0*(1 - aquaFract[i]) 
-        pV : list 
-            Volume of HW in the tank with time at the storage temperature. Initialized to array of 0s with pV[0] set to V0
-        pheating : boolean 
-            set to false. Simulation starts with a full tank so primary heating starts off
-        pGen : list 
-            The actual output in gallons of the HPWH with time
+        a SimulationRun object with all necessary components for running the simulation
         """
         
         loadShapeN = building.loadshape
@@ -204,25 +190,17 @@ class SystemConfig:
         # Init the "simulation"
         V0_normal = self.adjustedPVol_G_atStorageT
         
-        Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFract)] * 24
+        # set load shift schedule for the simulation
         LS_sched = ['N'] * 24
-
         if self.doLoadShift:
-            
-            Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFractShed) if x == 0 else self.PVol_G_atStorageT * (1 - self.aquaFract) for x in self.loadShiftSchedule]
             LS_sched = ['S' if x == 0 else "N" for x in self.loadShiftSchedule]
-            
             #set load up hours pre-shed 1
             shedHours = [i for i in range(len(self.loadShiftSchedule)) if self.loadShiftSchedule[i] == 0] 
-            Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFractLoadUp) if shedHours[0] - self.loadUpHours <= i <= shedHours[0] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
             LS_sched = ['L' if shedHours[0] - self.loadUpHours <= i <= shedHours[0] - 1 else LS_sched[i] for i, x in enumerate(LS_sched)]
-
             #check if there are two sheds, if so set all hours inbetween to load up
             try:
                 secondShed = [[shedHours[i-1], shedHours[i]] for i in range(1, len(shedHours)) if shedHours[i] - shedHours[i-1] > 1][0]
-                Vtrig = [self.PVol_G_atStorageT * (1 - self.aquaFractLoadUp) if secondShed[0] < i <= secondShed[1] - 1 else Vtrig[i] for i, x in enumerate(Vtrig)]
                 LS_sched = ['L' if secondShed[0] < i <= secondShed[1] - 1 else LS_sched[i] for i, x in enumerate(LS_sched)]
-            
             except IndexError:
                 pass
 
@@ -231,37 +209,27 @@ class SystemConfig:
             if not hwGenRate is None:
                 hwGenRate = hwGenRate / 60
             hwDemand = np.array(hrToMinList(hwDemand)) / 60
-            Vtrig = np.array(hrToMinList(np.tile(Vtrig, nDays))) 
             loadshiftSched = np.array(hrToMinList(loadshiftSched))
         elif minuteIntervals == 15:
             # To per 15 minute from per hour
             if not hwGenRate is None:
                 hwGenRate = hwGenRate / 4
             hwDemand = np.array(hrTo15MinList(hwDemand)) / 4
-            Vtrig = np.array(hrTo15MinList(np.tile(Vtrig, nDays)))
             loadshiftSched = np.array(hrTo15MinList(loadshiftSched))
-        elif minuteIntervals == 60:
-            Vtrig = np.array(np.tile(Vtrig, nDays))
-        else:
+        elif minuteIntervals != 60:
             raise Exception("Invalid input given for granularity. Must be 1, 15, or 60.")
 
         pV = [0] * (len(hwDemand) - 1) + [V0_normal]
 
-        pheating = False
-
-        pGen = [0] * len(hwDemand)
-        pRun = [0] * len(hwDemand)
-
-        mixedStorT_F = self.mixStorageTemps(V0_normal, building.incomingT_F, building.supplyT_F)[0]
         if initPV:
             pV[-1] = initPV
 
-        return SimulationRun(hwGenRate, hwDemand, V0_normal, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building, loadshiftSched, minuteIntervals, self.doLoadShift, LS_sched)
+        return SimulationRun(hwGenRate, hwDemand, V0_normal, pV, building, loadshiftSched, minuteIntervals, self.doLoadShift, LS_sched)
     
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         incomingWater_T = simRun.getIncomingWaterT(i)
         if i > 0 and incomingWater_T != simRun.getIncomingWaterT(i-1):
-            self.setLoadUPVolumeAndTrigger(incomingWater_T)
+            self.setLoadUPVolumeAndTrigger(incomingWater_T) #adjust load up volume to reflect usefull energy
         if not (oat is None or self.perfMap is None):
             # set primary system capacity based on outdoor ait temp and incoming water temp 
             self.setCapacity(oat = oat, incomingWater_T = incomingWater_T)
@@ -277,7 +245,7 @@ class SystemConfig:
                                                                                             hw_out = mixedDHW, 
                                                                                             hw_in = mixedGHW, 
                                                                                             mode = simRun.getLoadShiftMode(i),
-                                                                                            modeChanged = (simRun.getLoadShiftMode(i) == simRun.getLoadShiftMode(i-1)),
+                                                                                            modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
                                                                                             minuteIntervals = minuteIntervals) 
     
     def _setLoadShift(self, loadShiftSchedule, loadUpHours, aquaFract, aquaFractLoadUp, aquaFractShed, storageT_F, loadUpT_F, loadShiftPercent=1):

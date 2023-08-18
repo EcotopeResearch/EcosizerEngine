@@ -37,5 +37,5 @@ class PrimaryWithRecirc(SystemConfig):
                                                                                                 hw_out = mixedDHW, 
                                                                                                 hw_in = mixedGHW, 
                                                                                                 mode = simRun.getLoadShiftMode(i),
-                                                                                                modeChanged = (simRun.getLoadShiftMode(i) == simRun.getLoadShiftMode(i-1)),
+                                                                                                modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
                                                                                                 minuteIntervals = minuteIntervals)

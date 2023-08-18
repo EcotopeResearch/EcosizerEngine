@@ -457,7 +457,7 @@ class SwingTank(SystemConfig):
                                                                                                 hw_out = simRun.hw_outSwing[i], 
                                                                                                 hw_in = mixedGHW, 
                                                                                                 mode = simRun.getLoadShiftMode(i),
-                                                                                                modeChanged = (simRun.getLoadShiftMode(i) == simRun.getLoadShiftMode(i-1)),
+                                                                                                modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
                                                                                                 minuteIntervals = minuteIntervals)
     
     def getTMOutputCapacity(self, kW = False):
