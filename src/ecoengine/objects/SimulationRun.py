@@ -436,7 +436,7 @@ class SimulationRun:
 
         if self.doLoadShift:
             ls_off = [int(not x)* max(V)*2 for x in loadShiftSchedule]
-            fig.add_trace(Scatter(x=x_data, y=ls_off, name='Load Shift Off Period',
+            fig.add_trace(Scatter(x=x_data, y=ls_off, name='Load Shift Shed Period',
                                   mode='lines', line_shape='hv',
                                   opacity=0.5, marker_color='grey',
                                   fill='tonexty'))

@@ -479,8 +479,17 @@ def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationR
         y = energy_nls,
         name = 'Baseline'))
     
+    max_kw = max(max(energy_nls),max(energy_ls)),
+    
+    ls_off = [max_kw*3 if simRun_ls.getLoadShiftMode(i) == "S" else 0 for i in range(24)]
+    fig.add_trace(Scatter(x=hour_axis, y=ls_off, name='Load Shift Shed Period',
+                            mode='lines', line_shape='hv',
+                            opacity=0.5, marker_color='grey',
+                            fill='tonexty'))
+    
     fig.update_xaxes(title_text='Hour')
-    fig.update_yaxes(title_text='Energy Use (kWh)')
+    fig.update_yaxes(title_text='Energy Use (kWh)',
+                     range=[0, np.ceil((max_kw + 5)/100)*100])
     fig.update_layout(title_text='Energy Usage Comparison')
     
     if return_as_div:
