@@ -193,7 +193,7 @@ class SystemConfig:
         # set load shift schedule for the simulation
         LS_sched = ['N'] * 24
         if self.doLoadShift:
-            LS_sched = ['S' if x == 0 else "N" for x in self.loadShiftSchedule]
+            LS_sched = ['S' if x == 0 else 'N' for x in self.loadShiftSchedule]
             #set load up hours pre-shed 1
             shedHours = [i for i in range(len(self.loadShiftSchedule)) if self.loadShiftSchedule[i] == 0] 
             LS_sched = ['L' if shedHours[0] - self.loadUpHours <= i <= shedHours[0] - 1 else LS_sched[i] for i, x in enumerate(LS_sched)]
@@ -521,8 +521,9 @@ class SystemConfig:
         
         genRateON = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, loadUpHours, building, effSwingVolFract = effMixFract, primaryCurve = False)[1] #max generation rate from both methods
         genRate = [genRateON if x != 0 else 0 for x in self.loadShiftSchedule] #set generation rate during shed to 0
+        genRate = np.tile(genRate, 2)
         
-        diffN = np.tile(genRate, 2) - np.tile(loadshape,2) * building.magnitude
+        diffN = genRate - np.tile(loadshape,2) * building.magnitude
         
         #get first index after shed
         shedEnd = [i for i,x in enumerate(genRate[1:],1) if x > genRate[i-1]][0] #start at beginning of first shed, fully loaded up equivalent to starting at the end of shed completely "empty"

@@ -456,9 +456,9 @@ def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationR
         raise Exception("Both simulation runs needs to be annual with 15 minute intervals to generate comparison graph.")
         # TODO make useful for non-15 min intervals
 
-    energy_ls = [0] * 24
-    energy_nls = [0] * 24
-    hour_axis = [0] * 24
+    energy_ls = [0] * 25
+    energy_nls = [0] * 25
+    hour_axis = [0] * 25
     
     for i in range(8760*4):
         energy_ls[(i % 96) // 4] += ((simRun_ls.getCapIn(i) * simRun_ls.getPrimaryRun(i)) + (simRun_ls.getTMCapIn(i) * simRun_ls.getTMRun(i)))/15
@@ -469,27 +469,39 @@ def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationR
         energy_ls[i] = energy_ls[i]/365
         energy_nls[i] = energy_nls[i]/365
 
+    hour_axis[24] = 24
+    energy_ls[24] = energy_ls[0]
+    energy_nls[24] = energy_nls[0]
+
     fig = Figure()
+    
+    max_kw = max(max(energy_nls),max(energy_ls))
+    
+    ls_off = [max_kw + 10 if simRun_ls.LS_sched[i] == 'S' else 0 for i in range(24)]
+    ls_off.append(ls_off[0])
+    fig.add_trace(Scatter(
+        x=hour_axis, 
+        y=ls_off, 
+        name='Load Shift Shed Period',
+        mode='lines', 
+        line_shape='hv',
+        opacity=0.5, marker_color='grey',
+        fill='tonexty'))
+
     fig.add_trace(Scatter(
         x = hour_axis,
         y = energy_ls,
+        marker_color='blue',
         name = 'Load Shift'))
     fig.add_trace(Scatter(
         x = hour_axis,
         y = energy_nls,
+        marker_color='red',
         name = 'Baseline'))
-    
-    max_kw = max(max(energy_nls),max(energy_ls)),
-    
-    ls_off = [max_kw*3 if simRun_ls.getLoadShiftMode(i) == "S" else 0 for i in range(24)]
-    fig.add_trace(Scatter(x=hour_axis, y=ls_off, name='Load Shift Shed Period',
-                            mode='lines', line_shape='hv',
-                            opacity=0.5, marker_color='grey',
-                            fill='tonexty'))
     
     fig.update_xaxes(title_text='Hour')
     fig.update_yaxes(title_text='Energy Use (kWh)',
-                     range=[0, np.ceil((max_kw + 5)/100)*100])
+                     range=[0, max_kw + 5])
     fig.update_layout(title_text='Energy Usage Comparison')
     
     if return_as_div:

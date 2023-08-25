@@ -14,11 +14,11 @@ RECIRC_LOSS_MAX_BTUHR = 1080 * (watt_per_gal_recirc_factor * W_TO_BTUHR)
 
 
 # regular sizing and 3 day simulation
-aquaFractLoadUp = 0.04
+aquaFractLoadUp = 0.2
 aquaFractShed   = 0.8
 storageT_F = 150
-loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1] #assume this loadshape for annual simulation every day
-csvCreate = False
+loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0] #assume this loadshape for annual simulation every day
+csvCreate = True
 hpwhModel ='MODELS_NyleC90A_SP'
 tmModel ='MODELS_ColmacCxA_10_MP'
 minuteIntervals = 15
@@ -149,8 +149,8 @@ print('ls kGperkWh is', kGperkWh)
 print('annual COP:', simRun_ls.getAnnualCOP())
 print('annual COP (boundry):', simRun_ls.getAnnualCOP(True))
 
-if csvCreate:
-    createCSV(simRun_ls, simSchematic, kGperkWh, True, start_vol)
+# if csvCreate:
+#     createCSV(simRun_ls, simSchematic, kGperkWh, True, start_vol)
 
 print('=====================FOR NON LS==========================')
 simRun_nls = simResultArray[1]
@@ -161,13 +161,12 @@ print('non-ls kGperkWh is', kGperkWh_nonLS)
 print('annual COP:', simRun_nls.getAnnualCOP())
 print('annual COP (boundry):', simRun_nls.getAnnualCOP(True))
 
-if csvCreate:
-    createCSV(simRun_nls, simSchematic, kGperkWh_nonLS, False, start_vol)
+# if csvCreate:
+#     createCSV(simRun_nls, simSchematic, kGperkWh_nonLS, False, start_vol)
 print('=========================================================')
 print("LS to non-LS diff:", kGperkWh_nonLS - kGperkWh, "=", simResultArray[3])
 
 # print(getListOfModels())
-
 if csvCreate:
 # Generate the content for the HTML div
     content = getAnnualSimLSComparison(simRun_ls, simRun_nls)
