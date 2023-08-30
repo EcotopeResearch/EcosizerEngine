@@ -502,7 +502,7 @@ def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationR
     fig.update_xaxes(title_text='Hour')
     fig.update_yaxes(title_text='Energy Use (kWh)',
                      range=[0, max_kw + 5])
-    fig.update_layout(title_text='Energy Usage Comparison')
+    fig.update_layout(title_text='Annual Average Hourly Energy Use')
     
     if return_as_div:
         plot_div = plot(fig, output_type='div', show_link=False, link_text="",
