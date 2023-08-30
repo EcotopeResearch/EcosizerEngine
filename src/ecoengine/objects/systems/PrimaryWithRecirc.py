@@ -1,7 +1,7 @@
 from ecoengine.objects.SystemConfig import SystemConfig
 from ecoengine.objects.SimulationRun import SimulationRun
 from ecoengine.constants.Constants import *
-from ecoengine.objects.systemConfigUtils import mixVolume
+from ecoengine.objects.systemConfigUtils import convertVolume
 
 class PrimaryWithRecirc(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
@@ -17,7 +17,8 @@ class PrimaryWithRecirc(SystemConfig):
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         
         incomingWater_T = simRun.getIncomingWaterT(i) + ((self.storageT_F - simRun.getIncomingWaterT(i)) * self.inletWaterAdjustment)    
-        
+        if i > 0 and simRun.getIncomingWaterT(i) != simRun.getIncomingWaterT(i-1):
+            self.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(i))
         if not (oat is None or self.perfMap is None):
             # set primary system capacity based on outdoor ait temp and incoming water temp 
             self.setCapacity(oat = oat, incomingWater_T = incomingWater_T)
@@ -28,14 +29,13 @@ class PrimaryWithRecirc(SystemConfig):
         exitingWater = simRun.hwDemand[i] + simRun.generateRecircLoss(i)
         
         # get both water leaving system and rate of hw generatipon in storage temp
-        mixedDHW = mixVolume(exitingWater, simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) 
-        mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
+        mixedDHW = convertVolume(exitingWater, self.storageT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) 
+        mixedGHW = convertVolume(simRun.hwGenRate, self.storageT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
 
-        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating, 
-                                                                                               V0 = simRun.V0, 
-                                                                                               Vtrig = simRun.Vtrig[i], 
-                                                                                               Vcurr = simRun.pV[i-1], 
-                                                                                               hw_out = mixedDHW, 
-                                                                                               hw_in = mixedGHW,
-                                                                                               Vtrig_previous = simRun.Vtrig[i-1],
-                                                                                               minuteIntervals = minuteIntervals)
+        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep( pheating = simRun.pheating,
+                                                                                                Vcurr = simRun.pV[i-1], 
+                                                                                                hw_out = mixedDHW, 
+                                                                                                hw_in = mixedGHW, 
+                                                                                                mode = simRun.getLoadShiftMode(i),
+                                                                                                modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
+                                                                                                minuteIntervals = minuteIntervals)

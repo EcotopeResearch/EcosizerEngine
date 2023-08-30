@@ -3,7 +3,7 @@ from ecoengine.objects.SimulationRun import SimulationRun
 import numpy as np
 from ecoengine.objects.Building import Building
 from ecoengine.constants.Constants import *
-from ecoengine.objects.systemConfigUtils import mixVolume, hrToMinList, getPeakIndices, checkHeatHours
+from ecoengine.objects.systemConfigUtils import convertVolume, hrToMinList, getPeakIndices, checkHeatHours
 
 class SwingTank(SystemConfig):
 
@@ -151,7 +151,7 @@ class SwingTank(SystemConfig):
     
         #convert to supply so that we can reuse functionality 
         storMixedT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)[0]
-        runV_G = runV_G * (storMixedT_F - building.incomingT_F) / (building.supplyT_F - building.incomingT_F) 
+        runV_G = convertVolume(runV_G, building.supplyT_F, building.incomingT_F, storMixedT_F)
         
         return runV_G, eff_HW_mix_fraction
     
@@ -302,7 +302,7 @@ class SwingTank(SystemConfig):
         swingheating = False
 
         for i in range(1, N):
-            hw_outSwing[i] = mixVolume(hwDemand[i], swingT_F[i-1], building.incomingT_F, building.supplyT_F)
+            hw_outSwing[i] = convertVolume(hwDemand[i], swingT_F[i-1], building.incomingT_F, building.supplyT_F)
             primaryStorageT_F = self.mixStorageTemps(hw_outSwing[i], building.incomingT_F, building.supplyT_F)[0]
             swingheating, swingT_F[i], tmRun[i] = self._runOneSwingStep(building, swingheating, swingT_F[i-1], hw_outSwing[i], primaryStorageT_F)
         
@@ -436,6 +436,8 @@ class SwingTank(SystemConfig):
 
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         incomingWater_T = simRun.getIncomingWaterT(i)
+        if i > 0 and incomingWater_T != simRun.getIncomingWaterT(i-1):
+            self.setLoadUPVolumeAndTrigger(incomingWater_T)
         if not (oat is None or self.perfMap is None):
             # set primary system capacity based on outdoor ait temp and incoming water temp 
             self.setCapacity(oat = oat, incomingWater_T = incomingWater_T)
@@ -443,21 +445,20 @@ class SwingTank(SystemConfig):
                * self.defrostFactor)/(60/minuteIntervals))
             
         # aquire draw amount for time step
-        simRun.hw_outSwing[i] = mixVolume(simRun.hwDemand[i], simRun.tmT_F[i-1], incomingWater_T, simRun.building.supplyT_F)
+        simRun.hw_outSwing[i] = convertVolume(simRun.hwDemand[i], simRun.tmT_F[i-1], incomingWater_T, simRun.building.supplyT_F)
             
-        simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, simRun.tmheating, simRun.tmT_F[i-1], simRun.hw_outSwing[i], simRun.mixedStorT_F, minuteIntervals = minuteIntervals)
+        simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, simRun.tmheating, simRun.tmT_F[i-1], simRun.hw_outSwing[i], self.storageT_F, minuteIntervals = minuteIntervals)
         
         #Get the mixed generation
-        mixedGHW = mixVolume(simRun.hwGenRate, simRun.mixedStorT_F, incomingWater_T, simRun.building.supplyT_F)
+        mixedGHW = convertVolume(simRun.hwGenRate, self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
 
-        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating, 
-                                                                                               V0 = simRun.V0, 
-                                                                                               Vtrig = simRun.Vtrig[i], 
-                                                                                               Vcurr = simRun.pV[i-1], 
-                                                                                               hw_out = simRun.hw_outSwing[i], 
-                                                                                               hw_in = mixedGHW,
-                                                                                               Vtrig_previous = simRun.Vtrig[i-1],
-                                                                                               minuteIntervals = minuteIntervals)
+        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating,
+                                                                                                Vcurr = simRun.pV[i-1], 
+                                                                                                hw_out = simRun.hw_outSwing[i], 
+                                                                                                hw_in = mixedGHW, 
+                                                                                                mode = simRun.getLoadShiftMode(i),
+                                                                                                modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
+                                                                                                minuteIntervals = minuteIntervals)
     
     def getTMOutputCapacity(self, kW = False):
         if kW:

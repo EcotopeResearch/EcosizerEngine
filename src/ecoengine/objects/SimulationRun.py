@@ -9,7 +9,7 @@ import os
 import csv
 
 class SimulationRun:
-    def __init__(self, hwGenRate, hwDemand, V0, Vtrig, pV, pGen, pRun, pheating, mixedStorT_F, building : Building, loadShiftSchedule, minuteIntervals = 1, doLoadshift = False):
+    def __init__(self, hwGenRate, hwDemand, V0, pV, building : Building, loadShiftSchedule, minuteIntervals = 1, doLoadshift = False, LS_sched = []):
         """
         Initializes arrays needed for 3-day simulation
 
@@ -21,15 +21,16 @@ class SimulationRun:
             The hot water demand with time at the supply temperature
         V0 : float
             The storage volume of the primary system at the storage temperature
-        Vtrig : list
-            The remaining volume of the primary storage volume when heating is
-            triggered, note this equals V0*(1 - aquaFract[i]) 
         pV : list 
             Volume of HW in the tank with time at the storage temperature. Initialized to array of 0s with pV[0] set to V0
-        pheating : boolean 
-            set to false. Simulation starts with a full tank so primary heating starts off
-        pGen : list 
-            The generation of HW with time at the storage temperature
+        building : Building 
+            the Building object the simulation will be run for
+        minuteIntervals : int
+            the minutes per time interval for the simulation. Only 1, 15, and 60 are accepted
+        doLoadshift : boolean
+            set to True if doing loadshift
+        LS_sched : list
+            list length 24 corresponding to hours of the day filled with 'N' for normal, 'L' for load up, and 'S' for shed
         """
         if minuteIntervals != 1 and minuteIntervals != 15 and minuteIntervals != 60:
             raise Exception("Simulations can only take place over 1, 15, or 60 minute intervals")
@@ -37,16 +38,14 @@ class SimulationRun:
         self.V0 = V0 
         self.hwGenRate = hwGenRate # Can be initialized to None if hwGen is found dynamically
         self.hwDemand = hwDemand
-        self.Vtrig = Vtrig
         self.pV = pV
-        self.pheating = pheating
-        self.pGen = pGen
-        self.pRun = pRun # amount of time in interval primary tank is heating
-        self.mixedStorT_F = mixedStorT_F
+        self.pheating = False # set to false. Simulation starts with primary heating off
+        self.pGen = [0] * len(hwDemand) # The generation of HW with time at the storage temperature
+        self.pRun = [0] * len(hwDemand) # amount of time in interval primary tank is heating
         self.building = building
         self.minuteIntervals = minuteIntervals
         self.doLoadShift = doLoadshift
-        self.loadShiftSchedule = loadShiftSchedule
+        self.loadShiftSchedule = loadShiftSchedule # TODO get rid of this if you can
         self.monthlyCityWaterT_F = None
         self.oat = [] # oat by hour
         self.cap_out = [] # output capacity at every time interval
@@ -55,9 +54,10 @@ class SimulationRun:
         self.hwGen = []
         self.hwGean_at_storage_t = []
         self.recircLoss = []
+        self.LS_sched = LS_sched
 
     def initializeTMValue(self, initST, storageT_F, TMCap_kBTUhr, swingOut = True):
-        self.tmT_F = [0] * (len(self.hwDemand) - 1) + [self.mixedStorT_F]
+        self.tmT_F = [0] * (len(self.hwDemand) - 1) + [storageT_F]
         self.tmRun = [0] * (len(self.hwDemand))
         if swingOut:
             self.hw_outSwing = [0] * (len(self.hwDemand))
@@ -72,6 +72,9 @@ class SimulationRun:
         # next two items are for the resulting plotly plot
         self.storageT_F = storageT_F
         self.TMCap_kBTUhr = TMCap_kBTUhr
+
+    def getLoadShiftMode(self, i):
+        return self.LS_sched[int((i//(60/self.minuteIntervals))%24)] # returns 'N', 'L', or 'S' for normal, load, or shed mode respectively
 
     def getIncomingWaterT(self, i):
         if self.monthlyCityWaterT_F is None:
@@ -240,11 +243,6 @@ class SimulationRun:
             raise Exception(str(hwGen) + " is an invalid hot water generation value.")
         self.hwGen.append(hwGen)
         self.hwGenRate = hwGen
-
-    def setMixedStorT_F(self, mixedStorT_F):
-        if not (isinstance(mixedStorT_F, float) or isinstance(mixedStorT_F, int)):
-            raise Exception(str(mixedStorT_F) + " is an invalid mixed storagfe water temperature value.")
-        self.mixedStorT_F = mixedStorT_F
 
     def getPrimaryVolume(self, i = None):
         """
@@ -438,7 +436,7 @@ class SimulationRun:
 
         if self.doLoadShift:
             ls_off = [int(not x)* max(V)*2 for x in loadShiftSchedule]
-            fig.add_trace(Scatter(x=x_data, y=ls_off, name='Load Shift Off Period',
+            fig.add_trace(Scatter(x=x_data, y=ls_off, name='Load Shift Shed Period',
                                   mode='lines', line_shape='hv',
                                   opacity=0.5, marker_color='grey',
                                   fill='tonexty'))

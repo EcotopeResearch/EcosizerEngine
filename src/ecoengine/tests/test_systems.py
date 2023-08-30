@@ -188,13 +188,11 @@ def test_initialize_sim(simplePrimary, minuteIntervals, nDays, outputArrayLength
         assert initSim.pV[-1] == 375
     else:
         assert initSim.pV[-1] == initPV
-    assert len(initSim.Vtrig) == outputArrayLength
     assert len(initSim.pV) == outputArrayLength
     assert initSim.V0 == 375
     assert len(initSim.pGen) == outputArrayLength
     assert len(initSim.pRun) == outputArrayLength
     assert initSim.pheating == False
-    assert initSim.mixedStorT_F == 150
     assert len(initSim.oat) == 0
     assert len(initSim.cap_out) == 0
     assert len(initSim.cap_in) == 0
@@ -213,13 +211,11 @@ def test_initialize_sim_swing(swingTank, minuteIntervals, nDays, outputArrayLeng
         assert initSim.pV[-1] == 433.0
     else:
         assert initSim.pV[-1] == initPV
-    assert len(initSim.Vtrig) == outputArrayLength
     assert len(initSim.pV) == outputArrayLength
     assert initSim.V0 == 433.0
     assert len(initSim.pGen) == outputArrayLength
     assert len(initSim.pRun) == outputArrayLength
     assert initSim.pheating == False
-    assert initSim.mixedStorT_F == 150
     assert len(initSim.oat) == 0
     assert len(initSim.cap_out) == 0
     assert len(initSim.cap_in) == 0

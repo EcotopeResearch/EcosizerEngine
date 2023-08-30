@@ -175,20 +175,20 @@ class PrefMapTracker:
     def _linearInterp(self, xnew, x0, x1, y0, y1):
         return y0 + (xnew - x0) * (y1 - y0) / (x1 - x0)
     
-    def _regressedMethod(self, x1, x2, x3, coefficents):
+    def _regressedMethod(self, externalAirT_F, outletWaterT_F, inletWaterT_F, coefficents):
         if len(coefficents) != 11:
             raise Exception('Attempting to use preformance mapping method with invalid system model.')
         ynew = coefficents[0]
-        ynew += coefficents[1] * x1
-        ynew += coefficents[2] * x2
-        ynew += coefficents[3] * x3
-        ynew += coefficents[4] * x1 * x1
-        ynew += coefficents[5] * x2 * x2
-        ynew += coefficents[6] * x3 * x3
-        ynew += coefficents[7] * x1 * x2
-        ynew += coefficents[8] * x1 * x3
-        ynew += coefficents[9] * x2 * x3
-        ynew += coefficents[10] * x1 * x2 * x3
+        ynew += coefficents[1] * externalAirT_F
+        ynew += coefficents[2] * outletWaterT_F
+        ynew += coefficents[3] * inletWaterT_F
+        ynew += coefficents[4] * externalAirT_F * externalAirT_F
+        ynew += coefficents[5] * outletWaterT_F * outletWaterT_F
+        ynew += coefficents[6] * inletWaterT_F * inletWaterT_F
+        ynew += coefficents[7] * externalAirT_F * outletWaterT_F
+        ynew += coefficents[8] * externalAirT_F * inletWaterT_F
+        ynew += coefficents[9] * outletWaterT_F * inletWaterT_F
+        ynew += coefficents[10] * externalAirT_F * outletWaterT_F * inletWaterT_F
         return ynew
     
     def _regressedMethodMP(self, x1, x2, coefficents):
