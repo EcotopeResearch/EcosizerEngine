@@ -159,8 +159,6 @@ class SimulationRun:
         """
         if len(self.recircLoss) == 0:
             self.recircLoss = [0]*len(self.hwDemand)
-        elif len(self.recircLoss) != len(self.hwDemand):
-            raise Exception("Attempted to get recirculation loss list before simulation had completed")
         
         if i is None:
             return self.recircLoss

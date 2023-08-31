@@ -22,8 +22,8 @@ csvCreate = False
 hpwhModel ='MODELS_NyleC90A_SP'
 tmModel ='MODELS_ColmacCxA_10_MP'
 minuteIntervals = 15
-sizingSchematic = 'paralleltank'
-simSchematic = 'paralleltank'
+sizingSchematic = 'singlepass_rtp'
+simSchematic = 'singlepass_rtp'
 
 def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, start_vol):
     csv_filename = f'{simSchematic}_LS_simResult_{hpwhModel}.csv'
@@ -89,118 +89,14 @@ print('+++++++++++++++++++++++++++++++++++++++')
 
 # Annual simulation based on sizing from last:
 
-print("starting LS section using sizes")
-hpwh_ls = EcosizerEngine(
-            incomingT_F     = 50,
-            magnitudeStat  = 150,
-            supplyT_F       = 120,
-            storageT_F      = storageT_F,
-            loadUpT_F       = storageT_F + 10,
-            percentUseable  = 1, 
-            aquaFract       = 0.4, 
-            aquaFractLoadUp = aquaFractLoadUp,
-            aquaFractShed   = aquaFractShed,
-            schematic       = simSchematic, 
-            buildingType   = 'multi_family',
-            returnT_F       = 0, 
-            flowRate       = 0,
-            gpdpp           = 25,
-            safetyTM        = 1.75,
-            defrostFactor   = 1, 
-            compRuntime_hr  = 16, 
-            nApt            = 110, 
-            Wapt            = 60,
-            nBR             = [0,50,30,20,0,0],
-            loadShiftSchedule        = loadShiftSchedule,
-            loadUpHours     = 3,
-            doLoadShift     = True,
-            loadShiftPercent       = 0.8,
-            PVol_G_atStorageT = PVol_G_atStorageT, 
-            PCap_kW = PCap_kBTUhr/W_TO_BTUHR, 
-            TMVol_G = TMVol_G, 
-            TMCap_kW = TMCap_kW,
-            annual = True,
-            climateZone = 1,
-            systemModel = hpwhModel,
-            tmModel = tmModel
-        )
-
-start_vol = 0.4*PVol_G_atStorageT
-start_time = time.time()
-
-simResultArray = hpwh_ls.getSimRunWithkWCalc(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, optimizeNLS = False)
-# simResultArray = hpwh_ls.getSimRun(minuteIntervals = 1, nDays = 3, optimizeNLS = False)
-
-
-end_time = time.time()
-duration = end_time - start_time
-print("Program execution time for annual simulation:", duration, "seconds")
-
-simRun_ls = simResultArray[0]
-
-
-print('=========================================================')
-print('average city watertemp is', simRun_ls.getAvgIncomingWaterT())
-print('=======================FOR LS============================')
-loadshift_capacity = simResultArray[2]
-kGperkWh = simRun_ls.getkGCO2Sum()/loadshift_capacity
-print('ls kg_sum is', simRun_ls.getkGCO2Sum())
-print('ls kGperkWh is', kGperkWh)
-print('annual COP:', simRun_ls.getAnnualCOP())
-print('annual COP (boundry):', simRun_ls.getAnnualCOP(True))
-
-# if csvCreate:
-#     createCSV(simRun_ls, simSchematic, kGperkWh, True, start_vol)
-
-print('=====================FOR NON LS==========================')
-simRun_nls = simResultArray[1]
-
-kGperkWh_nonLS = simRun_nls.getkGCO2Sum()/loadshift_capacity
-print('non-ls kg_sum is', simRun_nls.getkGCO2Sum())
-print('non-ls kGperkWh is', kGperkWh_nonLS)
-print('annual COP:', simRun_nls.getAnnualCOP())
-print('annual COP (boundry):', simRun_nls.getAnnualCOP(True))
-
-# if csvCreate:
-#     createCSV(simRun_nls, simSchematic, kGperkWh_nonLS, False, start_vol)
-print('=========================================================')
-print("LS to non-LS diff:", kGperkWh_nonLS - kGperkWh, "=", simResultArray[3])
-
-# print(getListOfModels())
-if csvCreate:
-# Generate the content for the HTML div
-    content = getAnnualSimLSComparison(simRun_ls, simRun_nls)
-
-    # Create the HTML content
-    html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <title>My Webpage</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-</head>
-<body>
-<div>
-{content}
-</div>
-</body>
-</html>
-"""
-
-    # Write the HTML content to the file
-    file_name = f'{simSchematic}_simResult_{hpwhModel}.html'
-    with open(file_name, 'w') as file:
-        file.write(html_content)
-
-##############################################################################################
-
 # print("starting LS section using sizes")
 # hpwh_ls = EcosizerEngine(
 #             incomingT_F     = 50,
-#             magnitudeStat  = 1500,
+#             magnitudeStat  = 150,
 #             supplyT_F       = 120,
 #             storageT_F      = storageT_F,
-#             loadUpT_F       = 150,
-#             percentUseable  = 0.9, 
+#             loadUpT_F       = storageT_F + 10,
+#             percentUseable  = 1, 
 #             aquaFract       = 0.4, 
 #             aquaFractLoadUp = aquaFractLoadUp,
 #             aquaFractShed   = aquaFractShed,
@@ -232,17 +128,121 @@ if csvCreate:
 # start_vol = 0.4*PVol_G_atStorageT
 # start_time = time.time()
 
-# simRun_ls = hpwh_ls.getSimRun(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, exceptOnWaterShortage = False)
-# simResultArray = hpwh_ls.getSimRun(minuteIntervals = 1, nDays = 3, optimizeNLS = False)
+# simResultArray = hpwh_ls.getSimRunWithkWCalc(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, optimizeNLS = False)
+# # simResultArray = hpwh_ls.getSimRun(minuteIntervals = 1, nDays = 3, optimizeNLS = False)
 
 
 # end_time = time.time()
 # duration = end_time - start_time
 # print("Program execution time for annual simulation:", duration, "seconds")
 
+# simRun_ls = simResultArray[0]
+
+
+# print('=========================================================')
+# print('average city watertemp is', simRun_ls.getAvgIncomingWaterT())
+# print('=======================FOR LS============================')
+# loadshift_capacity = simResultArray[2]
+# kGperkWh = simRun_ls.getkGCO2Sum()/loadshift_capacity
+# print('ls kg_sum is', simRun_ls.getkGCO2Sum())
+# print('ls kGperkWh is', kGperkWh)
+# print('annual COP:', simRun_ls.getAnnualCOP())
+# print('annual COP (boundry):', simRun_ls.getAnnualCOP(True))
+
 # if csvCreate:
-#     csv_filename = f'{simSchematic}_LS_simResult_{hpwhModel}.csv'
-#     simRun_ls.writeCSV(csv_filename)
+#     createCSV(simRun_ls, simSchematic, kGperkWh, True, start_vol)
+
+# print('=====================FOR NON LS==========================')
+# simRun_nls = simResultArray[1]
+
+# kGperkWh_nonLS = simRun_nls.getkGCO2Sum()/loadshift_capacity
+# print('non-ls kg_sum is', simRun_nls.getkGCO2Sum())
+# print('non-ls kGperkWh is', kGperkWh_nonLS)
+# print('annual COP:', simRun_nls.getAnnualCOP())
+# print('annual COP (boundry):', simRun_nls.getAnnualCOP(True))
+
+# # if csvCreate:
+# #     createCSV(simRun_nls, simSchematic, kGperkWh_nonLS, False, start_vol)
+# print('=========================================================')
+# print("LS to non-LS diff:", kGperkWh_nonLS - kGperkWh, "=", simResultArray[3])
+
+# # print(getListOfModels())
+# if False:
+# # Generate the content for the HTML div
+#     content = getAnnualSimLSComparison(simRun_ls, simRun_nls)
+
+#     # Create the HTML content
+#     html_content = f"""<!DOCTYPE html>
+# <html>
+# <head>
+#     <title>My Webpage</title>
+#     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+# </head>
+# <body>
+# <div>
+# {content}
+# </div>
+# </body>
+# </html>
+# """
+
+#     # Write the HTML content to the file
+#     file_name = f'{simSchematic}_simResult_{hpwhModel}.html'
+#     with open(file_name, 'w') as file:
+#         file.write(html_content)
+
+##############################################################################################
+# PVol_G_atStorageT = 400
+print("starting LS section using sizes")
+hpwh_ls = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 1500,
+            supplyT_F       = 120,
+            storageT_F      = storageT_F,
+            loadUpT_F       = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            aquaFractLoadUp = aquaFractLoadUp,
+            aquaFractShed   = aquaFractShed,
+            schematic       = simSchematic, 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 110, 
+            Wapt            = 60,
+            nBR             = [0,50,30,20,0,0],
+            loadShiftSchedule        = loadShiftSchedule,
+            loadUpHours     = 3,
+            doLoadShift     = True,
+            loadShiftPercent       = 0.8,
+            PVol_G_atStorageT = PVol_G_atStorageT, 
+            PCap_kW = PCap_kBTUhr/W_TO_BTUHR, 
+            TMVol_G = TMVol_G, 
+            TMCap_kW = TMCap_kW,
+            annual = True,
+            climateZone = 1,
+            systemModel = hpwhModel,
+            tmModel = tmModel
+        )
+
+start_vol = PVol_G_atStorageT
+start_time = time.time()
+
+simRun_ls = hpwh_ls.getSimRun(initPV=PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, exceptOnWaterShortage = False)
+
+end_time = time.time()
+duration = end_time - start_time
+print("Program execution time for annual simulation:", duration, "seconds")
+
+if csvCreate:
+    csv_filename = f'{simSchematic}_LS_simResult_{hpwhModel}.csv'
+    simRun_ls.writeCSV(csv_filename)
+
+###################################################################################################################################################
 
 # swing_sizer = EcosizerEngine(
 #             incomingT_F     = 50,
