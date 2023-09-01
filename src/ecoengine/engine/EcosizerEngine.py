@@ -107,8 +107,9 @@ class EcosizerEngine:
 
     """
 
-    def __init__(self, incomingT_F, magnitudeStat, supplyT_F, storageT_F, percentUseable, aquaFract,
-                            schematic, buildingType, loadshape = None, avgLoadshape = None, loadShiftSchedule = None, loadUpHours = None,
+    def __init__(self, incomingT_F, supplyT_F, storageT_F, percentUseable, aquaFract,
+                            schematic, magnitudeStat = None, buildingType = None, loadshape = None, 
+                            avgLoadshape = None, loadShiftSchedule = None, loadUpHours = None,
                             aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1,
                             returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
                             defrostFactor = 1, compRuntime_hr = 16, nApt = None, Wapt = None, doLoadShift = False,

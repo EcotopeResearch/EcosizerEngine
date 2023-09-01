@@ -79,21 +79,24 @@ def test_multiFamilyWithBedroomsResults(multiFamilyWithBedrooms, expected):
 def test_multiUseResults(nursingHomeAndOffice, expected):
     assert [nursingHomeAndOffice.incomingT_F, nursingHomeAndOffice.supplyT_F, round(nursingHomeAndOffice.recirc_loss, 2), round(nursingHomeAndOffice.magnitude, 2)] == expected
 
-@pytest.mark.parametrize("buildingType, magnitude, expected", [
-   ("apartment",100,4280.0),
-   (["elementary_school"],100,108.1),
-   ("food_service_a",100,1103.2),
-   ("food_service_b",100,628.8),
-   ("junior_high",100,327.0),
-   ("mens_dorm",[100],1890.),
-   ("motel",100,2880.0),
-   (["nursing_home"],[100],2010),
-   ("office_building",100,111.0),
-   ("senior_high",100,302.),
-   ("womens_dorm",100,1640.),
-   (["womens_dorm", "junior_high"],[100,5],1656.3)
+@pytest.mark.parametrize("buildingType, loadshape, magnitude, expected", [
+   ("apartment",None,100,4280.0),
+   (["elementary_school"],None,100,108.1),
+   ("food_service_a",None,100,1103.2),
+   ("food_service_b",None,100,628.8),
+   ("junior_high",None,100,327.0),
+   ("mens_dorm",None,[100],1890.),
+   (None,[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[100],100),
+   (None,[0,0,0,0,0,0,0,0,100,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0],None,150),
+   (["office_building",None],[None, [0,0,0,0,0,0,0,0,100,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[100,None],261),
+   ("motel",None,100,2880.0),
+   (["nursing_home"],None,[100],2010),
+   ("office_building",None,100,111.0),
+   ("senior_high",None,100,302.),
+   ("womens_dorm",None,100,1640.),
+   (["womens_dorm", "junior_high"],None,[100,5],1656.3)
 ])
-def test_magnitudes(buildingType, magnitude, expected):
+def test_magnitudes(buildingType, loadshape, magnitude, expected):
     building = createBuilding(
             incomingT_F     = 50,
             magnitudeStat  = magnitude,
@@ -101,6 +104,7 @@ def test_magnitudes(buildingType, magnitude, expected):
             buildingType   = buildingType,
             flowRate       = 5,
             returnT_F       = 100,
+            loadshape       = loadshape
     )
     assert round(building.magnitude,1) == expected
 
@@ -124,7 +128,8 @@ def test_default_loadshapes(buildingType, magnitude, expected):
     
 @pytest.mark.parametrize("loadShape, buildingType, magnitude, expected", [
    ([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"apartment",100,np.array([1, 0, 0])),
-   ([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],["womens_dorm", "junior_high"],[5,100],np.array([1, 0, 0]))
+   ([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],None,100,np.array([1, 0, 0])),
+   ([[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],["womens_dorm", "junior_high"],[5,100],np.array([0.20049, 0.79951, 0.]))
 ])
 def test_custom_loadshapes(loadShape, buildingType, magnitude, expected):
     building = createBuilding(
@@ -210,6 +215,10 @@ def test_invalid_building_parameter_errors():
         createBuilding(35, 4, 120, "mens_dorm", avgLoadshape=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
     with pytest.raises(Exception, match="Can not have negative values in average loadshape."):
         createBuilding(35, 4, 120, "mens_dorm", avgLoadshape=[1,2,-3,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+    with pytest.raises(Exception, match="Missing values for multi-use building. Collected 2 building types but collected 24 avgLoadshape values"):
+        createBuilding(35, [4,8], 120, ["mens_dorm", None], avgLoadshape=[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+    with pytest.raises(Exception, match="Both buildingType and loadshape are undefined. Must define at least one to construct building object."):
+        createBuilding(35, [4,8], 120, ["mens_dorm", None], avgLoadshape=[None,None])
     with pytest.raises(Exception, match="Error: Supply temp must be a number."):
         createBuilding(35, 4, "whoops", "mens_dorm")
     with pytest.raises(Exception, match="Error: Return temp must be a number."):
@@ -230,6 +239,8 @@ def test_invalid_building_parameter_errors():
         createBuilding(35, [1,2], 120, ["mens_dorm","yep"])
     with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 16."):
         createBuilding(35, 4, 120, "mens_dorm", climateZone = 18)
+    with pytest.raises(Exception, match="Both buildingType and loadshape are undefined. Must define at least one to construct building object."):
+        createBuilding(35, 4, 120, None)
     with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 16."):
         createBuilding(35, 4, 120, "mens_dorm", climateZone = 'yes')
     with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 16."):

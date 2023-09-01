@@ -62,9 +62,29 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
             if not isinstance(magnitudeStat, list) or len(buildingType) != len(magnitudeStat):
                 raise Exception("Missing values for multi-use building. Collected " + str(len(buildingType)) + " building types but collected " + 
                                 ("1" if not isinstance(magnitudeStat, list) else str(len(magnitudeStat)))+ " magnitude varriables")
+            
+            # TODO: probably won't ever happen but need a case for 24 len buildingType
+            if not loadshape is None:
+                if not isinstance(loadshape, list):
+                    raise Exception("loadshape must be a list")
+                elif len(loadshape) != len(buildingType):
+                    raise Exception("Missing values for multi-use building. Collected " + str(len(buildingType)) + " building types but collected " + 
+                                str(len(loadshape))+ " loadshape values")
+            else:
+                loadshape = [None] * len(buildingType)
+
+            if not avgLoadshape is None:
+                if not isinstance(avgLoadshape, list):
+                    raise Exception("avgLoadshape must be a list")
+                elif len(avgLoadshape) != len(buildingType):
+                    raise Exception("Missing values for multi-use building. Collected " + str(len(buildingType)) + " building types but collected " + 
+                                str(len(avgLoadshape))+ " avgLoadshape values")
+            else:
+                avgLoadshape = [None] * len(buildingType)
+
             building_list = []
             for i in range(len(buildingType)):
-                building_list.append(createBuilding(incomingT_F, magnitudeStat[i], supplyT_F, buildingType[i], loadshape, avgLoadshape,
+                building_list.append(createBuilding(incomingT_F, magnitudeStat[i], supplyT_F, buildingType[i], loadshape[i], avgLoadshape[i],
                         returnT_F, flowRate, gpdpp, nBR, nApt, Wapt, standardGPD, annual, zipCode, climateZone))
             return MultiUse(building_list, incomingT_F, supplyT_F, returnT_F, flowRate, getClimateZone(zipCode, climateZone), ignoreRecirc)
     
@@ -75,9 +95,28 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
         else:
             raise Exception("Missing values for multi-use building. Collected 1 building type but collected " + str(len(magnitudeStat)) + " magnitude varriables")
     
-    if not isinstance(buildingType, str):
-            raise Exception("buildingType must be a string.")
+    if buildingType is None:
+        if loadshape is None:
+            raise Exception("Both buildingType and loadshape are undefined. Must define at least one to construct building object.")
+    elif not isinstance(buildingType, str):
+        raise Exception("buildingType must be a string. Or, if using a custom load shape, can be None.")
     
+    # check magnitude and loadshape for custom loadshape
+    if magnitudeStat is None:
+        if loadshape is None:
+            raise Exception("Both magnitudeStat and loadshape are undefined. Must have one or both to properly define the building.")
+        checkLoadShape(loadshape, normalized=False)
+        magnitudeStat = sum(loadshape)
+        loadshape = normalizeLoadShape(loadshape)
+        print("hey hey", sum(loadshape))
+    # if using custom load shape, check or set avg loadshape
+    if not loadshape is None:
+        if avgLoadshape is None:
+            avgLoadshape = loadshape
+        else:
+            checkLoadShape(avgLoadshape, normalized=False)
+            avgLoadshape = normalizeLoadShape(avgLoadshape)
+            
     # check custom loadshape or install standard loadshape
     if annual:
         loadshape = getLoadShape(buildingType, "Annual_Normalized")
@@ -98,6 +137,8 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
     climate = getClimateZone(zipCode, climateZone)
 
     match buildingType:
+        case None:
+            return Building(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
         case 'apartment':
             return Apartment(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
         case 'elementary_school':
@@ -137,11 +178,11 @@ def getLoadShape(file_name, shape = 'Stream'):
     except:
         raise Exception("No default loadshape found for building type " +file_name + ".")
         
-def checkLoadShape(loadshape, avgLS = False):
+def checkLoadShape(loadshape, avgLS = False, normalized = True):
     if len(loadshape) != 24:
         raise Exception(("Average loadshape" if avgLS else "Loadshape") + " must be of length 24 but instead has length of "
                         + str(len(loadshape))+".")
-    if sum(loadshape) > 1 + 1e-3 or sum(loadshape) < 1 - 1e-3:
+    if normalized and (sum(loadshape) > 1 + 1e-3 or sum(loadshape) < 1 - 1e-3):
         raise Exception("Sum of the " + ("average loadshape" if avgLS else "loadshape") + " does not equal 1. Loadshape needs to be normalized.")
     if any(x < 0 for x in loadshape):
         raise Exception("Can not have negative values in " + ("average loadshape" if avgLS else "loadshape") + ".")
@@ -160,3 +201,11 @@ def getClimateZone(zipCode = None, climateZone = None):
             raise Exception(str(zipCode) + " is not a California zip code.")
     else:
         return None
+    
+def normalizeLoadShape(loadshape):
+    if sum(loadshape) > 1 + 1e-3 or sum(loadshape) < 1 - 1e-3:
+        ls_sum = sum(loadshape)
+        for i in range(len(loadshape)):
+            loadshape[i] = loadshape[i]/ls_sum
+    print("hey hey heyo", sum(loadshape))
+    return loadshape

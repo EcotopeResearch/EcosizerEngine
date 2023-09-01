@@ -1,5 +1,6 @@
 from ecoengine import EcosizerEngine, getListOfModels, SimulationRun, getAnnualSimLSComparison
 import time
+import math
 
 
 #########################################################################################################
@@ -19,8 +20,8 @@ aquaFractShed   = 0.8
 storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0] #assume this loadshape for annual simulation every day
 csvCreate = False
-hpwhModel ='MODELS_NyleC90A_SP'
-tmModel ='MODELS_ColmacCxA_10_MP'
+hpwhModel ='MODELS_Mitsubishi_QAHV'
+tmModel ='MODELS_Mitsubishi_QAHV'
 minuteIntervals = 15
 sizingSchematic = 'singlepass_rtp'
 simSchematic = 'singlepass_rtp'
@@ -194,52 +195,57 @@ print('+++++++++++++++++++++++++++++++++++++++')
 ##############################################################################################
 # PVol_G_atStorageT = 400
 print("starting LS section using sizes")
-hpwh_ls = EcosizerEngine(
-            incomingT_F     = 50,
-            magnitudeStat  = 1500,
-            supplyT_F       = 120,
-            storageT_F      = storageT_F,
-            loadUpT_F       = 150,
-            percentUseable  = 0.9, 
-            aquaFract       = 0.4, 
-            aquaFractLoadUp = aquaFractLoadUp,
-            aquaFractShed   = aquaFractShed,
-            schematic       = simSchematic, 
-            buildingType   = 'multi_family',
-            returnT_F       = 0, 
-            flowRate       = 0,
-            gpdpp           = 25,
-            safetyTM        = 1.75,
-            defrostFactor   = 1, 
-            compRuntime_hr  = 16, 
-            nApt            = 110, 
-            Wapt            = 60,
-            nBR             = [0,50,30,20,0,0],
-            loadShiftSchedule        = loadShiftSchedule,
-            loadUpHours     = 3,
-            doLoadShift     = True,
-            loadShiftPercent       = 0.8,
-            PVol_G_atStorageT = PVol_G_atStorageT, 
-            PCap_kW = PCap_kBTUhr/W_TO_BTUHR, 
-            TMVol_G = TMVol_G, 
-            TMCap_kW = TMCap_kW,
-            annual = True,
-            climateZone = 1,
-            systemModel = hpwhModel,
-            tmModel = tmModel
-        )
+loadshape = [18.52, 32.27, 11.51, 9.96, 19.01, 51.56, 324.4, 339.9, 308.27, 198.04, 373.78, 259.31, 195.34, 294.24, 345.65, 441.84, 310.58, 417.3, 330.08, 96.58, 10.62, 12.03, 14.5, 27.32]
+loadshape = [math.ceil(x) for x in loadshape]
+totalDemand = sum(loadshape)
+print('total HW demand', totalDemand)
+normalizedLoad = [x / sum(loadshape) for x in loadshape]
+print('normalized Load', normalizedLoad)
+nPep = 200
+vol = nPep * 6
+kbtu = nPep * 0.8
+hpwh = EcosizerEngine(
+                     incomingT_F     = 50,
+                     magnitudeStat  = nPep,
+                     supplyT_F       = 120,
+                     storageT_F      = 150,
+                     percentUseable  = 0.9,
+                     aquaFract       = 0.4,
+                     schematic       = "singlepass_rtp",
+                     buildingType   = 'multi_family',
+                     flowRate       = 0,
+                     gpdpp           = 25,
+                     safetyTM        = 1.75,
+                     defrostFactor   = 1,
+                     compRuntime_hr  = 16,
+                     nApt            = int(100),
+                     Wapt            = int(60),
+                     loadShiftSchedule = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
+                     loadUpHours     = int(3),
+                     doLoadShift     = True,
+                     loadShiftPercent= 0.95,
+                     aquaFractLoadUp = 0.2,
+                     aquaFractShed   = 0.8,
+                     loadUpT_F       = 160,
+                     PVol_G_atStorageT = vol,
+                     PCap_kW =  kbtu / 3.41,
+                     TMVol_G = TMVol_G,
+                     TMCap_kW = TMCap_kW,
+                     annual = True,
+                     climateZone = 1,
+                     systemModel = "MODELS_Mitsubishi_QAHV")
 
-start_vol = PVol_G_atStorageT
+start_vol = vol
 start_time = time.time()
 
-simRun_ls = hpwh_ls.getSimRun(initPV=PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, exceptOnWaterShortage = False)
+simRun_ls = hpwh.getSimRun(initPV=start_vol, initST=135, minuteIntervals = minuteIntervals, nDays = 365, exceptOnWaterShortage = False)
 
 end_time = time.time()
 duration = end_time - start_time
 print("Program execution time for annual simulation:", duration, "seconds")
 
 if csvCreate:
-    csv_filename = f'{simSchematic}_LS_simResult_{hpwhModel}.csv'
+    csv_filename = f'{simSchematic}_thing_simResult_{hpwhModel}.csv'
     simRun_ls.writeCSV(csv_filename)
 
 ###################################################################################################################################################
