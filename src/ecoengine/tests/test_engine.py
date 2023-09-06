@@ -405,7 +405,7 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
         assert simRun.getPrimaryVolume(i) > hopefulResult - 0.01
 
         # assert hw generation rate makes sense
-        calculated_generation = 1000 * (simRun.getCapOut(i)*W_TO_BTUHR) / rhoCp / (supplyT_F - simRun.getIncomingWaterT(i))
+        calculated_generation = 1000 * (simRun.getCapOut(i)*W_TO_BTUHR) / rhoCp / (supplyT_F - simRun.getIncomingWaterT(i)) / 4 # divide by 4 because there are 4 15 min intervals in an hour
         assert simRun.getHWGeneration(i) < calculated_generation + 0.01
         assert simRun.getHWGeneration(i) > calculated_generation - 0.01
         calculated_generation *= supplyToStorageFactor * (simRun.getPrimaryRun(i)/15)
@@ -413,7 +413,7 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
         assert simRun.getPrimaryGeneration(i) > calculated_generation - 0.01
 
         # assert kW calculation is correct
-        calculatedKg = climateZone_1_kg[i//4][climateZone-1] * (simRun.getCapIn(i) * (simRun.getPrimaryRun(i) / 15) + (simRun.getTMCapIn(i)*simRun.getTMRun(i)/15))
+        calculatedKg = climateZone_1_kg[i//4][climateZone-1] * (simRun.getCapIn(i) * (simRun.getPrimaryRun(i) / 60) + (simRun.getTMCapIn(i)*simRun.getTMRun(i)/60))
         assert simRun.getkGCO2(i) < calculatedKg + 0.001
         assert simRun.getkGCO2(i) > calculatedKg - 0.001
 

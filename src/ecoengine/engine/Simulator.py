@@ -74,12 +74,12 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
                             simRun.addOat(oat_F)
                             kG_row = next(kG_reader)
                         system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals, oat = oat_F)
-                        simRun.addCap(system.getOutputCapacity(kW=True)/(60/minuteIntervals), system.getInputCapacity(kW=True)/(60/minuteIntervals))
-                        kGofCO2 = simRun.getCapIn(i)*(simRun.pRun[i]/minuteIntervals)
+                        simRun.addCap(system.getOutputCapacity(kW=True), system.getInputCapacity(kW=True))
+                        kGofCO2 = simRun.getCapIn(i)*(simRun.pRun[i]/60)
                         if(hasattr(simRun, 'tmRun')):
                             # we are keeping track of temperature maintenance power as well
-                            simRun.addTMCap(system.getTMOutputCapacity(kW=True)/(60/minuteIntervals), system.getTMInputCapacity(kW=True)/(60/minuteIntervals))
-                            kGofCO2 += simRun.getTMCapIn(i)*(simRun.tmRun[i]/minuteIntervals)
+                            simRun.addTMCap(system.getTMOutputCapacity(kW=True), system.getTMInputCapacity(kW=True))
+                            kGofCO2 += simRun.getTMCapIn(i)*(simRun.tmRun[i]/60)
                         kGofCO2 *= float(kG_row[building.climateZone-1])
                         simRun.addKGCO2(kGofCO2)   
                     else:

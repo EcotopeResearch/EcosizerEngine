@@ -359,11 +359,11 @@ class SimulationRun:
             recirc_const = self.building.recirc_loss / (60/self.minuteIntervals)
             for i in range(len(self.hwDemand)):
                 heatOutputTotal += (rhoCp*self.hwDemand[i]*(self.building.supplyT_F - self.getIncomingWaterT(i))) + (recirc_const)
-                heatInputTotal += ((self.getCapIn(i)*self.getPrimaryRun(i)/self.minuteIntervals) + (self.getTMCapIn(i)*self.getTMRun(i)/self.minuteIntervals))*KWH_TO_BTU
+                heatInputTotal += ((self.getCapIn(i)*self.getPrimaryRun(i)/60) + (self.getTMCapIn(i)*self.getTMRun(i)/60))*KWH_TO_BTU
         else:
             for i in range(len(self.hwDemand)):
-                heatOutputTotal += (self.getCapOut(i)*self.getPrimaryRun(i)/self.minuteIntervals) + (self.getTMCapOut(i)*self.getTMRun(i)/self.minuteIntervals)
-                heatInputTotal += (self.getCapIn(i)*self.getPrimaryRun(i)/self.minuteIntervals) + (self.getTMCapIn(i)*self.getTMRun(i)/self.minuteIntervals)
+                heatOutputTotal += (self.getCapOut(i)*self.getPrimaryRun(i)/60) + (self.getTMCapOut(i)*self.getTMRun(i)/60)
+                heatInputTotal += (self.getCapIn(i)*self.getPrimaryRun(i)/60) + (self.getTMCapIn(i)*self.getTMRun(i)/60)
         return heatOutputTotal/heatInputTotal
 
 
