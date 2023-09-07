@@ -5,7 +5,7 @@ from .PrefMapTracker import PrefMapTracker
 import numpy as np
 from scipy.stats import norm #lognorm
 from .systemConfigUtils import convertVolume, hrToMinList, hrTo15MinList, getPeakIndices, checkLiqudWater, checkHeatHours
-import os
+from plotly.offline import plot
 from plotly.graph_objs import Figure, Scatter
 
 class SystemConfig:
