@@ -6,6 +6,7 @@ import numpy as np
 from scipy.stats import norm #lognorm
 from .systemConfigUtils import convertVolume, hrToMinList, hrTo15MinList, getPeakIndices, checkLiqudWater, checkHeatHours
 import os
+from plotly.graph_objs import Figure, Scatter
 
 class SystemConfig:
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building : Building = None,
@@ -628,7 +629,7 @@ class SystemConfig:
         #load up hours to loop through
         for i in range(1, 6): #arbitrary stopping point, anything more than this will not result in different sizing
             #size the primary system based on the number of load up hours
-            volN[i-1], effMixN[i-1] = self.sizePrimaryTankVolume(heatHrs = self.maxDayRun_hr, loadUpHours = i, primaryCurve = False)
+            volN[i-1], effMixN[i-1] = self.sizePrimaryTankVolume(heatHrs = self.maxDayRun_hr, loadUpHours = i, building = building, primaryCurve = False)
             capN[i-1] = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, i, building, effSwingVolFract = effMixN[i-1], primaryCurve = False)[0]
             N[i-1] = i
 
@@ -636,6 +637,132 @@ class SystemConfig:
         N = N[:len(volN)]
     
         return [volN, capN, N]
+    
+    def get_Figure_xy_point(self, x, y, startind): #getFigureXUPoint
+        """
+        Sub - Function to plot the the x and y curve and create a point (secretly creates all the points)
+        """
+        fig = Figure()
+        
+        hovertext = 'Storage Volume: %{x:.1f} gallons \nHeating Capacity: %{y:.1f}'
+
+        fig.add_trace(Scatter(x=x, y=y,
+                        visible=True,
+                        line=dict(color="#28a745", width=4),
+                        hovertemplate=hovertext,
+                        opacity=0.8,
+                        ))
+
+        # Add traces for the point, one for each slider step
+        for ii in range(len(x)):
+            fig.add_trace(Scatter(x=[x[ii]], y=[y[ii]], 
+                            visible=False,
+                            mode='markers', marker_symbol="diamond", 
+                            opacity=1, marker_color="#2EA3F2", marker_size=10,
+                            name="System Size",
+                            hoverlabel = dict(font=dict(color='white'), bordercolor="white")
+                            ))
+
+        # Make the 16 hour trace visible
+        fig.data[startind+1].visible = True
+        fig.update_layout(title="Primary Sizing Curve",
+                      xaxis_title="Primary Tank Volume (Gallons) at Storage Temperature",
+                      yaxis_title="Primary Heating Capacity (kBTU/hr)",
+                      showlegend=False)
+        #fig.update_xaxes(range=[min(x),max(x)], fixedrange=True)
+        #fig.update_yaxes(range=[min(y),max(y)], fixedrange=True)
+    
+        return fig
+    
+
+    def get_primary_curve_and_slider(self, x, y, startind, y2 = None, returnAsDiv = True, lsPoints = None): #getPrimaryCurveAndSlider
+        """
+        Function to plot the the x and y curve and create a point that moves up
+        and down the curve with a slider bar 
+
+        Args
+        --------
+        x : array
+            The x data
+        y : array
+            The y data
+        startind : ind
+            The index that the initial point starts on
+        
+        Returns
+        --------
+        plotdiv : a plotly div of the graph
+        
+        
+        """
+        fig = self.get_Figure_xy_point(x, y, startind)
+    
+        # Create and add sliderbar steps
+        steps = []
+        for i in range(1,len(fig.data)):
+        
+            labelText = "Storage: <b id='point_x'>" + str(float(x[i-1])) + "</b> Gal, Capacity: <b id='point_y'>" + \
+                    str(round(y[i-1],1)) + "</b> kBTU/hr" 
+            if y2 is not None:
+                labelText += ", Compressor Runtime: <b>" + str(float(y2[i-1])) + "</b> hr" 
+        
+            step = dict(
+            # label = "Storage: <b id='point_x'>" + str(int(ceil(x[i-1]))) + "</b> Gal, Capacity: <b id='point_y'>" + \
+            #         str(round(y[i-1],1)) + "</b> kBTU/hr",
+
+            # this value must match the values in x = loads(form['x_data']) #json loads
+            label = labelText,
+            method="update",
+            args=[{"visible": [False] * len(fig.data)},
+                  ],  # layout attribute
+            )
+            step["args"][0]["visible"][0] = True  # Make sure first trace is visible since its the line
+            step["args"][0]["visible"][i] = True  # Toggle i'th trace to "visible"
+            steps.append(step)
+
+        if lsPoints:
+            volumes = list(lsPoints[0])
+            capacities = list(lsPoints[1])
+            hours = list(lsPoints[2])
+            
+            fig.add_trace(
+                Scatter(
+                   x = volumes,
+                   y = capacities,
+                   text = hours,
+                   mode = 'markers' 
+                )
+            )
+
+        sliders = [dict(    
+            steps=steps,
+            active=startind,
+            currentvalue=dict({
+                'font': {'size': 16},
+                'prefix': '<b>Primary System Size</b>, ',
+                'visible': True,
+                'xanchor': 'left'
+                }), 
+            pad={"t": 50},
+            minorticklen=0,
+            ticklen=0,
+            #tickcolor="#28a745",
+            bgcolor= "#CCD9DB",
+            #bordercolor = "#28a745", 
+            borderwidth = 0,
+            #activebgcolor ="blue",
+        )]
+    
+        fig.update_layout(
+            sliders=sliders
+        )
+
+        if returnAsDiv:
+            plot_div = plot(fig, output_type='div', show_link=False, link_text="",
+                    include_plotlyjs = False)
+            return plot_div
+    
+        return fig
 
     
     def runOnePrimaryStep(self, pheating, Vcurr, hw_out, hw_in, mode, modeChanged, minuteIntervals = 1):

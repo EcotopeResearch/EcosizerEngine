@@ -398,6 +398,25 @@ class EcosizerEngine:
         simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
         return simRun.plotStorageLoadSim(return_as_div)
     
+    def plotSizingCurve(self):
+        """
+        Returns a plot of the valid storage and capacity combinations.
+
+        Parameters
+        ----------
+        return_as_div
+            A logical on the output, as a div (true) or as a figure (false)
+
+        Returns
+        -------
+        div/fig
+            plot_div
+        """
+        [x_data, y_data, hours, recInd] = self.system.primaryCurve(self.building)
+        lsPoints = self.system.lsSizedPoints(self.building)
+        
+        return self.system.get_primary_curve_and_slider(x_data, y_data, recInd, hours, returnAsDiv = False, lsPoints = lsPoints)
+    
     def lsSizedPoints(self):
         """
         Returns combinations of storage and capacity based on number of 

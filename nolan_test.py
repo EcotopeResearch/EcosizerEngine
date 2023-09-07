@@ -58,6 +58,10 @@ hpwh_for_sizing = EcosizerEngine(
             loadShiftPercent       = 0.8
         )
 
+#test plot output
+fig = hpwh_for_sizing.plotSizingCurve()
+fig.write_html('Z:\\sizingplotTEST.html')
+
 start_time = time.time()
 simRun_from_sized = hpwh_for_sizing.getSimRun()
 
