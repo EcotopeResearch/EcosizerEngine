@@ -630,7 +630,6 @@ class SystemConfig:
         for i in range(1, 6): #arbitrary stopping point, anything more than this will not result in different sizing
             #size the primary system based on the number of load up hours
             volN[i-1], effMixN[i-1] = self.sizePrimaryTankVolume(heatHrs = self.maxDayRun_hr, loadUpHours = i, building = building, primaryCurve = False)
-            #(self, heatHrs, loadUpHours, building : Building, primaryCurve = False):
             capN[i-1] = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, i, building, effSwingVolFract = effMixN[i-1], primaryCurve = False)[0]
             N[i-1] = i
 

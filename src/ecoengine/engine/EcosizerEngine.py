@@ -414,7 +414,7 @@ class EcosizerEngine:
         """
         [x_data, y_data, hours, recInd] = self.system.primaryCurve(self.building)
         lsPoints = self.system.lsSizedPoints(self.building)
-        print(lsPoints)
+        
         return self.system.get_primary_curve_and_slider(x_data, y_data, recInd, hours, returnAsDiv = False, lsPoints = lsPoints)
     
     def lsSizedPoints(self):
