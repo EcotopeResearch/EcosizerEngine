@@ -6,7 +6,7 @@ import copy
 import json
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
-from plotly.subplots import make_subplots
+from numpy import around, flipud
 
 print("EcosizerEngine Copyright (C) 2023  Ecotope Inc.")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")
@@ -412,8 +412,12 @@ class EcosizerEngine:
         div/fig
             plot_div
         """
-        [x_data, y_data, hours, recInd] = self.system.primaryCurve(self.building)
+        [x_data, y_data, hours, recInd] = self.primaryCurve()
         lsPoints = self.system.lsSizedPoints(self.building)
+        x_data = around(flipud(x_data),2)
+        y_data = around(flipud(y_data),2)
+        hours = around(flipud(hours),2)
+        recInd = len(x_data)-recInd-1
         
         return self.system.get_primary_curve_and_slider(x_data, y_data, recInd, hours, returnAsDiv = False, lsPoints = lsPoints)
     
