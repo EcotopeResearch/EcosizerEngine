@@ -398,7 +398,7 @@ class EcosizerEngine:
         simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
         return simRun.plotStorageLoadSim(return_as_div)
     
-    def plotSizingCurve(self):
+    def plotSizingCurve(self, returnAsDiv = False):
         """
         Returns a plot of the valid storage and capacity combinations.
 
@@ -412,14 +412,21 @@ class EcosizerEngine:
         div/fig
             plot_div
         """
-        [x_data, y_data, hours, recInd] = self.primaryCurve()
-        lsPoints = self.system.lsSizedPoints(self.building)
-        x_data = around(flipud(x_data),2)
-        y_data = around(flipud(y_data),2)
-        hours = around(flipud(hours),2)
-        recInd = len(x_data)-recInd-1
-        
-        return self.system.get_primary_curve_and_slider(x_data, y_data, recInd, hours, returnAsDiv = False, lsPoints = lsPoints)
+        if self.system.doLoadShift:
+            [x_data, y_data, percents] = self.system.lsSizedPoints(self.building)
+            x_data = around(flipud(x_data),2)
+            y_data = around(flipud(y_data),2)
+            percents = around(flipud(percents),2)
+            
+            return self.system.get_primary_curve_and_slider(percents, x_data, 5, percents, returnAsDiv = returnAsDiv) # TODO change the 5
+        else:
+            [x_data, y_data, hours, recInd] = self.primaryCurve()
+            x_data = around(flipud(x_data),2)
+            y_data = around(flipud(y_data),2)
+            hours = around(flipud(hours),2)
+            recInd = len(x_data)-recInd-1
+            
+            return self.system.get_primary_curve_and_slider(x_data, y_data, recInd, hours, returnAsDiv = returnAsDiv)
     
     def lsSizedPoints(self):
         """
