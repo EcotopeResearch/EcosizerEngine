@@ -4,7 +4,7 @@ from .SimulationRun import SimulationRun
 from .PrefMapTracker import PrefMapTracker
 import numpy as np
 from scipy.stats import norm #lognorm
-from .systemConfigUtils import convertVolume, hrToMinList, hrTo15MinList, getPeakIndices, checkLiqudWater, checkHeatHours
+from .systemConfigUtils import *
 from plotly.offline import plot
 from plotly.graph_objs import Figure, Scatter
 
@@ -310,6 +310,7 @@ class SystemConfig:
             fract = norm_mean + norm_std * norm.ppf(loadShiftPercent) #TODO norm_mean and std are currently from multi-family, need other types eventually. For now, loadshifting will only be available for multi-family
             self.fract_total_vol = fract if fract <= 1. else 1.
         
+        self.loadShiftPercent = loadShiftPercent
         self.doLoadShift = True
 
     def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building : Building, primaryCurve = False, effSwingVolFract=1, lsFractTotalVol = 1):
@@ -415,16 +416,14 @@ class SystemConfig:
                 effMixFract = LSeffMixFract
                 
                 #get the average tank volume
-                # TODO Should we be doing this? I think not....
-                totalVolAtStorage_ls = self.mixStorageTemps(runningVol_G, building.incomingT_F, building.supplyT_F)[1]
+                totalVolAtStorage_ls = convertVolume(runningVol_G, self.storageT_F, building.incomingT_F, building.supplyT_F) / (self.aquaFractShed - self.aquaFractLoadUp)
                 
                 #multiply computed storage by efficiency safety factor (currently set to 1)
                 totalVolAtStorage_ls *=  thermalStorageSF 
 
-                #TODO if answer to above TODO is yes, then I need to do this. Talk to Scott or Madison
                 if totalVolAtStorage_ls > totalVolAtStorage:
                     totalVolAtStorage = totalVolAtStorage_ls
-        
+
             # Check the Cycling Volume 
             LUcyclingVol_G = totalVolAtStorage * (self.aquaFractLoadUp - (1 - self.percentUseable))
             minRunVol_G = pCompMinimumRunTime * (building.magnitude / heatHrs) # (generation rate - no usage) #REMOVED EFFMIXFRACT
@@ -626,9 +625,6 @@ class SystemConfig:
         lsSizingCombos : array
             Array of volume and capacity combinations sized based on the number of load up hours.
         """
-        start = 80
-        end = 100
-        dif = end-start
         volN = []
         capN = []
         effMixN = []
@@ -637,7 +633,7 @@ class SystemConfig:
         #load up hours to loop through
         i = 100
         # try:
-        while i > 25: #arbitrary stopping point, anything more than this will not result in different sizing
+        while i >= 25: #arbitrary stopping point, anything more than this will not result in different sizing
             #size the primary system based on the number of load up hours
             fract = norm_mean + norm_std * norm.ppf(i/100) #TODO norm_mean and std are currently from multi-family, need other types eventually. For now, loadshifting will only be available for multi-family
             fract = fract if fract <= 1. else 1.
@@ -650,46 +646,10 @@ class SystemConfig:
 
         # except Exception:
     
-        return [volN, capN, N]
-    
-    def get_Figure_xy_point(self, x, y, startind): #getFigureXUPoint
-        """
-        Sub - Function to plot the the x and y curve and create a point (secretly creates all the points)
-        """
-        fig = Figure()
-        
-        hovertext = 'Storage Volume: %{x:.1f} gallons \nHeating Capacity: %{y:.1f}' if not self.doLoadShift else 'CDF: %{x:.1f} gallons \Storage Volume: %{y:.1f}' 
-
-        fig.add_trace(Scatter(x=x, y=y,
-                        visible=True,
-                        line=dict(color="#28a745", width=4),
-                        hovertemplate=hovertext,
-                        opacity=0.8,
-                        ))
-
-        # Add traces for the point, one for each slider step
-        for ii in range(len(x)):
-            fig.add_trace(Scatter(x=[x[ii]], y=[y[ii]], 
-                            visible=False,
-                            mode='markers', marker_symbol="diamond", 
-                            opacity=1, marker_color="#2EA3F2", marker_size=10,
-                            name="System Size",
-                            hoverlabel = dict(font=dict(color='white'), bordercolor="white")
-                            ))
-
-        # Make the 16 hour trace visible
-        fig.data[startind+1].visible = True
-        fig.update_layout(title="Primary Sizing Curve",
-                      xaxis_title="Primary Tank Volume (Gallons) at Storage Temperature" if not self.doLoadShift else "Percent of Load Shift Captured",
-                      yaxis_title="Primary Heating Capacity (kBTU/hr)" if not self.doLoadShift else "Primary Tank Volume (Gallons) at Storage Temperature",
-                      showlegend=False)
-        #fig.update_xaxes(range=[min(x),max(x)], fixedrange=True)
-        #fig.update_yaxes(range=[min(y),max(y)], fixedrange=True)
-    
-        return fig
+        return [volN, capN, N, int(np.ceil((self.loadShiftPercent * 100)-25))]
     
 
-    def get_primary_curve_and_slider(self, x, y, startind, y2 = None, returnAsDiv = True, lsPoints = None): #getPrimaryCurveAndSlider
+    def getPrimaryCurveAndSlider(self, x, y, startind, y2 = None, returnAsDiv = True, lsPoints = None): #getPrimaryCurveAndSlider
         """
         Function to plot the the x and y curve and create a point that moves up
         and down the curve with a slider bar 
@@ -709,29 +669,27 @@ class SystemConfig:
         
         
         """
-        fig = self.get_Figure_xy_point(x, y, startind)
+        fig = createSizingCurvePlot(x, y, startind, loadshifting = self.doLoadShift)
     
         # Create and add sliderbar steps
         steps = []
         for i in range(1,len(fig.data)):
         
-            labelText = "Storage: <b id='point_x'>" + str(float(x[i-1] if not self.doLoadShift else y[i-1])) + "</b> Gal, Capacity: <b id='point_y'>" + \
-                    str(round(y[i-1],1) if not self.doLoadShift else self.PCap_kBTUhr) + "</b> kBTU/hr" 
+            labelText = "Storage: "+("<b id='point_y'>" if self.doLoadShift else "<b id='point_x'>") + str(float(x[i-1] if not self.doLoadShift else y[i-1])) + "</b> Gal, Capacity: "+ \
+                ("<b>" if self.doLoadShift else "<b id='point_y'>") + \
+                str(round(y[i-1],1) if not self.doLoadShift else round(self.PCap_kBTUhr,2)) + "</b> kBTU/hr" 
             if y2 is not None:
                 if self.doLoadShift:
-                    labelText += ", Percent Loadshift Days Covered: <b>" + str(float(y2[i-1])) + "</b> %"
+                    labelText += ", Percent Loadshift Days Covered: <b id='point_x'>" + str(float(y2[i-1])) + "</b> %"
                 else:
                     labelText += ", Compressor Runtime: <b>" + str(float(y2[i-1])) + "</b> hr" 
         
             step = dict(
-            # label = "Storage: <b id='point_x'>" + str(int(ceil(x[i-1]))) + "</b> Gal, Capacity: <b id='point_y'>" + \
-            #         str(round(y[i-1],1)) + "</b> kBTU/hr",
-
-            # this value must match the values in x = loads(form['x_data']) #json loads
-            label = labelText,
-            method="update",
-            args=[{"visible": [False] * len(fig.data)},
-                  ],  # layout attribute
+                # this value must match the values in x = loads(form['x_data']) #json loads
+                label = labelText,
+                method="update",
+                args=[{"visible": [False] * len(fig.data)},
+                    ],  # layout attribute
             )
             step["args"][0]["visible"][0] = True  # Make sure first trace is visible since its the line
             step["args"][0]["visible"][i] = True  # Toggle i'th trace to "visible"
@@ -749,11 +707,8 @@ class SystemConfig:
             pad={"t": 50},
             minorticklen=0,
             ticklen=0,
-            #tickcolor="#28a745",
             bgcolor= "#CCD9DB",
-            #bordercolor = "#28a745", 
             borderwidth = 0,
-            #activebgcolor ="blue",
         )]
     
         fig.update_layout(
@@ -886,41 +841,7 @@ class SystemConfig:
         Vshift = sum([loadshape[i]*building.magnitude for i in firstShed]) * lsFractTotalVol #calculate vol used during first shed multiplied by cdf
         VconsumedLU = sum(loadshape[firstShed[0] - loadUpHours : firstShed[0]]) * building.magnitude
         
-        return Vshift, VconsumedLU 
-        
-    def mixStorageTemps(self, runningVol_G, incomingT_F, supplyT_F):
-        """
-        Calculates average tank temperature using load up and normal setpoints according to locations of aquastats. 
-        Used for load shifting when there are two setpoints. Returns normal storage setpoint if load up and normal
-        setpoint are equal or if not loadshifting.
-
-        Parameters
-        ----------
-        runningVol_G : float
-            Volume of water to be mixed. 
-        incomingT_F : float
-            Incoming temp (in Fahrenhiet) of city water
-        supplyT_F : float
-            Supply temp (in Fahrenhiet) of water distributed to those in the building
-
-        Returns
-        ----------
-        mixStorageT_F: float
-            Average storage temperature calcuated with normal setpoint and load up setpoint.
-        totalVolMax : float
-            The total storage volume in gallons adjusted to the average storage temperature.
-        """
-        mixStorageT_F = self.storageT_F
-
-        if self.doLoadShift:
-            f = (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) 
-            normV = (1 - f) * runningVol_G
-            loadV = f * runningVol_G
-
-            mixStorageT_F = (self.storageT_F * normV + self.loadUpT_F * loadV) / (normV + loadV)
-            return mixStorageT_F, convertVolume(runningVol_G, mixStorageT_F, incomingT_F, supplyT_F) / (self.aquaFractShed - self.aquaFractLoadUp)
-        
-        return [mixStorageT_F]
+        return Vshift, VconsumedLU
     
 class Primary(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,

@@ -2,6 +2,7 @@ from .BuildingCreator import *
 from .SystemCreator import *
 from .Simulator import simulate
 from ecoengine.objects.SimulationRun import *
+from ecoengine.objects.systemConfigUtils import *
 import copy
 import json
 from plotly.graph_objs import Figure, Scatter
@@ -380,7 +381,7 @@ class EcosizerEngine:
         """
         return self.system.primaryCurve(self.building)
     
-    def plotStorageLoadSim(self, return_as_div=True, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False):
+    def plotStorageLoadSim(self, return_as_div=True, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
         """
         Returns a plot of the of the simulation for the minimum sized primary
         system as a div or plotly figure. Can plot the minute level simulation
@@ -398,7 +399,7 @@ class EcosizerEngine:
         simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
         return simRun.plotStorageLoadSim(return_as_div)
     
-    def plotSizingCurve(self, returnAsDiv = False):
+    def plotSizingCurve(self, returnAsDiv = False, returnWithXYPoints = False):
         """
         Returns a plot of the valid storage and capacity combinations.
 
@@ -413,20 +414,31 @@ class EcosizerEngine:
             plot_div
         """
         if self.system.doLoadShift:
-            [x_data, y_data, percents] = self.system.lsSizedPoints(self.building)
-            x_data = around(flipud(x_data),2)
-            y_data = around(flipud(y_data),2)
+            [storage_data, capacity_data, percents, startIndex] = self.lsSizedPoints()
+            storage_data = around(flipud(storage_data),2)
             percents = around(flipud(percents),2)
-            
-            return self.system.get_primary_curve_and_slider(percents, x_data, 5, percents, returnAsDiv = returnAsDiv) # TODO change the 5
+            if returnWithXYPoints:
+                return [
+                    self.system.getPrimaryCurveAndSlider(percents, storage_data, startIndex, percents, returnAsDiv = returnAsDiv),
+                    percents,
+                    storage_data,
+                    startIndex
+                ]
+            return self.system.getPrimaryCurveAndSlider(percents, storage_data, startIndex, percents, returnAsDiv = returnAsDiv)
         else:
-            [x_data, y_data, hours, recInd] = self.primaryCurve()
-            x_data = around(flipud(x_data),2)
-            y_data = around(flipud(y_data),2)
+            [storage_data, capacity_data, hours, startIndex] = self.primaryCurve()
+            storage_data = around(flipud(storage_data),2)
+            capacity_data = around(flipud(capacity_data),2)
             hours = around(flipud(hours),2)
-            recInd = len(x_data)-recInd-1
-            
-            return self.system.get_primary_curve_and_slider(x_data, y_data, recInd, hours, returnAsDiv = returnAsDiv)
+            startIndex = len(storage_data)-startIndex-1
+            if returnWithXYPoints:
+                return [
+                    self.system.getPrimaryCurveAndSlider(storage_data, capacity_data, startIndex, hours, returnAsDiv = returnAsDiv),
+                    storage_data,
+                    capacity_data,
+                    startIndex
+                ]
+            return self.system.getPrimaryCurveAndSlider(storage_data, capacity_data, startIndex, hours, returnAsDiv = returnAsDiv)
     
     def lsSizedPoints(self):
         """
@@ -478,6 +490,12 @@ def getListOfModels(multiPass = False):
             elif not multiPass and model_name[-2:] != 'MP':
                 returnList.append([model_name,value["name"]])
     return returnList
+
+def getSizingCurvePlot(x, y, startind, loadshifting = False):
+    """
+    creates a plotly figure from a list of x and y points and starts the slider at the start index.
+    """
+    return createSizingCurvePlot(x, y, startind, loadshifting)
 
 def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationRun, return_as_div=True):
     """

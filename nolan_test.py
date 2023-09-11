@@ -55,8 +55,19 @@ hpwh_for_sizing = EcosizerEngine(
             loadShiftSchedule        = loadShiftSchedule,
             loadUpHours     = 3,
             doLoadShift     = True,
-            loadShiftPercent       = 0.7
+            loadShiftPercent       = 1
         )
+
+print('+++++++++++++++++++++++++++++++++++++++')
+print('SIZING RESULTS')
+print('+++++++++++++++++++++++++++++++++++++++')
+print('recirc loss', hpwh_for_sizing.building.recirc_loss)
+PVol_G_atStorageT = hpwh_for_sizing.getSizingResults()[0] 
+PCap_kBTUhr = hpwh_for_sizing.getSizingResults()[1] 
+if simSchematic == 'multipass' or simSchematic == 'primaryrecirc':
+    PCap_kBTUhr += (hpwh_for_sizing.building.recirc_loss * 1.75 / 1000)
+print('PVol_G_atStorageT = ',PVol_G_atStorageT)
+print('PCap_kBTUhr = ',PCap_kBTUhr)
 
 if csvCreate:
     #test plot output

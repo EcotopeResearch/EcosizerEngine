@@ -150,7 +150,7 @@ class SwingTank(SystemConfig):
                 eff_HW_mix_fraction = temp_eff_HW_mix_fraction
     
         #convert to supply so that we can reuse functionality 
-        storMixedT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)[0]
+        storMixedT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)
         runV_G = convertVolume(runV_G, building.supplyT_F, building.incomingT_F, storMixedT_F)
         
         return runV_G, eff_HW_mix_fraction
@@ -218,7 +218,7 @@ class SwingTank(SystemConfig):
         runV_G += Vshift
        
         #get mixed storage temp
-        mixedStorT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)[0]
+        mixedStorT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)
         
         #convert from storage to supply volume
         runV_G = runV_G * (mixedStorT_F- building.incomingT_F) / (building.supplyT_F - building.incomingT_F) 
@@ -268,6 +268,36 @@ class SwingTank(SystemConfig):
         # TODO do we want to multiply by * lsFractTotalVol here or up on line 253?
         return Vshift* lsFractTotalVol, VconsumedLU
 
+    def mixStorageTemps(self, runningVol_G, incomingT_F, supplyT_F):
+        """
+        Calculates average tank temperature using load up and normal setpoints according to locations of aquastats. 
+        Used for load shifting when there are two setpoints. Returns normal storage setpoint if load up and normal
+        setpoint are equal or if not loadshifting.
+
+        Parameters
+        ----------
+        runningVol_G : float
+            Volume of water to be mixed. 
+        incomingT_F : float
+            Incoming temp (in Fahrenhiet) of city water
+        supplyT_F : float
+            Supply temp (in Fahrenhiet) of water distributed to those in the building
+
+        Returns
+        ----------
+        mixStorageT_F: float
+            Average storage temperature calcuated with normal setpoint and load up setpoint.
+        """
+        mixStorageT_F = self.storageT_F
+
+        if self.doLoadShift:
+            f = (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) 
+            normV = (1 - f) * runningVol_G
+            loadV = f * runningVol_G
+
+            mixStorageT_F = (self.storageT_F * normV + self.loadUpT_F * loadV) / (normV + loadV)
+        
+        return mixStorageT_F
 
     def _simJustSwing(self, N, hw_out, building, initST = None):
         """
@@ -304,7 +334,7 @@ class SwingTank(SystemConfig):
 
         for i in range(1, N):
             hw_outSwing[i] = convertVolume(hwDemand[i], swingT_F[i-1], building.incomingT_F, building.supplyT_F)
-            primaryStorageT_F = self.mixStorageTemps(hw_outSwing[i], building.incomingT_F, building.supplyT_F)[0]
+            primaryStorageT_F = self.mixStorageTemps(hw_outSwing[i], building.incomingT_F, building.supplyT_F)
             swingheating, swingT_F[i], tmRun[i] = self._runOneSwingStep(building, swingheating, swingT_F[i-1], hw_outSwing[i], primaryStorageT_F)
         
         return [swingT_F, tmRun, hw_outSwing]
