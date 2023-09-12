@@ -154,7 +154,7 @@ def test_swingResults(swingTank):
             swingTank.TMVol_G, swingTank.TMCap_kBTUhr] == [540.4258388420066, 118.11496284632373, [1]*24, 16, 100, 59.712485]
 
 def test_LSprimary(LSprimary):
-    assert [LSprimary.PVol_G_atStorageT, LSprimary.PCap_kBTUhr] == [841.0350199999997, 91.3667890625]
+    assert [LSprimary.PVol_G_atStorageT, LSprimary.PCap_kBTUhr] == [841.0350199999998, 91.3667890625]
 
 def test_sizedPrimaryResults(sizedPrimary):
     assert [sizedPrimary.PVol_G_atStorageT, sizedPrimary.PCap_kBTUhr, sizedPrimary.loadShiftSchedule, sizedPrimary.maxDayRun_hr] == [500, 95, [1]*24, 16]
@@ -354,7 +354,7 @@ def test_invalid_prefomance_map():
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, default_building, PVol_G_atStorageT = 10, TMVol_G=10, TMCap_kBTUhr=10, systemModel = 'model', numHeatPumps = 4.0)
 
 def test_too_small_lu_aq_sizing():
-    with pytest.raises(Exception, match = "The load up aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: 0.546 or increase your drawdown factor"):
+    with pytest.raises(Exception, match = "('01', 'The aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: ', 0.546)"):
         createSystem(
             schematic   = 'singlepass_norecirc', 
             building    = default_building, 

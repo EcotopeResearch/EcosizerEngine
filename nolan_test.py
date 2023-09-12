@@ -18,12 +18,12 @@ RECIRC_LOSS_MAX_BTUHR = 1080 * (watt_per_gal_recirc_factor * W_TO_BTUHR)
 aquaFractLoadUp = 0.2
 aquaFractShed   = 0.8
 storageT_F = 150
-loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0] #assume this loadshape for annual simulation every day
-csvCreate = False
+loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1] #assume this loadshape for annual simulation every day
+csvCreate = True
 hpwhModel ='MODELS_Mitsubishi_QAHV'
 tmModel ='MODELS_Mitsubishi_QAHV'
 minuteIntervals = 15
-sizingSchematic = 'singlepass_rtp'
+sizingSchematic = 'singlepass_norecirc'
 simSchematic = 'singlepass_rtp'
 
 def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, start_vol):
@@ -38,7 +38,7 @@ hpwh_for_sizing = EcosizerEngine(
             supplyT_F       = 120,
             storageT_F      = storageT_F,
             loadUpT_F       = storageT_F + 10,
-            percentUseable  = 1, 
+            percentUseable  = 0.85, 
             aquaFract       = 0.4, 
             aquaFractLoadUp = aquaFractLoadUp,
             aquaFractShed   = aquaFractShed,
@@ -55,19 +55,8 @@ hpwh_for_sizing = EcosizerEngine(
             loadShiftSchedule        = loadShiftSchedule,
             loadUpHours     = 3,
             doLoadShift     = True,
-            loadShiftPercent       = 0.8
+            loadShiftPercent       = 1
         )
-
-#test plot output
-fig = hpwh_for_sizing.plotSizingCurve()
-fig.write_html('Z:\\sizingplotTEST.html')
-
-start_time = time.time()
-simRun_from_sized = hpwh_for_sizing.getSimRun()
-
-end_time = time.time()
-duration = end_time - start_time
-print("Execution time for simple simulation run:", duration, "seconds")
 
 print('+++++++++++++++++++++++++++++++++++++++')
 print('SIZING RESULTS')
@@ -79,122 +68,145 @@ if simSchematic == 'multipass' or simSchematic == 'primaryrecirc':
     PCap_kBTUhr += (hpwh_for_sizing.building.recirc_loss * 1.75 / 1000)
 print('PVol_G_atStorageT = ',PVol_G_atStorageT)
 print('PCap_kBTUhr = ',PCap_kBTUhr)
-print('Vtrig_normal = ',hpwh_for_sizing.system.Vtrig_normal)
-print('Vtrig_shed = ',hpwh_for_sizing.system.Vtrig_shed)
-print('Vtrig_loadUp = ',hpwh_for_sizing.system.Vtrig_loadUp)
-
-TMVol_G = None
-TMCap_kW = None
-if sizingSchematic == 'swingtank' or sizingSchematic == 'paralleltank':
-    TMVol_G = hpwh_for_sizing.getSizingResults()[2] 
-    TMCap_kW = hpwh_for_sizing.getSizingResults()[3]/W_TO_BTUHR
-    print('TMVol_G = ',TMVol_G)
-    print('TMCap_kW = ',TMCap_kW)
-print('+++++++++++++++++++++++++++++++++++++++')
-
-# Annual simulation based on sizing from last:
-
-print("starting LS section using sizes")
-hpwh_ls = EcosizerEngine(
-            incomingT_F     = 50,
-            magnitudeStat  = 150,
-            supplyT_F       = 120,
-            storageT_F      = storageT_F,
-            loadUpT_F       = storageT_F + 10,
-            percentUseable  = 1, 
-            aquaFract       = 0.4, 
-            aquaFractLoadUp = aquaFractLoadUp,
-            aquaFractShed   = aquaFractShed,
-            schematic       = simSchematic, 
-            buildingType   = 'multi_family',
-            returnT_F       = 0, 
-            flowRate       = 0,
-            gpdpp           = 25,
-            safetyTM        = 1.75,
-            defrostFactor   = 1, 
-            compRuntime_hr  = 16, 
-            nApt            = 110, 
-            Wapt            = 60,
-            nBR             = [0,50,30,20,0,0],
-            loadShiftSchedule        = loadShiftSchedule,
-            loadUpHours     = 3,
-            doLoadShift     = True,
-            loadShiftPercent       = 0.8,
-            PVol_G_atStorageT = PVol_G_atStorageT, 
-            PCap_kW = PCap_kBTUhr/W_TO_BTUHR, 
-            TMVol_G = TMVol_G, 
-            TMCap_kW = TMCap_kW,
-            annual = True,
-            climateZone = 1,
-            systemModel = hpwhModel,
-            tmModel = tmModel
-        )
-
-start_vol = 0.4*PVol_G_atStorageT
-start_time = time.time()
-
-simResultArray = hpwh_ls.getSimRunWithkWCalc(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, optimizeNLS = False)
-# simResultArray = hpwh_ls.getSimRun(minuteIntervals = 1, nDays = 3, optimizeNLS = False)
-
-
-end_time = time.time()
-duration = end_time - start_time
-print("Program execution time for annual simulation:", duration, "seconds")
-
-simRun_ls = simResultArray[0]
-
-
-print('=========================================================')
-print('average city watertemp is', simRun_ls.getAvgIncomingWaterT())
-print('=======================FOR LS============================')
-loadshift_capacity = simResultArray[2]
-kGperkWh = simRun_ls.getkGCO2Sum()/loadshift_capacity
-print('ls kg_sum is', simRun_ls.getkGCO2Sum())
-print('ls kGperkWh is', kGperkWh)
-print('annual COP:', simRun_ls.getAnnualCOP())
-print('annual COP (boundry):', simRun_ls.getAnnualCOP(True))
 
 if csvCreate:
-    createCSV(simRun_ls, simSchematic, kGperkWh, True, start_vol)
+    #test plot output
+    fig = hpwh_for_sizing.plotSizingCurve()
+    fig.write_html('Z:\\sizingplotTEST.html')
 
-print('=====================FOR NON LS==========================')
-simRun_nls = simResultArray[1]
+# start_time = time.time()
+# simRun_from_sized = hpwh_for_sizing.getSimRun()
 
-kGperkWh_nonLS = simRun_nls.getkGCO2Sum()/loadshift_capacity
-print('non-ls kg_sum is', simRun_nls.getkGCO2Sum())
-print('non-ls kGperkWh is', kGperkWh_nonLS)
-print('annual COP:', simRun_nls.getAnnualCOP())
-print('annual COP (boundry):', simRun_nls.getAnnualCOP(True))
+# end_time = time.time()
+# duration = end_time - start_time
+# print("Execution time for simple simulation run:", duration, "seconds")
+
+# print('+++++++++++++++++++++++++++++++++++++++')
+# print('SIZING RESULTS')
+# print('+++++++++++++++++++++++++++++++++++++++')
+# print('recirc loss', hpwh_for_sizing.building.recirc_loss)
+# PVol_G_atStorageT = hpwh_for_sizing.getSizingResults()[0] 
+# PCap_kBTUhr = hpwh_for_sizing.getSizingResults()[1] 
+# if simSchematic == 'multipass' or simSchematic == 'primaryrecirc':
+#     PCap_kBTUhr += (hpwh_for_sizing.building.recirc_loss * 1.75 / 1000)
+# print('PVol_G_atStorageT = ',PVol_G_atStorageT)
+# print('PCap_kBTUhr = ',PCap_kBTUhr)
+# print('Vtrig_normal = ',hpwh_for_sizing.system.Vtrig_normal)
+# print('Vtrig_shed = ',hpwh_for_sizing.system.Vtrig_shed)
+# print('Vtrig_loadUp = ',hpwh_for_sizing.system.Vtrig_loadUp)
+
+# TMVol_G = None
+# TMCap_kW = None
+# if sizingSchematic == 'swingtank' or sizingSchematic == 'paralleltank':
+#     TMVol_G = hpwh_for_sizing.getSizingResults()[2] 
+#     TMCap_kW = hpwh_for_sizing.getSizingResults()[3]/W_TO_BTUHR
+#     print('TMVol_G = ',TMVol_G)
+#     print('TMCap_kW = ',TMCap_kW)
+# print('+++++++++++++++++++++++++++++++++++++++')
+
+# # Annual simulation based on sizing from last:
+
+# print("starting LS section using sizes")
+# hpwh_ls = EcosizerEngine(
+#             incomingT_F     = 50,
+#             magnitudeStat  = 150,
+#             supplyT_F       = 120,
+#             storageT_F      = storageT_F,
+#             loadUpT_F       = storageT_F + 10,
+#             percentUseable  = 1, 
+#             aquaFract       = 0.4, 
+#             aquaFractLoadUp = aquaFractLoadUp,
+#             aquaFractShed   = aquaFractShed,
+#             schematic       = simSchematic, 
+#             buildingType   = 'multi_family',
+#             returnT_F       = 0, 
+#             flowRate       = 0,
+#             gpdpp           = 25,
+#             safetyTM        = 1.75,
+#             defrostFactor   = 1, 
+#             compRuntime_hr  = 16, 
+#             nApt            = 110, 
+#             Wapt            = 60,
+#             nBR             = [0,50,30,20,0,0],
+#             loadShiftSchedule        = loadShiftSchedule,
+#             loadUpHours     = 3,
+#             doLoadShift     = True,
+#             loadShiftPercent       = 0.8,
+#             PVol_G_atStorageT = PVol_G_atStorageT, 
+#             PCap_kW = PCap_kBTUhr/W_TO_BTUHR, 
+#             TMVol_G = TMVol_G, 
+#             TMCap_kW = TMCap_kW,
+#             annual = True,
+#             climateZone = 1,
+#             systemModel = hpwhModel,
+#             tmModel = tmModel
+#         )
+
+# start_vol = 0.4*PVol_G_atStorageT
+# start_time = time.time()
+
+# simResultArray = hpwh_ls.getSimRunWithkWCalc(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, optimizeNLS = False)
+# # simResultArray = hpwh_ls.getSimRun(minuteIntervals = 1, nDays = 3, optimizeNLS = False)
+
+
+# end_time = time.time()
+# duration = end_time - start_time
+# print("Program execution time for annual simulation:", duration, "seconds")
+
+# simRun_ls = simResultArray[0]
+
+
+# print('=========================================================')
+# print('average city watertemp is', simRun_ls.getAvgIncomingWaterT())
+# print('=======================FOR LS============================')
+# loadshift_capacity = simResultArray[2]
+# kGperkWh = simRun_ls.getkGCO2Sum()/loadshift_capacity
+# print('ls kg_sum is', simRun_ls.getkGCO2Sum())
+# print('ls kGperkWh is', kGperkWh)
+# print('annual COP:', simRun_ls.getAnnualCOP())
+# print('annual COP (boundry):', simRun_ls.getAnnualCOP(True))
 
 # if csvCreate:
-#     createCSV(simRun_nls, simSchematic, kGperkWh_nonLS, False, start_vol)
-print('=========================================================')
-print("LS to non-LS diff:", kGperkWh_nonLS - kGperkWh, "=", simResultArray[3])
+#     createCSV(simRun_ls, simSchematic, kGperkWh, True, start_vol)
 
-# print(getListOfModels())
-if False:
-# Generate the content for the HTML div
-    content = getAnnualSimLSComparison(simRun_ls, simRun_nls)
+# print('=====================FOR NON LS==========================')
+# simRun_nls = simResultArray[1]
 
-    # Create the HTML content
-    html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <title>My Webpage</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-</head>
-<body>
-<div>
-{content}
-</div>
-</body>
-</html>
-"""
+# kGperkWh_nonLS = simRun_nls.getkGCO2Sum()/loadshift_capacity
+# print('non-ls kg_sum is', simRun_nls.getkGCO2Sum())
+# print('non-ls kGperkWh is', kGperkWh_nonLS)
+# print('annual COP:', simRun_nls.getAnnualCOP())
+# print('annual COP (boundry):', simRun_nls.getAnnualCOP(True))
 
-    # Write the HTML content to the file
-    file_name = f'{simSchematic}_simResult_{hpwhModel}.html'
-    with open(file_name, 'w') as file:
-        file.write(html_content)
+# # if csvCreate:
+# #     createCSV(simRun_nls, simSchematic, kGperkWh_nonLS, False, start_vol)
+# print('=========================================================')
+# print("LS to non-LS diff:", kGperkWh_nonLS - kGperkWh, "=", simResultArray[3])
+
+# # print(getListOfModels())
+# if False:
+# # Generate the content for the HTML div
+#     content = getAnnualSimLSComparison(simRun_ls, simRun_nls)
+
+#     # Create the HTML content
+#     html_content = f"""<!DOCTYPE html>
+# <html>
+# <head>
+#     <title>My Webpage</title>
+#     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+# </head>
+# <body>
+# <div>
+# {content}
+# </div>
+# </body>
+# </html>
+# """
+
+#     # Write the HTML content to the file
+#     file_name = f'{simSchematic}_simResult_{hpwhModel}.html'
+#     with open(file_name, 'w') as file:
+#         file.write(html_content)
 
 ##############################################################################################
 # # PVol_G_atStorageT = 400

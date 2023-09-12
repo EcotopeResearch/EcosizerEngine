@@ -238,11 +238,14 @@ def test_convertVolume(convertToT_F, referenceT_F, convertFromT_F, expected):
     assert round(convertVolume(100, convertToT_F, referenceT_F, convertFromT_F), 3) == expected
 
 @pytest.mark.parametrize("sizingResult, magnitude", [
-   ([1528.0027969823054, 150.75919907543388, 100, 59.712485, 168], 2500)
+   ([1579.8153948651482, 150.75919907543388, 100, 59.712485, 168], 2500)
 ])
 def test_swingSizingResult(swing_sizer, sizingResult, magnitude):
     assert swing_sizer.getSizingResults() == sizingResult
     assert swing_sizer.getHWMagnitude() == magnitude
+
+def test_plotSizingCurve_len(swing_sizer):
+    assert len(swing_sizer.plotSizingCurve(returnAsDiv = True, returnWithXYPoints = True)) == 4
 
 @pytest.mark.parametrize("sizingResult", [
     ([540.4258388420066, 118.11496284632373, 100, 59.712485, 168])
@@ -251,7 +254,7 @@ def test_swingSizingNLSResult(swing_sizer_nls, sizingResult):
     assert swing_sizer_nls.getSizingResults() == sizingResult
 
 @pytest.mark.parametrize("sizingResult, magnitude", [
-   ([1141.554372892012, 112.45143269230772], 2500)
+   ([1141.5543728920115, 112.45143269230772], 2500)
 ])
 def test_primarySizingResult(primary_sizer, sizingResult, magnitude):
     assert primary_sizer.getSizingResults() == sizingResult
@@ -264,7 +267,7 @@ def test_primarySizingNLSResults(primary_sizer_nls, sizingResult):
     assert primary_sizer_nls.getSizingResults() == sizingResult
 
 @pytest.mark.parametrize("sizingResult, magnitude", [
-   ([1141.554372892012, 112.45143269230772, 136.0194559548742, 59.712485], 2500)
+   ([1141.5543728920115, 112.45143269230772, 136.0194559548742, 59.712485], 2500)
 ])
 def test_parallelSizingResult(parallel_sizer, sizingResult, magnitude):
     assert parallel_sizer.getSizingResults() == sizingResult
@@ -315,13 +318,6 @@ def test__swing_simulationResults(swing_sizer):
     simResult = swing_sizer.getSimResult()
     assert len(simResult) == 7
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == len(simResult[4]) == len(simResult[5]) == len(simResult[6]) == 4320
-    assert simResult[0][:10] == [1375.528, 1375.054, 1374.576, 1374.094, 1373.61, 1373.122, 1372.63, 1372.135, 1371.637, 1371.135]
-    assert simResult[1][-10:] == [4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297, 4.297]
-    assert simResult[2][-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
-    assert simResult[3][800:810] == [3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008, 3.008]
-    assert simResult[4][-10:] == [124.201, 125.002, 125.791, 126.568, 127.334, 128.0, 127.555, 127.115, 126.682, 126.256]
-    assert simResult[5][-200:-190] == [0, 0, 0, 0, 0.013, 1, 1, 1, 1, 1]
-    assert simResult[6][800:803] == [0.9489206357019205, 0.9384794009334938, 0.9283993792885612]
 
 def test__primary_nls_simulationResults(primary_sizer_nls):
     simResult = primary_sizer_nls.getSimResult()

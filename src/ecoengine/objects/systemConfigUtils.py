@@ -1,4 +1,6 @@
 import numpy as np
+from plotly.offline import plot
+from plotly.graph_objs import Figure, Scatter
 
 def roundList(a_list, n=3):
     """
@@ -138,3 +140,37 @@ def checkHeatHours(heathours):
     else:
         if heathours > 24 or heathours <= 0:
             raise Exception("Heat hours is not within 1 - 24 hours")
+        
+def createSizingCurvePlot(x, y, startind, loadshifting = False):
+    """
+    Sub - Function to plot the the x and y curve and create a point (secretly creates all the points)
+    """
+    fig = Figure()
+    
+    hovertext = 'Storage Volume: %{x:.1f} gallons \nHeating Capacity: %{y:.1f}' if not loadshifting else 'CDF: %{x:.1f} gallons \Storage Volume: %{y:.1f}' 
+
+    fig.add_trace(Scatter(x=x, y=y,
+                    visible=True,
+                    line=dict(color="#28a745", width=4),
+                    hovertemplate=hovertext,
+                    opacity=0.8,
+                    ))
+
+    # Add traces for the point, one for each slider step
+    for ii in range(len(x)):
+        fig.add_trace(Scatter(x=[x[ii]], y=[y[ii]], 
+                        visible=False,
+                        mode='markers', marker_symbol="diamond", 
+                        opacity=1, marker_color="#2EA3F2", marker_size=10,
+                        name="System Size",
+                        hoverlabel = dict(font=dict(color='white'), bordercolor="white")
+                        ))
+
+    # Make the 16 hour trace visible
+    fig.data[startind+1].visible = True
+    fig.update_layout(title="Primary Sizing Curve",
+                    xaxis_title="Primary Tank Volume (Gallons) at Storage Temperature" if not loadshifting else "Percent of Load Shift Captured",
+                    yaxis_title="Primary Heating Capacity (kBTU/hr)" if not loadshifting else "Primary Tank Volume (Gallons)",
+                    showlegend=False)
+
+    return fig

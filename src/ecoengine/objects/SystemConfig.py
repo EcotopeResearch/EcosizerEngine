@@ -4,7 +4,7 @@ from .SimulationRun import SimulationRun
 from .PrefMapTracker import PrefMapTracker
 import numpy as np
 from scipy.stats import norm #lognorm
-from .systemConfigUtils import convertVolume, hrToMinList, hrTo15MinList, getPeakIndices, checkLiqudWater, checkHeatHours
+from .systemConfigUtils import *
 from plotly.offline import plot
 from plotly.graph_objs import Figure, Scatter
 
@@ -126,9 +126,9 @@ class SystemConfig:
         """
         if not isinstance(building, Building):
                 raise Exception("Error: Building is not valid.")
-        self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr, self.loadUpHours, building)
+        self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr, self.loadUpHours, building, lsFractTotalVol = self.fract_total_vol)
         self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, building, 
-            effSwingVolFract = self.effSwingFract, primaryCurve = False)[0]
+            effSwingVolFract = self.effSwingFract, primaryCurve = False, lsFractTotalVol = self.fract_total_vol)[0]
         
     def getSizingResults(self):
         """
@@ -310,9 +310,10 @@ class SystemConfig:
             fract = norm_mean + norm_std * norm.ppf(loadShiftPercent) #TODO norm_mean and std are currently from multi-family, need other types eventually. For now, loadshifting will only be available for multi-family
             self.fract_total_vol = fract if fract <= 1. else 1.
         
+        self.loadShiftPercent = loadShiftPercent
         self.doLoadShift = True
 
-    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building : Building, primaryCurve = False, effSwingVolFract=1):
+    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building : Building, primaryCurve = False, effSwingVolFract=1, lsFractTotalVol = 1):
         """
         Converts from hours of heating in a day to heating capacity. If loadshifting compares this method to capacity needed to load up
         and takes maximum.
@@ -348,7 +349,7 @@ class SystemConfig:
         genRate = building.magnitude * effSwingVolFract / heathours
         
         if self.doLoadShift and not primaryCurve:
-            Vshift, VconsumedLU = self._calcPrelimVol(loadUpHours, building.avgLoadshape, building) 
+            Vshift, VconsumedLU = self._calcPrelimVol(loadUpHours, building.avgLoadshape, building, lsFractTotalVol)
             Vload = Vshift * (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) #volume in 'load up' portion of tank
             LUgenRate = (Vload + VconsumedLU) / loadUpHours #rate needed to load up tank and offset use during load up period
             
@@ -361,7 +362,7 @@ class SystemConfig:
         return heatCap, genRate
     
 
-    def sizePrimaryTankVolume(self, heatHrs, loadUpHours, building : Building, primaryCurve = False):
+    def sizePrimaryTankVolume(self, heatHrs, loadUpHours, building : Building, primaryCurve = False, lsFractTotalVol = 1.):
         """
         Calculates the primary storage using the Ecotope sizing methodology. Function is also used
         to generate primary sizing curve, which creates a curve with no load shifting and points
@@ -407,8 +408,7 @@ class SystemConfig:
         totalVolAtStorage *=  thermalStorageSF
 
         if self.doLoadShift and not primaryCurve:
-            LSrunningVol_G, LSeffMixFract = self._calcRunningVolLS(loadUpHours, building.avgLoadshape, building, effMixFract)
-            LSrunningVol_G *= self.fract_total_vol 
+            LSrunningVol_G, LSeffMixFract = self._calcRunningVolLS(loadUpHours, building.avgLoadshape, building, effMixFract, lsFractTotalVol = lsFractTotalVol)
 
             # Get total volume from max of primary method or load shift method
             if LSrunningVol_G > runningVol_G:
@@ -416,20 +416,24 @@ class SystemConfig:
                 effMixFract = LSeffMixFract
                 
                 #get the average tank volume
-                totalVolAtStorage = self.mixStorageTemps(runningVol_G, building.incomingT_F, building.supplyT_F)[1]
+                totalVolAtStorage_ls = convertVolume(runningVol_G, self.storageT_F, building.incomingT_F, building.supplyT_F) / (self.aquaFractShed - self.aquaFractLoadUp)
                 
                 #multiply computed storage by efficiency safety factor (currently set to 1)
-                totalVolAtStorage *=  thermalStorageSF 
-        
+                totalVolAtStorage_ls *=  thermalStorageSF 
+
+                if totalVolAtStorage_ls > totalVolAtStorage:
+                    totalVolAtStorage = totalVolAtStorage_ls
+
             # Check the Cycling Volume 
             LUcyclingVol_G = totalVolAtStorage * (self.aquaFractLoadUp - (1 - self.percentUseable))
             minRunVol_G = pCompMinimumRunTime * (building.magnitude / heatHrs) # (generation rate - no usage) #REMOVED EFFMIXFRACT
             
             if minRunVol_G > LUcyclingVol_G:
                 min_AF = minRunVol_G / totalVolAtStorage + (1 - self.percentUseable)
-                if min_AF < 1:
-                    raise Exception("The load up aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: " + str(round(min_AF,3)) + " or increase your drawdown factor.")
-                raise Exception("The minimum load up aquastat fraction is greater than 1. This is due to the storage efficency and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )
+                if min_AF >= 1:
+                    raise Exception("The minimum load up aquastat fraction is greater than 1. This is due to the storage efficency and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )                
+                # raise Exception("The load up aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: " + str(round(min_AF,3)) + " or increase your drawdown factor.")
+
 
         cyclingVol_G = totalVolAtStorage * (self.aquaFract - (1 - self.percentUseable))
         minRunVol_G = pCompMinimumRunTime * (building.magnitude / heatHrs) # (generation rate - no usage)  #REMOVED EFFMIXFRACT
@@ -492,7 +496,7 @@ class SystemConfig:
             runV_G = max(runV_G, -min(diffCum[diffCum<0.])) #Minimum value less than 0 or 0.
         return runV_G, effMixFract
     
-    def _calcRunningVolLS(self, loadUpHours, loadshape, building : Building, effMixFract = 1):
+    def _calcRunningVolLS(self, loadUpHours, loadshape, building : Building, effMixFract = 1, lsFractTotalVol = 1):
         """
         Function to calculate the running volume if load shifting. Using the max generation rate between normal sizing
         and preliminary volume, the deficit between generation and hot water use is then added to the preliminary volume.
@@ -518,9 +522,9 @@ class SystemConfig:
         effMixFract : float
             Used for swing tank implementation.
         """
-        Vshift = self._calcPrelimVol(loadUpHours, loadshape, building)[0] #volume to make it through first shed
+        Vshift = self._calcPrelimVol(loadUpHours, loadshape, building, lsFractTotalVol = lsFractTotalVol)[0] #volume to make it through first shed
         
-        genRateON = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, loadUpHours, building, effSwingVolFract = effMixFract, primaryCurve = False)[1] #max generation rate from both methods
+        genRateON = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, loadUpHours, building, effSwingVolFract = effMixFract, primaryCurve = False, lsFractTotalVol = lsFractTotalVol)[1] #max generation rate from both methods
         genRate = [genRateON if x != 0 else 0 for x in self.loadShiftSchedule] #set generation rate during shed to 0
         genRate = np.tile(genRate, 2)
         
@@ -529,8 +533,9 @@ class SystemConfig:
         #get first index after shed
         shedEnd = [i for i,x in enumerate(genRate[1:],1) if x > genRate[i-1]][0] #start at beginning of first shed, fully loaded up equivalent to starting at the end of shed completely "empty"
         diffCum = np.cumsum(diffN[shedEnd:]) 
-        LSrunV_G = -min(diffCum[diffCum<0.], default = 0) #numbers less than 0 are a hot water deficit, find the biggest deficit. if no deficit then 0.
-        
+        LSrunV_G = -min(diffCum[diffCum<0.], default = 0) * lsFractTotalVol #numbers less than 0 are a hot water deficit, find the biggest deficit. if no deficit then 0.
+        # TODO do we want to multiply LSrunV_G by lsFractTotalVol? that isn't really affected by cdf
+
         #add running volume to preliminary shifted volume
         LSrunV_G += Vshift
         
@@ -593,7 +598,7 @@ class SystemConfig:
         effMixFract = np.ones(len(heatHours))
         for i in range(0,len(heatHours)):
             try:
-                volN[i], effMixFract[i] = self.sizePrimaryTankVolume(heatHours[i], self.loadUpHours, building, primaryCurve = True)
+                volN[i], effMixFract[i] = self.sizePrimaryTankVolume(heatHours[i], self.loadUpHours, building, primaryCurve = True, lsFractTotalVol = self.fract_total_vol)
                 
             except ValueError:
                 break
@@ -603,7 +608,7 @@ class SystemConfig:
         effMixFract = effMixFract[:i]
 
         return [volN, self._primaryHeatHrs2kBTUHR(heatHours, self.loadUpHours, building, 
-            effSwingVolFract = effMixFract, primaryCurve = True)[0], heatHours, recIndex]
+            effSwingVolFract = effMixFract, primaryCurve = True, lsFractTotalVol = self.fract_total_vol)[0], heatHours, recIndex]
 
     def lsSizedPoints(self, building : Building):
         """
@@ -620,62 +625,31 @@ class SystemConfig:
         lsSizingCombos : array
             Array of volume and capacity combinations sized based on the number of load up hours.
         """
-        
-        volN = np.zeros(5)
-        capN = np.zeros(5)
-        effMixN = np.zeros(5)
-        N = np.zeros(5)
+        volN = []
+        capN = []
+        effMixN = []
+        N = []
 
         #load up hours to loop through
-        for i in range(1, 6): #arbitrary stopping point, anything more than this will not result in different sizing
+        i = 100
+        # try:
+        while i >= 25: #arbitrary stopping point, anything more than this will not result in different sizing
             #size the primary system based on the number of load up hours
-            volN[i-1], effMixN[i-1] = self.sizePrimaryTankVolume(heatHrs = self.maxDayRun_hr, loadUpHours = i, building = building, primaryCurve = False)
-            capN[i-1] = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, i, building, effSwingVolFract = effMixN[i-1], primaryCurve = False)[0]
-            N[i-1] = i
+            fract = norm_mean + norm_std * norm.ppf(i/100) #TODO norm_mean and std are currently from multi-family, need other types eventually. For now, loadshifting will only be available for multi-family
+            fract = fract if fract <= 1. else 1.
+            volN_i, effMixN_i = self.sizePrimaryTankVolume(heatHrs = self.maxDayRun_hr, loadUpHours = self.loadUpHours, building = building, primaryCurve = False, lsFractTotalVol = fract)
+            volN.append(volN_i)
+            effMixN.append(effMixN_i)
+            capN.append(self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, building, effSwingVolFract = effMixN_i, primaryCurve = False, lsFractTotalVol = fract)[0])
+            N.append(i)
+            i -= 1
 
-        volN, capN = zip(*set(zip(volN, capN)))
-        N = N[:len(volN)]
+        # except Exception:
     
-        return [volN, capN, N]
-    
-    def get_Figure_xy_point(self, x, y, startind): #getFigureXUPoint
-        """
-        Sub - Function to plot the the x and y curve and create a point (secretly creates all the points)
-        """
-        fig = Figure()
-        
-        hovertext = 'Storage Volume: %{x:.1f} gallons \nHeating Capacity: %{y:.1f}'
-
-        fig.add_trace(Scatter(x=x, y=y,
-                        visible=True,
-                        line=dict(color="#28a745", width=4),
-                        hovertemplate=hovertext,
-                        opacity=0.8,
-                        ))
-
-        # Add traces for the point, one for each slider step
-        for ii in range(len(x)):
-            fig.add_trace(Scatter(x=[x[ii]], y=[y[ii]], 
-                            visible=False,
-                            mode='markers', marker_symbol="diamond", 
-                            opacity=1, marker_color="#2EA3F2", marker_size=10,
-                            name="System Size",
-                            hoverlabel = dict(font=dict(color='white'), bordercolor="white")
-                            ))
-
-        # Make the 16 hour trace visible
-        fig.data[startind+1].visible = True
-        fig.update_layout(title="Primary Sizing Curve",
-                      xaxis_title="Primary Tank Volume (Gallons) at Storage Temperature",
-                      yaxis_title="Primary Heating Capacity (kBTU/hr)",
-                      showlegend=False)
-        #fig.update_xaxes(range=[min(x),max(x)], fixedrange=True)
-        #fig.update_yaxes(range=[min(y),max(y)], fixedrange=True)
-    
-        return fig
+        return [volN, capN, N, int(np.ceil((self.loadShiftPercent * 100)-25))]
     
 
-    def get_primary_curve_and_slider(self, x, y, startind, y2 = None, returnAsDiv = True, lsPoints = None): #getPrimaryCurveAndSlider
+    def getPrimaryCurveAndSlider(self, x, y, startind, y2 = None, returnAsDiv = True, lsPoints = None): #getPrimaryCurveAndSlider
         """
         Function to plot the the x and y curve and create a point that moves up
         and down the curve with a slider bar 
@@ -695,44 +669,31 @@ class SystemConfig:
         
         
         """
-        fig = self.get_Figure_xy_point(x, y, startind)
+        fig = createSizingCurvePlot(x, y, startind, loadshifting = self.doLoadShift)
     
         # Create and add sliderbar steps
         steps = []
         for i in range(1,len(fig.data)):
         
-            labelText = "Storage: <b id='point_x'>" + str(float(x[i-1])) + "</b> Gal, Capacity: <b id='point_y'>" + \
-                    str(round(y[i-1],1)) + "</b> kBTU/hr" 
+            labelText = "Storage: "+("<b id='point_y'>" if self.doLoadShift else "<b id='point_x'>") + str(float(x[i-1] if not self.doLoadShift else y[i-1])) + "</b> Gal, Capacity: "+ \
+                ("<b>" if self.doLoadShift else "<b id='point_y'>") + \
+                str(round(y[i-1],1) if not self.doLoadShift else round(self.PCap_kBTUhr,2)) + "</b> kBTU/hr" 
             if y2 is not None:
-                labelText += ", Compressor Runtime: <b>" + str(float(y2[i-1])) + "</b> hr" 
+                if self.doLoadShift:
+                    labelText += ", Percent Loadshift Days Covered: <b id='point_x'>" + str(float(y2[i-1])) + "</b> %"
+                else:
+                    labelText += ", Compressor Runtime: <b>" + str(float(y2[i-1])) + "</b> hr" 
         
             step = dict(
-            # label = "Storage: <b id='point_x'>" + str(int(ceil(x[i-1]))) + "</b> Gal, Capacity: <b id='point_y'>" + \
-            #         str(round(y[i-1],1)) + "</b> kBTU/hr",
-
-            # this value must match the values in x = loads(form['x_data']) #json loads
-            label = labelText,
-            method="update",
-            args=[{"visible": [False] * len(fig.data)},
-                  ],  # layout attribute
+                # this value must match the values in x = loads(form['x_data']) #json loads
+                label = labelText,
+                method="update",
+                args=[{"visible": [False] * len(fig.data)},
+                    ],  # layout attribute
             )
             step["args"][0]["visible"][0] = True  # Make sure first trace is visible since its the line
             step["args"][0]["visible"][i] = True  # Toggle i'th trace to "visible"
             steps.append(step)
-
-        if lsPoints:
-            volumes = list(lsPoints[0])
-            capacities = list(lsPoints[1])
-            hours = list(lsPoints[2])
-            
-            fig.add_trace(
-                Scatter(
-                   x = volumes,
-                   y = capacities,
-                   text = hours,
-                   mode = 'markers' 
-                )
-            )
 
         sliders = [dict(    
             steps=steps,
@@ -746,11 +707,8 @@ class SystemConfig:
             pad={"t": 50},
             minorticklen=0,
             ticklen=0,
-            #tickcolor="#28a745",
             bgcolor= "#CCD9DB",
-            #bordercolor = "#28a745", 
             borderwidth = 0,
-            #activebgcolor ="blue",
         )]
     
         fig.update_layout(
@@ -856,7 +814,7 @@ class SystemConfig:
 
         return pheating, Vnew, hw_generated, time_ran * minuteIntervals
     
-    def _calcPrelimVol(self, loadUpHours, loadshape, building : Building):
+    def _calcPrelimVol(self, loadUpHours, loadshape, building : Building, lsFractTotalVol = 1):
         '''
         Function to calculate volume shifted during first shed period, which is used to calculated generation rate
         needed for load up.
@@ -880,45 +838,10 @@ class SystemConfig:
         '''
         shedHours = [i for i in range(len(self.loadShiftSchedule)) if self.loadShiftSchedule[i] == 0] #get all scheduled shed hours
         firstShed = [x for i,x in enumerate(shedHours) if x == shedHours[0] + i] #get first shed
-        Vshift = sum([loadshape[i]*building.magnitude for i in firstShed])#calculate vol used during first shed
+        Vshift = sum([loadshape[i]*building.magnitude for i in firstShed]) * lsFractTotalVol #calculate vol used during first shed multiplied by cdf
         VconsumedLU = sum(loadshape[firstShed[0] - loadUpHours : firstShed[0]]) * building.magnitude
         
-        return Vshift, VconsumedLU 
-        
-    def mixStorageTemps(self, runningVol_G, incomingT_F, supplyT_F):
-        """
-        Calculates average tank temperature using load up and normal setpoints according to locations of aquastats. 
-        Used for load shifting when there are two setpoints. Returns normal storage setpoint if load up and normal
-        setpoint are equal or if not loadshifting.
-
-        Parameters
-        ----------
-        runningVol_G : float
-            Volume of water to be mixed. 
-        incomingT_F : float
-            Incoming temp (in Fahrenhiet) of city water
-        supplyT_F : float
-            Supply temp (in Fahrenhiet) of water distributed to those in the building
-
-        Returns
-        ----------
-        mixStorageT_F: float
-            Average storage temperature calcuated with normal setpoint and load up setpoint.
-        totalVolMax : float
-            The total storage volume in gallons adjusted to the average storage temperature.
-        """
-        mixStorageT_F = self.storageT_F
-
-        if self.doLoadShift:
-            f = (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) 
-            normV = (1 - f) * runningVol_G
-            loadV = f * runningVol_G
-
-            mixStorageT_F = (self.storageT_F * normV + self.loadUpT_F * loadV) / (normV + loadV)
-
-            return mixStorageT_F, convertVolume(runningVol_G, mixStorageT_F, incomingT_F, supplyT_F) / (self.aquaFractShed - self.aquaFractLoadUp)
-        
-        return [mixStorageT_F]
+        return Vshift, VconsumedLU
     
 class Primary(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,

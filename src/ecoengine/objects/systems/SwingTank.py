@@ -150,13 +150,13 @@ class SwingTank(SystemConfig):
                 eff_HW_mix_fraction = temp_eff_HW_mix_fraction
     
         #convert to supply so that we can reuse functionality 
-        storMixedT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)[0]
+        storMixedT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)
         runV_G = convertVolume(runV_G, building.supplyT_F, building.incomingT_F, storMixedT_F)
         
         return runV_G, eff_HW_mix_fraction
     
 
-    def _calcRunningVolLS(self, loadUpHours, loadshape, building, effMixFract):
+    def _calcRunningVolLS(self, loadUpHours, loadshape, building, effMixFract, lsFractTotalVol = 1):
         """
         Function to to find the adjusted hot water demand on the primary system by the swing tank. Function
         uses maximum generation rate between standard method and rate needed to load up then finds the 
@@ -188,9 +188,9 @@ class SwingTank(SystemConfig):
             primary system. Only used in a swing tank system.
 
         """
-        Vshift = self._calcPrelimVol(loadUpHours, loadshape, building)[0]
+        Vshift = self._calcPrelimVol(loadUpHours, loadshape, building, lsFractTotalVol = lsFractTotalVol)[0]
 
-        genRateON = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr,  loadUpHours, building, effSwingVolFract = effMixFract, primaryCurve = False)[1] #max generation rate in storage/swing frame
+        genRateON = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr,  loadUpHours, building, effSwingVolFract = effMixFract, primaryCurve = False, lsFractTotalVol = lsFractTotalVol)[1] #max generation rate in storage/swing frame
         genRate = np.tile([genRateON if x != 0 else 0 for x in self.loadShiftSchedule], 2) #set generation rate during shed to 0
         
         #get first index after shed and go through next 24 hours
@@ -218,7 +218,7 @@ class SwingTank(SystemConfig):
         runV_G += Vshift
        
         #get mixed storage temp
-        mixedStorT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)[0]
+        mixedStorT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)
         
         #convert from storage to supply volume
         runV_G = runV_G * (mixedStorT_F- building.incomingT_F) / (building.supplyT_F - building.incomingT_F) 
@@ -226,7 +226,7 @@ class SwingTank(SystemConfig):
         return runV_G, eff_HW_mix_fraction
 
     
-    def _calcPrelimVol(self, loadUpHours, loadshape, building):
+    def _calcPrelimVol(self, loadUpHours, loadshape, building, lsFractTotalVol = 1):
         '''
         Function to calculate volume shifted during first shed period in order to calculate generation rate,
         adjusted for swing tank usage. Values are in swing tank reference frame and thus at storage temperature.
@@ -250,7 +250,7 @@ class SwingTank(SystemConfig):
         '''
         shedHours = [i for i in range(len(self.loadShiftSchedule)) if self.loadShiftSchedule[i] == 0] #get all scheduled shed hours
         firstShed = [x for i,x in enumerate(shedHours) if x == shedHours[0] + i] #get first shed
-        Vshift = sum([loadshape[i] * building.magnitude for i in firstShed])#calculate vol used during first shed
+        Vshift = sum([loadshape[i] * building.magnitude for i in firstShed]) #calculate vol used during first shed multiplied by cdf
         VconsumedLU = sum(loadshape[firstShed[0]-loadUpHours : firstShed[0]]) * building.magnitude
         
         #get swing tank contribution for shed period
@@ -265,8 +265,39 @@ class SwingTank(SystemConfig):
         effMixFract = sum(hw_out_from_swing) / VconsumedLU 
         VconsumedLU *= effMixFract
        
-        return Vshift, VconsumedLU
+        # TODO do we want to multiply by * lsFractTotalVol here or up on line 253?
+        return Vshift* lsFractTotalVol, VconsumedLU
 
+    def mixStorageTemps(self, runningVol_G, incomingT_F, supplyT_F):
+        """
+        Calculates average tank temperature using load up and normal setpoints according to locations of aquastats. 
+        Used for load shifting when there are two setpoints. Returns normal storage setpoint if load up and normal
+        setpoint are equal or if not loadshifting.
+
+        Parameters
+        ----------
+        runningVol_G : float
+            Volume of water to be mixed. 
+        incomingT_F : float
+            Incoming temp (in Fahrenhiet) of city water
+        supplyT_F : float
+            Supply temp (in Fahrenhiet) of water distributed to those in the building
+
+        Returns
+        ----------
+        mixStorageT_F: float
+            Average storage temperature calcuated with normal setpoint and load up setpoint.
+        """
+        mixStorageT_F = self.storageT_F
+
+        if self.doLoadShift:
+            f = (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) 
+            normV = (1 - f) * runningVol_G
+            loadV = f * runningVol_G
+
+            mixStorageT_F = (self.storageT_F * normV + self.loadUpT_F * loadV) / (normV + loadV)
+        
+        return mixStorageT_F
 
     def _simJustSwing(self, N, hw_out, building, initST = None):
         """
@@ -303,7 +334,7 @@ class SwingTank(SystemConfig):
 
         for i in range(1, N):
             hw_outSwing[i] = convertVolume(hwDemand[i], swingT_F[i-1], building.incomingT_F, building.supplyT_F)
-            primaryStorageT_F = self.mixStorageTemps(hw_outSwing[i], building.incomingT_F, building.supplyT_F)[0]
+            primaryStorageT_F = self.mixStorageTemps(hw_outSwing[i], building.incomingT_F, building.supplyT_F)
             swingheating, swingT_F[i], tmRun[i] = self._runOneSwingStep(building, swingheating, swingT_F[i-1], hw_outSwing[i], primaryStorageT_F)
         
         return [swingT_F, tmRun, hw_outSwing]
@@ -380,7 +411,7 @@ class SwingTank(SystemConfig):
 
         return swingheating, Tnew, time_run
     
-    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building, effSwingVolFract, primaryCurve = False,):
+    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building, effSwingVolFract, primaryCurve = False, lsFractTotalVol = 1):
         """
         Converts from hours of heating in a day to heating capacity. Takes maximum from 
         standard method based on number of heating hours and load shift method based on
@@ -415,7 +446,7 @@ class SwingTank(SystemConfig):
             (self.storageT_F - building.incomingT_F) / self.defrostFactor / 1000 #use storage temp instead of supply temp
         
         if self.doLoadShift and not primaryCurve:
-            Vshift, VconsumedLU = self._calcPrelimVol(loadUpHours, building.avgLoadshape, building) 
+            Vshift, VconsumedLU = self._calcPrelimVol(loadUpHours, building.avgLoadshape, building, lsFractTotalVol = lsFractTotalVol) 
             Vload = Vshift * (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) #volume in 'load up' portion of tank
             LUgenRate = (Vload + VconsumedLU) / loadUpHours #rate needed to load up tank and offset use 
             LUheatCap = LUgenRate * rhoCp * \
