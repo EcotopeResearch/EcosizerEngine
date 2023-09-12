@@ -147,7 +147,7 @@ def createSizingCurvePlot(x, y, startind, loadshifting = False):
     """
     fig = Figure()
     
-    hovertext = 'Storage Volume: %{x:.1f} gallons \nHeating Capacity: %{y:.1f}' if not loadshifting else 'CDF: %{x:.1f} gallons \Storage Volume: %{y:.1f}' 
+    hovertext = 'Storage Volume: %{x:.1f} gallons \nHeating Capacity: %{y:.1f}' if not loadshifting else 'CDF: %{x:.1f} gallons \nStorage Volume: %{y:.1f}' 
 
     fig.add_trace(Scatter(x=x, y=y,
                     visible=True,
