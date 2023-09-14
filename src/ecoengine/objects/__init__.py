@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-
+__all__ = ['SimulationRun']
 from .Building import *
 from .SystemConfig import *
 from .systemConfigUtils import *

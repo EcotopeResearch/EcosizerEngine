@@ -5,33 +5,30 @@ from .systemConfigUtils import hrToMinList, roundList, hrTo15MinList
 from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots
-import os
 import csv
 
 class SimulationRun:
+    """
+    Attributes
+    ----------
+    hwGenRate : list
+        The generation of HW with time at the supply temperature
+    hwDemand : list
+        The hot water demand with time at the supply temperature
+    V0 : float
+        The storage volume of the primary system at the storage temperature
+    pV : list 
+        Volume of HW in the tank with time at the storage temperature. Initialized to array of 0s with pV[0] set to V0
+    building : Building 
+        the Building object the simulation will be run for
+    minuteIntervals : int
+        the minutes per time interval for the simulation. Only 1, 15, and 60 are accepted
+    doLoadshift : boolean
+        set to True if doing loadshift
+    LS_sched : list
+        list length 24 corresponding to hours of the day filled with 'N' for normal, 'L' for load up, and 'S' for shed
+    """
     def __init__(self, hwGenRate, hwDemand, V0, pV, building : Building, loadShiftSchedule, minuteIntervals = 1, doLoadshift = False, LS_sched = []):
-        """
-        Initializes arrays needed for 3-day simulation
-
-        Parameters
-        ----------
-        hwGenRate : list
-            The generation of HW with time at the supply temperature
-        hwDemand : list
-            The hot water demand with time at the supply temperature
-        V0 : float
-            The storage volume of the primary system at the storage temperature
-        pV : list 
-            Volume of HW in the tank with time at the storage temperature. Initialized to array of 0s with pV[0] set to V0
-        building : Building 
-            the Building object the simulation will be run for
-        minuteIntervals : int
-            the minutes per time interval for the simulation. Only 1, 15, and 60 are accepted
-        doLoadshift : boolean
-            set to True if doing loadshift
-        LS_sched : list
-            list length 24 corresponding to hours of the day filled with 'N' for normal, 'L' for load up, and 'S' for shed
-        """
         if minuteIntervals != 1 and minuteIntervals != 15 and minuteIntervals != 60:
             raise Exception("Simulations can only take place over 1, 15, or 60 minute intervals")
 
@@ -57,6 +54,20 @@ class SimulationRun:
         self.LS_sched = LS_sched
 
     def initializeTMValue(self, initST, storageT_F, TMCap_kBTUhr, swingOut = True):
+        """
+        Initializes temperature maintenance values
+
+        Parameters
+        ----------
+        initST : float
+            temperature maintenance tank temperature at start of the simulation.
+        storageT_F : float
+            storage temperature setpoint for temperature maintenance system
+        TMCap_kBTUhr : float
+            temperature maintenance heating capacity in kBTUhr
+        swingOut : boolean
+            set to True for swing tank systems so that DHW leaving temperature maintenance system is recorded
+        """
         self.tmT_F = [0] * (len(self.hwDemand) - 1) + [storageT_F]
         self.tmRun = [0] * (len(self.hwDemand))
         if swingOut:
@@ -74,9 +85,35 @@ class SimulationRun:
         self.TMCap_kBTUhr = TMCap_kBTUhr
 
     def getLoadShiftMode(self, i):
+        """
+        returns the load shifting setting at interval i of the simulation
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        loadshiftMode : string
+            The load shift mode of the system at interval i. Returns 'N', 'L', or 'S' for normal, load, or shed mode respectively  
+        """
         return self.LS_sched[int((i//(60/self.minuteIntervals))%24)] # returns 'N', 'L', or 'S' for normal, load, or shed mode respectively
 
     def getIncomingWaterT(self, i):
+        """
+        returns incoming water temperature (F) at interval i of the simulation
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        waterT_F : float
+            The incoming water temperature (F) at interval i of the simulation 
+        """
         if self.monthlyCityWaterT_F is None:
             return self.building.incomingT_F # default city water temp
         else:
@@ -123,6 +160,11 @@ class SimulationRun:
     def getAvgIncomingWaterT(self):
         """
         Returns the average incoming water temperature for the year in fahrenheit as a float
+
+        Returns
+        -------
+        waterT_F : float
+            The average incoming water temperature (F) of the simulation 
         """
         if self.monthlyCityWaterT_F is None:
             return self.building.incomingT_F # default city water temp
@@ -132,6 +174,19 @@ class SimulationRun:
                 + (self.monthlyCityWaterT_F[8]*30) + (self.monthlyCityWaterT_F[9]*31) + (self.monthlyCityWaterT_F[10]*30) + (self.monthlyCityWaterT_F[11]*31)) / 365
     
     def setMonthlyCityWaterT_F(self, monthlyCityWaterT_F):
+        """
+        sets monthly incoming water temperature (F) for each month of an annual simulation
+
+        Parameters
+        ----------
+        monthlyCityWaterT_F : List
+            List of floats representing the incoming water temperature at each month. must be length 12.
+
+        Raises
+        ----------
+        Exception: Error if monthlyCityWaterT_F is not length 12 or contains wrong data type
+
+        """
         if len(monthlyCityWaterT_F) != 12:
             raise Exception("Monthly city water temperature data must have 12 entries (one for every month).")
         for i in range(12):
@@ -142,6 +197,20 @@ class SimulationRun:
     def generateRecircLoss(self, i : int):
         """
         Returns recirculation loss from primary system at supply temp at interval i in gallons
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        recirculationLoss : float
+            the recirculation loss from primary system at supply temp at interval i in gallons
+
+        Raises
+        ----------
+        Exception: Error if attempt is made to find recirculation loss outside of scope of simulation
         """
         if i < len(self.recircLoss):
             return self.recircLoss[i]
@@ -156,6 +225,16 @@ class SimulationRun:
     def getRecircLoss(self, i : int = None):
         """
         Returns list of recirculation loss from primary system at supply temp in gallons at every interval in simulation
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        recirculationLoss : float
+            the recirculation loss from primary system at supply temp at interval i in gallons or the entire list of recirculation losses at every interval if i is undefined
         """
         if len(self.recircLoss) == 0:
             self.recircLoss = [0]*len(self.hwDemand)
@@ -165,11 +244,37 @@ class SimulationRun:
         return self.recircLoss[i]
     
     def addOat(self, oat_value):
+        """
+        adds outdoor air temperature (F) to the simulation at timestep
+
+        Parameters
+        ----------
+        oat_value : float
+            float representing the outdoor air temperature (F) current timestep.
+
+        Raises
+        ----------
+        Exception: Error if oat_value contains the wrong data type
+        """
         if not (isinstance(oat_value, float) or isinstance(oat_value, int)):
             raise Exception(str(oat_value) + " is an invalid outdoor air tempurature.")
         self.oat.append(oat_value)
     
     def addCap(self, out_cap_value, in_cap_value):
+        """
+        adds calculated capacity values to the simulation at timestep
+
+        Parameters
+        ----------
+        out_cap_value : float
+            float representing the primary system's output capacity in kW during current timestep.
+        in_cap_value : float
+            float representing the primary system's input capacity in kW during current timestep.
+
+        Raises
+        ----------
+        Exception: Error if out_cap_value or in_cap_value contains the wrong data type
+        """
         if not (isinstance(out_cap_value, float) or isinstance(out_cap_value, int)):
             raise Exception(str(out_cap_value) + " is an invalid system capacity.")
         if not (isinstance(in_cap_value, float) or isinstance(in_cap_value, int)):
@@ -179,6 +284,20 @@ class SimulationRun:
         self.cap_in.append(in_cap_value)
 
     def addTMCap(self, out_tm_cap_value, in_tm_cap_value):
+        """
+        adds calculated capacity values for temperature maintenance sysyem to the simulation at timestep
+
+        Parameters
+        ----------
+        out_tm_cap_value : float
+            float representing the temperature maintenance system's output capacity in kW during current timestep.
+        in_tm_cap_value : float
+            float representing the temperature maintenance system's input capacity in kW during current timestep.
+
+        Raises
+        ----------
+        Exception: Error if out_tm_cap_value or in_tm_cap_value contains the wrong data type
+        """
         if not (isinstance(out_tm_cap_value, float) or isinstance(out_tm_cap_value, int)):
             raise Exception(str(out_tm_cap_value) + " is an invalid system capacity.")
         if not (isinstance(in_tm_cap_value, float) or isinstance(in_tm_cap_value, int)):
@@ -189,8 +308,18 @@ class SimulationRun:
 
     def getCapOut(self, i : int = None):
         """
-        Returns a list from the out put capacity for the primary system at every timestep
+        Returns a list of the output capacity in kW for the primary system at every timestep
         or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        capacityOut_kW : float
+            the output capacity in kW for the primary system at interval i in gallons or the entire list of output capacity in kW at every interval if i is undefined
         """
         if i is None:
             return self.cap_out
@@ -198,8 +327,18 @@ class SimulationRun:
     
     def getCapIn(self, i : int = None):
         """
-        Returns a list from the input capacity for the primary system at every timestep
+        Returns a list of the input capacity in kW for the primary system at every timestep
         or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        capacityIn_kW : float
+            the input capacity in kW for the primary system at interval i in gallons or the entire list of input capacity in kW at every interval if i is undefined
         """
         if i is None:
             return self.cap_in
@@ -207,8 +346,18 @@ class SimulationRun:
     
     def getTMCapOut(self, i : int = None):
         """
-        Returns a list from the out put capacity for the primary system at every timestep
+        Returns a list of the output capacity in kW for the temperature maintenance system at every timestep
         or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        capacityOut_kW : float
+            the output capacity in kW for the temperature maintenance system at interval i in gallons or the entire list of output capacity in kW at every interval if i is undefined
         """
         if hasattr(self, 'tm_cap_out'):
             if i is None:
@@ -220,8 +369,18 @@ class SimulationRun:
     
     def getTMCapIn(self, i : int = None):
         """
-        Returns a list from the out put capacity for the primary system at every timestep
+        Returns a list of the input capacity in kW for the temperature maintenance system at every timestep
         or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        capacityIn_kW : float
+            the input capacity in kW for the temperature maintenance system at interval i in gallons or the entire list of input capacity in kW at every interval if i is undefined
         """
         if hasattr(self, 'tm_cap_in'):
             if i is None:
@@ -232,11 +391,35 @@ class SimulationRun:
         return 0
 
     def addKGCO2(self, kGCO2_value):
+        """
+        add a calculated kGCO2 emission value to the simulation
+
+        Parameters
+        ----------
+        kGCO2_value : float
+            float representing the amount of CO2 emitted in kg during the current time step for later use in kgCO2 calculation.
+
+        Raises
+        ----------
+        Exception: Error if kGCO2_value contains wrong data type
+        """
         if not (isinstance(kGCO2_value, float) or isinstance(kGCO2_value, int)):
             raise Exception(str(kGCO2_value) + " is an invalid value for number of kG of CO2.")
         self.kGCO2.append(kGCO2_value)
 
     def addHWGen(self, hwGen):
+        """
+        add a calculated hot water generation value to the simulation
+
+        Parameters
+        ----------
+        hwGen : float
+            float representing the amount of hot water generated at supply temperature in gallons during current timestep.
+
+        Raises
+        ----------
+        Exception: Error if hwGen contains wrong data type
+        """
         if not (isinstance(hwGen, float) or isinstance(hwGen, int)):
             raise Exception(str(hwGen) + " is an invalid hot water generation value.")
         self.hwGen.append(hwGen)
@@ -246,6 +429,16 @@ class SimulationRun:
         """
         Returns a list from the simulation of the volume of the primary tank by timestep
         or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        volume : float
+            the primary tank volume in gallons at interval i or the entire list of primary tank volume at every interval if i is undefined
         """
         if i is None:
             return roundList(self.pV, 3)
@@ -255,6 +448,16 @@ class SimulationRun:
         """
         Returns a list from the simulation of the hot water demand by timestep
         or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        volume : float
+            the hot water demand in gallons at interval i or the entire list of hot water demand at every interval if i is undefined
         """
         if i is None:
             return roundList(self.hwDemand, 3)
@@ -264,6 +467,16 @@ class SimulationRun:
         """
         Returns a list from the simulation of the theoretical hot water generation of the primary tank at supply temperature by timestep
         or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        volume : float
+            the theoretical hot water generation of the primary tank at supply temperature in gallons at interval i or the entire list of theoretical hot water generation at every interval if i is undefined
         """
         if len(self.hwGen) == 0:
             self.hwGen = self.hwGenRate * self.loadShiftSchedule
@@ -274,6 +487,16 @@ class SimulationRun:
     def getPrimaryGeneration(self, i = None):
         """
         Returns a list from the simulation of the actual hot water generation of the primary tank by timestep
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        volume : float
+            the actual hot water generation at supply temperature in gallons at interval i or the entire list of actual hot water generation at every interval if i is undefined
         """
         if i is None:
             return roundList(self.pGen,3)
@@ -283,6 +506,17 @@ class SimulationRun:
         """
         Returns a list from the simulation of the amount of time the primary tank is running in minutes per timestep
         or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        minutes : float
+            the amount of time the primary tank is running in minutes at interval i or the entire list of 
+            amount of time the primary tank is running in minutes at every interval if i is undefined
         """
         if i is None:
             return self.pRun
@@ -290,7 +524,18 @@ class SimulationRun:
     
     def getTMTemp(self):
         """
-        Returns a list from the simulation of the swing tank temperature in (F) by timestep
+        Returns a list from the simulation of the temperature maintenance tank temperature in (F) by timestep
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        temperature : float
+            the temperature maintenance tank temperature in (F) at interval i or the entire list of 
+            temperature maintenance tank temperature in (F) at every interval if i is undefined
         """
         if hasattr(self, 'tmT_F'):
             return roundList(self.tmT_F, 3)
@@ -299,8 +544,19 @@ class SimulationRun:
         
     def getTMRun(self, i : int = None):
         """
-        Returns a list from the simulation of the amount of time the swing tank is running in minutes per timestep
+        Returns a list from the simulation of the amount of time the temperature maintenance tank is running in minutes per timestep
         or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        minutes : float
+            the amount of time the temperature maintenance tank is running in minutes at interval i or the entire list of 
+            amount of time the temperature maintenance tank is running in minutes at every interval if i is undefined
         """
         if hasattr(self, 'tmRun'):
             if i is None:
@@ -312,8 +568,19 @@ class SimulationRun:
         
     def gethwOutSwing(self, i : int = None):
         """
-        Returns a list from the simulation of the amount of water coming out of the swing tank in gallons by timestep
+        Returns a list from the simulation of the amount of water coming out of the swing tank at tempurature in gallons by timestep
         or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        volume : float
+            the amount of water coming out of the swing tank at tempurature in gallons at interval i or the entire list of 
+            amount of water coming out of the swing tank at tempurature in gallons at every interval if i is undefined
         """
         if hasattr(self, 'hw_outSwing'):
             if i is None:
@@ -326,6 +593,17 @@ class SimulationRun:
     def getOAT(self):
         """
         Returns a list from the simulation of the Outdoor Air Temperature in (F) by timestep
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        oat : float
+            the Outdoor Air Temperature in (F) at interval i or the entire list of 
+            Outdoor Air Temperature in (F) at every interval if i is undefined
         """
         if self.minuteIntervals == 15:
             return hrTo15MinList(self.oat)
@@ -338,6 +616,17 @@ class SimulationRun:
         """
         Returns a list from the simulation of the get output of CO2 by timestep in kilograms
         or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        CO2 : float
+            the output of CO2 in kilograms at interval i or the entire list of 
+            output of CO2 in kilograms at every interval if i is undefined
         """
         if i is None:
             return self.kGCO2
@@ -346,12 +635,27 @@ class SimulationRun:
     def getkGCO2Sum(self):
         """
         Returns the sum from the simulation of the output of CO2 in kilograms
+
+        Returns
+        -------
+        CO2 : float
+            the sum from the simulation of the output of CO2 in kilograms
         """
         return sum(self.kGCO2)
     
     def getAnnualCOP(self, boundryMethod = False):
         """
         Returns annual COP for the simulation
+
+        Parameters
+        ----------
+        boundryMethod : boolean
+            set to True to use boundry method to compute COP
+
+        Returns
+        -------
+        COP : float
+            the COP value for the system over the annual simulation
         """
         heatInputTotal = 0
         heatOutputTotal = 0
@@ -368,6 +672,9 @@ class SimulationRun:
 
 
     def returnSimResult(self, kWhCalc = False):
+        """
+        ***LEGACY FUNCTION*** to be depricated.
+        """
         retList = [self.getPrimaryVolume(),
             self.getHWGeneration(),
             self.getHWDemand(),
@@ -401,13 +708,13 @@ class SimulationRun:
 
         Parameters
         ----------
-        return_as_div
+        return_as_div : boolean
             A logical on the output, as a div (true) or as a figure (false)
 
         Returns
         -------
-        div/fig
-            plot_div
+        plot : plotly.Figure -OR- <div> string
+            The storage load simulation graph. Return type depends on value of return_as_div parameter.
         """
         # TODO make this function work for not 1 minute intervals
         hrind_fromback = 24 # Look at the last 24 hours of the simulation not the whole thing
@@ -492,6 +799,14 @@ class SimulationRun:
         return fig 
     
     def writeCSV(self, file_path):
+        """
+        writes all simulation data to a formated csv
+
+        Parameters
+        ----------
+        file_path : string
+            the file path for the output csv file
+        """
         
         hours = [(i // (60/self.minuteIntervals)) + 1 for i in range(len(self.getPrimaryVolume()))]
         column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'Primary Generation (Gallons Storage Temp)', 'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)','Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'OAT (F)', 'Input Capacity (kW)', 'Output Capacity (kW)']

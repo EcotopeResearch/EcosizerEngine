@@ -46,7 +46,7 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
     climateZone : int
         the CA climate zone the building resides in
     ignoreRecirc : boolean
-        Set to true if recirc_losses is irrelevent due to no TM system
+        Set to true if recirc_losses is irrelevent due to no temperature maintenance system
 
     Raises
     ----------

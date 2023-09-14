@@ -48,7 +48,7 @@ class EcosizerEngine:
         The fraction of the total height of the primary hot water tanks at which the shed aquastat is located.
     loadUpT_F : float
         The hot water storage temperature between the normal and load up aquastat. [°F]
-    loadShiftPercent: float
+    loadShiftPercent : float
         Percentage of days the load shift will be met
     returnT_F : float 
         The water temperature returning from the recirculation loop. [°F]
@@ -184,15 +184,15 @@ class EcosizerEngine:
     
     def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False, optimizeNLS = False):
         """
-        LEGACY FUNCTION.
+        ***LEGACY FUNCTION***
         Returns the result of a simulation of a HPWH system in a building
 
-        Inputs
-        ------
+        Parameters
+        ----------
         initPV : float
             Primary volume at start of the simulation
         initST : float
-            Swing tank temperature at start of the simulation. Not used in this instance of the function
+            Swing tank temperature at start of the simulation.
         minuteIntervals : int
             the number of minutes the duration each interval timestep for the simulation will be
         nDays : int
@@ -284,8 +284,8 @@ class EcosizerEngine:
         """
         Returns a simulationRun object for a simulation of the Ecosizer's building and system object
 
-        Inputs
-        ------
+        Parameters
+        ----------
         initPV : float
             Primary volume at start of the simulation
         initST : float
@@ -296,6 +296,11 @@ class EcosizerEngine:
             the number of days the for duration of the entire simulation will be
         exceptOnWaterShortage : boolean
             Throws an exception if Primary Storage runs out of water. Otherwise returns failed simulation run
+
+        Returns
+        -------
+        simRun : SimulationRun
+            The object carrying details from the simulation of the system
         """
         return simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays, exceptOnWaterShortage = exceptOnWaterShortage)
     
@@ -304,8 +309,8 @@ class EcosizerEngine:
         Returns a list that includes a simulationRun object for a simulation of the Ecosizer's building and system object with load shifting and without load shifting,
         also includes the loadshift_capacity and the kGperkWh_saved
 
-        Inputs
-        ------
+        Parameters
+        ----------
         initPV : float
             Primary volume at start of the simulation
         initST : float
@@ -319,7 +324,20 @@ class EcosizerEngine:
 
         Returns
         -------
-        [simRun_ls, simRun_nls, loadshift_capacity, kGperkWh_saved, annual_kGCO2_saved]
+        simRun_ls : SimulationRun
+            The object carrying details from the simulation of the system with load shifting activated
+        simRun_nls : SimulationRun
+            The object carrying details from the simulation of the system with load shifting deactivated
+        loadshift_capacity : float
+            Thermal storage capacity of the tank volume between the load up and shed aquastat in kWh
+        kGperkWh_saved : float
+            Annual reduction in CO2 emissions per kWh of load shift capacity
+        annual_kGCO2_saved : float
+            Annual CO2 emissions saved by scheduling heat pump to load shift in kg CO2-e
+
+        Raises
+        ----------
+        Exception: Error if system has not been set up for load shifting.
         """
         if not self.system.doLoadShift:
             raise Exception('Cannot preform kgCO2/kWh calculation on non-loadshifting systems.')
@@ -355,8 +373,16 @@ class EcosizerEngine:
 
         Returns
         -------
-        list
-            self.PVol_G_atStorageT, self.PCap_kBTUhr (also self.TMVol_G, self.TMCap_kBTUhr if there is a TM system and self.CA_TMVol_G if SwingTank)
+        PVol_G_atStorageT : float
+            The volume of the primary storage tank storing DHW at storage tempurature in gallons.
+        PCap_kBTUhr : float
+            The heating capacity of the primary HPWH in kBTUhr
+        TMVol_G : float
+            Available only in systems with a tempurature maintenence system. The volume of the tempurature maintenence system in gallons.
+        TMCap_kBTUhr : float 
+            Available only in systems with a tempurature maintenence system. The heating capacity of the tempurature maintenence system in kBTUhr
+        CA_TMVol_G : float 
+            Available only in systems with a swing tank. The volume of the swing in gallons as specified by California sizing methods.
         """
         return self.system.getSizingResults()
 
@@ -389,12 +415,20 @@ class EcosizerEngine:
         Parameters
         ----------
         return_as_div
-            A logical on the output, as a div (true) or as a figure (false)
+            A logical on the output, as a div string (true) or as a figure (false)
+        initPV : float
+            Primary volume at start of the simulation
+        initST : float
+            Swing tank temperature at start of the simulation. Not used in this instance of the function
+        minuteIntervals : int
+            the number of minutes the duration each interval timestep for the simulation will be
+        nDays : int
+            the number of days the for duration of the entire simulation will be
 
         Returns
         -------
-        div/fig
-            plot_div
+        plot : plotly.Figure -OR- <div> string
+            The storage load simulation graph. Return type depends on value of return_as_div parameter.
         """
         simRun = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
         return simRun.plotStorageLoadSim(return_as_div)
@@ -405,13 +439,23 @@ class EcosizerEngine:
 
         Parameters
         ----------
-        return_as_div
-            A logical on the output, as a div (true) or as a figure (false)
+        return_as_div : boolean
+            A logical on the output, as a div string (true) or as a figure (false)
+        returnWithXYPoints : boolean
+            set to true to return the plot in addition to arrays of x and y coordinates for the sizing curve
 
         Returns
         -------
-        div/fig
-            plot_div
+        plot : plotly.Figure -OR- <div> string
+            The sizing curve graph with slider. Return type depends on value of return_as_div parameter.
+            If the system has a load shifting element, the graph will plot Percent of Load Shift Days Covered vs. Storage Volume.
+            Otherwise, it will plot Storage Volume vs. Capacity.
+        x_values : List
+            List of x axis values of points on the sizing curve. Returned only if returnWithXYPoints set to True.
+        y_values : List
+            List of y axis values of points on the sizing curve. Returned only if returnWithXYPoints set to True.
+        startIndex : int
+            the index in x_values and y_values to start the slider on the sizing curve. Returned only if returnWithXYPoints set to True.
         """
         if self.system.doLoadShift:
             [storage_data, capacity_data, percents, startIndex] = self.lsSizedPoints()
@@ -442,8 +486,11 @@ class EcosizerEngine:
     
     def lsSizedPoints(self):
         """
-        Returns combinations of storage and capacity based on number of 
-        load up hours
+        Returns combinations of storage and percent of load shift days covered
+
+        Raises
+        ----------
+        Exception: Error if system has not been set up for load shifting.
 
         Returns 
         -------
@@ -453,23 +500,30 @@ class EcosizerEngine:
             Array of heating capacity for each number of load up hours.
         N : array
             Array of load up hours tested. Goes from 1 to hour before first shed.
+        startIndex : int
+            The position the slider on the graph should start, reflecting the user defined load shift percent
         """
         return self.system.lsSizedPoints(self.building)
 
     def getHWMagnitude(self):
         """
-        Returns the total daily hot water for the building the HPWH is being sized for.
+        Returns the total daily DHW usage for the building the HPWH is being sized or simulated for.
         
         Returns
         -------
         magnitude : Float
-            The total daily hot water for the building the HPWH is being sized for.
+            The total daily DHW usage for the building in gallons.
         """
         return self.building.magnitude
     
     def getClimateZone(self):
         """
         Returns climate zone of the simulation building as an int or None if it has not been set.
+        
+        Returns
+        -------
+        climateZone : int
+            A number between 1 and 16 that represents the coorespondiong California climate zone. Returns None if this value has not been set.
         """
         return self.building.getClimateZone()
     
@@ -480,6 +534,17 @@ class EcosizerEngine:
 def getListOfModels(multiPass = False):
     """
     Static Method to Return all Model Names as a list of strings
+
+    Parameters
+    ----------
+    multiPass : boolean
+        return multi-pass models only (True) or single=pass models only (False)
+
+    Returns
+    -------
+    model_list : List
+        a list of tuples containing strings in the form [model_code, display_name] where model_code is the string to set as the systemModel parameter for EcosizerEngine and
+        display_name is the corresponding friendly display name for that model.
     """
     returnList = []
     with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
@@ -494,12 +559,44 @@ def getListOfModels(multiPass = False):
 def getSizingCurvePlot(x, y, startind, loadshifting = False):
     """
     creates a plotly figure from a list of x and y points and starts the slider at the start index.
+
+    Parameters
+    ----------
+    x : List
+        List of x axis values of points on the sizing curve.
+    y : List
+        List of y axis values of points on the sizing curve.
+    startind : int
+        the index in x_values and y_values to start the slider on the sizing curve.
+    loadshifting : boolean
+        Indicates whether the resulting plot should be for a load shifting system (plotting Percent of Load Shift Days Covered vs. Storage Volume)
+        or non-load shifting system (plotting Storage Volume vs. Capacity)
+
+    Returns
+    -------
+    plot : plotly.Figure
+        The sizing curve graph. If loadshifting parameter is set to True, the graph will label the plot as Percent of Load Shift Days Covered vs. Storage Volume.
+        Otherwise, it will label the plot as Storage Volume vs. Capacity.
     """
     return createSizingCurvePlot(x, y, startind, loadshifting)
 
 def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationRun, return_as_div=True):
     """
     Returns comparison graph of the input power by hour for an annual load shifting and non loadshifting HPWH simulation
+
+    Parameters
+    ----------
+    simRun_ls : SimulationRun
+        The object carrying details from the simulation of the system with load shifting activated
+    simRun_nls : SimulationRun
+        The object carrying details from the simulation of the system with load shifting deactivated
+    return_as_div : boolean
+            A logical on the output, as a div string (true) or as a figure (false)
+
+    Returns
+    -------
+    plot : plotly.Figure OR div string
+        The annual simulation graph comparing average daily input capacity of the system with load shifting activated and the system with load shifting deactivated.
     """
     if simRun_ls.minuteIntervals != 15 or simRun_nls.minuteIntervals != 15 or len(simRun_ls.oat) != 8760 or len(simRun_nls.oat) != 8760:
         raise Exception("Both simulation runs needs to be annual with 15 minute intervals to generate comparison graph.")
@@ -551,7 +648,7 @@ def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationR
     fig.update_xaxes(title_text='Hour')
     fig.update_yaxes(title_text='Energy Use (kWh)',
                      range=[0, max_kw + 5])
-    fig.update_layout(title_text='Annual Average Hourly Energy Use')
+    fig.update_layout(title_text='Annual Average Hourly Thermal Energy Use')
     
     if return_as_div:
         plot_div = plot(fig, output_type='div', show_link=False, link_text="",

@@ -625,6 +625,9 @@ class SystemConfig:
         lsSizingCombos : array
             Array of volume and capacity combinations sized based on the number of load up hours.
         """
+        if not self.doLoadShift:
+            raise Exception("lsSizedPoints() only applicable to systems with load shifting.")
+        
         volN = []
         capN = []
         effMixN = []
@@ -680,7 +683,7 @@ class SystemConfig:
                 str(round(y[i-1],1) if not self.doLoadShift else round(self.PCap_kBTUhr,2)) + "</b> kBTU/hr" 
             if y2 is not None:
                 if self.doLoadShift:
-                    labelText += ", Percent Loadshift Days Covered: <b id='point_x'>" + str(float(y2[i-1])) + "</b> %"
+                    labelText += ", Percent Load Shift Days Covered: <b id='point_x'>" + str(float(y2[i-1])) + "</b> %"
                 else:
                     labelText += ", Compressor Runtime: <b>" + str(float(y2[i-1])) + "</b> hr" 
         

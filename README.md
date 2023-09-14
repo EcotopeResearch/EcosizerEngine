@@ -92,7 +92,7 @@ From the parent directory, type
 This will run all unit tests for the package
 
 ### Updating Documentation:
-1. If not installed in environment: pip install sphinx and numpydocs
+1. If not installed in environment: pip install sphinx and numpydoc
 2. navigate to docs directory and run:
 
 
