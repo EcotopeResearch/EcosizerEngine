@@ -11,7 +11,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../src/ecosizer_engine_package'))
+sys.path.insert(0, os.path.abspath('../src/ecoengine'))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -28,10 +28,18 @@ extensions = ['sphinx.ext.autodoc', 'numpydoc','sphinx.ext.coverage', 'sphinx.ex
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-
-
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
+# The theme to use for HTML and HTML Help pages.  See the documentation for
+# a list of builtin themes.
+#
+html_theme = "nature"
+html_theme_options = {
+    "sidebarwidth": 300
+}
+
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']

@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to EcosizerEngine's documentation!
+EcosizerEngine Documentation
 ==========================================
 
 .. toctree::
@@ -19,6 +19,8 @@ Welcome to EcosizerEngine's documentation!
 .. automodule:: engine.SystemCreator
     :members:
 
+.. automodule:: objects.SimulationRun
+    :members:
 
 Indices and tables
 ==================
