@@ -17,8 +17,9 @@ sys.path.insert(0, os.path.abspath('../src/ecoengine'))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'EcosizerEngine'
-copyright = '2023, Nolan Price, Madison Johnson, Scott Spielman'
+copyright = '2023, Ecotope Inc.'
 author = 'Nolan Price, Madison Johnson, Scott Spielman'
+release = '1.1.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -26,7 +27,7 @@ author = 'Nolan Price, Madison Johnson, Scott Spielman'
 extensions = ['sphinx.ext.autodoc', 'numpydoc','sphinx.ext.coverage', 'sphinx.ext.napoleon']
 
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = []
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
