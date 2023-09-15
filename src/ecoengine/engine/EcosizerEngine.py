@@ -184,7 +184,7 @@ class EcosizerEngine:
     
     def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False, optimizeNLS = False):
         """
-        ***LEGACY FUNCTION***
+        ***LEGACY FUNCTION*** to be depricated.
         Returns the result of a simulation of a HPWH system in a building
 
         Parameters

@@ -1,0 +1,1529 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="ecosizerengine-documentation">
+<h1>EcosizerEngine Documentation<a class="headerlink" href="#ecosizerengine-documentation" title="Permalink to this heading">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-engine.EcosizerEngine"></span><dl class="py class">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">EcosizerEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incomingT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supplyT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentUseable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schematic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitudeStat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buildingType</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avgLoadshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadShiftSchedule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadUpHours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFractLoadUp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFractShed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadUpT_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadShiftPercent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returnT_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flowRate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpdpp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nBR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safetyTM</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defrostFactor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compRuntime_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nApt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wapt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doLoadShift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setpointTM_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">135</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMonTemp_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offTime_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.333</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standardGPD</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PVol_G_atStorageT</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PCap_kW</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMVol_G</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMCap_kW</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annual</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zipCode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">climateZone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">systemModel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numHeatPumps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmModel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmNumHeatPumps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inletWaterAdjustment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes and sizes the HPWH system for a building based on the given parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>incomingT_F</strong><span class="classifier">float</span></dt><dd><p>The incoming city water temperature on the design day. [°F]</p>
+</dd>
+<dt><strong>magnitude_stat</strong><span class="classifier">int or list</span></dt><dd><p>a number that will be used to assess the magnitude of the building based on the building type</p>
+</dd>
+<dt><strong>supplyT_F</strong><span class="classifier">float</span></dt><dd><p>The hot water supply temperature.[°F]</p>
+</dd>
+<dt><strong>storageT_F</strong><span class="classifier">float</span></dt><dd><p>The hot water storage temperature. [°F]</p>
+</dd>
+<dt><strong>percentUseable</strong><span class="classifier">float</span></dt><dd><p>The fraction of the storage volume that can be filled with hot water.</p>
+</dd>
+<dt><strong>aquaFract: float</strong></dt><dd><p>The fraction of the total height of the primary hot water tanks at which the Aquastat is located.</p>
+</dd>
+<dt><strong>schematic</strong><span class="classifier">String</span></dt><dd><p>Indicates schematic type. Valid values are ‘swingtank’, ‘paralleltank’, and ‘primary’</p>
+</dd>
+<dt><strong>building_type</strong><span class="classifier">string or list</span></dt><dd><p>a string indicating the type of building we are sizing for (e.g. “multi_family”, “office_building”, etc.)</p>
+</dd>
+<dt><strong>loadShape</strong><span class="classifier">ndarray</span></dt><dd><p>defaults to design load shape for building type.</p>
+</dd>
+<dt><strong>avgLoadShape</strong><span class="classifier">ndarray</span></dt><dd><p>defaults to average load shape for building type.</p>
+</dd>
+<dt><strong>loadShiftSchedule</strong><span class="classifier">array_like</span></dt><dd><p>List or array of 0’s, 1’s used for load shifting, 0 indicates system is off.</p>
+</dd>
+<dt><strong>loadUpHours</strong><span class="classifier">float</span></dt><dd><p>Number of hours spent loading up for first shed.</p>
+</dd>
+<dt><strong>aquaFractLoadUp</strong><span class="classifier">float</span></dt><dd><p>The fraction of the total height of the primary hot water tanks at which the load up aquastat is located.</p>
+</dd>
+<dt><strong>aquaFractShed</strong><span class="classifier">float</span></dt><dd><p>The fraction of the total height of the primary hot water tanks at which the shed aquastat is located.</p>
+</dd>
+<dt><strong>loadUpT_F</strong><span class="classifier">float</span></dt><dd><p>The hot water storage temperature between the normal and load up aquastat. [°F]</p>
+</dd>
+<dt><strong>loadShiftPercent</strong><span class="classifier">float</span></dt><dd><p>Percentage of days the load shift will be met</p>
+</dd>
+<dt><strong>returnT_F</strong><span class="classifier">float</span></dt><dd><p>The water temperature returning from the recirculation loop. [°F]</p>
+</dd>
+<dt><strong>flow_rate</strong><span class="classifier">float</span></dt><dd><p>The pump flow rate of the recirculation loop. (GPM)</p>
+</dd>
+<dt><strong>gpdpp</strong><span class="classifier">float</span></dt><dd><p>The volume of water in gallons at 120F each person uses per dat.[°F]</p>
+</dd>
+<dt><strong>nBR</strong><span class="classifier">array_like</span></dt><dd><p>A list of the number of units by size in the order 0 bedroom units,
+1 bedroom units, 2 bedroom units, 3 bedroom units, 4 bedroom units,
+5 bedroom units.</p>
+</dd>
+<dt><strong>safetyTM</strong><span class="classifier">float</span></dt><dd><p>The saftey factor for the temperature maintenance system.</p>
+</dd>
+<dt><strong>defrostFactor</strong><span class="classifier">float</span></dt><dd><p>A multipier used to account for defrost in the final heating capacity. Default equals 1.</p>
+</dd>
+<dt><strong>compRuntime_hr</strong><span class="classifier">float</span></dt><dd><p>The number of hours the compressor will run on the design day. [Hr]</p>
+</dd>
+<dt><strong>nApt: integer</strong></dt><dd><p>The number of apartments. Use with Qdot_apt to determine total recirculation losses. (For multi-falmily buildings)</p>
+</dd>
+<dt><strong>Wapt:  float</strong></dt><dd><p>Watts of heat lost in through recirculation piping system. Used with N_apt to determine total recirculation losses. (For multi-falmily buildings)</p>
+</dd>
+<dt><strong>doLoadShift</strong><span class="classifier">boolean</span></dt><dd><p>Set to true if doing loadshift</p>
+</dd>
+<dt><strong>setpointTM_F</strong><span class="classifier">float</span></dt><dd><p>The setpoint of the temprature maintence tank. Defaults to 130 °F.</p>
+</dd>
+<dt><strong>TMonTemp_F</strong><span class="classifier">float</span></dt><dd><p>The temperature where parallel loop tank will turn on.
+Defaults to 120 °F.</p>
+</dd>
+<dt><strong>offTime_hr: integer</strong></dt><dd><p>Maximum hours per day the temperature maintenance equipment can run.</p>
+</dd>
+<dt><strong>standardGPD</strong><span class="classifier">string</span></dt><dd><p>indicates whether to use a standard gpdpp specification for multi-family buildings. Set to None if not using a standard gpdpp.</p>
+</dd>
+<dt><strong>PVol_G_atStorageT</strong><span class="classifier">float</span></dt><dd><p>For pre-sized systems, the total/maximum storage volume for water at storage temperature for the system in gallons</p>
+</dd>
+<dt><strong>PCap_kW</strong><span class="classifier">float</span></dt><dd><p>For pre-sized systems, the output capacity for the system in kW</p>
+</dd>
+<dt><strong>TMVol_G</strong><span class="classifier">float</span></dt><dd><p>For applicable pre-sized systems, the temperature maintenance volume for the system in gallons</p>
+</dd>
+<dt><strong>TMCap_kW</strong><span class="classifier">float</span></dt><dd><p>For applicable pre-sized systems, the output capacity for temperature maintenance for the system in kW</p>
+</dd>
+<dt><strong>annual</strong><span class="classifier">boolean</span></dt><dd><p>indicates whether to use annual loadshape for multi-family buildings</p>
+</dd>
+<dt><strong>zipCode</strong><span class="classifier">int</span></dt><dd><p>the CA zipcode the building resides in to determine the climate zone</p>
+</dd>
+<dt><strong>climateZone</strong><span class="classifier">int</span></dt><dd><p>the CA climate zone the building resides in</p>
+</dd>
+<dt><strong>systemModel</strong><span class="classifier">String</span></dt><dd><p>The make/model of the HPWH being used for the primary system.</p>
+</dd>
+<dt><strong>numHeatPumps</strong><span class="classifier">int</span></dt><dd><p>The number of heat pumps on the primary system</p>
+</dd>
+<dt><strong>tmModel</strong><span class="classifier">String</span></dt><dd><p>The make/model of the HPWH being used for the temperature maintenance system.</p>
+</dd>
+<dt><strong>tmNumHeatPumps</strong><span class="classifier">int</span></dt><dd><p>The number of heat pumps on the temperature maintenance system</p>
+</dd>
+<dt><strong>inletWaterAdjustment</strong><span class="classifier">float</span></dt><dd><p>adjustment for inlet water temperature fraction for primary recirculation systems</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getClimateZone" title="engine.EcosizerEngine.EcosizerEngine.getClimateZone"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getClimateZone</span></code></a>()</p></td>
+<td><p>Returns climate zone of the simulation building as an int or None if it has not been set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getHWMagnitude" title="engine.EcosizerEngine.EcosizerEngine.getHWMagnitude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWMagnitude</span></code></a>()</p></td>
+<td><p>Returns the total daily DHW usage for the building the HPWH is being sized or simulated for.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimResult" title="engine.EcosizerEngine.EcosizerEngine.getSimResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSimResult</span></code></a>([initPV, initST, ...])</p></td>
+<td><p><strong>*LEGACY FUNCTION*</strong> to be depricated.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimRun" title="engine.EcosizerEngine.EcosizerEngine.getSimRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSimRun</span></code></a>([initPV, initST, minuteIntervals, ...])</p></td>
+<td><p>Returns a simulationRun object for a simulation of the Ecosizer's building and system object</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimRunWithkWCalc" title="engine.EcosizerEngine.EcosizerEngine.getSimRunWithkWCalc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSimRunWithkWCalc</span></code></a>([initPV, initST, ...])</p></td>
+<td><p>Returns a list that includes a simulationRun object for a simulation of the Ecosizer's building and system object with load shifting and without load shifting, also includes the loadshift_capacity and the kGperkWh_saved</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSizingResults" title="engine.EcosizerEngine.EcosizerEngine.getSizingResults"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSizingResults</span></code></a>()</p></td>
+<td><p>Returns the minimum primary volume and heating capacity sizing results</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.lsSizedPoints" title="engine.EcosizerEngine.EcosizerEngine.lsSizedPoints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lsSizedPoints</span></code></a>()</p></td>
+<td><p>Returns combinations of storage and percent of load shift days covered</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotSizingCurve" title="engine.EcosizerEngine.EcosizerEngine.plotSizingCurve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotSizingCurve</span></code></a>([returnAsDiv, ...])</p></td>
+<td><p>Returns a plot of the valid storage and capacity combinations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim" title="engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotStorageLoadSim</span></code></a>([return_as_div, initPV, ...])</p></td>
+<td><p>Returns a plot of the of the simulation for the minimum sized primary system as a div or plotly figure.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.primaryCurve" title="engine.EcosizerEngine.EcosizerEngine.primaryCurve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">primaryCurve</span></code></a>()</p></td>
+<td><p>Sizes the primary system curve.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.getClimateZone">
+<span class="sig-name descname"><span class="pre">getClimateZone</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.getClimateZone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns climate zone of the simulation building as an int or None if it has not been set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>climateZone</strong><span class="classifier">int</span></dt><dd><p>A number between 1 and 16 that represents the coorespondiong California climate zone. Returns None if this value has not been set.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.getHWMagnitude">
+<span class="sig-name descname"><span class="pre">getHWMagnitude</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.getHWMagnitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total daily DHW usage for the building the HPWH is being sized or simulated for.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>magnitude</strong><span class="classifier">Float</span></dt><dd><p>The total daily DHW usage for the building in gallons.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.getSimResult">
+<span class="sig-name descname"><span class="pre">getSimResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initPV</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initST</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minuteIntervals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nDays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kWhCalc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kGDiff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizeNLS</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.getSimResult" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*LEGACY FUNCTION*</strong> to be depricated.
+Returns the result of a simulation of a HPWH system in a building</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>initPV</strong><span class="classifier">float</span></dt><dd><p>Primary volume at start of the simulation</p>
+</dd>
+<dt><strong>initST</strong><span class="classifier">float</span></dt><dd><p>Swing tank temperature at start of the simulation.</p>
+</dd>
+<dt><strong>minuteIntervals</strong><span class="classifier">int</span></dt><dd><p>the number of minutes the duration each interval timestep for the simulation will be</p>
+</dd>
+<dt><strong>nDays</strong><span class="classifier">int</span></dt><dd><p>the number of days the for duration of the entire simulation will be</p>
+</dd>
+<dt><strong>kWhCalc</strong><span class="classifier">boolean</span></dt><dd><p>set to true to add the kgCO2/kWh calculation to the result.</p>
+</dd>
+<dt><strong>kGDiff</strong><span class="classifier">boolean</span></dt><dd><p>set to True if you want to include the kGCO2/kWh saved in the result. Will also include loadshift capacity. Only available for loadshifting systems with annual loadshapes</p>
+</dd>
+<dt><strong>optimizeNLS</strong><span class="classifier">boolean</span></dt><dd><p>set to True to optimize non-loadshift sizing. Only applies if kGDiff = True</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>simResult</strong><span class="classifier">List</span></dt><dd><dl>
+<dt>contains the following items in this order:</dt><dd><dl class="simple">
+<dt>pV<span class="classifier">List</span></dt><dd><p>Volume of HW in the tank at the storage temperature at every simulation interval. (Gallons)</p>
+</dd>
+<dt>hwGen<span class="classifier">List</span></dt><dd><p>The theoretical amount of HW at storage tempurature that can be generated at every simulation interval. (Gallons)</p>
+</dd>
+<dt>hwDemand<span class="classifier">List</span></dt><dd><p>The amount of HW used by the building (loadshape) at every simulation interval. (Gallons)</p>
+</dd>
+<dt>pGen<span class="classifier">List</span></dt><dd><p>The actual amount of HW at storage tempurature generated by the primary system at every simulation interval. (Gallons)</p>
+</dd>
+</dl>
+</dd>
+<dt>If the system is a swing tank, the following fields will appear in the result in this order:</dt><dd><dl class="simple">
+<dt>swingT_F<span class="classifier">List</span></dt><dd><p>Tempurature of water in the swing tank at every simulation interval. (F)</p>
+</dd>
+<dt>tmRun<span class="classifier">List</span></dt><dd><p>Amount of time the temperature maintenance is on during every simulation interval. (Minutes)</p>
+</dd>
+<dt>hw_outSwing<span class="classifier">List</span></dt><dd><p>Hot water exiting swing tank at swing tank temperature at every simulation interval. (Gallons)</p>
+</dd>
+</dl>
+</dd>
+<dt>If kWhCalc == True, the following fields will appear in the result in this order:</dt><dd><dl class="simple">
+<dt>pRun<span class="classifier">List</span></dt><dd><p>Amount of time the primary tank is on during every simulation interval. (Minutes)</p>
+</dd>
+<dt>oat<span class="classifier">List</span></dt><dd><p>Tempurature of outdoor air at every simulation interval. (F)</p>
+</dd>
+<dt>cap<span class="classifier">List</span></dt><dd><p>The capacity of the primary system at every simulation interval. (kW)</p>
+</dd>
+<dt>kGperkWh<span class="classifier">List</span></dt><dd><p>The kGCO2 used in every simulation interval. (kGCO2)</p>
+</dd>
+<dt>sum_of_kGperkWh<span class="classifier">Float</span></dt><dd><p>Sum of kGCO2 used in the simulation. (kGCO2)</p>
+</dd>
+<dt>avgIncomingWaterT_F<span class="classifier">Float</span></dt><dd><p>Average incoming water temperature for the entire simulation. (F)</p>
+</dd>
+</dl>
+</dd>
+<dt>If kGDiff == True, the following fields will appear in the result in this order:</dt><dd><dl class="simple">
+<dt>loadshift_capacity<span class="classifier">Float</span></dt><dd><p>The loadshift capacity for the entire simulation (kWh)</p>
+</dd>
+<dt>kGperKwH_saved<span class="classifier">Float</span></dt><dd><p>The kGCO2 saved by using load shifting in the simulation. (kGCO2/kWh)</p>
+</dd>
+</dl>
+<p><strong>*NOTE*</strong> If kGDiff == True, the return value will be an array of size [2][x], where x is the length
+return values for one simulation result and array[0] will be the simulation result with load shifting
+and array[1] will be the result without load shifting.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.getSimRun">
+<span class="sig-name descname"><span class="pre">getSimRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initPV</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initST</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minuteIntervals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nDays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exceptOnWaterShortage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SimulationRun</span></span></span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.getSimRun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a simulationRun object for a simulation of the Ecosizer’s building and system object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>initPV</strong><span class="classifier">float</span></dt><dd><p>Primary volume at start of the simulation</p>
+</dd>
+<dt><strong>initST</strong><span class="classifier">float</span></dt><dd><p>Swing tank temperature at start of the simulation. Not used in this instance of the function</p>
+</dd>
+<dt><strong>minuteIntervals</strong><span class="classifier">int</span></dt><dd><p>the number of minutes the duration each interval timestep for the simulation will be</p>
+</dd>
+<dt><strong>nDays</strong><span class="classifier">int</span></dt><dd><p>the number of days the for duration of the entire simulation will be</p>
+</dd>
+<dt><strong>exceptOnWaterShortage</strong><span class="classifier">boolean</span></dt><dd><p>Throws an exception if Primary Storage runs out of water. Otherwise returns failed simulation run</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>simRun</strong><span class="classifier">SimulationRun</span></dt><dd><p>The object carrying details from the simulation of the system</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.getSimRunWithkWCalc">
+<span class="sig-name descname"><span class="pre">getSimRunWithkWCalc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initPV</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initST</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minuteIntervals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nDays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">365</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizeNLS</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.getSimRunWithkWCalc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list that includes a simulationRun object for a simulation of the Ecosizer’s building and system object with load shifting and without load shifting,
+also includes the loadshift_capacity and the kGperkWh_saved</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>initPV</strong><span class="classifier">float</span></dt><dd><p>Primary volume at start of the simulation</p>
+</dd>
+<dt><strong>initST</strong><span class="classifier">float</span></dt><dd><p>Swing tank temperature at start of the simulation. Not used in this instance of the function</p>
+</dd>
+<dt><strong>minuteIntervals</strong><span class="classifier">int</span></dt><dd><p>the number of minutes the duration each interval timestep for the simulation will be</p>
+</dd>
+<dt><strong>nDays</strong><span class="classifier">int</span></dt><dd><p>the number of days the for duration of the entire simulation will be</p>
+</dd>
+<dt><strong>optimizeNLS</strong><span class="classifier">boolean</span></dt><dd><p>set to True to optimize non-loadshift sizing. Only applies if kGDiff = True</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>simRun_ls</strong><span class="classifier">SimulationRun</span></dt><dd><p>The object carrying details from the simulation of the system with load shifting activated</p>
+</dd>
+<dt><strong>simRun_nls</strong><span class="classifier">SimulationRun</span></dt><dd><p>The object carrying details from the simulation of the system with load shifting deactivated</p>
+</dd>
+<dt><strong>loadshift_capacity</strong><span class="classifier">float</span></dt><dd><p>Thermal storage capacity of the tank volume between the load up and shed aquastat in kWh</p>
+</dd>
+<dt><strong>kGperkWh_saved</strong><span class="classifier">float</span></dt><dd><p>Annual reduction in CO2 emissions per kWh of load shift capacity</p>
+</dd>
+<dt><strong>annual_kGCO2_saved</strong><span class="classifier">float</span></dt><dd><p>Annual CO2 emissions saved by scheduling heat pump to load shift in kg CO2-e</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Exception: Error if system has not been set up for load shifting.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.getSizingResults">
+<span class="sig-name descname"><span class="pre">getSizingResults</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.getSizingResults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the minimum primary volume and heating capacity sizing results</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>PVol_G_atStorageT</strong><span class="classifier">float</span></dt><dd><p>The volume of the primary storage tank storing DHW at storage tempurature in gallons.</p>
+</dd>
+<dt><strong>PCap_kBTUhr</strong><span class="classifier">float</span></dt><dd><p>The heating capacity of the primary HPWH in kBTUhr</p>
+</dd>
+<dt><strong>TMVol_G</strong><span class="classifier">float</span></dt><dd><p>Available only in systems with a tempurature maintenence system. The volume of the tempurature maintenence system in gallons.</p>
+</dd>
+<dt><strong>TMCap_kBTUhr</strong><span class="classifier">float</span></dt><dd><p>Available only in systems with a tempurature maintenence system. The heating capacity of the tempurature maintenence system in kBTUhr</p>
+</dd>
+<dt><strong>CA_TMVol_G</strong><span class="classifier">float</span></dt><dd><p>Available only in systems with a swing tank. The volume of the swing in gallons as specified by California sizing methods.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.lsSizedPoints">
+<span class="sig-name descname"><span class="pre">lsSizedPoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.lsSizedPoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns combinations of storage and percent of load shift days covered</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>volN</strong><span class="classifier">array</span></dt><dd><p>Array of storage volume for each number of load up hours.</p>
+</dd>
+<dt><strong>CapN</strong><span class="classifier">array</span></dt><dd><p>Array of heating capacity for each number of load up hours.</p>
+</dd>
+<dt><strong>N</strong><span class="classifier">array</span></dt><dd><p>Array of load up hours tested. Goes from 1 to hour before first shed.</p>
+</dd>
+<dt><strong>startIndex</strong><span class="classifier">int</span></dt><dd><p>The position the slider on the graph should start, reflecting the user defined load shift percent</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Exception: Error if system has not been set up for load shifting.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.plotSizingCurve">
+<span class="sig-name descname"><span class="pre">plotSizingCurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">returnAsDiv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returnWithXYPoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.plotSizingCurve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a plot of the valid storage and capacity combinations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>return_as_div</strong><span class="classifier">boolean</span></dt><dd><p>A logical on the output, as a div string (true) or as a figure (false)</p>
+</dd>
+<dt><strong>returnWithXYPoints</strong><span class="classifier">boolean</span></dt><dd><p>set to true to return the plot in addition to arrays of x and y coordinates for the sizing curve</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>plot</strong><span class="classifier">plotly.Figure -OR- &lt;div&gt; string</span></dt><dd><p>The sizing curve graph with slider. Return type depends on value of return_as_div parameter.
+If the system has a load shifting element, the graph will plot Percent of Load Shift Days Covered vs. Storage Volume.
+Otherwise, it will plot Storage Volume vs. Capacity.</p>
+</dd>
+<dt><strong>x_values</strong><span class="classifier">List</span></dt><dd><p>List of x axis values of points on the sizing curve. Returned only if returnWithXYPoints set to True.</p>
+</dd>
+<dt><strong>y_values</strong><span class="classifier">List</span></dt><dd><p>List of y axis values of points on the sizing curve. Returned only if returnWithXYPoints set to True.</p>
+</dd>
+<dt><strong>startIndex</strong><span class="classifier">int</span></dt><dd><p>the index in x_values and y_values to start the slider on the sizing curve. Returned only if returnWithXYPoints set to True.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim">
+<span class="sig-name descname"><span class="pre">plotStorageLoadSim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_as_div</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initPV</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initST</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minuteIntervals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nDays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a plot of the of the simulation for the minimum sized primary
+system as a div or plotly figure. Can plot the minute level simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>return_as_div</strong></dt><dd><p>A logical on the output, as a div string (true) or as a figure (false)</p>
+</dd>
+<dt><strong>initPV</strong><span class="classifier">float</span></dt><dd><p>Primary volume at start of the simulation</p>
+</dd>
+<dt><strong>initST</strong><span class="classifier">float</span></dt><dd><p>Swing tank temperature at start of the simulation. Not used in this instance of the function</p>
+</dd>
+<dt><strong>minuteIntervals</strong><span class="classifier">int</span></dt><dd><p>the number of minutes the duration each interval timestep for the simulation will be</p>
+</dd>
+<dt><strong>nDays</strong><span class="classifier">int</span></dt><dd><p>the number of days the for duration of the entire simulation will be</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>plot</strong><span class="classifier">plotly.Figure -OR- &lt;div&gt; string</span></dt><dd><p>The storage load simulation graph. Return type depends on value of return_as_div parameter.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.primaryCurve">
+<span class="sig-name descname"><span class="pre">primaryCurve</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.primaryCurve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sizes the primary system curve. Will catch the point at which the aquatstat
+fraction is too small for system and cuts the return arrays to match cutoff point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>volN</strong><span class="classifier">array</span></dt><dd><p>Array of volume in the tank at each hour.</p>
+</dd>
+<dt><strong>sHrs2kBTUHR</strong><span class="classifier">array</span></dt><dd><p>Array of heating capacity in kBTU/hr</p>
+</dd>
+<dt><strong>heatHours</strong><span class="classifier">array</span></dt><dd><p>Array of running hours per day corresponding to primaryHeatHrs2kBTUHR</p>
+</dd>
+<dt><strong>recIndex</strong><span class="classifier">int</span></dt><dd><p>The index of the recommended heating rate.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.getAnnualSimLSComparison">
+<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getAnnualSimLSComparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simRun_ls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SimulationRun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simRun_nls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SimulationRun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_as_div</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getAnnualSimLSComparison" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns comparison graph of the input power by hour for an annual load shifting and non loadshifting HPWH simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>simRun_ls</strong><span class="classifier">SimulationRun</span></dt><dd><p>The object carrying details from the simulation of the system with load shifting activated</p>
+</dd>
+<dt><strong>simRun_nls</strong><span class="classifier">SimulationRun</span></dt><dd><p>The object carrying details from the simulation of the system with load shifting deactivated</p>
+</dd>
+<dt><strong>return_as_div</strong><span class="classifier">boolean</span></dt><dd><p>A logical on the output, as a div string (true) or as a figure (false)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>plot</strong><span class="classifier">plotly.Figure OR div string</span></dt><dd><p>The annual simulation graph comparing average daily input capacity of the system with load shifting activated and the system with load shifting deactivated.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.getListOfModels">
+<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getListOfModels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multiPass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getListOfModels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Static Method to Return all Model Names as a list of strings</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>multiPass</strong><span class="classifier">boolean</span></dt><dd><p>return multi-pass models only (True) or single=pass models only (False)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>model_list</strong><span class="classifier">List</span></dt><dd><p>a list of tuples containing strings in the form [model_code, display_name] where model_code is the string to set as the systemModel parameter for EcosizerEngine and
+display_name is the corresponding friendly display name for that model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.getSizingCurvePlot">
+<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getSizingCurvePlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadshifting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getSizingCurvePlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates a plotly figure from a list of x and y points and starts the slider at the start index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">List</span></dt><dd><p>List of x axis values of points on the sizing curve.</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">List</span></dt><dd><p>List of y axis values of points on the sizing curve.</p>
+</dd>
+<dt><strong>startind</strong><span class="classifier">int</span></dt><dd><p>the index in x_values and y_values to start the slider on the sizing curve.</p>
+</dd>
+<dt><strong>loadshifting</strong><span class="classifier">boolean</span></dt><dd><p>Indicates whether the resulting plot should be for a load shifting system (plotting Percent of Load Shift Days Covered vs. Storage Volume)
+or non-load shifting system (plotting Storage Volume vs. Capacity)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>plot</strong><span class="classifier">plotly.Figure</span></dt><dd><p>The sizing curve graph. If loadshifting parameter is set to True, the graph will label the plot as Percent of Load Shift Days Covered vs. Storage Volume.
+Otherwise, it will label the plot as Storage Volume vs. Capacity.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-engine.BuildingCreator"></span><dl class="py function">
+<dt class="sig sig-object py" id="engine.BuildingCreator.createBuilding">
+<span class="sig-prename descclassname"><span class="pre">engine.BuildingCreator.</span></span><span class="sig-name descname"><span class="pre">createBuilding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incomingT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitudeStat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supplyT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buildingType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avgLoadshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returnT_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flowRate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpdpp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nBR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nApt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wapt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standardGPD</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annual</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zipCode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">climateZone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignoreRecirc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.BuildingCreator.createBuilding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the building in which the HPWH system will be sized for</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Exception: Error if buildingType is not in list of valid buildingType names.</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>incomingT_F</strong><span class="classifier">float</span></dt><dd><p>The incoming city water temperature on the design day. [°F]</p>
+</dd>
+<dt><strong>magnitudeStat</strong><span class="classifier">int or list</span></dt><dd><p>a number that will be used to assess the magnitude of the building based on the building type</p>
+</dd>
+<dt><strong>supplyT_F</strong><span class="classifier">float</span></dt><dd><p>The hot water supply temperature.[°F]</p>
+</dd>
+<dt><strong>buildingType</strong><span class="classifier">string or list</span></dt><dd><p>a string indicating the type of building we are sizing for (e.g. “multi_family”, “office_building”, etc.)</p>
+</dd>
+<dt><strong>loadShape</strong><span class="classifier">ndarray</span></dt><dd><p>defaults to design load shape for building type.</p>
+</dd>
+<dt><strong>avgLoadShape</strong><span class="classifier">ndarray</span></dt><dd><p>defaults to average load shape for building type.</p>
+</dd>
+<dt><strong>returnT_F</strong><span class="classifier">float</span></dt><dd><p>The water temperature returning from the recirculation loop. [°F]</p>
+</dd>
+<dt><strong>flowRate</strong><span class="classifier">float</span></dt><dd><p>The pump flow rate of the recirculation loop. (GPM)</p>
+</dd>
+<dt><strong>gpdpp</strong><span class="classifier">float</span></dt><dd><p>The volume of water in gallons at 120F each person uses per dat.[°F]</p>
+</dd>
+<dt><strong>nBR</strong><span class="classifier">array_like</span></dt><dd><p>A list of the number of units by size in the order 0 bedroom units,
+1 bedroom units, 2 bedroom units, 3 bedroom units, 4 bedroom units,
+5 bedroom units.</p>
+</dd>
+<dt><strong>nApt: integer</strong></dt><dd><p>The number of apartments. Use with Qdot_apt to determine total recirculation losses. (For multi-falmily buildings)</p>
+</dd>
+<dt><strong>Wapt:  float</strong></dt><dd><p>Watts of heat lost in through recirculation piping system. Used with N_apt to determine total recirculation losses. (For multi-falmily buildings)</p>
+</dd>
+<dt><strong>standardGPD</strong><span class="classifier">string</span></dt><dd><p>indicates whether to use a standard gpdpp specification for multi-family buildings. Set to None if not using a standard gpdpp.</p>
+</dd>
+<dt><strong>annual</strong><span class="classifier">boolean</span></dt><dd><p>indicates whether to use annual loadshape for multi-family buildings</p>
+</dd>
+<dt><strong>zipCode</strong><span class="classifier">int</span></dt><dd><p>the CA zipcode the building resides in to determine the climate zone</p>
+</dd>
+<dt><strong>climateZone</strong><span class="classifier">int</span></dt><dd><p>the CA climate zone the building resides in</p>
+</dd>
+<dt><strong>ignoreRecirc</strong><span class="classifier">boolean</span></dt><dd><p>Set to true if recirc_losses is irrelevent due to no temperature maintenance system</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-engine.SystemCreator"></span><dl class="py function">
+<dt class="sig sig-object py" id="engine.SystemCreator.createSystem">
+<span class="sig-prename descclassname"><span class="pre">engine.SystemCreator.</span></span><span class="sig-name descname"><span class="pre">createSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schematic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defrostFactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentUseable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compRuntime_hr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doLoadShift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFractLoadUp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFractShed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadUpT_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadShiftPercent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadShiftSchedule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadUpHours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safetyTM</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setpointTM_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">135</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMonTemp_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offTime_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.333</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PVol_G_atStorageT</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PCap_kBTUhr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMVol_G</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMCap_kBTUhr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">systemModel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numHeatPumps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmModel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmNumHeatPumps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inletWaterAdjustment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.SystemCreator.createSystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes and sizes the HPWH system. Both primary and tempurature maintenance (for parrallel loop and swing tank) are set up in this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Exception: Error if schematic is not in list of valid schematic names.</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>schematic</strong><span class="classifier">String</span></dt><dd><p>Indicates schematic type. Valid values are ‘swingtank’, ‘paralleltank’, ‘multipass’, and ‘primary’</p>
+</dd>
+<dt><strong>storageT_F</strong><span class="classifier">float</span></dt><dd><p>The hot water storage temperature. [°F]</p>
+</dd>
+<dt><strong>defrostFactor</strong><span class="classifier">float</span></dt><dd><p>A multipier used to account for defrost in the final heating capacity. Default equals 1.</p>
+</dd>
+<dt><strong>percentUseable</strong><span class="classifier">float</span></dt><dd><p>The fraction of the storage volume that can be filled with hot water.</p>
+</dd>
+<dt><strong>compRuntime_hr</strong><span class="classifier">float</span></dt><dd><p>The number of hours the compressor will run on the design day. [Hr]</p>
+</dd>
+<dt><strong>aquaFract: float</strong></dt><dd><p>The fraction of the total height of the primary hot water tanks at which the Aquastat is located.</p>
+</dd>
+<dt><strong>building</strong><span class="classifier">Building</span></dt><dd><p>Building object the HPWH system will be sized for.</p>
+</dd>
+<dt><strong>doLoadShift</strong><span class="classifier">boolean</span></dt><dd><p>Set to true if doing loadshift</p>
+</dd>
+<dt><strong>aquaFractLoadUp</strong><span class="classifier">float</span></dt><dd><p>The fraction of the total height of the primary hot water tanks at which the load up aquastat is located.</p>
+</dd>
+<dt><strong>aquaFractShed</strong><span class="classifier">float</span></dt><dd><p>The fraction of the total height of the primary hot water tanks at which the shed aquastat is located.</p>
+</dd>
+<dt><strong>loadUpT_F</strong><span class="classifier">float</span></dt><dd><p>The hot water storage temperature between the normal and load up aquastat. [°F]</p>
+</dd>
+<dt><strong>loadShiftPercent: float</strong></dt><dd><p>Percentage of days the load shift will be met</p>
+</dd>
+<dt><strong>loadShiftSchedule</strong><span class="classifier">array_like</span></dt><dd><p>List or array of 0’s and 1’s for don’t run and run respectively. Used for load shifting</p>
+</dd>
+<dt><strong>loadUpHours</strong><span class="classifier">float</span></dt><dd><p>Number of hours spent loading up for first shed.</p>
+</dd>
+<dt><strong>safetyTM</strong><span class="classifier">float</span></dt><dd><p>The saftey factor for the temperature maintenance system.</p>
+</dd>
+<dt><strong>setpointTM_F</strong><span class="classifier">float</span></dt><dd><p>The setpoint of the temprature maintence tank. Defaults to 130 °F.</p>
+</dd>
+<dt><strong>TMonTemp_F</strong><span class="classifier">float</span></dt><dd><p>The temperature where parallel loop tank will turn on.
+Defaults to 120 °F.</p>
+</dd>
+<dt><strong>offTime_hr: integer</strong></dt><dd><p>Maximum hours per day the temperature maintenance equipment can run.</p>
+</dd>
+<dt><strong>PVol_G_atStorageT</strong><span class="classifier">float</span></dt><dd><p>For pre-sized systems, the total/maximum storage volume for water at storage temperature for the system in gallons</p>
+</dd>
+<dt><strong>PCap_kBTUhr</strong><span class="classifier">float</span></dt><dd><p>For pre-sized systems, the output capacity for the system in kBTUhr</p>
+</dd>
+<dt><strong>TMVol_G</strong><span class="classifier">float</span></dt><dd><p>For applicable pre-sized systems, the temperature maintenance volume for the system in gallons</p>
+</dd>
+<dt><strong>TMCap_kBTUhr</strong><span class="classifier">float</span></dt><dd><p>For applicable pre-sized systems, the output capacity for temperature maintenance for the system in kBTUhr</p>
+</dd>
+<dt><strong>systemModel</strong><span class="classifier">String</span></dt><dd><p>The make/model of the HPWH being used.</p>
+</dd>
+<dt><strong>numHeatPumps</strong><span class="classifier">int</span></dt><dd><p>The number of heatpumps the HPWH model is using</p>
+</dd>
+<dt><strong>tmModel</strong><span class="classifier">String</span></dt><dd><p>The make/model of the HPWH being used for the temperature maintenance system.</p>
+</dd>
+<dt><strong>tmNumHeatPumps</strong><span class="classifier">int</span></dt><dd><p>The number of heat pumps on the temperature maintenance system</p>
+</dd>
+<dt><strong>inletWaterAdjustment</strong><span class="classifier">float</span></dt><dd><p>adjustment for inlet water temperature fraction for primary recirculation systems</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-objects.SimulationRun"></span><dl class="py class">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">objects.SimulationRun.</span></span><span class="sig-name descname"><span class="pre">SimulationRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hwGenRate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hwDemand</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pV</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Building</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadShiftSchedule</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minuteIntervals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doLoadshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LS_sched</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>hwGenRate</strong><span class="classifier">list</span></dt><dd><p>The generation of HW with time at the supply temperature</p>
+</dd>
+<dt><strong>hwDemand</strong><span class="classifier">list</span></dt><dd><p>The hot water demand with time at the supply temperature</p>
+</dd>
+<dt><strong>V0</strong><span class="classifier">float</span></dt><dd><p>The storage volume of the primary system at the storage temperature</p>
+</dd>
+<dt><strong>pV</strong><span class="classifier">list</span></dt><dd><p>Volume of HW in the tank with time at the storage temperature. Initialized to array of 0s with pV[0] set to V0</p>
+</dd>
+<dt><strong>building</strong><span class="classifier">Building</span></dt><dd><p>the Building object the simulation will be run for</p>
+</dd>
+<dt><strong>minuteIntervals</strong><span class="classifier">int</span></dt><dd><p>the minutes per time interval for the simulation. Only 1, 15, and 60 are accepted</p>
+</dd>
+<dt><strong>doLoadshift</strong><span class="classifier">boolean</span></dt><dd><p>set to True if doing loadshift</p>
+</dd>
+<dt><strong>LS_sched</strong><span class="classifier">list</span></dt><dd><p>list length 24 corresponding to hours of the day filled with ‘N’ for normal, ‘L’ for load up, and ‘S’ for shed</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.addCap" title="objects.SimulationRun.SimulationRun.addCap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addCap</span></code></a>(out_cap_value, in_cap_value)</p></td>
+<td><p>adds calculated capacity values to the simulation at timestep</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.addHWGen" title="objects.SimulationRun.SimulationRun.addHWGen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addHWGen</span></code></a>(hwGen)</p></td>
+<td><p>add a calculated hot water generation value to the simulation</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.addKGCO2" title="objects.SimulationRun.SimulationRun.addKGCO2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addKGCO2</span></code></a>(kGCO2_value)</p></td>
+<td><p>add a calculated kGCO2 emission value to the simulation</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.addOat" title="objects.SimulationRun.SimulationRun.addOat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addOat</span></code></a>(oat_value)</p></td>
+<td><p>adds outdoor air temperature (F) to the simulation at timestep</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.addTMCap" title="objects.SimulationRun.SimulationRun.addTMCap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addTMCap</span></code></a>(out_tm_cap_value, in_tm_cap_value)</p></td>
+<td><p>adds calculated capacity values for temperature maintenance sysyem to the simulation at timestep</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.generateRecircLoss" title="objects.SimulationRun.SimulationRun.generateRecircLoss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generateRecircLoss</span></code></a>(i)</p></td>
+<td><p>Returns recirculation loss from primary system at supply temp at interval i in gallons</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getAnnualCOP" title="objects.SimulationRun.SimulationRun.getAnnualCOP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getAnnualCOP</span></code></a>([boundryMethod])</p></td>
+<td><p>Returns annual COP for the simulation</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getAvgIncomingWaterT" title="objects.SimulationRun.SimulationRun.getAvgIncomingWaterT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getAvgIncomingWaterT</span></code></a>()</p></td>
+<td><p>Returns the average incoming water temperature for the year in fahrenheit as a float</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapIn" title="objects.SimulationRun.SimulationRun.getCapIn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCapIn</span></code></a>([i])</p></td>
+<td><p>Returns a list of the input capacity in kW for the primary system at every timestep or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapOut" title="objects.SimulationRun.SimulationRun.getCapOut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCapOut</span></code></a>([i])</p></td>
+<td><p>Returns a list of the output capacity in kW for the primary system at every timestep or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWDemand" title="objects.SimulationRun.SimulationRun.getHWDemand"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWDemand</span></code></a>([i])</p></td>
+<td><p>Returns a list from the simulation of the hot water demand by timestep or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWGeneration" title="objects.SimulationRun.SimulationRun.getHWGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWGeneration</span></code></a>([i])</p></td>
+<td><p>Returns a list from the simulation of the theoretical hot water generation of the primary tank at supply temperature by timestep or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getIncomingWaterT" title="objects.SimulationRun.SimulationRun.getIncomingWaterT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getIncomingWaterT</span></code></a>(i)</p></td>
+<td><p>returns incoming water temperature (F) at interval i of the simulation</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getLoadShiftMode" title="objects.SimulationRun.SimulationRun.getLoadShiftMode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getLoadShiftMode</span></code></a>(i)</p></td>
+<td><p>returns the load shifting setting at interval i of the simulation</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getOAT" title="objects.SimulationRun.SimulationRun.getOAT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getOAT</span></code></a>()</p></td>
+<td><p>Returns a list from the simulation of the Outdoor Air Temperature in (F) by timestep</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryGeneration" title="objects.SimulationRun.SimulationRun.getPrimaryGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryGeneration</span></code></a>([i])</p></td>
+<td><p>Returns a list from the simulation of the actual hot water generation of the primary tank by timestep</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryRun" title="objects.SimulationRun.SimulationRun.getPrimaryRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryRun</span></code></a>([i])</p></td>
+<td><p>Returns a list from the simulation of the amount of time the primary tank is running in minutes per timestep or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryVolume" title="objects.SimulationRun.SimulationRun.getPrimaryVolume"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryVolume</span></code></a>([i])</p></td>
+<td><p>Returns a list from the simulation of the volume of the primary tank by timestep or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getRecircLoss" title="objects.SimulationRun.SimulationRun.getRecircLoss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getRecircLoss</span></code></a>([i])</p></td>
+<td><p>Returns list of recirculation loss from primary system at supply temp in gallons at every interval in simulation</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapIn" title="objects.SimulationRun.SimulationRun.getTMCapIn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCapIn</span></code></a>([i])</p></td>
+<td><p>Returns a list of the input capacity in kW for the temperature maintenance system at every timestep or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapOut" title="objects.SimulationRun.SimulationRun.getTMCapOut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCapOut</span></code></a>([i])</p></td>
+<td><p>Returns a list of the output capacity in kW for the temperature maintenance system at every timestep or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMRun" title="objects.SimulationRun.SimulationRun.getTMRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMRun</span></code></a>([i])</p></td>
+<td><p>Returns a list from the simulation of the amount of time the temperature maintenance tank is running in minutes per timestep or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMTemp" title="objects.SimulationRun.SimulationRun.getTMTemp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMTemp</span></code></a>()</p></td>
+<td><p>Returns a list from the simulation of the temperature maintenance tank temperature in (F) by timestep</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.gethwOutSwing" title="objects.SimulationRun.SimulationRun.gethwOutSwing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gethwOutSwing</span></code></a>([i])</p></td>
+<td><p>Returns a list from the simulation of the amount of water coming out of the swing tank at tempurature in gallons by timestep or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2" title="objects.SimulationRun.SimulationRun.getkGCO2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getkGCO2</span></code></a>([i])</p></td>
+<td><p>Returns a list from the simulation of the get output of CO2 by timestep in kilograms or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2Sum" title="objects.SimulationRun.SimulationRun.getkGCO2Sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getkGCO2Sum</span></code></a>()</p></td>
+<td><p>Returns the sum from the simulation of the output of CO2 in kilograms</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.initializeTMValue" title="objects.SimulationRun.SimulationRun.initializeTMValue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initializeTMValue</span></code></a>(initST, storageT_F, ...[, ...])</p></td>
+<td><p>Initializes temperature maintenance values</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim" title="objects.SimulationRun.SimulationRun.plotStorageLoadSim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotStorageLoadSim</span></code></a>([return_as_div])</p></td>
+<td><p>Returns a plot of the of the simulation for the minimum sized primary system as a div or plotly figure.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.returnSimResult" title="objects.SimulationRun.SimulationRun.returnSimResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">returnSimResult</span></code></a>([kWhCalc])</p></td>
+<td><p><strong>*LEGACY FUNCTION*</strong> to be depricated.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.setMonthlyCityWaterT_F" title="objects.SimulationRun.SimulationRun.setMonthlyCityWaterT_F"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setMonthlyCityWaterT_F</span></code></a>(monthlyCityWaterT_F)</p></td>
+<td><p>sets monthly incoming water temperature (F) for each month of an annual simulation</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.writeCSV" title="objects.SimulationRun.SimulationRun.writeCSV"><code class="xref py py-obj docutils literal notranslate"><span class="pre">writeCSV</span></code></a>(file_path)</p></td>
+<td><p>writes all simulation data to a formated csv</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.addCap">
+<span class="sig-name descname"><span class="pre">addCap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_cap_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_cap_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.addCap" title="Permalink to this definition">¶</a></dt>
+<dd><p>adds calculated capacity values to the simulation at timestep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>out_cap_value</strong><span class="classifier">float</span></dt><dd><p>float representing the primary system’s output capacity in kW during current timestep.</p>
+</dd>
+<dt><strong>in_cap_value</strong><span class="classifier">float</span></dt><dd><p>float representing the primary system’s input capacity in kW during current timestep.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Exception: Error if out_cap_value or in_cap_value contains the wrong data type</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.addHWGen">
+<span class="sig-name descname"><span class="pre">addHWGen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hwGen</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.addHWGen" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a calculated hot water generation value to the simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>hwGen</strong><span class="classifier">float</span></dt><dd><p>float representing the amount of hot water generated at supply temperature in gallons during current timestep.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Exception: Error if hwGen contains wrong data type</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.addKGCO2">
+<span class="sig-name descname"><span class="pre">addKGCO2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kGCO2_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.addKGCO2" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a calculated kGCO2 emission value to the simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>kGCO2_value</strong><span class="classifier">float</span></dt><dd><p>float representing the amount of CO2 emitted in kg during the current time step for later use in kgCO2 calculation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Exception: Error if kGCO2_value contains wrong data type</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.addOat">
+<span class="sig-name descname"><span class="pre">addOat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">oat_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.addOat" title="Permalink to this definition">¶</a></dt>
+<dd><p>adds outdoor air temperature (F) to the simulation at timestep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>oat_value</strong><span class="classifier">float</span></dt><dd><p>float representing the outdoor air temperature (F) current timestep.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Exception: Error if oat_value contains the wrong data type</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.addTMCap">
+<span class="sig-name descname"><span class="pre">addTMCap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_tm_cap_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_tm_cap_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.addTMCap" title="Permalink to this definition">¶</a></dt>
+<dd><p>adds calculated capacity values for temperature maintenance sysyem to the simulation at timestep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>out_tm_cap_value</strong><span class="classifier">float</span></dt><dd><p>float representing the temperature maintenance system’s output capacity in kW during current timestep.</p>
+</dd>
+<dt><strong>in_tm_cap_value</strong><span class="classifier">float</span></dt><dd><p>float representing the temperature maintenance system’s input capacity in kW during current timestep.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Exception: Error if out_tm_cap_value or in_tm_cap_value contains the wrong data type</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.generateRecircLoss">
+<span class="sig-name descname"><span class="pre">generateRecircLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.generateRecircLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns recirculation loss from primary system at supply temp at interval i in gallons</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>recirculationLoss</strong><span class="classifier">float</span></dt><dd><p>the recirculation loss from primary system at supply temp at interval i in gallons</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Exception: Error if attempt is made to find recirculation loss outside of scope of simulation</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getAnnualCOP">
+<span class="sig-name descname"><span class="pre">getAnnualCOP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boundryMethod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getAnnualCOP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns annual COP for the simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>boundryMethod</strong><span class="classifier">boolean</span></dt><dd><p>set to True to use boundry method to compute COP</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>COP</strong><span class="classifier">float</span></dt><dd><p>the COP value for the system over the annual simulation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getAvgIncomingWaterT">
+<span class="sig-name descname"><span class="pre">getAvgIncomingWaterT</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getAvgIncomingWaterT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average incoming water temperature for the year in fahrenheit as a float</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>waterT_F</strong><span class="classifier">float</span></dt><dd><p>The average incoming water temperature (F) of the simulation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getCapIn">
+<span class="sig-name descname"><span class="pre">getCapIn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getCapIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of the input capacity in kW for the primary system at every timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>capacityIn_kW</strong><span class="classifier">float</span></dt><dd><p>the input capacity in kW for the primary system at interval i in gallons or the entire list of input capacity in kW at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getCapOut">
+<span class="sig-name descname"><span class="pre">getCapOut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getCapOut" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of the output capacity in kW for the primary system at every timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>capacityOut_kW</strong><span class="classifier">float</span></dt><dd><p>the output capacity in kW for the primary system at interval i in gallons or the entire list of output capacity in kW at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getHWDemand">
+<span class="sig-name descname"><span class="pre">getHWDemand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getHWDemand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list from the simulation of the hot water demand by timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>volume</strong><span class="classifier">float</span></dt><dd><p>the hot water demand in gallons at interval i or the entire list of hot water demand at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getHWGeneration">
+<span class="sig-name descname"><span class="pre">getHWGeneration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getHWGeneration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list from the simulation of the theoretical hot water generation of the primary tank at supply temperature by timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>volume</strong><span class="classifier">float</span></dt><dd><p>the theoretical hot water generation of the primary tank at supply temperature in gallons at interval i or the entire list of theoretical hot water generation at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getIncomingWaterT">
+<span class="sig-name descname"><span class="pre">getIncomingWaterT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getIncomingWaterT" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns incoming water temperature (F) at interval i of the simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>waterT_F</strong><span class="classifier">float</span></dt><dd><p>The incoming water temperature (F) at interval i of the simulation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getLoadShiftMode">
+<span class="sig-name descname"><span class="pre">getLoadShiftMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getLoadShiftMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the load shifting setting at interval i of the simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>loadshiftMode</strong><span class="classifier">string</span></dt><dd><p>The load shift mode of the system at interval i. Returns ‘N’, ‘L’, or ‘S’ for normal, load, or shed mode respectively</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getOAT">
+<span class="sig-name descname"><span class="pre">getOAT</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getOAT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list from the simulation of the Outdoor Air Temperature in (F) by timestep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>oat</strong><span class="classifier">float</span></dt><dd><p>the Outdoor Air Temperature in (F) at interval i or the entire list of
+Outdoor Air Temperature in (F) at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getPrimaryGeneration">
+<span class="sig-name descname"><span class="pre">getPrimaryGeneration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getPrimaryGeneration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list from the simulation of the actual hot water generation of the primary tank by timestep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>volume</strong><span class="classifier">float</span></dt><dd><p>the actual hot water generation at supply temperature in gallons at interval i or the entire list of actual hot water generation at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getPrimaryRun">
+<span class="sig-name descname"><span class="pre">getPrimaryRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getPrimaryRun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list from the simulation of the amount of time the primary tank is running in minutes per timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>minutes</strong><span class="classifier">float</span></dt><dd><p>the amount of time the primary tank is running in minutes at interval i or the entire list of
+amount of time the primary tank is running in minutes at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getPrimaryVolume">
+<span class="sig-name descname"><span class="pre">getPrimaryVolume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getPrimaryVolume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list from the simulation of the volume of the primary tank by timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>volume</strong><span class="classifier">float</span></dt><dd><p>the primary tank volume in gallons at interval i or the entire list of primary tank volume at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getRecircLoss">
+<span class="sig-name descname"><span class="pre">getRecircLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getRecircLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of recirculation loss from primary system at supply temp in gallons at every interval in simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>recirculationLoss</strong><span class="classifier">float</span></dt><dd><p>the recirculation loss from primary system at supply temp at interval i in gallons or the entire list of recirculation losses at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getTMCapIn">
+<span class="sig-name descname"><span class="pre">getTMCapIn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getTMCapIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of the input capacity in kW for the temperature maintenance system at every timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>capacityIn_kW</strong><span class="classifier">float</span></dt><dd><p>the input capacity in kW for the temperature maintenance system at interval i in gallons or the entire list of input capacity in kW at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getTMCapOut">
+<span class="sig-name descname"><span class="pre">getTMCapOut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getTMCapOut" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of the output capacity in kW for the temperature maintenance system at every timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>capacityOut_kW</strong><span class="classifier">float</span></dt><dd><p>the output capacity in kW for the temperature maintenance system at interval i in gallons or the entire list of output capacity in kW at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getTMRun">
+<span class="sig-name descname"><span class="pre">getTMRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getTMRun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list from the simulation of the amount of time the temperature maintenance tank is running in minutes per timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>minutes</strong><span class="classifier">float</span></dt><dd><p>the amount of time the temperature maintenance tank is running in minutes at interval i or the entire list of
+amount of time the temperature maintenance tank is running in minutes at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getTMTemp">
+<span class="sig-name descname"><span class="pre">getTMTemp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getTMTemp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list from the simulation of the temperature maintenance tank temperature in (F) by timestep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>temperature</strong><span class="classifier">float</span></dt><dd><p>the temperature maintenance tank temperature in (F) at interval i or the entire list of
+temperature maintenance tank temperature in (F) at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.gethwOutSwing">
+<span class="sig-name descname"><span class="pre">gethwOutSwing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.gethwOutSwing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list from the simulation of the amount of water coming out of the swing tank at tempurature in gallons by timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>volume</strong><span class="classifier">float</span></dt><dd><p>the amount of water coming out of the swing tank at tempurature in gallons at interval i or the entire list of
+amount of water coming out of the swing tank at tempurature in gallons at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getkGCO2">
+<span class="sig-name descname"><span class="pre">getkGCO2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getkGCO2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list from the simulation of the get output of CO2 by timestep in kilograms
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>CO2</strong><span class="classifier">float</span></dt><dd><p>the output of CO2 in kilograms at interval i or the entire list of
+output of CO2 in kilograms at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getkGCO2Sum">
+<span class="sig-name descname"><span class="pre">getkGCO2Sum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getkGCO2Sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sum from the simulation of the output of CO2 in kilograms</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>CO2</strong><span class="classifier">float</span></dt><dd><p>the sum from the simulation of the output of CO2 in kilograms</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.initializeTMValue">
+<span class="sig-name descname"><span class="pre">initializeTMValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initST</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMCap_kBTUhr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">swingOut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.initializeTMValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes temperature maintenance values</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>initST</strong><span class="classifier">float</span></dt><dd><p>temperature maintenance tank temperature at start of the simulation.</p>
+</dd>
+<dt><strong>storageT_F</strong><span class="classifier">float</span></dt><dd><p>storage temperature setpoint for temperature maintenance system</p>
+</dd>
+<dt><strong>TMCap_kBTUhr</strong><span class="classifier">float</span></dt><dd><p>temperature maintenance heating capacity in kBTUhr</p>
+</dd>
+<dt><strong>swingOut</strong><span class="classifier">boolean</span></dt><dd><p>set to True for swing tank systems so that DHW leaving temperature maintenance system is recorded</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.plotStorageLoadSim">
+<span class="sig-name descname"><span class="pre">plotStorageLoadSim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_as_div</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a plot of the of the simulation for the minimum sized primary
+system as a div or plotly figure. Can plot the minute level simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>return_as_div</strong><span class="classifier">boolean</span></dt><dd><p>A logical on the output, as a div (true) or as a figure (false)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>plot</strong><span class="classifier">plotly.Figure -OR- &lt;div&gt; string</span></dt><dd><p>The storage load simulation graph. Return type depends on value of return_as_div parameter.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.returnSimResult">
+<span class="sig-name descname"><span class="pre">returnSimResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kWhCalc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.returnSimResult" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*LEGACY FUNCTION*</strong> to be depricated.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.setMonthlyCityWaterT_F">
+<span class="sig-name descname"><span class="pre">setMonthlyCityWaterT_F</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monthlyCityWaterT_F</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.setMonthlyCityWaterT_F" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets monthly incoming water temperature (F) for each month of an annual simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>monthlyCityWaterT_F</strong><span class="classifier">List</span></dt><dd><p>List of floats representing the incoming water temperature at each month. must be length 12.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Exception: Error if monthlyCityWaterT_F is not length 12 or contains wrong data type</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.writeCSV">
+<span class="sig-name descname"><span class="pre">writeCSV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.writeCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>writes all simulation data to a formated csv</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_path</strong><span class="classifier">string</span></dt><dd><p>the file path for the output csv file</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="#">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">EcosizerEngine Documentation</a><ul>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine</span></code></a><ul>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getClimateZone"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getClimateZone()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getHWMagnitude"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getHWMagnitude()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimResult"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getSimResult()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimRun"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getSimRun()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimRunWithkWCalc"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getSimRunWithkWCalc()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSizingResults"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getSizingResults()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.lsSizedPoints"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.lsSizedPoints()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotSizingCurve"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.plotSizingCurve()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.plotStorageLoadSim()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.primaryCurve"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.primaryCurve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.getAnnualSimLSComparison"><code class="docutils literal notranslate"><span class="pre">getAnnualSimLSComparison()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.getListOfModels"><code class="docutils literal notranslate"><span class="pre">getListOfModels()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.getSizingCurvePlot"><code class="docutils literal notranslate"><span class="pre">getSizingCurvePlot()</span></code></a></li>
+<li><a class="reference internal" href="#engine.BuildingCreator.createBuilding"><code class="docutils literal notranslate"><span class="pre">createBuilding()</span></code></a></li>
+<li><a class="reference internal" href="#engine.SystemCreator.createSystem"><code class="docutils literal notranslate"><span class="pre">createSystem()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun"><code class="docutils literal notranslate"><span class="pre">SimulationRun</span></code></a><ul>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.addCap"><code class="docutils literal notranslate"><span class="pre">SimulationRun.addCap()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.addHWGen"><code class="docutils literal notranslate"><span class="pre">SimulationRun.addHWGen()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.addKGCO2"><code class="docutils literal notranslate"><span class="pre">SimulationRun.addKGCO2()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.addOat"><code class="docutils literal notranslate"><span class="pre">SimulationRun.addOat()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.addTMCap"><code class="docutils literal notranslate"><span class="pre">SimulationRun.addTMCap()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.generateRecircLoss"><code class="docutils literal notranslate"><span class="pre">SimulationRun.generateRecircLoss()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getAnnualCOP"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getAnnualCOP()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getAvgIncomingWaterT"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getAvgIncomingWaterT()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapIn"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getCapIn()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapOut"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getCapOut()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWDemand"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getHWDemand()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWGeneration"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getHWGeneration()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getIncomingWaterT"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getIncomingWaterT()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getLoadShiftMode"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getLoadShiftMode()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getOAT"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getOAT()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryGeneration"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getPrimaryGeneration()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryRun"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getPrimaryRun()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryVolume"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getPrimaryVolume()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getRecircLoss"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getRecircLoss()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapIn"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getTMCapIn()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapOut"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getTMCapOut()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMRun"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getTMRun()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMTemp"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getTMTemp()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.gethwOutSwing"><code class="docutils literal notranslate"><span class="pre">SimulationRun.gethwOutSwing()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getkGCO2()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2Sum"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getkGCO2Sum()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.initializeTMValue"><code class="docutils literal notranslate"><span class="pre">SimulationRun.initializeTMValue()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim"><code class="docutils literal notranslate"><span class="pre">SimulationRun.plotStorageLoadSim()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.returnSimResult"><code class="docutils literal notranslate"><span class="pre">SimulationRun.returnSimResult()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.setMonthlyCityWaterT_F"><code class="docutils literal notranslate"><span class="pre">SimulationRun.setMonthlyCityWaterT_F()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.writeCSV"><code class="docutils literal notranslate"><span class="pre">SimulationRun.writeCSV()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Nolan Price, Madison Johnson, Scott Spielman.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+  </body>
+</html>
