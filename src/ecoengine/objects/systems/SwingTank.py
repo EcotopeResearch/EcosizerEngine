@@ -339,7 +339,7 @@ class SwingTank(SystemConfig):
         
         return [swingT_F, tmRun, hw_outSwing]
     
-    def _runOneSwingStep(self, building : Building, swingheating, Tcurr, hw_out, primaryStorageT_F, minuteIntervals = 1):
+    def _runOneSwingStep(self, building : Building, swingheating, Tcurr, hw_out, primaryStorageT_F, minuteIntervals = 1, erCalc = False):
         """
         Runs one step on the swing tank step. Since the swing tank is in series
         with the primary system the temperature needs to be tracked to inform
@@ -377,13 +377,27 @@ class SwingTank(SystemConfig):
 
         timeDivisor = 60 // minuteIntervals
 
-        # Take out the recirc losses
-        Tnew = Tcurr - building.recirc_loss / timeDivisor / rhoCp / self.TMVol_G
-        element_dT = self.TMCap_kBTUhr * 1000  / timeDivisor / rhoCp / self.TMVol_G
+        Tnew = Tcurr 
 
         # Add in heat for a draw
         if hw_out:
-            Tnew += hw_out * (primaryStorageT_F - Tcurr) / self.TMVol_G 
+            # if hw_out > 
+            # Tnew += hw_out * (primaryStorageT_F - Tcurr) / self.TMVol_G 
+            volAtTcurr = self.TMVol_G - hw_out
+            if volAtTcurr <= 0:
+                print("here", minuteIntervals)
+                # we need to do things with more granularity because more water is folowing throught the tank than the tank's volume
+                if minuteIntervals == 1:
+                    raise Exception(f"swing tank is undersized. The swing tank must be larger than {hw_out} gallons given the demand of the building.")
+                swingRun = [0] * minuteIntervals
+                for i in range(minuteIntervals):
+                    swingheating, Tnew, swingRun[i] = self._runOneSwingStep(building, swingheating, Tnew, hw_out/minuteIntervals, primaryStorageT_F, 1, erCalc=erCalc)
+                return swingheating, Tnew, sum(swingRun)
+            else:
+                Tnew = ((hw_out * primaryStorageT_F) + (Tcurr * volAtTcurr)) / self.TMVol_G
+
+        Tnew -= building.recirc_loss / timeDivisor / rhoCp / self.TMVol_G
+        element_dT = self.TMCap_kBTUhr * 1000  / timeDivisor / rhoCp / self.TMVol_G
         
         # Check if the element is heating
         if swingheating:
@@ -392,20 +406,29 @@ class SwingTank(SystemConfig):
 
             # Check if the element should turn off
             if Tnew > building.supplyT_F + self.element_deadband_F: # If too hot
-                time_over = (Tnew - (building.supplyT_F + self.element_deadband_F)) / element_dT # Temp below turn on / rate of element heating gives time above trigger plus deadband
+                time_over = min((Tnew - (building.supplyT_F + self.element_deadband_F)) / element_dT,1) # Temp below turn on / rate of element heating gives time above trigger plus deadband
                 Tnew -= element_dT * time_over # Make full with miss volume
                 time_running = (1-time_over)
                 swingheating = False
 
         elif Tnew <= building.supplyT_F: # If the element should turn on
-            time_missed = (building.supplyT_F - Tnew)/element_dT # Temp below turn on / rate of element heating gives time below tigger
+            time_missed = min((building.supplyT_F - Tnew)/element_dT, 1) # Temp below turn on / rate of element heating gives time below tigger
             Tnew += element_dT * time_missed # Start heating 
             time_running = time_missed
             swingheating = True # Start heating
 
         if Tnew < building.supplyT_F: # Check for errors
-            raise Exception("The swing tank dropped below the supply temperature! The system is undersized")
-        
+            if not erCalc:
+                print("primaryStorageT_F", primaryStorageT_F)
+                print("recirc_loss", building.recirc_loss / timeDivisor / rhoCp / self.TMVol_G)
+                print("Tnew", Tnew)
+                print("Tcurr",Tcurr)
+                print("hw_out * (primaryStorageT_F - Tcurr) / self.TMVol_G",hw_out * (primaryStorageT_F - Tcurr) / self.TMVol_G)
+                print("time_running",time_running)
+                print("element_dT",element_dT)
+                raise Exception("The swing tank dropped below the supply temperature! The system is undersized")
+            # else:
+                
         # multiply time_running to reflect the time durration of the interval.
         time_run = time_running * minuteIntervals
 
@@ -460,12 +483,12 @@ class SwingTank(SystemConfig):
             
         return heatCap, genRate
     
-    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
+    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3) -> SimulationRun:
         simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
         simRun.initializeTMValue(initST, self.storageT_F, self.TMCap_kBTUhr)
         return simRun
 
-    def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
+    def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None, erCalc = False):
         incomingWater_T = simRun.getIncomingWaterT(i)
         if i > 0 and incomingWater_T != simRun.getIncomingWaterT(i-1):
             self.setLoadUPVolumeAndTrigger(incomingWater_T)
@@ -478,7 +501,7 @@ class SwingTank(SystemConfig):
         # aquire draw amount for time step
         simRun.hw_outSwing[i] = convertVolume(simRun.hwDemand[i], simRun.tmT_F[i-1], incomingWater_T, simRun.building.supplyT_F)
             
-        simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, simRun.tmheating, simRun.tmT_F[i-1], simRun.hw_outSwing[i], self.storageT_F, minuteIntervals = minuteIntervals)
+        simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, simRun.tmheating, simRun.tmT_F[i-1], simRun.hw_outSwing[i], self.storageT_F, minuteIntervals = minuteIntervals, erCalc = erCalc)
         
         #Get the mixed generation
         mixedGHW = convertVolume(simRun.hwGenRate, self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
@@ -489,7 +512,10 @@ class SwingTank(SystemConfig):
                                                                                                 hw_in = mixedGHW, 
                                                                                                 mode = simRun.getLoadShiftMode(i),
                                                                                                 modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
-                                                                                                minuteIntervals = minuteIntervals)
+                                                                                                minuteIntervals = minuteIntervals,
+                                                                                                erCalc = erCalc)
+        if simRun.pV[i] < 0:
+            print(f"simRun.hw_outSwing[{i}] is {simRun.hw_outSwing[i]}, system has {simRun.pV[i-1]} gal and generates {mixedGHW} gal, resuling in {simRun.pV[i]} gal")
     
     def getTMOutputCapacity(self, kW = False):
         if kW:

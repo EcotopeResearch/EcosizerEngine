@@ -238,7 +238,7 @@ def test_convertVolume(convertToT_F, referenceT_F, convertFromT_F, expected):
     assert round(convertVolume(100, convertToT_F, referenceT_F, convertFromT_F), 3) == expected
 
 @pytest.mark.parametrize("sizingResult, magnitude", [
-   ([1579.8153948651482, 150.75919907543388, 100, 59.712485, 168], 2500)
+   ([ 1579.8153948651493, 150.75919907543388, 100, 59.712485, 168], 2500)
 ])
 def test_swingSizingResult(swing_sizer, sizingResult, magnitude):
     assert swing_sizer.getSizingResults() == sizingResult
@@ -248,7 +248,7 @@ def test_plotSizingCurve_len(swing_sizer):
     assert len(swing_sizer.plotSizingCurve(returnAsDiv = True, returnWithXYPoints = True)) == 4
 
 @pytest.mark.parametrize("sizingResult", [
-    ([540.4258388420066, 118.11496284632373, 100, 59.712485, 168])
+    ([540.4258388420066, 118.11496284632376, 100, 59.712485, 168])
 ])
 def test_swingSizingNLSResult(swing_sizer_nls, sizingResult):
     assert swing_sizer_nls.getSizingResults() == sizingResult

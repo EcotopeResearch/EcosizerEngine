@@ -151,7 +151,7 @@ def test_parallelResults(parallellTank):
 def test_swingResults(swingTank):
     assert [swingTank.PVol_G_atStorageT, swingTank.PCap_kBTUhr, 
             swingTank.loadShiftSchedule, swingTank.maxDayRun_hr,
-            swingTank.TMVol_G, swingTank.TMCap_kBTUhr] == [540.4258388420066, 118.11496284632373, [1]*24, 16, 100, 59.712485]
+            swingTank.TMVol_G, swingTank.TMCap_kBTUhr] == [540.4258388420066, 118.11496284632376, [1]*24, 16, 100, 59.712485]
 
 def test_LSprimary(LSprimary):
     assert [LSprimary.PVol_G_atStorageT, LSprimary.PCap_kBTUhr] == [841.0350199999998, 91.3667890625]

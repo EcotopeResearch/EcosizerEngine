@@ -1,5 +1,6 @@
 from ecoengine.objects.SystemConfig import *
 from ecoengine.objects.systems.SwingTank import *
+from ecoengine.objects.systems.SwingTankER import *
 from ecoengine.objects.systems.ParallelLoopTank import *
 from ecoengine.objects.systems.MultiPass import *
 from ecoengine.objects.systems.MultiPassRecirc import *
@@ -80,7 +81,11 @@ def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRunti
         case 'swingtank':
             return SwingTank(safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
-                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr)        
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr)       
+        case 'swingtank_er':
+            return SwingTankER(safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
+                doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, TMVol_G, TMCap_kBTUhr)    
         case 'paralleltank':
             return ParallelLoopTank(safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                 building, doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,

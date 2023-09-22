@@ -19,18 +19,16 @@ aquaFractLoadUp = 0.2
 aquaFractShed   = 0.8
 storageT_F = 150
 loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1] #assume this loadshape for annual simulation every day
-csvCreate = False
+csvCreate = True
 hpwhModel ='MODELS_Mitsubishi_QAHV'
 tmModel ='MODELS_Mitsubishi_QAHV'
 minuteIntervals = 15
-sizingSchematic = 'singlepass_norecirc'
+sizingSchematic = 'swingtank_er'
 simSchematic = 'singlepass_rtp'
-
-def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, start_vol):
-    csv_filename = f'{simSchematic}_LS_simResult_{hpwhModel}.csv'
-    if loadshift_title == False:
-        csv_filename = f'{simSchematic}_NON_LS_simResult_{hpwhModel}.csv'
-    simRun.writeCSV(csv_filename)
+TMCap_kW = 40 / W_TO_BTUHR
+PVol_G_atStorageT = 1312
+PCap_kW = 100 / W_TO_BTUHR
+TMVol_G = 80
 
 hpwh_for_sizing = EcosizerEngine(
             incomingT_F     = 50,
@@ -55,24 +53,118 @@ hpwh_for_sizing = EcosizerEngine(
             loadShiftSchedule        = loadShiftSchedule,
             loadUpHours     = 3,
             doLoadShift     = True,
+            TMCap_kW = TMCap_kW,
+            PVol_G_atStorageT = PVol_G_atStorageT,
+            PCap_kW = PCap_kW,
+            TMVol_G = TMVol_G,
             loadShiftPercent       = 1
         )
-
-print('+++++++++++++++++++++++++++++++++++++++')
-print('SIZING RESULTS')
-print('+++++++++++++++++++++++++++++++++++++++')
-print('recirc loss', hpwh_for_sizing.building.recirc_loss)
-PVol_G_atStorageT = hpwh_for_sizing.getSizingResults()[0] 
-PCap_kBTUhr = hpwh_for_sizing.getSizingResults()[1] 
-if simSchematic == 'multipass' or simSchematic == 'primaryrecirc':
-    PCap_kBTUhr += (hpwh_for_sizing.building.recirc_loss * 1.75 / 1000)
-print('PVol_G_atStorageT = ',PVol_G_atStorageT)
-print('PCap_kBTUhr = ',PCap_kBTUhr)
-
+# print("simRun.pv2", simRun.pV)
 if csvCreate:
-    #test plot output
-    fig = hpwh_for_sizing.plotSizingCurve()
-    fig.write_html('Z:\\sizingplotTEST.html')
+    simRun = hpwh_for_sizing.getSimRun(nDays=2,minuteIntervals=15, exceptOnWaterShortage=False)
+# Generate the content for the HTML div
+    content = simRun.plotStorageLoadSim(numDays=2)
+
+    # Create the HTML content
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>My Webpage</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+<div>
+{content}
+</div>
+</body>
+</html>
+"""
+
+    # Write the HTML content to the file
+    file_name = f'{sizingSchematic}_simResult_15.html'
+    with open(file_name, 'w') as file:
+        file.write(html_content)
+
+        simRun = hpwh_for_sizing.getSimRun(nDays=2,minuteIntervals=60, exceptOnWaterShortage=False)
+# Generate the content for the HTML div
+    content = simRun.plotStorageLoadSim(numDays=2)
+
+    # Create the HTML content
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>My Webpage</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+<div>
+{content}
+</div>
+</body>
+</html>
+"""
+
+    # Write the HTML content to the file
+    file_name = f'{sizingSchematic}_simResult_60.html'
+    with open(file_name, 'w') as file:
+        file.write(html_content)
+
+
+
+
+
+# print("/////////////////////////////////")
+# print("simRun.hw_outSwing", simRun.hw_outSwing)
+# for i in range(48):
+#     print(simRun.hw_outSwing[i]-simRun.hwDemand[i])
+
+# def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, start_vol):
+#     csv_filename = f'{simSchematic}_LS_simResult_{hpwhModel}.csv'
+#     if loadshift_title == False:
+#         csv_filename = f'{simSchematic}_NON_LS_simResult_{hpwhModel}.csv'
+#     simRun.writeCSV(csv_filename)
+
+# hpwh_for_sizing = EcosizerEngine(
+#             incomingT_F     = 50,
+#             magnitudeStat  = 150,
+#             supplyT_F       = 120,
+#             storageT_F      = storageT_F,
+#             loadUpT_F       = storageT_F + 10,
+#             percentUseable  = 0.85, 
+#             aquaFract       = 0.4, 
+#             aquaFractLoadUp = aquaFractLoadUp,
+#             aquaFractShed   = aquaFractShed,
+#             schematic       = sizingSchematic, 
+#             buildingType   = 'multi_family',
+#             returnT_F       = 0, 
+#             flowRate       = 0,
+#             gpdpp           = 25,
+#             safetyTM        = 1.75,
+#             defrostFactor   = 1, 
+#             compRuntime_hr  = 16, 
+#             nApt            = 110, 
+#             Wapt            = 60,
+#             loadShiftSchedule        = loadShiftSchedule,
+#             loadUpHours     = 3,
+#             doLoadShift     = True,
+#             loadShiftPercent       = 1
+#         )
+
+# print('+++++++++++++++++++++++++++++++++++++++')
+# print('SIZING RESULTS')
+# print('+++++++++++++++++++++++++++++++++++++++')
+# print('recirc loss', hpwh_for_sizing.building.recirc_loss)
+# PVol_G_atStorageT = hpwh_for_sizing.getSizingResults()[0] 
+# PCap_kBTUhr = hpwh_for_sizing.getSizingResults()[1] 
+# if simSchematic == 'multipass' or simSchematic == 'primaryrecirc':
+#     PCap_kBTUhr += (hpwh_for_sizing.building.recirc_loss * 1.75 / 1000)
+# print('PVol_G_atStorageT = ',PVol_G_atStorageT)
+# print('PCap_kBTUhr = ',PCap_kBTUhr)
+
+# if csvCreate:
+#     #test plot output
+#     fig = hpwh_for_sizing.plotSizingCurve()
+#     fig.write_html('Z:\\sizingplotTEST.html')
 
 # start_time = time.time()
 # simRun_from_sized = hpwh_for_sizing.getSimRun()

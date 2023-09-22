@@ -526,11 +526,6 @@ class SimulationRun:
         """
         Returns a list from the simulation of the temperature maintenance tank temperature in (F) by timestep
 
-        Parameters
-        ----------
-        i : int
-            interval of the simulation
-
         Returns
         -------
         temperature : float
@@ -701,7 +696,7 @@ class SimulationRun:
             retList.append(self.getAvgIncomingWaterT())               
         return retList
     
-    def plotStorageLoadSim(self, return_as_div=True):
+    def plotStorageLoadSim(self, return_as_div=True, numDays = 1):
         """
         Returns a plot of the of the simulation for the minimum sized primary
         system as a div or plotly figure. Can plot the minute level simulation
@@ -717,11 +712,11 @@ class SimulationRun:
             The storage load simulation graph. Return type depends on value of return_as_div parameter.
         """
         # TODO make this function work for not 1 minute intervals
-        hrind_fromback = 24 # Look at the last 24 hours of the simulation not the whole thing
+        hrind_fromback = 24 * numDays # Look at the last 24 hours of the simulation not the whole thing
 
-        run = np.array(roundList(self.pGen,3)[-(60*hrind_fromback):])*60
-        loadShiftSchedule = np.array(self.loadShiftSchedule[-(60*hrind_fromback):])*60
-        hwDemand = np.array(roundList(self.hwDemand,3)[-(60*hrind_fromback):])*60
+        run = np.array(roundList(self.pGen,3)[-(60*hrind_fromback):])*(60/self.minuteIntervals)
+        loadShiftSchedule = np.array(self.loadShiftSchedule[-(60*hrind_fromback):])*(60/self.minuteIntervals)
+        hwDemand = np.array(roundList(self.hwDemand,3)[-(60*hrind_fromback):])*(60/self.minuteIntervals)
         V = np.array(roundList(self.pV,3)[-(60*hrind_fromback):])
 
         if any(i < 0 for i in V):
@@ -738,6 +733,7 @@ class SimulationRun:
 
         # Do primary components
         x_data = list(range(len(V)))
+        # x_data = [x/(60/self.minuteIntervals) for x in x_data]
 
         if self.doLoadShift:
             ls_off = [int(not x)* max(V)*2 for x in loadShiftSchedule]
@@ -765,7 +761,6 @@ class SimulationRun:
         
         # Swing tank
         if hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'storageT_F') and hasattr(self, 'hw_outSwing'):
-
             # Do Swing Tank components:
             tmT_F = np.array(roundList(self.tmT_F,3)[-(60*hrind_fromback):])
             tmRun = np.array(roundList(self.tmRun,3)[-(60*hrind_fromback):]) * self.TMCap_kBTUhr/W_TO_BTUHR #tmRun is logical so convert to kW
