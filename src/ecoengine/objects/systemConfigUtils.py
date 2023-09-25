@@ -65,18 +65,19 @@ def convertVolume(originalVol, convertToT_F, referenceT_F, convertFromT_F):
 
 def getMixedTemp(temp1_F, temp2_F, vol1_G, vol2_G):
         """
-        Calculates average tank temperature using load up and normal setpoints according to locations of aquastats. 
-        Used for load shifting when there are two setpoints. Returns normal storage setpoint if load up and normal
-        setpoint are equal or if not loadshifting.
+        Calculates average tank temperature for a tank with vol1_G gallons of water at temp1_F degrees F and
+        vol2_G gallons of water at temp2_F degrees F
 
         Parameters
         ----------
-        runningVol_G : float
-            Volume of water to be mixed. 
-        incomingT_F : float
-            Incoming temp (in Fahrenhiet) of city water
-        supplyT_F : float
-            Supply temp (in Fahrenhiet) of water distributed to those in the building
+        temp1_F : float
+            Temperature (F) of first volume of water 
+        temp2_F : float
+            Temperature (F) of second volume of water 
+        vol1_G : float
+            Volume (gallons) of first temperature (temp1_F) of water
+        vol2_G : float
+            Volume (gallons) of first temperature (temp2_F) of water
 
         Returns
         ----------

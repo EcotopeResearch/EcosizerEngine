@@ -19,72 +19,6 @@ class SwingTankER(SwingTank):
         
         self.setLoadUPVolumeAndTrigger(building.incomingT_F)
         self.sizeERElement(building)
-
-    # def sizeERElement(self, building : Building):
-
-    #     if building is None:
-    #         raise Exception("Cannot size additional swing tank electric resistance without building parameter.")
-    #     simRun = self.getInitializedSimulation(building, minuteIntervals = 60, nDays = 2)
-    #     #TODO handle for preformance maps (this means adding oat among other things....)
-    #     for i in range(len(simRun.hwDemand)):
-    #         self.runOneERCalcStep(simRun, i, minuteIntervals = 60)
-    #     # find largest water deficit rate
-    #     hwDeficit = [x if x < 0 else 0 for x in simRun.pV]
-    #     hwDeficitRate = [hwDeficit[i]-hwDeficit[i-1] if i > 0 else hwDeficit[i] for i in range(0,len(hwDeficit))]
-    #     # print("simRun.pV", simRun.pV)
-    #     # print("hwDeficitRate", hwDeficitRate)
-    #     largestDeficit = -min(hwDeficitRate)
-    #     for i in range(len(hwDeficitRate)):
-    #         if hwDeficitRate[i] == -largestDeficit:
-    #             print("min", i*60)
-    #     print("largestDeficit (gallons)", largestDeficit)
-    #     print("original self.TMCap_kBTUhr", self.TMCap_kBTUhr)
-    #     self.TMCap_kBTUhr += (largestDeficit * rhoCp * (self.storageT_F - building.incomingT_F)) / 1000.  # additional ER to compensate
-    #     print("new self.TMCap_kBTUhr", self.TMCap_kBTUhr)
-        
-    #     return
-
-    # def sizeERElement(self, building : Building):
-
-    #     if building is None:
-    #         raise Exception("Cannot size additional swing tank electric resistance without building parameter.")
-    #     simRun = self.getInitializedSimulation(building, minuteIntervals = 60, nDays = 2)
-    #     #TODO handle for preformance maps (this means adding oat among other things....)
-    #     for i in range(len(simRun.hwDemand)):
-    #         self.runOneSystemStep(simRun, i, minuteIntervals = 60, erCalc=True)
-    #     lowestSwingTemp = min(simRun.tmT_F)
-    #     print("lowestSwingTemp", lowestSwingTemp)
-    #     self.TMCap_kBTUhr += (self.TMVol_G * rhoCp * (building.supplyT_F - lowestSwingTemp)) / 1000.  # additional ER to compensate
-    #     print("new self.TMCap_kBTUhr", self.TMCap_kBTUhr)
-        
-    #     return
-    
-    # def runOneERCalcStep(self, simRun : SimulationRun, i, minuteIntervals = 60, oat = None):
-    #     if simRun.pV[i-1] > 0:
-    #         super().runOneSystemStep(simRun, i, minuteIntervals, oat, erCalc=True)
-    #     else:
-    #         incomingWater_T = simRun.getIncomingWaterT(i)
-    #         # if primary system is out of hot water, the swing tank is working as an additional heat source so capacity is combined for hot water generation rate
-    #         combinedHWGenRate = (1000 * (self.PCap_kBTUhr + self.TMCap_kBTUhr) / rhoCp / (simRun.building.supplyT_F - incomingWater_T) * self.defrostFactor)/(60/minuteIntervals)
-    #         simRun.tmheating = True
-    #         simRun.tmT_F[i] = simRun.building.supplyT_F 
-    #         simRun.tmRun[i] = minuteIntervals
-
-    #         #Get the mixed generation
-    #         mixedGHW = convertVolume(combinedHWGenRate, self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
-    #         # get exiting water at storage temperature
-    #         # Account for recirculation losses at storage temperature
-    #         exitingWater = simRun.hwDemand[i] + simRun.generateRecircLoss(i)
-    #         mixedDHW = convertVolume(exitingWater, self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
-
-    #         simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating,
-    #                                                                                             Vcurr = simRun.pV[i-1], 
-    #                                                                                             hw_out = mixedDHW, 
-    #                                                                                             hw_in = mixedGHW, 
-    #                                                                                             mode = simRun.getLoadShiftMode(i),
-    #                                                                                             modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
-    #                                                                                             minuteIntervals = minuteIntervals,
-    #                                                                                             erCalc=True)
             
     def sizeERElement(self, building : Building):
 
@@ -206,13 +140,6 @@ class SwingTankER(SwingTank):
             simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, simRun.tmheating, last_temp, simRun.hw_outSwing[i], mixedT_F, minuteIntervals = minuteIntervals, erCalc=True)
         else:
             simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, simRun.tmheating, last_temp, simRun.hw_outSwing[i], self.storageT_F, minuteIntervals = minuteIntervals, erCalc=True)
-
-        # if simRun.tmT_F[i] < simRun.building.supplyT_F:
-        #     print("hwVol_G",simRun.pV[i-1] + mixedGHW)
-        #     print("simRun.pV[i-1]",simRun.pV[i-1])
-        #     print("simRun.hw_outSwing[i]",simRun.hw_outSwing[i])
-        #     print("i",i)
-        #     print("---------------------------")
 
         simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating,
                                                                                                 Vcurr = simRun.pV[i-1], 
