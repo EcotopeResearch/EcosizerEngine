@@ -34,21 +34,21 @@ class SwingTankER(SwingTank):
         while i < len(simRun.hwDemand):
             if normalFunction:
                 i = self.findNextIndexOfHWDeficit(simRun, i, minuteIntervals = minuteIntervals)
-                print(f"index of HW deficit is {i}")
+                # print(f"index of HW deficit is {i}")
                 if i < len(simRun.hwDemand):
                     normalFunction = False
             else:
                 # get available supply temperature volume in system and pretend it is all in completely stratified swing tank
                 swingV[i-1] = convertVolume(self.TMVol_G, building.supplyT_F, simRun.getIncomingWaterT(i-1), simRun.tmT_F[i-1]) + \
                     convertVolume(simRun.pV[i-1], building.supplyT_F, simRun.getIncomingWaterT(i-1), self.storageT_F)
-                print(f"ok we are in here now, swing vol is {swingV[i-1]} gal at supply temp")
+                # print(f"ok we are in here now, swing vol is {swingV[i-1]} gal at supply temp")
                 # get full hwGeneration rate of swing tank plus hw coming in from primary system
                 fullHWGenRate = (1000 * self.TMCap_kBTUhr / (60/minuteIntervals) /rhoCp / (building.supplyT_F - simRun.getIncomingWaterT(i-1)) * self.defrostFactor) + simRun.hwGenRate
                 recircLossAtTime = (building.recirc_loss / (rhoCp * (building.supplyT_F - simRun.getIncomingWaterT(i)))) / (60/minuteIntervals)
-                print(f"we generate {fullHWGenRate} gal total supply temp water, primary generates {simRun.hwGenRate} of that")
+                # print(f"we generate {fullHWGenRate} gal total supply temp water, primary generates {simRun.hwGenRate} of that")
                 while i < len(simRun.hwDemand) and not normalFunction:
                     waterLeavingSystem = simRun.hwDemand[i] + recircLossAtTime
-                    print(f"at index {i}, we lose {waterLeavingSystem} ({simRun.hwDemand[i]} from demand), meaning a {waterLeavingSystem-fullHWGenRate} gal deficit, so there will be {swingV[i-1] + fullHWGenRate - waterLeavingSystem} in swing")
+                    # print(f"at index {i}, we lose {waterLeavingSystem} ({simRun.hwDemand[i]} from demand), meaning a {waterLeavingSystem-fullHWGenRate} gal deficit, so there will be {swingV[i-1] + fullHWGenRate - waterLeavingSystem} in swing")
                     # if fullHWGenRate >= waterLeavingSystem:
                     if convertVolume(simRun.hwGenRate, self.storageT_F, building.incomingT_F, building.supplyT_F) >= simRun.hwDemand[i]:
                         simRun.pV[i-1] = 0
@@ -56,7 +56,7 @@ class SwingTankER(SwingTank):
                             simRun.tmT_F[i-1] = building.supplyT_F
                         else:
                             simRun.tmT_F[i-1] =  ((swingV[i-1] * (building.supplyT_F - building.incomingT_F))/self.TMVol_G) + building.incomingT_F
-                        print(f"and we are back to normal at index {i}")
+                        # print(f"and we are back to normal at index {i}")
                         normalFunction = True
                         # return
                     else:
@@ -66,15 +66,15 @@ class SwingTankER(SwingTank):
                         i += 1
 
 
-        for i in range(len(swingV)):
-            print(f"{i} swingV: {swingV[i]}, waterDeficit: {waterDeficit[i]}, simRun.pV {simRun.pV[i]}, simRun.tmT_F {simRun.tmT_F[i]}")
-        print("max deficit", max(waterDeficit))
-        print("hour of highest", waterDeficit.index(max(waterDeficit)))
-        print("original self.TMCap_kBTUhr", self.TMCap_kBTUhr)
-        print("simRun.hwGenRate",simRun.hwGenRate)
+        # for i in range(len(swingV)):
+        #     print(f"{i} swingV: {swingV[i]}, waterDeficit: {waterDeficit[i]}, simRun.pV {simRun.pV[i]}, simRun.tmT_F {simRun.tmT_F[i]}")
+        # print("max deficit", max(waterDeficit))
+        # print("hour of highest", waterDeficit.index(max(waterDeficit)))
+        # print("original self.TMCap_kBTUhr", self.TMCap_kBTUhr)
+        # print("simRun.hwGenRate",simRun.hwGenRate)
         self.TMCap_kBTUhr += (max(waterDeficit) * (60/minuteIntervals) * rhoCp * (building.supplyT_F - building.incomingT_F)) / 1000.  # additional ER to compensate
-        print("new self.TMCap_kBTUhr", self.TMCap_kBTUhr)
-        print("///////////////////////////////////////////////////////////////")
+        # print("new self.TMCap_kBTUhr", self.TMCap_kBTUhr)
+        # print("///////////////////////////////////////////////////////////////")
         return
     
     def findNextIndexOfHWDeficit(self, simRun : SimulationRun, i, minuteIntervals = 60, oat = None):

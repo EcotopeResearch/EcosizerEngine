@@ -385,7 +385,7 @@ class SwingTank(SystemConfig):
             # Tnew += hw_out * (primaryStorageT_F - Tcurr) / self.TMVol_G 
             volAtTcurr = self.TMVol_G - hw_out
             if volAtTcurr <= 0:
-                print("here", minuteIntervals)
+                # print("here", minuteIntervals)
                 # we need to do things with more granularity because more water is folowing throught the tank than the tank's volume
                 if minuteIntervals == 1:
                     raise Exception(f"swing tank is undersized. The swing tank must be larger than {hw_out} gallons given the demand of the building.")
@@ -419,13 +419,13 @@ class SwingTank(SystemConfig):
 
         if Tnew < building.supplyT_F: # Check for errors
             if not erCalc:
-                print("primaryStorageT_F", primaryStorageT_F)
-                print("recirc_loss", building.recirc_loss / timeDivisor / rhoCp / self.TMVol_G)
-                print("Tnew", Tnew)
-                print("Tcurr",Tcurr)
-                print("hw_out * (primaryStorageT_F - Tcurr) / self.TMVol_G",hw_out * (primaryStorageT_F - Tcurr) / self.TMVol_G)
-                print("time_running",time_running)
-                print("element_dT",element_dT)
+                # print("primaryStorageT_F", primaryStorageT_F)
+                # print("recirc_loss", building.recirc_loss / timeDivisor / rhoCp / self.TMVol_G)
+                # print("Tnew", Tnew)
+                # print("Tcurr",Tcurr)
+                # print("hw_out * (primaryStorageT_F - Tcurr) / self.TMVol_G",hw_out * (primaryStorageT_F - Tcurr) / self.TMVol_G)
+                # print("time_running",time_running)
+                # print("element_dT",element_dT)
                 raise Exception("The swing tank dropped below the supply temperature! The system is undersized")
             # else:
                 
@@ -514,8 +514,8 @@ class SwingTank(SystemConfig):
                                                                                                 modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
                                                                                                 minuteIntervals = minuteIntervals,
                                                                                                 erCalc = erCalc)
-        if simRun.pV[i] < 0:
-            print(f"simRun.hw_outSwing[{i}] is {simRun.hw_outSwing[i]}, system has {simRun.pV[i-1]} gal and generates {mixedGHW} gal, resuling in {simRun.pV[i]} gal")
+        # if simRun.pV[i] < 0:
+        #     print(f"simRun.hw_outSwing[{i}] is {simRun.hw_outSwing[i]}, system has {simRun.pV[i-1]} gal and generates {mixedGHW} gal, resuling in {simRun.pV[i]} gal")
     
     def getTMOutputCapacity(self, kW = False):
         if kW:
