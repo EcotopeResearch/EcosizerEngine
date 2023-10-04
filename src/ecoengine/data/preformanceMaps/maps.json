@@ -1,5 +1,5 @@
 {
-    "MODELS_AOSmithHPTS50" : {
+    "MODELS_AOSmithHPTS50_MP" : {
         "name" : "AOSmith HPTS 50 gallon",
         "perfmap": [
             {
@@ -19,7 +19,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTS66" : {
+    "MODELS_AOSmithHPTS66_MP" : {
         "name" : "AOSmith HPTS 66 gallon",
         "perfmap": [
             {
@@ -39,7 +39,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTS80" : {
+    "MODELS_AOSmithHPTS80_MP" : {
         "name" : "AOSmith HPTS 80 gallon",
         "perfmap": [
             {
@@ -59,7 +59,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTU50" : {
+    "MODELS_AOSmithHPTU50_MP" : {
         "name" : "AOSmith HPTU 50 gallon",
         "perfmap": [
             {
@@ -79,7 +79,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTU66" : {
+    "MODELS_AOSmithHPTU66_MP" : {
         "name" : "AOSmith HPTU 66 gallon",
         "perfmap": [
             {
@@ -99,7 +99,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTU80" : {
+    "MODELS_AOSmithHPTU80_MP" : {
         "name" : "AOSmith HPTU 80 gallon",
         "perfmap": [
             {
@@ -119,7 +119,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTU80_DR" : {
+    "MODELS_AOSmithHPTU80_DR_MP" : {
         "name" : "AOSmith HPTU 80 gallon DR",
         "perfmap": [
             {
@@ -154,7 +154,7 @@
             }
         ]
     },
-    "MODELS_BWC2020_65" : {
+    "MODELS_BWC2020_65_MP" : {
         "name" : "Bradford White 2020 65 gallon unit",
         "perfmap": [
             {
@@ -301,7 +301,7 @@
             }
         ]
     },
-    "MODELS_GE2014" : {
+    "MODELS_GE2014_MP" : {
         "name" : "GE 2014 model run in efficiency mode",
         "perfmap": [
             {
@@ -316,7 +316,7 @@
             }
         ]
     },
-    "MODELS_GE2014_80" : {
+    "MODELS_GE2014_80_MP" : {
         "name" : "GE 2014 model run in efficiency mode, 80 gallon unit",
         "perfmap": [
             {
@@ -331,7 +331,7 @@
             }
         ]
     },
-    "MODELS_GE2014STDMode" : {
+    "MODELS_GE2014STDMode_MP" : {
         "name" : "GE 2014 model run in standard mode",
         "perfmap": [
             {
@@ -346,7 +346,7 @@
             }
         ]
     },
-    "MODELS_GE2014STDMode_80" : {
+    "MODELS_GE2014STDMode_80_MP" : {
         "name" : "GE 2014 model run in standard mode, 80 gallon unit",
         "perfmap": [
             {
@@ -494,7 +494,7 @@
                 9.78042E-05, -0.000872708,-0.001013945, -0.00021852,	5.55444E-06]
             }
     ]},
-    "MODELS_RheemHB50" : {
+    "MODELS_RheemHB50_MP" : {
         "name" : "Rheem 2014 Model",
         "perfmap": [
             {
@@ -508,7 +508,7 @@
                 "COP_coeffs" : [6.3, -0.03, 0.0]
             }
     ]},
-    "MODELS_RheemHBDR2250" : {
+    "MODELS_RheemHBDR2250_MP" : {
         "name" : "Rheem HB Duct Ready 50 gallon, 2250 W resistance",
         "perfmap": [
             {
@@ -528,7 +528,7 @@
             }
         ]
     },
-    "MODELS_RheemHBDR4550" : {
+    "MODELS_RheemHBDR4550_MP" : {
         "name" : "Rheem HB Duct Ready 50 gallon, 4500 W resistance",
         "perfmap": [
             {
@@ -548,7 +548,7 @@
             }
         ]
     },
-    "MODELS_RheemHBDR2265" : {
+    "MODELS_RheemHBDR2265_MP" : {
         "name" : "Rheem HB Duct Ready 65 gallon, 2250 W resistance",
         "perfmap": [
             {
@@ -568,7 +568,7 @@
             }
         ]
     },
-    "MODELS_RheemHBDR4565" : {
+    "MODELS_RheemHBDR4565_MP" : {
         "name" : "Rheem HB Duct Ready 65 gallon, 4500 W resistance",
         "perfmap": [
             {
@@ -588,7 +588,7 @@
             }
         ]
     },
-    "MODELS_RheemHBDR2280" : {
+    "MODELS_RheemHBDR2280_MP" : {
         "name" : "Rheem HB Duct Ready 80 gallon, 2250 W resistance",
         "perfmap": [
             {
@@ -608,7 +608,7 @@
             }
         ]
     },
-    "MODELS_RheemHBDR4580" : {
+    "MODELS_RheemHBDR4580_MP" : {
         "name" : "Rheem HB Duct Ready 80 gallon, 4500 W resistance",
         "perfmap": [
             {
@@ -664,7 +664,7 @@
             "COP_coeffs" : [5.0207181209, 0.0442525790, -0.0418284882, 0.0000793531, 0.0001132421, -0.0002491563]
         }
     ]},
-    "MODELS_RheemPlugInDedicated40" : {
+    "MODELS_RheemPlugInDedicated40_MP" : {
         "name" : "Rheem 120V Dedicated-Circuit, 40 gallon",
         "perfmap": [
             {
@@ -679,7 +679,7 @@
             }
         ]
     },
-    "MODELS_RheemPlugInDedicated50" : {
+    "MODELS_RheemPlugInDedicated50_MP" : {
         "name" : "Rheem 120V Dedicated-Circuit, 50 gallon",
         "perfmap": [
             {
@@ -694,7 +694,7 @@
             }
         ]
     },
-    "MODELS_RheemPlugInShared40" : {
+    "MODELS_RheemPlugInShared40_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 40 gallon",
         "perfmap": [
             {
@@ -709,7 +709,7 @@
             }
         ]
     },
-    "MODELS_RheemPlugInShared50" : {
+    "MODELS_RheemPlugInShared50_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 50 gallon",
         "perfmap": [
             {
@@ -724,7 +724,7 @@
             }
         ]
     },
-    "MODELS_RheemPlugInShared65" : {
+    "MODELS_RheemPlugInShared65_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 65 gallon",
         "perfmap": [
             {
@@ -739,7 +739,7 @@
             }
         ]
     },
-    "MODELS_RheemPlugInShared80" : {
+    "MODELS_RheemPlugInShared80_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 80 gallon",
         "perfmap": [
             {
@@ -754,7 +754,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Build40 " : {
+    "MODELS_Rheem2020Build40_MP" : {
         "name" : "Rheem 2020 Builder, 40 gallon",
         "perfmap": [
             {
@@ -769,7 +769,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Build50 " : {
+    "MODELS_Rheem2020Build50_MP" : {
         "name" : "Rheem 2020 Builder, 50 gallon",
         "perfmap": [
             {
@@ -784,7 +784,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Build65 " : {
+    "MODELS_Rheem2020Build65_MP" : {
         "name" : "Rheem 2020 Builder, 65 gallon",
         "perfmap": [
             {
@@ -799,7 +799,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Build80 " : {
+    "MODELS_Rheem2020Build80_MP" : {
         "name" : "Rheem 2020 Builder, 80 gallon",
         "perfmap": [
             {
@@ -814,7 +814,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Prem40" : {
+    "MODELS_Rheem2020Prem40_MP" : {
         "name" : "Rheem 2020 Premium, 40 gallon",
         "perfmap": [
             {
@@ -829,7 +829,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Prem50" : {
+    "MODELS_Rheem2020Prem50_MP" : {
         "name" : "Rheem 2020 Premium, 50 gallon",
         "perfmap": [
             {
@@ -844,7 +844,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Prem65" : {
+    "MODELS_Rheem2020Prem65_MP" : {
         "name" : "Rheem 2020 Premium, 65 gallon",
         "perfmap": [
             {
@@ -859,7 +859,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Prem80" : {
+    "MODELS_Rheem2020Prem80_MP" : {
         "name" : "Rheem 2020 Premium, 80 gallon",
         "perfmap": [
             {
@@ -874,7 +874,7 @@
             }
         ]
     },
-    "MODELS_SANCO2_43" : {
+    "MODELS_SANCO2_43_MP" : {
         "name" : "SANCO2 43 gallon CO2 external heat pump",
         "perfmap": [
             {
@@ -905,7 +905,7 @@
         ]
     },
     "MODELS_SANCO2_GS3_45HPA_US_SP" : {
-        "name" : "SANCO2 80 gallon CO2 external heat pump",
+        "name" : "SANCO2 GS3",
         "perfmap": [
             {
                 "T_F" : 17,
@@ -934,7 +934,7 @@
             }
         ]
     },
-    "MODELS_SANCO2_83" : {
+    "MODELS_SANCO2_83_MP" : {
         "name" : "SANCO2 83 gallon CO2 external heat pump",
         "perfmap": [
             {
@@ -964,7 +964,7 @@
             }
         ]
     },
-    "MODELS_SANCO2_119" : {
+    "MODELS_SANCO2_119_MP" : {
         "name" : "SANCO2 120 gallon CO2 external heat pump",
         "perfmap": [
             {
@@ -994,7 +994,7 @@
             }
         ]
     },
-    "MODELS_Stiebel220E" : {
+    "MODELS_Stiebel220E_MP" : {
         "name" : "Stiebel Eltron",
         "perfmap": [
             {
@@ -1009,7 +1009,7 @@
             }
         ]
     },
-    "MODELS_VOLTEX60" : {
+    "MODELS_VOLTEX60_MP" : {
         "name" : "Voltex 60 gallon HPWH",
         "perfmap": [
             {
@@ -1024,7 +1024,7 @@
             }
         ]
     },
-    "MODELS_VOLTEX80" : {
+    "MODELS_VOLTEX80_MP" : {
         "name" : "Voltex 80 gallon HPWH",
         "perfmap": [
             {
