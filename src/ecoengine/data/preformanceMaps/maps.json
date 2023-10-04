@@ -1,4 +1,139 @@
 {
+    "MODELS_AOSmithHPTS50" : {
+        "name" : "AOSmith HPTS 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [66.82, 2.49, 0.0],
+                "COP_coeffs" : [8.64, -0.0436, 0.0]
+            },
+            {
+                "T_F" : 67.5,
+                "inputPower_coeffs" : [85.1, 2.38, 0.0],
+                "COP_coeffs" : [10.82, -0.0551, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [89, 2.62, 0.0],
+                "COP_coeffs" : [12.52, -0.0534, 0.0]
+            }
+        ]
+    },
+    "MODELS_AOSmithHPTS66" : {
+        "name" : "AOSmith HPTS 66 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [66.82, 2.49, 0.0],
+                "COP_coeffs" : [8.64, -0.0436, 0.0]
+            },
+            {
+                "T_F" : 67.5,
+                "inputPower_coeffs" : [85.1, 2.38, 0.0],
+                "COP_coeffs" : [10.82, -0.0551, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [89, 2.62, 0.0],
+                "COP_coeffs" : [12.52, -0.0534, 0.0]
+            }
+        ]
+    },
+    "MODELS_AOSmithHPTS80" : {
+        "name" : "AOSmith HPTS 80 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [66.82, 2.49, 0.0],
+                "COP_coeffs" : [8.64, -0.0436, 0.0]
+            },
+            {
+                "T_F" : 67.5,
+                "inputPower_coeffs" : [85.1, 2.38, 0.0],
+                "COP_coeffs" : [10.82, -0.0551, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [89, 2.62, 0.0],
+                "COP_coeffs" : [12.52, -0.0534, 0.0]
+            }
+        ]
+    },
+    "MODELS_AOSmithHPTU50" : {
+        "name" : "AOSmith HPTU 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ]
+    },
+    "MODELS_AOSmithHPTU66" : {
+        "name" : "AOSmith HPTU 66 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ]
+    },
+    "MODELS_AOSmithHPTU80" : {
+        "name" : "AOSmith HPTU 80 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ]
+    },
+    "MODELS_AOSmithHPTU80_DR" : {
+        "name" : "AOSmith HPTU 80 gallon DR",
+        "perfmap": [
+            {
+                "T_F" : 47,
+                "inputPower_coeffs" : [142.6, 2.152, 0.0],
+                "COP_coeffs" : [6.989258, -0.038320, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [120.14, 2.513, 0.0],
+                "COP_coeffs" : [8.188, -0.0432, 0.0]
+            }
+        ]
+    },
     "MODELS_AOSmithCAHP120_MP" : {
         "name" : "AOSmith CAHP 120 gallon Commercial Grade",
         "perfmap": [
@@ -16,6 +151,21 @@
                 "T_F" : 95,
                 "inputPower_coeffs" : [2276.0625, -7.106608, 0.119911],
                 "COP_coeffs" : [8.821262, -0.042059, 0.0]
+            }
+        ]
+    },
+    "MODELS_BWC2020_65" : {
+        "name" : "Bradford White 2020 65 gallon unit",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [187.064124, 1.939747, 0.0],
+                "COP_coeffs" : [5.4977772, -0.0243008, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [148.0418, 2.553291, 0.0],
+                "COP_coeffs" : [7.207307, -0.0335265, 0.0]
             }
         ]
     },
@@ -151,6 +301,66 @@
             }
         ]
     },
+    "MODELS_GE2014" : {
+        "name" : "GE 2014 model run in efficiency mode",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [187.064124, 1.939747, 0.0],
+                "COP_coeffs" : [5.4977772, -0.0243008, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [148.0418, 2.553291, 0.0],
+                "COP_coeffs" : [7.207307, -0.0335265, 0.0]
+            }
+        ]
+    },
+    "MODELS_GE2014_80" : {
+        "name" : "GE 2014 model run in efficiency mode, 80 gallon unit",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [187.064124, 1.939747, 0.0],
+                "COP_coeffs" : [5.4977772, -0.0243008, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [148.0418, 2.553291, 0.0],
+                "COP_coeffs" : [7.207307, -0.0335265, 0.0]
+            }
+        ]
+    },
+    "MODELS_GE2014STDMode" : {
+        "name" : "GE 2014 model run in standard mode",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [187.064124, 1.939747, 0.0],
+                "COP_coeffs" : [5.4977772, -0.0243008, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [148.0418, 2.553291, 0.0],
+                "COP_coeffs" : [7.207307, -0.0335265, 0.0]
+            }
+        ]
+    },
+    "MODELS_GE2014STDMode_80" : {
+        "name" : "GE 2014 model run in standard mode, 80 gallon unit",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [187.064124, 1.939747, 0.0],
+                "COP_coeffs" : [5.4977772, -0.0243008, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [148.0418, 2.553291, 0.0],
+                "COP_coeffs" : [7.207307, -0.0335265, 0.0]
+            }
+        ]
+    },
     "MODELS_Mitsubishi_QAHV" : {
         "name" : "Mitsubishi QAHV"
     },
@@ -276,14 +486,148 @@
     "MODELS_NyleC250A_C_SP" : {
         "name" : "Nyle C250A (Cold Weather Package) in Single Pass Mode",
         "perfmap": [
-        {
-            "T_F" : 90,
-            "inputPower_coeffs" : [18.58007733, -0.215324777, -0.089782421,	0.01503161,	0.000332503,	0.000274216,
-            2.70498E-05,	0.001387914,	0.000449199,	0.000829578, -5.28641E-06],
-            "COP_coeffs" : [-0.629432348,	0.181466663,	0.00044047,	0.012104957, -6.61515E-05,	9.29975E-05,	
-            9.78042E-05, -0.000872708,-0.001013945, -0.00021852,	5.55444E-06]
-        }
+            {
+                "T_F" : 90,
+                "inputPower_coeffs" : [18.58007733, -0.215324777, -0.089782421,	0.01503161,	0.000332503,	0.000274216,
+                2.70498E-05,	0.001387914,	0.000449199,	0.000829578, -5.28641E-06],
+                "COP_coeffs" : [-0.629432348,	0.181466663,	0.00044047,	0.012104957, -6.61515E-05,	9.29975E-05,	
+                9.78042E-05, -0.000872708,-0.001013945, -0.00021852,	5.55444E-06]
+            }
     ]},
+    "MODELS_RheemHB50" : {
+        "name" : "Rheem 2014 Model",
+        "perfmap": [
+            {
+                "T_F" : 47,
+                "inputPower_coeffs" : [280, 4.97342, 0.0],
+                "COP_coeffs" : [5.634009, -0.029485, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [280, 5.35992, 0.0],
+                "COP_coeffs" : [6.3, -0.03, 0.0]
+            }
+    ]},
+    "MODELS_RheemHBDR2250" : {
+        "name" : "Rheem HB Duct Ready 50 gallon, 2250 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ]
+    },
+    "MODELS_RheemHBDR4550" : {
+        "name" : "Rheem HB Duct Ready 50 gallon, 4500 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ]
+    },
+    "MODELS_RheemHBDR2265" : {
+        "name" : "Rheem HB Duct Ready 65 gallon, 2250 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ]
+    },
+    "MODELS_RheemHBDR4565" : {
+        "name" : "Rheem HB Duct Ready 65 gallon, 4500 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ]
+    },
+    "MODELS_RheemHBDR2280" : {
+        "name" : "Rheem HB Duct Ready 80 gallon, 2250 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ]
+    },
+    "MODELS_RheemHBDR4580" : {
+        "name" : "Rheem HB Duct Ready 80 gallon, 4500 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ]
+    },
     "MODELS_RHEEM_HPHD60HNU_201_MP" : {
         "name" : "Rheem MP 60 kBtu HNU",
         "perfmap": [
@@ -320,8 +664,218 @@
             "COP_coeffs" : [5.0207181209, 0.0442525790, -0.0418284882, 0.0000793531, 0.0001132421, -0.0002491563]
         }
     ]},
-    "MODELS_SANCO2_GS3_45HPA_US_SP" : {
-        "name" : "SANCO2 GS3",
+    "MODELS_RheemPlugInDedicated40" : {
+        "name" : "Rheem 120V Dedicated-Circuit, 40 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [528.91, 4.8988, 0.0],
+                "COP_coeffs" : [4.3943, -0.012443, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [494.03, 7.7266, 0.0],
+                "COP_coeffs" : [5.48189, -0.01604, 0.0]
+            }
+        ]
+    },
+    "MODELS_RheemPlugInDedicated50" : {
+        "name" : "Rheem 120V Dedicated-Circuit, 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [528.91, 4.8988, 0.0],
+                "COP_coeffs" : [4.3943, -0.012443, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [494.03, 7.7266, 0.0],
+                "COP_coeffs" : [5.48189, -0.01604, 0.0]
+            }
+        ]
+    },
+    "MODELS_RheemPlugInShared40" : {
+        "name" : "Rheem 120V Shared-Circuit, 40 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ]
+    },
+    "MODELS_RheemPlugInShared50" : {
+        "name" : "Rheem 120V Shared-Circuit, 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ]
+    },
+    "MODELS_RheemPlugInShared65" : {
+        "name" : "Rheem 120V Shared-Circuit, 65 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ]
+    },
+    "MODELS_RheemPlugInShared80" : {
+        "name" : "Rheem 120V Shared-Circuit, 80 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ]
+    },
+    "MODELS_Rheem2020Build40 " : {
+        "name" : "Rheem 2020 Builder, 40 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [220.0, 0.8743, 0.00454],
+                "COP_coeffs" : [7.96064, -0.0448, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [8.45936, -0.04539, 0.0]
+            }
+        ]
+    },
+    "MODELS_Rheem2020Build50 " : {
+        "name" : "Rheem 2020 Builder, 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [220.0, 0.8743, 0.00454],
+                "COP_coeffs" : [7.96064, -0.0448, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [8.45936, -0.04539, 0.0]
+            }
+        ]
+    },
+    "MODELS_Rheem2020Build65 " : {
+        "name" : "Rheem 2020 Builder, 65 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [220.0, 0.8743, 0.00454],
+                "COP_coeffs" : [7.96064, -0.0448, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [8.45936, -0.04539, 0.0]
+            }
+        ]
+    },
+    "MODELS_Rheem2020Build80 " : {
+        "name" : "Rheem 2020 Builder, 80 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [220.0, 0.8743, 0.00454],
+                "COP_coeffs" : [7.96064, -0.0448, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [8.45936, -0.04539, 0.0]
+            }
+        ]
+    },
+    "MODELS_Rheem2020Prem40" : {
+        "name" : "Rheem 2020 Premium, 40 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ]
+    },
+    "MODELS_Rheem2020Prem50" : {
+        "name" : "Rheem 2020 Premium, 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ]
+    },
+    "MODELS_Rheem2020Prem65" : {
+        "name" : "Rheem 2020 Premium, 65 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ]
+    },
+    "MODELS_Rheem2020Prem80" : {
+        "name" : "Rheem 2020 Premium, 80 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ]
+    },
+    "MODELS_SANCO2_43" : {
+        "name" : "SANCO2 43 gallon CO2 external heat pump",
         "perfmap": [
             {
                 "T_F" : 17,
@@ -347,6 +901,141 @@
                 "T_F" : 95,
                 "inputPower_coeffs" : [790, 2, 0.0],
                 "COP_coeffs" : [7.15, -0.04, 0.0]
+            }
+        ]
+    },
+    "MODELS_SANCO2_GS3_45HPA_US_SP" : {
+        "name" : "SANCO2 80 gallon CO2 external heat pump",
+        "perfmap": [
+            {
+                "T_F" : 17,
+                "inputPower_coeffs" : [1650, 5.5, 0.0],
+                "COP_coeffs" : [3.2, -0.015, 0.0]
+            },
+            {
+                "T_F" : 35,
+                "inputPower_coeffs" : [1100, 4.0, 0.0],
+                "COP_coeffs" : [3.7, -0.015, 0.0]
+            },
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [880, 3.1, 0.0],
+                "COP_coeffs" : [5.25, -0.025, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [740, 4.0, 0.0],
+                "COP_coeffs" : [6.2, -0.03, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [790, 2, 0.0],
+                "COP_coeffs" : [7.15, -0.04, 0.0]
+            }
+        ]
+    },
+    "MODELS_SANCO2_83" : {
+        "name" : "SANCO2 83 gallon CO2 external heat pump",
+        "perfmap": [
+            {
+                "T_F" : 17,
+                "inputPower_coeffs" : [1650, 5.5, 0.0],
+                "COP_coeffs" : [3.2, -0.015, 0.0]
+            },
+            {
+                "T_F" : 35,
+                "inputPower_coeffs" : [1100, 4.0, 0.0],
+                "COP_coeffs" : [3.7, -0.015, 0.0]
+            },
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [880, 3.1, 0.0],
+                "COP_coeffs" : [5.25, -0.025, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [740, 4.0, 0.0],
+                "COP_coeffs" : [6.2, -0.03, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [790, 2, 0.0],
+                "COP_coeffs" : [7.15, -0.04, 0.0]
+            }
+        ]
+    },
+    "MODELS_SANCO2_119" : {
+        "name" : "SANCO2 120 gallon CO2 external heat pump",
+        "perfmap": [
+            {
+                "T_F" : 17,
+                "inputPower_coeffs" : [1650, 5.5, 0.0],
+                "COP_coeffs" : [3.2, -0.015, 0.0]
+            },
+            {
+                "T_F" : 35,
+                "inputPower_coeffs" : [1100, 4.0, 0.0],
+                "COP_coeffs" : [3.7, -0.015, 0.0]
+            },
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [880, 3.1, 0.0],
+                "COP_coeffs" : [5.25, -0.025, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [740, 4.0, 0.0],
+                "COP_coeffs" : [6.2, -0.03, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [790, 2, 0.0],
+                "COP_coeffs" : [7.15, -0.04, 0.0]
+            }
+        ]
+    },
+    "MODELS_Stiebel220E" : {
+        "name" : "Stiebel Eltron",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [295.55337, 2.28518, 0.0],
+                "COP_coeffs" : [5.744118, -0.025946, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [282.2126, 2.82001, 0.0],
+                "COP_coeffs" : [8.012112, -0.039394, 0.0]
+            }
+        ]
+    },
+    "MODELS_VOLTEX60" : {
+        "name" : "Voltex 60 gallon HPWH",
+        "perfmap": [
+            {
+                "T_F" : 47,
+                "inputPower_coeffs" : [467.0, 2.81, 0.0072],
+                "COP_coeffs" : [4.86, -0.0222, -0.00001]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [541.0, 1.47, 0.0176],
+                "COP_coeffs" : [6.58, -0.0392, 0.0000407]
+            }
+        ]
+    },
+    "MODELS_VOLTEX80" : {
+        "name" : "Voltex 80 gallon HPWH",
+        "perfmap": [
+            {
+                "T_F" : 47,
+                "inputPower_coeffs" : [467.0, 2.81, 0.0072],
+                "COP_coeffs" : [4.86, -0.0222, -0.00001]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [541.0, 1.47, 0.0176],
+                "COP_coeffs" : [6.58, -0.0392, 0.0000407]
             }
         ]
     }
