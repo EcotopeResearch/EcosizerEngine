@@ -377,13 +377,24 @@ class SwingTank(SystemConfig):
 
         timeDivisor = 60 // minuteIntervals
 
-        # Take out the recirc losses
-        Tnew = Tcurr - building.recirc_loss / timeDivisor / rhoCp / self.TMVol_G
-        element_dT = self.TMCap_kBTUhr * 1000  / timeDivisor / rhoCp / self.TMVol_G
+        Tnew = Tcurr 
 
         # Add in heat for a draw
         if hw_out:
-            Tnew += hw_out * (primaryStorageT_F - Tcurr) / self.TMVol_G 
+            volAtTcurr = self.TMVol_G - hw_out
+            if volAtTcurr <= 0:
+                # we need to do things with more granularity because more water is folowing throught the tank than the tank's volume
+                if minuteIntervals == 1:
+                    raise Exception(f"swing tank is undersized. The swing tank must be larger than {hw_out} gallons given the demand of the building.")
+                swingRun = [0] * minuteIntervals
+                for i in range(minuteIntervals):
+                    swingheating, Tnew, swingRun[i] = self._runOneSwingStep(building, swingheating, Tnew, hw_out/minuteIntervals, primaryStorageT_F, 1)
+                return swingheating, Tnew, sum(swingRun)
+            else:
+                Tnew = ((hw_out * primaryStorageT_F) + (Tcurr * volAtTcurr)) / self.TMVol_G
+
+        Tnew -= building.recirc_loss / timeDivisor / rhoCp / self.TMVol_G
+        element_dT = self.TMCap_kBTUhr * 1000  / timeDivisor / rhoCp / self.TMVol_G
         
         # Check if the element is heating
         if swingheating:
@@ -392,20 +403,20 @@ class SwingTank(SystemConfig):
 
             # Check if the element should turn off
             if Tnew > building.supplyT_F + self.element_deadband_F: # If too hot
-                time_over = (Tnew - (building.supplyT_F + self.element_deadband_F)) / element_dT # Temp below turn on / rate of element heating gives time above trigger plus deadband
+                time_over = min((Tnew - (building.supplyT_F + self.element_deadband_F)) / element_dT,1) # Temp below turn on / rate of element heating gives time above trigger plus deadband
                 Tnew -= element_dT * time_over # Make full with miss volume
                 time_running = (1-time_over)
                 swingheating = False
 
         elif Tnew <= building.supplyT_F: # If the element should turn on
-            time_missed = (building.supplyT_F - Tnew)/element_dT # Temp below turn on / rate of element heating gives time below tigger
+            time_missed = min((building.supplyT_F - Tnew)/element_dT, 1) # Temp below turn on / rate of element heating gives time below tigger
             Tnew += element_dT * time_missed # Start heating 
             time_running = time_missed
             swingheating = True # Start heating
 
         if Tnew < building.supplyT_F: # Check for errors
             raise Exception("The swing tank dropped below the supply temperature! The system is undersized")
-        
+                
         # multiply time_running to reflect the time durration of the interval.
         time_run = time_running * minuteIntervals
 
