@@ -11,7 +11,8 @@ from plotly.graph_objs import Figure, Scatter
 class SystemConfig:
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building : Building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
+                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
+                 PCap_kBTUhr = None, ignoreShortCycleEr = False):
         # check inputs. Schedule not checked because it is checked elsewhere
         self._checkInputs(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent)
         self.doLoadShift = doLoadShift
@@ -21,6 +22,7 @@ class SystemConfig:
         self.compRuntime_hr = compRuntime_hr
         self.aquaFract = aquaFract
         self.loadUpHours = None
+        self.ignoreShortCycleEr = ignoreShortCycleEr
 
         if doLoadShift:
             self._setLoadShift(loadShiftSchedule, loadUpHours, aquaFract, aquaFractLoadUp, aquaFractShed, storageT_F, loadUpT_F, loadShiftPercent)
@@ -440,9 +442,10 @@ class SystemConfig:
 
         if minRunVol_G > cyclingVol_G:
             min_AF = minRunVol_G / totalVolAtStorage + (1 - self.percentUseable)
-            if min_AF < 1:
+            if min_AF < 1 and not self.ignoreShortCycleEr:
                 raise ValueError("01", "The aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: ", round(min_AF,3))
-            raise ValueError("02", "The minimum aquastat fraction is greater than 1. This is due to the storage efficency and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )
+            elif min_AF >= 1:
+                raise ValueError("02", "The minimum aquastat fraction is greater than 1. This is due to the storage efficency and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )
 
         
         # Return the temperature adjusted total volume ########################
@@ -849,9 +852,9 @@ class SystemConfig:
 class Primary(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None):
+                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, ignoreShortCycleEr = False):
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, doLoadShift, 
                 loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, systemModel, 
-                numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr)
+                numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr)
 
 

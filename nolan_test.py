@@ -2,98 +2,41 @@ from ecoengine import EcosizerEngine, getListOfModels, SimulationRun, getAnnualS
 import time
 import math
 
-# hpwh = EcosizerEngine(
-# incomingT_F = 50.0,
-# magnitudeStat = 1,
-# supplyT_F = 110.0,
-# storageT_F = 165.0,
-# percentUseable = 0.85,
-# aquaFract = 0.45,
-# aquaFractLoadUp = None,
-# aquaFractShed = None,
-# loadUpT_F = None,
-# loadUpHours = None,
-# schematic = "swingtank",
-# buildingType  = "multi_family",
-# returnT_F = 100,
-# flowRate = 8.0,
-# loadshape = [0.07272037, 0.03588551, 0.01756301, 0.02060094, 0.00778469, 0.00830683,
-#  0.00028481, 0.01571178, 0.03484122, 0.08401766, 0.06925523, 0.05135995
-# , 0.03213557, 0.03137609, 0.05957184, 0.05197703, 0.06223003, 0.05150235
-# , 0.08112213, 0.05207196, 0.04452461, 0.02829069, 0.04480942, 0.0420563],
-# avgLoadshape =[0.07272037, 0.03588551, 0.01756301, 0.02060094, 0.00778469, 0.00830683
-# , 0.00028481, 0.01571178, 0.03484122, 0.08401766, 0.06925523, 0.05135995
-# , 0.03213557, 0.03137609, 0.05957184, 0.05197703, 0.06223003, 0.05150235
-# , 0.08112213, 0.05207196, 0.04452461, 0.02829069, 0.04480942, 0.0420563],
-# gpdpp = 21067.0,
-# nBR = None,
-# safetyTM = 1.75,
-# defrostFactor  = 1.0,
-# compRuntime_hr = 16,
-# nApt = 1,
-# Wapt = None,
-# setpointTM_F = 135.0,
-# TMonTemp_F = 125.0,
-# offTime_hr = 0.33,
-# standardGPD = None,
-# loadShiftSchedule = [],
-# doLoadShift   = False,
-# loadShiftPercent = None
-# )
-#########################################################################################################
-rhoCp = 8.353535 
-W_TO_BTUHR = 3.412142
-W_TO_BTUMIN = W_TO_BTUHR/60.
-W_TO_TONS = 0.000284345
-TONS_TO_KBTUHR = 12.
-watt_per_gal_recirc_factor = 100 
-KWH_TO_BTU = 3412.14
-RECIRC_LOSS_MAX_BTUHR = 1080 * (watt_per_gal_recirc_factor * W_TO_BTUHR)
-
-
-# regular sizing and 3 day simulation
-aquaFractLoadUp = 0.2
-aquaFractShed   = 0.8
-storageT_F = 150
-loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1] #assume this loadshape for annual simulation every day
-csvCreate = False
-hpwhModel ='MODELS_Mitsubishi_QAHV'
-tmModel ='MODELS_Mitsubishi_QAHV'
-minuteIntervals = 15
-sizingSchematic = 'singlepass_norecirc'
-simSchematic = 'singlepass_rtp'
-
-def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, start_vol):
-    csv_filename = f'{simSchematic}_LS_simResult_{hpwhModel}.csv'
-    if loadshift_title == False:
-        csv_filename = f'{simSchematic}_NON_LS_simResult_{hpwhModel}.csv'
-    simRun.writeCSV(csv_filename)
-
 hpwh_for_sizing = EcosizerEngine(
-            incomingT_F     = 50,
-            magnitudeStat  = 150,
-            supplyT_F       = 120,
-            storageT_F      = storageT_F,
-            loadUpT_F       = storageT_F + 10,
-            percentUseable  = 0.85, 
-            aquaFract       = 0.4, 
-            aquaFractLoadUp = aquaFractLoadUp,
-            aquaFractShed   = aquaFractShed,
-            schematic       = sizingSchematic, 
-            buildingType   = 'multi_family',
-            returnT_F       = 0, 
-            flowRate       = 0,
-            gpdpp           = 25,
-            safetyTM        = 1.75,
-            defrostFactor   = 1, 
-            compRuntime_hr  = 16, 
-            nApt            = 110, 
-            Wapt            = 60,
-            loadShiftSchedule        = loadShiftSchedule,
-            loadUpHours     = 3,
-            doLoadShift     = True,
-            loadShiftPercent       = 1
-        )
+    incomingT_F = 50.0,
+    magnitudeStat = 1,
+    supplyT_F = 110.0,
+    storageT_F = 165.0,
+    percentUseable = 0.85,
+    aquaFract = 0.45,
+    aquaFractLoadUp = None,
+    aquaFractShed = None,
+    loadUpT_F = None,
+    loadUpHours = None,
+    schematic = "swingtank",
+    buildingType  = "multi_family",
+    returnT_F = 100,
+    flowRate = 8.0,
+    loadshape = [0.07272037, 0.03588551, 0.01756301, 0.02060094, 0.00778469, 0.00830683,
+    0.00028481, 0.01571178, 0.03484122, 0.08401766, 0.06925523, 0.05135995
+    , 0.03213557, 0.03137609, 0.05957184, 0.05197703, 0.06223003, 0.05150235
+    , 0.08112213, 0.05207196, 0.04452461, 0.02829069, 0.04480942, 0.0420563],
+    gpdpp = 21067.0,
+    nBR = None,
+    safetyTM = 1.75,
+    defrostFactor  = 1.0,
+    compRuntime_hr = 16,
+    nApt = 1,
+    Wapt = None,
+    setpointTM_F = 135.0,
+    TMonTemp_F = 125.0,
+    offTime_hr = 0.33,
+    standardGPD = None,
+    loadShiftSchedule = [],
+    doLoadShift   = False,
+    loadShiftPercent = None,
+    ignoreShortCycleEr = True
+)
 
 print('+++++++++++++++++++++++++++++++++++++++')
 print('SIZING RESULTS')
@@ -101,90 +44,153 @@ print('+++++++++++++++++++++++++++++++++++++++')
 print('recirc loss', hpwh_for_sizing.building.recirc_loss)
 PVol_G_atStorageT = hpwh_for_sizing.getSizingResults()[0] 
 PCap_kBTUhr = hpwh_for_sizing.getSizingResults()[1] 
-if simSchematic == 'multipass' or simSchematic == 'primaryrecirc':
-    PCap_kBTUhr += (hpwh_for_sizing.building.recirc_loss * 1.75 / 1000)
 print('PVol_G_atStorageT = ',PVol_G_atStorageT)
 print('PCap_kBTUhr = ',PCap_kBTUhr)
+#########################################################################################################
+# rhoCp = 8.353535 
+# W_TO_BTUHR = 3.412142
+# W_TO_BTUMIN = W_TO_BTUHR/60.
+# W_TO_TONS = 0.000284345
+# TONS_TO_KBTUHR = 12.
+# watt_per_gal_recirc_factor = 100 
+# KWH_TO_BTU = 3412.14
+# RECIRC_LOSS_MAX_BTUHR = 1080 * (watt_per_gal_recirc_factor * W_TO_BTUHR)
 
-if csvCreate:
-    #test plot output
-    fig = hpwh_for_sizing.plotSizingCurve()
-    fig.write_html('Z:\\sizingplotTEST.html')
-##########################################################################################
-start_time = time.time()
-simRun_from_sized = hpwh_for_sizing.getSimRun()
 
-end_time = time.time()
-duration = end_time - start_time
-print("Execution time for simple simulation run:", duration, "seconds")
+# # regular sizing and 3 day simulation
+# aquaFractLoadUp = 0.2
+# aquaFractShed   = 0.8
+# storageT_F = 150
+# loadShiftSchedule        = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1] #assume this loadshape for annual simulation every day
+# csvCreate = False
+# hpwhModel ='MODELS_Mitsubishi_QAHV'
+# tmModel ='MODELS_Mitsubishi_QAHV'
+# minuteIntervals = 15
+# sizingSchematic = 'singlepass_norecirc'
+# simSchematic = 'singlepass_rtp'
 
-print('+++++++++++++++++++++++++++++++++++++++')
-print('SIZING RESULTS')
-print('+++++++++++++++++++++++++++++++++++++++')
-print('recirc loss', hpwh_for_sizing.building.recirc_loss)
-PVol_G_atStorageT = hpwh_for_sizing.getSizingResults()[0] 
-PCap_kBTUhr = hpwh_for_sizing.getSizingResults()[1] 
-if simSchematic == 'multipass' or simSchematic == 'primaryrecirc':
-    PCap_kBTUhr += (hpwh_for_sizing.building.recirc_loss * 1.75 / 1000)
-print('PVol_G_atStorageT = ',PVol_G_atStorageT)
-print('PCap_kBTUhr = ',PCap_kBTUhr)
-print('Vtrig_normal = ',hpwh_for_sizing.system.Vtrig_normal)
-print('Vtrig_shed = ',hpwh_for_sizing.system.Vtrig_shed)
-print('Vtrig_loadUp = ',hpwh_for_sizing.system.Vtrig_loadUp)
+# def createCSV(simRun : SimulationRun, simSchematic, kGperkWh, loadshift_title, start_vol):
+#     csv_filename = f'{simSchematic}_LS_simResult_{hpwhModel}.csv'
+#     if loadshift_title == False:
+#         csv_filename = f'{simSchematic}_NON_LS_simResult_{hpwhModel}.csv'
+#     simRun.writeCSV(csv_filename)
 
-TMVol_G = None
-TMCap_kW = None
-if sizingSchematic == 'swingtank' or sizingSchematic == 'paralleltank':
-    TMVol_G = hpwh_for_sizing.getSizingResults()[2] 
-    TMCap_kW = hpwh_for_sizing.getSizingResults()[3]/W_TO_BTUHR
-    print('TMVol_G = ',TMVol_G)
-    print('TMCap_kW = ',TMCap_kW)
-print('+++++++++++++++++++++++++++++++++++++++')
+# hpwh_for_sizing = EcosizerEngine(
+#             incomingT_F     = 50,
+#             magnitudeStat  = 150,
+#             supplyT_F       = 120,
+#             storageT_F      = storageT_F,
+#             loadUpT_F       = storageT_F + 10,
+#             percentUseable  = 0.85, 
+#             aquaFract       = 0.4, 
+#             aquaFractLoadUp = aquaFractLoadUp,
+#             aquaFractShed   = aquaFractShed,
+#             schematic       = sizingSchematic, 
+#             buildingType   = 'multi_family',
+#             returnT_F       = 0, 
+#             flowRate       = 0,
+#             gpdpp           = 25,
+#             safetyTM        = 1.75,
+#             defrostFactor   = 1, 
+#             compRuntime_hr  = 16, 
+#             nApt            = 110, 
+#             Wapt            = 60,
+#             loadShiftSchedule        = loadShiftSchedule,
+#             loadUpHours     = 3,
+#             doLoadShift     = True,
+#             loadShiftPercent       = 1
+#         )
 
-# Annual simulation based on sizing from last:
+# print('+++++++++++++++++++++++++++++++++++++++')
+# print('SIZING RESULTS')
+# print('+++++++++++++++++++++++++++++++++++++++')
+# print('recirc loss', hpwh_for_sizing.building.recirc_loss)
+# PVol_G_atStorageT = hpwh_for_sizing.getSizingResults()[0] 
+# PCap_kBTUhr = hpwh_for_sizing.getSizingResults()[1] 
+# if simSchematic == 'multipass' or simSchematic == 'primaryrecirc':
+#     PCap_kBTUhr += (hpwh_for_sizing.building.recirc_loss * 1.75 / 1000)
+# print('PVol_G_atStorageT = ',PVol_G_atStorageT)
+# print('PCap_kBTUhr = ',PCap_kBTUhr)
 
-print("starting LS section using sizes")
-hpwh_ls = EcosizerEngine(
-            incomingT_F     = 50,
-            magnitudeStat  = 150,
-            supplyT_F       = 120,
-            storageT_F      = storageT_F,
-            loadUpT_F       = storageT_F + 10,
-            percentUseable  = 1, 
-            aquaFract       = 0.4, 
-            aquaFractLoadUp = aquaFractLoadUp,
-            aquaFractShed   = aquaFractShed,
-            schematic       = simSchematic, 
-            buildingType   = 'multi_family',
-            returnT_F       = 0, 
-            flowRate       = 0,
-            gpdpp           = 25,
-            safetyTM        = 1.75,
-            defrostFactor   = 1, 
-            compRuntime_hr  = 16, 
-            nApt            = 110, 
-            Wapt            = 60,
-            nBR             = [0,50,30,20,0,0],
-            loadShiftSchedule        = loadShiftSchedule,
-            loadUpHours     = 3,
-            doLoadShift     = True,
-            loadShiftPercent       = 0.8,
-            PVol_G_atStorageT = PVol_G_atStorageT, 
-            PCap_kW = PCap_kBTUhr/W_TO_BTUHR, 
-            TMVol_G = TMVol_G, 
-            TMCap_kW = TMCap_kW,
-            annual = True,
-            climateZone = 1,
-            systemModel = hpwhModel,
-            tmModel = tmModel
-        )
+# if csvCreate:
+#     #test plot output
+#     fig = hpwh_for_sizing.plotSizingCurve()
+#     fig.write_html('Z:\\sizingplotTEST.html')
+# ##########################################################################################
+# start_time = time.time()
+# simRun_from_sized = hpwh_for_sizing.getSimRun()
 
-start_vol = 0.4*PVol_G_atStorageT
-start_time = time.time()
+# end_time = time.time()
+# duration = end_time - start_time
+# print("Execution time for simple simulation run:", duration, "seconds")
 
-simResultArray = hpwh_ls.getSimRunWithkWCalc(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, optimizeNLS = False)
-lsCap = simResultArray[2]
-print(lsCap)
+# print('+++++++++++++++++++++++++++++++++++++++')
+# print('SIZING RESULTS')
+# print('+++++++++++++++++++++++++++++++++++++++')
+# print('recirc loss', hpwh_for_sizing.building.recirc_loss)
+# PVol_G_atStorageT = hpwh_for_sizing.getSizingResults()[0] 
+# PCap_kBTUhr = hpwh_for_sizing.getSizingResults()[1] 
+# if simSchematic == 'multipass' or simSchematic == 'primaryrecirc':
+#     PCap_kBTUhr += (hpwh_for_sizing.building.recirc_loss * 1.75 / 1000)
+# print('PVol_G_atStorageT = ',PVol_G_atStorageT)
+# print('PCap_kBTUhr = ',PCap_kBTUhr)
+# print('Vtrig_normal = ',hpwh_for_sizing.system.Vtrig_normal)
+# print('Vtrig_shed = ',hpwh_for_sizing.system.Vtrig_shed)
+# print('Vtrig_loadUp = ',hpwh_for_sizing.system.Vtrig_loadUp)
+
+# TMVol_G = None
+# TMCap_kW = None
+# if sizingSchematic == 'swingtank' or sizingSchematic == 'paralleltank':
+#     TMVol_G = hpwh_for_sizing.getSizingResults()[2] 
+#     TMCap_kW = hpwh_for_sizing.getSizingResults()[3]/W_TO_BTUHR
+#     print('TMVol_G = ',TMVol_G)
+#     print('TMCap_kW = ',TMCap_kW)
+# print('+++++++++++++++++++++++++++++++++++++++')
+
+# # Annual simulation based on sizing from last:
+
+# print("starting LS section using sizes")
+# hpwh_ls = EcosizerEngine(
+#             incomingT_F     = 50,
+#             magnitudeStat  = 150,
+#             supplyT_F       = 120,
+#             storageT_F      = storageT_F,
+#             loadUpT_F       = storageT_F + 10,
+#             percentUseable  = 1, 
+#             aquaFract       = 0.4, 
+#             aquaFractLoadUp = aquaFractLoadUp,
+#             aquaFractShed   = aquaFractShed,
+#             schematic       = simSchematic, 
+#             buildingType   = 'multi_family',
+#             returnT_F       = 0, 
+#             flowRate       = 0,
+#             gpdpp           = 25,
+#             safetyTM        = 1.75,
+#             defrostFactor   = 1, 
+#             compRuntime_hr  = 16, 
+#             nApt            = 110, 
+#             Wapt            = 60,
+#             nBR             = [0,50,30,20,0,0],
+#             loadShiftSchedule        = loadShiftSchedule,
+#             loadUpHours     = 3,
+#             doLoadShift     = True,
+#             loadShiftPercent       = 0.8,
+#             PVol_G_atStorageT = PVol_G_atStorageT, 
+#             PCap_kW = PCap_kBTUhr/W_TO_BTUHR, 
+#             TMVol_G = TMVol_G, 
+#             TMCap_kW = TMCap_kW,
+#             annual = True,
+#             climateZone = 1,
+#             systemModel = hpwhModel,
+#             tmModel = tmModel
+#         )
+
+# start_vol = 0.4*PVol_G_atStorageT
+# start_time = time.time()
+
+# simResultArray = hpwh_ls.getSimRunWithkWCalc(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = minuteIntervals, nDays = 365, optimizeNLS = False)
+# lsCap = simResultArray[2]
+# print(lsCap)
 
 # # simResultArray = hpwh_ls.getSimRun(minuteIntervals = 1, nDays = 3, optimizeNLS = False)
 

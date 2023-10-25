@@ -9,8 +9,8 @@ from ecoengine.objects.systemConfigUtils import checkLiqudWater
 class ParallelLoopTank(SystemConfig):
     def __init__(self, safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, aquaFractShed = None, 
-                 loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None,
-                 tmModel = None, tmNumHeatPumps = None):
+                 loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, ignoreShortCycleEr = False,
+                 TMVol_G = None, TMCap_kBTUhr = None, tmModel = None, tmNumHeatPumps = None):
 
         if TMonTemp_F == 0:
             TMonTemp_F = building.incomingT_F + 2 # TODO deal with this
@@ -23,7 +23,7 @@ class ParallelLoopTank(SystemConfig):
 
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
-                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr)
+                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr)
 
         # size if needed, else all sizing is taken care of in super().__init__
         if not PVol_G_atStorageT is None: # indicates system is sized

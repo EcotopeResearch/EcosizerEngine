@@ -434,6 +434,7 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
    (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_GS3_45HPA_US_SP', None, 'swingtank', 891, 48, 100, 19, 91380,16),
    (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_SP', 'MODELS_ColmacCxA_20_MP', 'paralleltank', 891, 31, 91, 19, 91730,10),
 ])
+
 def test_annual_simRun_comparison_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, 
                                          tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, zipCode, climateZone):
     hpwh_ls = EcosizerEngine(
@@ -522,3 +523,28 @@ def test_annual_QAVH_for_all_climates(climateZone):
     boundry_method_cop = simRun.getAnnualCOP(boundryMethod = True)
     assert equip_method_cop < boundry_method_cop + 0.003
     assert equip_method_cop > boundry_method_cop - 0.003
+
+def test_short_cycle_override():
+    with pytest.raises(ValueError, 
+                       match="('01', 'The aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: ', 0.517)"):
+        hpwh = EcosizerEngine(incomingT_F = 50.0,magnitudeStat = 1,supplyT_F = 110.0,storageT_F = 165.0, percentUseable = 0.85,aquaFract = 0.45,aquaFractLoadUp = None,
+            aquaFractShed = None,loadUpT_F = None,loadUpHours = None,schematic = "swingtank",buildingType  = "multi_family",returnT_F = 100,flowRate = 8.0,
+            loadshape = [0.07272037, 0.03588551, 0.01756301, 0.02060094, 0.00778469, 0.00830683,
+            0.00028481, 0.01571178, 0.03484122, 0.08401766, 0.06925523, 0.05135995
+            , 0.03213557, 0.03137609, 0.05957184, 0.05197703, 0.06223003, 0.05150235
+            , 0.08112213, 0.05207196, 0.04452461, 0.02829069, 0.04480942, 0.0420563],
+            gpdpp = 21067.0,nBR = None,safetyTM = 1.75,defrostFactor  = 1.0,compRuntime_hr = 16,nApt = 1,Wapt = None,setpointTM_F = 135.0,TMonTemp_F = 125.0,
+            offTime_hr = 0.33,standardGPD = None,loadShiftSchedule = [],doLoadShift   = False,loadShiftPercent = None
+        )
+    hpwh = EcosizerEngine(incomingT_F = 50.0,magnitudeStat = 1,supplyT_F = 110.0,storageT_F = 165.0, percentUseable = 0.85,aquaFract = 0.45,aquaFractLoadUp = None,
+            aquaFractShed = None,loadUpT_F = None,loadUpHours = None,schematic = "swingtank",buildingType  = "multi_family",returnT_F = 100,flowRate = 8.0,
+            loadshape = [0.07272037, 0.03588551, 0.01756301, 0.02060094, 0.00778469, 0.00830683,
+            0.00028481, 0.01571178, 0.03484122, 0.08401766, 0.06925523, 0.05135995
+            , 0.03213557, 0.03137609, 0.05957184, 0.05197703, 0.06223003, 0.05150235
+            , 0.08112213, 0.05207196, 0.04452461, 0.02829069, 0.04480942, 0.0420563],
+            gpdpp = 21067.0,nBR = None,safetyTM = 1.75,defrostFactor  = 1.0,compRuntime_hr = 16,nApt = 1,Wapt = None,setpointTM_F = 135.0,TMonTemp_F = 125.0,
+            offTime_hr = 0.33,standardGPD = None,loadShiftSchedule = [],doLoadShift   = False,loadShiftPercent = None, ignoreShortCycleEr = True
+    )
+    assert 598.0958941412142 == hpwh.getSizingResults()[0] 
+    assert 722.2618842984205 == hpwh.getSizingResults()[1] 
+    

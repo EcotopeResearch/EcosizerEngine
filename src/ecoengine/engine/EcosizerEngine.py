@@ -66,9 +66,9 @@ class EcosizerEngine:
         A multipier used to account for defrost in the final heating capacity. Default equals 1.
     compRuntime_hr : float
         The number of hours the compressor will run on the design day. [Hr]
-    nApt: integer
+    nApt : integer
         The number of apartments. Use with Qdot_apt to determine total recirculation losses. (For multi-falmily buildings)
-    Wapt:  float
+    Wapt : float
         Watts of heat lost in through recirculation piping system. Used with N_apt to determine total recirculation losses. (For multi-falmily buildings)  
     doLoadShift : boolean
         Set to true if doing loadshift
@@ -77,7 +77,7 @@ class EcosizerEngine:
     TMonTemp_F : float
         The temperature where parallel loop tank will turn on.
         Defaults to 120 °F.
-    offTime_hr: integer
+    offTime_hr : integer
         Maximum hours per day the temperature maintenance equipment can run.
     standardGPD : string
         indicates whether to use a standard gpdpp specification for multi-family buildings. Set to None if not using a standard gpdpp.
@@ -105,6 +105,8 @@ class EcosizerEngine:
         The number of heat pumps on the temperature maintenance system
     inletWaterAdjustment : float
         adjustment for inlet water temperature fraction for primary recirculation systems
+    ignoreShortCycleEr : boolean
+        ignores errors for short cycling (when the AQ fract is too low in the system). The engineer should be informed to use multiple heat pumps to avoid shortcycling if they are overriding short cycling errors
 
     """
 
@@ -117,7 +119,7 @@ class EcosizerEngine:
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None,
                             PVol_G_atStorageT = None, PCap_kW = None, TMVol_G = None, TMCap_kW = None,
                             annual = False, zipCode = None, climateZone = None, systemModel = None, numHeatPumps = None, 
-                            tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None):
+                            tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None, ignoreShortCycleEr = False):
         
         ignoreRecirc = False
         if schematic == 'singlepass_norecirc' or schematic == 'primary' or schematic == 'multipass_norecirc' or schematic == 'multipass':
@@ -179,7 +181,8 @@ class EcosizerEngine:
                                 numHeatPumps = numHeatPumps,
                                 tmModel = tmModel,
                                 tmNumHeatPumps = tmNumHeatPumps,
-                                inletWaterAdjustment = inletWaterAdjustment
+                                inletWaterAdjustment = inletWaterAdjustment,
+                                ignoreShortCycleEr = ignoreShortCycleEr
         )
     
     def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False, optimizeNLS = False):
