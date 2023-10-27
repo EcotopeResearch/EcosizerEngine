@@ -73,7 +73,7 @@ class EcosizerEngine:
     doLoadShift : boolean
         Set to true if doing loadshift
     setpointTM_F : float
-        The setpoint of the temprature maintence tank. Defaults to 130 °F.
+        The setpoint of the temprature maintence tank. Defaults to 135 °F.
     TMonTemp_F : float
         The temperature where parallel loop tank will turn on.
         Defaults to 120 °F.
