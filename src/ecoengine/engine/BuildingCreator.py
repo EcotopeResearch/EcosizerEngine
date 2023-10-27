@@ -189,8 +189,8 @@ def checkLoadShape(loadshape, avgLS = False, normalized = True):
     
 def getClimateZone(zipCode = None, climateZone = None):
     if not climateZone is None:
-        if not isinstance(climateZone, int) or climateZone < 1 or climateZone > 16:
-            raise Exception("Climate Zone must be a number between 1 and 16.")
+        if not isinstance(climateZone, int) or climateZone < 1 or climateZone > 19:
+            raise Exception("Climate Zone must be a number between 1 and 19.")
         return climateZone
     elif not zipCode is None:
         with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/ZipCode_ClimateZone_Lookup.csv'), 'r') as file:
