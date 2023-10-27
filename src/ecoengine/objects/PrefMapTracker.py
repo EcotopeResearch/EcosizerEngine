@@ -55,7 +55,7 @@ class PrefMapTracker:
                 condenserT_F = 120
                 extrapolate = True
             elif condenserT_F < 41:
-                condenserT_F = 120
+                condenserT_F = 41
                 extrapolate = True
             
             if outT_F > 170:
