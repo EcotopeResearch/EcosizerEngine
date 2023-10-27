@@ -6,7 +6,8 @@ from scipy.interpolate import LinearNDInterpolator
 import math
 
 class PrefMapTracker:
-    def __init__(self, defaultCapacity = None, modelName = None, kBTUhr = False, numHeatPumps = None, isMultiPass = False):
+    def __init__(self, defaultCapacity = None, modelName = None, kBTUhr = False, numHeatPumps = None, 
+                 isMultiPass = False, designOAT_F : float = None, designIncomingT_F : float = None, designOutT_F : float = None):
         self.isQAHV = False
         self.output_cap_interpolator = None
         self.cop_interpolator = None
@@ -22,6 +23,8 @@ class PrefMapTracker:
         self.numHeatPumps = numHeatPumps
         if not modelName is None: 
             self.setPrefMap(modelName)
+            if numHeatPumps is None and not (designOAT_F is None or designIncomingT_F is None or designOutT_F is None):
+                self.getCapacity(designOAT_F, designIncomingT_F, designOutT_F) # will set self.numHeatPumps in this function
 
     def getDefaultCapacity(self):
         return self.defaultCapacity

@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+import csv
 
 from ecoengine.constants.Constants import *
 
@@ -45,6 +46,28 @@ class Building:
         raise Exception("setToDailyLS() feature is not available for this building type. This feature is only available for multi-family buildings.")
     def getClimateZone(self):
         return self.climateZone
+    def getLowestOAT(self):
+        if self.climateZone is None:
+            return None
+        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
+            oat_reader = csv.reader(oat_file)
+            next(oat_reader)# Skip the header row
+            lowest_oat = float('inf')
+            for oat_row in oat_reader:
+                oat_value = float(oat_row[self.climateZone - 1])
+                lowest_oat = min(lowest_oat, oat_value)
+            return lowest_oat
+    def getLowestIncomingT_F(self):
+        if self.climateZone is None:
+            return self.incomingT_F
+        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as oat_file:
+            temp_reader = csv.reader(oat_file)
+            next(temp_reader)# Skip the header row
+            lowest_t = float('inf')
+            for t_row in temp_reader:
+                t_value = float(t_row[self.climateZone - 1])
+                lowest_t = min(lowest_t, t_value)
+            return lowest_t
 
 class MensDorm(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):

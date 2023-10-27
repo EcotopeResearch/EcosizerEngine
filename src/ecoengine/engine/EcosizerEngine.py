@@ -161,7 +161,7 @@ class EcosizerEngine:
                                 percentUseable, 
                                 compRuntime_hr, 
                                 aquaFract,
-                                building = self.building if PVol_G_atStorageT is None else None, 
+                                building = self.building, 
                                 aquaFractLoadUp = aquaFractLoadUp,
                                 aquaFractShed = aquaFractShed,
                                 loadUpT_F = loadUpT_F,

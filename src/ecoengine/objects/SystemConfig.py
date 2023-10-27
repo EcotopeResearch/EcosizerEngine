@@ -56,8 +56,13 @@ class SystemConfig:
         self.Vtrig_normal = self.PVol_G_atStorageT * (1 - self.aquaFract)
         if self.doLoadShift:
             self.Vtrig_shed = self.PVol_G_atStorageT * (1 - self.aquaFractShed)
-        
-        self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True)
+        if numHeatPumps is None and not systemModel is None and not building is None and not building.getClimateZone() is None:
+            # size number of heatpumps based on the coldest day
+            self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
+                                          designOAT_F=building.getLowestOAT(), designIncomingT_F=building.getLowestIncomingT_F(),
+                                          designOutT_F=self.storageT_F) 
+        else:
+            self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True)
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):
         if not (isinstance(storageT_F, int) or isinstance(storageT_F, float)) or not checkLiqudWater(storageT_F): 
