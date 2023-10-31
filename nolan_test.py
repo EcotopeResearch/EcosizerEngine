@@ -2,42 +2,40 @@ from ecoengine import EcosizerEngine, getListOfModels, SimulationRun, getAnnualS
 import time
 import math
 
-hpwh_for_sizing = EcosizerEngine(
-    incomingT_F = 50.0,
-    magnitudeStat = 1,
-    supplyT_F = 110.0,
-    storageT_F = 165.0,
-    percentUseable = 0.85,
-    aquaFract = 0.45,
-    aquaFractLoadUp = None,
-    aquaFractShed = None,
-    loadUpT_F = None,
-    loadUpHours = None,
-    schematic = "swingtank",
-    buildingType  = "multi_family",
-    returnT_F = 100,
-    flowRate = 8.0,
-    loadshape = [0.07272037, 0.03588551, 0.01756301, 0.02060094, 0.00778469, 0.00830683,
-    0.00028481, 0.01571178, 0.03484122, 0.08401766, 0.06925523, 0.05135995
-    , 0.03213557, 0.03137609, 0.05957184, 0.05197703, 0.06223003, 0.05150235
-    , 0.08112213, 0.05207196, 0.04452461, 0.02829069, 0.04480942, 0.0420563],
-    gpdpp = 21067.0,
-    nBR = None,
-    safetyTM = 1.75,
-    defrostFactor  = 1.0,
-    compRuntime_hr = 16,
-    nApt = 1,
-    Wapt = None,
-    setpointTM_F = 135.0,
-    TMonTemp_F = 125.0,
-    offTime_hr = 0.33,
-    standardGPD = None,
-    loadShiftSchedule = [],
-    doLoadShift   = False,
-    loadShiftPercent = None,
-    ignoreShortCycleEr = True
-)
 
+hpwh_for_sizing = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            loadUpT_F       = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            aquaFractLoadUp = 0.21,
+            aquaFractShed   = 0.8,
+            schematic       = 'singlepass_norecirc', 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 60,
+            loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
+            loadUpHours     = 3,
+            doLoadShift     = True,
+            loadShiftPercent       = 0.8,
+            PVol_G_atStorageT = 891, 
+            PCap_kW = 48,
+            TMVol_G = None,
+            TMCap_kW = None,
+            annual = True,
+            zipCode = 91701,
+            systemModel = 'MODELS_Mitsubishi_QAHV'
+        )
+simRun = hpwh_for_sizing.getSimRun(initPV=0.4*891, initST=135, minuteIntervals = 15, nDays = 365)
 print('+++++++++++++++++++++++++++++++++++++++')
 print('SIZING RESULTS')
 print('+++++++++++++++++++++++++++++++++++++++')

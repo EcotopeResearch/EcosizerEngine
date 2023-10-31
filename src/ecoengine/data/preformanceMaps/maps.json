@@ -171,6 +171,9 @@
     },
     "MODELS_ColmacCxV_5_SP" : {
         "name" : "Colmac CxA_5 external heat pump in Single Pass Mode",
+        "bounds_pkl": "Colmac_CxV5_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxV5_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxV5_Single_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
@@ -183,6 +186,9 @@
     },
     "MODELS_ColmacCxA_10_SP" : {
         "name" : "Colmac CxA_10 external heat pump in Single Pass Mode",
+        "bounds_pkl": "Colmac_CxA10_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_Single_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
@@ -195,6 +201,9 @@
     },
     "MODELS_ColmacCxA_15_SP" : {
         "name" : "Colmac CxA_15 external heat pump in Single Pass Mode",
+        "bounds_pkl": "Colmac_CxA15_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_Single_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
@@ -207,6 +216,9 @@
     },
     "MODELS_ColmacCxA_20_SP" : {
         "name" : "Colmac CxA_20 external heat pump in Single Pass Mode",
+        "bounds_pkl": "Colmac_CxA20_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_Single_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
@@ -219,6 +231,9 @@
     },
     "MODELS_ColmacCxA_25_SP" : {
         "name" : "Colmac CxA_25 external heat pump in Single Pass Mode",
+        "bounds_pkl": "Colmac_CxA25_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_Single_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
@@ -231,6 +246,9 @@
     },
     "MODELS_ColmacCxA_30_SP" : {
         "name" : "Colmac CxA_30 external heat pump in Single Pass Mode",
+        "bounds_pkl": "Colmac_CxA30_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_Single_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
@@ -362,10 +380,16 @@
         ]
     },
     "MODELS_Mitsubishi_QAHV" : {
-        "name" : "Mitsubishi QAHV"
+        "name" : "Mitsubishi QAHV",
+        "bounds_pkl": "Mitsubishi_QAHV_bounds.pkl",
+        "cap_in_pkl": "Mitsubishi_QAHV_power_in_interpolator.pkl",
+        "cap_out_pkl": "Mitsubishi_QAHV_capacity_interpolator.pkl"
     },
     "MODELS_NyleC25A_SP" : {
         "name" : "Nyle C25A external heat pump in Single Pass Mode",
+        "bounds_pkl": "Nyle_C25A_bounds.pkl",
+        "cap_in_pkl": "Nyle_C25A_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_C25A_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 90,
@@ -378,6 +402,9 @@
     },
     "MODELS_NyleC60A_SP" : {
         "name" : "Nyle C60A external heat pump in Single Pass Mode",
+        "bounds_pkl": "Nyle_C60A_bounds.pkl",
+        "cap_in_pkl": "Nyle_C60A_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_C60A_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 90,
@@ -390,6 +417,9 @@
     },
     "MODELS_NyleC60A_C_SP" : {
         "name" : "Nyle C60A (Cold Weather Package) in Single Pass Mode",
+        "bounds_pkl": "Nyle_C60A_bounds.pkl",
+        "cap_in_pkl": "Nyle_C60A_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_C60A_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 90,
@@ -402,6 +432,9 @@
     },
     "MODELS_NyleC90A_SP" : {
         "name" : "Nyle C90A external heat pump in Single Pass Mode",
+        "bounds_pkl": "Nyle_C90A_bounds.pkl",
+        "cap_in_pkl": "Nyle_C90A_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_C90A_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 90,
@@ -414,6 +447,9 @@
     },
     "MODELS_NyleC90A_C_SP" : {
         "name" : "Nyle C90A (Cold Weather Package) in Single Pass Mode",
+        "bounds_pkl": "Nyle_C90A_bounds.pkl",
+        "cap_in_pkl": "Nyle_C90A_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_C90A_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 90,
@@ -426,6 +462,9 @@
     },
     "MODELS_NyleC125A_SP" : {
         "name" : "Nyle C125A external heat pump in Single Pass Mode",
+        "bounds_pkl": "Nyle_C125A_bounds.pkl",
+        "cap_in_pkl": "Nyle_C125A_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_C125A_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 90,
@@ -438,6 +477,9 @@
     },
     "MODELS_NyleC125A_C_SP" : {
         "name" : "Nyle C125A (Cold Weather Package) in Single Pass Mode",
+        "bounds_pkl": "Nyle_C125A_bounds.pkl",
+        "cap_in_pkl": "Nyle_C125A_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_C125A_capacity_interpolator.pkl",
         "perfmap": [
         {
             "T_F" : 90,
@@ -449,6 +491,9 @@
     ]},
     "MODELS_NyleC185A_SP" : {
         "name" : "Nyle C185A external heat pump in Single Pass Mode",
+        "bounds_pkl": "Nyle_C185A_bounds.pkl",
+        "cap_in_pkl": "Nyle_C185A_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_C185A_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 90,
@@ -461,6 +506,9 @@
     },
     "MODELS_NyleC185A_C_SP" : {
         "name" : "Nyle C185A (Cold Weather Package) in Single Pass Mode",
+        "bounds_pkl": "Nyle_C185A_bounds.pkl",
+        "cap_in_pkl": "Nyle_C185A_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_C185A_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 90,
@@ -473,6 +521,9 @@
     },
     "MODELS_NyleC250A_SP" : {
         "name" : "Nyle C250A external heat pump in Single Pass Mode",
+        "bounds_pkl": "Nyle_C250A_bounds.pkl",
+        "cap_in_pkl": "Nyle_C250A_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_C250A_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 90,
@@ -485,6 +536,9 @@
     },
     "MODELS_NyleC250A_C_SP" : {
         "name" : "Nyle C250A (Cold Weather Package) in Single Pass Mode",
+        "bounds_pkl": "Nyle_C250A_bounds.pkl",
+        "cap_in_pkl": "Nyle_C250A_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_C250A_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 90,
