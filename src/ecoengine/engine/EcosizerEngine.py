@@ -631,7 +631,7 @@ def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationR
     fig.add_trace(Scatter(
         x=hour_axis, 
         y=ls_off, 
-        name='Load Shift TOU Period',
+        name='4-9 PM Peak Pricing',
         mode='lines', 
         line_shape='hv',
         opacity=0.5, marker_color='grey',
