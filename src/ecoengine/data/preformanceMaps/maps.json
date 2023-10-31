@@ -702,6 +702,9 @@
     ]},
     "MODELS_RHEEM_HPHD135HNU_483_MP" : {
         "name" : "Rheem MP 135 kBtu HNU",
+        "bounds_pkl": "Rheem_HPHD_135HNU_483_bounds.pkl",
+        "cap_in_pkl": "Rheem_HPHD_135HNU_483_power_in_interpolator.pkl",
+        "cap_out_pkl": "Rheem_HPHD_135HNU_483_capacity_interpolator.pkl",
         "perfmap": [
         {
             "T_F" : 110,
@@ -711,6 +714,9 @@
     ]},
     "MODELS_RHEEM_HPHD135VNU_483_MP" : {
         "name" : "Rheem MP 135 kBtu VNU",
+        "bounds_pkl": "Rheem_HPHD_135VNU_483_bounds.pkl",
+        "cap_in_pkl": "Rheem_HPHD_135VNU_483_power_in_interpolator.pkl",
+        "cap_out_pkl": "Rheem_HPHD_135VNU_483_capacity_interpolator.pkl",
         "perfmap": [
         {
             "T_F" : 110,

@@ -60,9 +60,10 @@ class SystemConfig:
             # size number of heatpumps based on the coldest day
             self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
                                           designOAT_F=building.getLowestOAT(), designIncomingT_F=building.getLowestIncomingT_F(),
-                                          designOutT_F=self.storageT_F) 
+                                          designOutT_F=self.storageT_F, usePkl=True if not systemModel is None else False) # TODO usePkl should not be set here in final version. This should be a param
         else:
-            self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True)
+            self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
+                                          usePkl=True if not systemModel is None else False) # TODO usePkl should not be set here in final version. This should be a param
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):
         if not (isinstance(storageT_F, int) or isinstance(storageT_F, float)) or not checkLiqudWater(storageT_F): 
