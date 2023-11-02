@@ -75,7 +75,9 @@ class PrefMapTracker:
                 condenserT_F += 10 # add 10 degrees to incoming water temp for QAHV only
 
             #use pickled interpolation functions
-            input_array = [condenserT_F, outT_F, externalT_F] # add 10 degrees to inlet water temp for QAHV
+            input_array = [condenserT_F, outT_F, externalT_F]
+            if self.isMultiPass:
+                input_array = [condenserT_F, externalT_F] # MultiPass performance maps do not account for outlet water temp
             output_kW = self.output_cap_interpolator(input_array)[0][0]
             input_kW = self.input_cap_interpolator(input_array)[0][0]
             if math.isnan(output_kW) or math.isnan(input_kW):
@@ -96,7 +98,7 @@ class PrefMapTracker:
                     input_kW = self.default_input_high
 
         elif self.perfMap is None or len(self.perfMap) == 0:
-            return self.defaultCapacity, self.defaultCapacity / 2.5 # assume COP of 2.5 for input_capactiy calculation
+            return self.defaultCapacity, self.defaultCapacity #/ 2.5 # assume COP of 2.5 for input_capactiy calculation
         
         elif len(self.perfMap) > 1:
             # cop at ambient temperatures T1 and T2
@@ -167,14 +169,17 @@ class PrefMapTracker:
         return [output_kW, input_kW]
 
     def _autoSetNumHeatPumps(self, modelCapacity):
-        print(f"{self.defaultCapacity}/{modelCapacity}")
-        heatPumps = round(self.defaultCapacity/modelCapacity)
+        # print(f"{self.defaultCapacity}/{modelCapacity}")
+        heatPumps = math.ceil(self.defaultCapacity/modelCapacity)
         self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
     def setPrefMap(self, modelName):
         if modelName == "MODELS_Mitsubishi_QAHV":
             self.usePkl = True
             self.isQAHV = True
+        elif modelName[-2:] == 'MP' and modelName != "MODELS_RHEEM_HPHD135VNU_483_MP" and modelName != "MODELS_RHEEM_HPHD135HNU_483_MP":
+            # The two rheems with pkls function like single pass pkls
+            self.isMultiPass = True
         try:
             with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
                 dataDict = json.load(json_file)
@@ -199,8 +204,6 @@ class PrefMapTracker:
                         self.default_input_low = bounds[4][1]
                 else:
                         self.perfMap = dataDict[modelName]["perfmap"]
-                        if modelName[-2:] == 'MP':
-                            self.isMultiPass = True
         except:
             if self.usePkl and modelName != "MODELS_Mitsubishi_QAHV":
                 print("No preformance map pkl file found for " + modelName + ". Attempting to use non-pkl preformance map")

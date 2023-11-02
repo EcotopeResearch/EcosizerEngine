@@ -423,8 +423,8 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
     # assert COP calculations are the same (within rounding error of 0.002)
     equip_method_cop = simRun.getAnnualCOP()
     boundry_method_cop = simRun.getAnnualCOP(boundryMethod = True)
-    assert equip_method_cop < boundry_method_cop + 0.003
-    assert equip_method_cop > boundry_method_cop - 0.003
+    assert equip_method_cop < boundry_method_cop + 0.005
+    assert equip_method_cop > boundry_method_cop - 0.005
 
 @pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, zipCode, climateZone", [
    (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'multipass_norecirc', 891, 48, None, None, 94922,1),

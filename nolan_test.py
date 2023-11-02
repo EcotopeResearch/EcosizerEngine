@@ -2,48 +2,71 @@ from ecoengine import EcosizerEngine, getListOfModels, SimulationRun, getAnnualS
 import time
 import math
 
-
+W_TO_BTUHR = 3.412142
 hpwh_for_sizing = EcosizerEngine(
-            incomingT_F     = 50,
-            magnitudeStat  = 100,
+            incomingT_F     = 33.5,
+            magnitudeStat  = 222.95,
             supplyT_F       = 120,
             storageT_F      = 150,
-            loadUpT_F       = 150,
-            percentUseable  = 0.9, 
-            aquaFract       = 0.4, 
-            aquaFractLoadUp = 0.21,
-            aquaFractShed   = 0.8,
+            percentUseable  = 0.85, 
+            aquaFract       = 0.4,
             schematic       = 'singlepass_norecirc', 
             buildingType   = 'multi_family',
-            returnT_F       = 0, 
-            flowRate       = 0,
-            gpdpp           = 25,
             safetyTM        = 1.75,
             defrostFactor   = 1, 
             compRuntime_hr  = 16, 
+            nBR             = [20, 30, 25, 15, 10, 0],
+            standardGPD     = 'ecoMark',
             nApt            = 100, 
-            Wapt            = 60,
-            loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
+            Wapt            = 100,
             loadUpHours     = 3,
-            doLoadShift     = True,
-            loadShiftPercent       = 0.8,
-            PVol_G_atStorageT = 891, 
-            PCap_kW = 48,
-            TMVol_G = None,
-            TMCap_kW = None,
-            annual = True,
-            zipCode = 91701,
-            systemModel = 'MODELS_Mitsubishi_QAHV'
+            doLoadShift     = False
         )
-simRun = hpwh_for_sizing.getSimRun(initPV=0.4*891, initST=135, minuteIntervals = 15, nDays = 365)
-print('+++++++++++++++++++++++++++++++++++++++')
-print('SIZING RESULTS')
-print('+++++++++++++++++++++++++++++++++++++++')
-print('recirc loss', hpwh_for_sizing.building.recirc_loss)
-PVol_G_atStorageT = hpwh_for_sizing.getSizingResults()[0] 
-PCap_kBTUhr = hpwh_for_sizing.getSizingResults()[1] 
-print('PVol_G_atStorageT = ',PVol_G_atStorageT)
-print('PCap_kBTUhr = ',PCap_kBTUhr)
+
+# print('+++++++++++++++++++++++++++++++++++++++')
+# print('SIZING RESULTS')
+# print('+++++++++++++++++++++++++++++++++++++++')
+TMVol_G = None 
+TMCap_kW = None
+# print('recirc loss', hpwh_for_sizing.building.recirc_loss)
+sizing_result = hpwh_for_sizing.getSizingResults()
+PVol_G_atStorageT = sizing_result[0] 
+PCap_kBTUhr = sizing_result[1] 
+if len(sizing_result) > 2:
+    TMVol_G = sizing_result[2] 
+    TMCap_kW = sizing_result[3]/W_TO_BTUHR
+# print('PVol_G_atStorageT = ',PVol_G_atStorageT)
+# print('PCap_kBTUhr = ',PCap_kBTUhr)
+# print('TMVol_G = ',TMVol_G)
+# print('TMCap_kW = ',TMCap_kW)
+
+hpwh = EcosizerEngine(
+            incomingT_F     = 33.5,
+            magnitudeStat  = 222.95,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            percentUseable  = 0.85, 
+            aquaFract       = 0.4,
+            schematic       = 'multipass_norecirc', 
+            buildingType   = 'multi_family',
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nBR             = [20, 30, 25, 15, 10, 0],
+            standardGPD     = 'ecoMark',
+            nApt            = 100, 
+            Wapt            = 100,
+            doLoadShift     = False,
+            PVol_G_atStorageT = PVol_G_atStorageT, 
+            PCap_kW = PCap_kBTUhr/W_TO_BTUHR, 
+            TMVol_G = TMVol_G, 
+            TMCap_kW = TMCap_kW,
+            annual = True,
+            climateZone = 17,
+            systemModel = "MODELS_ColmacCxA_30_MP"
+        )
+simRun = hpwh.getSimRun(minuteIntervals = 60, nDays = 365, exceptOnWaterShortage=False)
+# simRun.writeCSV("here.csv")
+
 #########################################################################################################
 # rhoCp = 8.353535 
 # W_TO_BTUHR = 3.412142

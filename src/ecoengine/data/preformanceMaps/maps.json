@@ -260,7 +260,10 @@
         ]
     },
     "MODELS_ColmacCxV_5_MP" : {
-        "name" : "Colmac CxA_5 external heat pump in Multi Pass Mode",
+        "name" : "Colmac CxV_5 external heat pump in Multi Pass Mode",
+        "bounds_pkl": "Colmac_CxV5_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxV5_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxV5_Multi_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
@@ -271,6 +274,9 @@
     },
     "MODELS_ColmacCxA_10_MP" : {
         "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode",
+        "bounds_pkl": "Colmac_CxA10_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_Multi_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
@@ -281,6 +287,9 @@
     },
     "MODELS_ColmacCxA_15_MP" : {
         "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode",
+        "bounds_pkl": "Colmac_CxA15_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_Multi_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
@@ -291,6 +300,9 @@
     },
     "MODELS_ColmacCxA_20_MP" : {
         "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode",
+        "bounds_pkl": "Colmac_CxA20_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_Multi_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
@@ -301,6 +313,9 @@
     },
     "MODELS_ColmacCxA_25_MP" : {
         "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode",
+        "bounds_pkl": "Colmac_CxA25_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_Multi_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
@@ -311,6 +326,9 @@
     },
     "MODELS_ColmacCxA_30_MP" : {
         "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode",
+        "bounds_pkl": "Colmac_CxA30_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_Multi_Pass_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 100,
