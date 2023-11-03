@@ -36,7 +36,7 @@ class ParallelLoopTank(SystemConfig):
 
         # set performance map for tm tank
         self.tmPerfMap = PrefMapTracker(self.TMCap_kBTUhr, modelName = tmModel, numHeatPumps = tmNumHeatPumps, kBTUhr = True, 
-                                        usePkl=True if not systemModel is None else False) # TODO usePkl should not be set here in final version. This should be a param
+                                        usePkl=True if not tmModel is None else False) # TODO usePkl should not be set here in final version. This should be a param
 
     def _checkParallelLoopInputs(self, safetyTM, offTime_hr, setpointTM_F, TMonTemp_F):
         # Quick Check to make sure the inputs make sense

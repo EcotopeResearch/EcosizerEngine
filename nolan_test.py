@@ -10,7 +10,7 @@ hpwh_for_sizing = EcosizerEngine(
             storageT_F      = 150,
             percentUseable  = 0.85, 
             aquaFract       = 0.4,
-            schematic       = 'singlepass_norecirc', 
+            schematic       = 'paralleltank', 
             buildingType   = 'multi_family',
             safetyTM        = 1.75,
             defrostFactor   = 1, 
@@ -47,7 +47,7 @@ hpwh = EcosizerEngine(
             storageT_F      = 150,
             percentUseable  = 0.85, 
             aquaFract       = 0.4,
-            schematic       = 'multipass_norecirc', 
+            schematic       = 'paralleltank', 
             buildingType   = 'multi_family',
             defrostFactor   = 1, 
             compRuntime_hr  = 16, 
@@ -62,7 +62,7 @@ hpwh = EcosizerEngine(
             TMCap_kW = TMCap_kW,
             annual = True,
             climateZone = 17,
-            systemModel = "MODELS_ColmacCxA_30_MP"
+            systemModel = "MODELS_Mitsubishi_QAHV"
         )
 simRun = hpwh.getSimRun(minuteIntervals = 60, nDays = 365, exceptOnWaterShortage=False)
 # simRun.writeCSV("here.csv")

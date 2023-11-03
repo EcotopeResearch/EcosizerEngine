@@ -1,5 +1,5 @@
 {
-    "MODELS_AOSmithHPTS50_MP" : {
+    "MODELS_AOSmithHPTS50_R_MP" : {
         "name" : "AOSmith HPTS 50 gallon",
         "perfmap": [
             {
@@ -19,7 +19,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTS66_MP" : {
+    "MODELS_AOSmithHPTS66_R_MP" : {
         "name" : "AOSmith HPTS 66 gallon",
         "perfmap": [
             {
@@ -39,7 +39,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTS80_MP" : {
+    "MODELS_AOSmithHPTS80_R_MP" : {
         "name" : "AOSmith HPTS 80 gallon",
         "perfmap": [
             {
@@ -59,7 +59,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTU50_MP" : {
+    "MODELS_AOSmithHPTU50_R_MP" : {
         "name" : "AOSmith HPTU 50 gallon",
         "perfmap": [
             {
@@ -79,7 +79,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTU66_MP" : {
+    "MODELS_AOSmithHPTU66_R_MP" : {
         "name" : "AOSmith HPTU 66 gallon",
         "perfmap": [
             {
@@ -99,7 +99,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTU80_MP" : {
+    "MODELS_AOSmithHPTU80_R_MP" : {
         "name" : "AOSmith HPTU 80 gallon",
         "perfmap": [
             {
@@ -119,7 +119,7 @@
             }
         ]
     },
-    "MODELS_AOSmithHPTU80_DR_MP" : {
+    "MODELS_AOSmithHPTU80_DR_R_MP" : {
         "name" : "AOSmith HPTU 80 gallon DR",
         "perfmap": [
             {
@@ -134,7 +134,7 @@
             }
         ]
     },
-    "MODELS_AOSmithCAHP120_MP" : {
+    "MODELS_AOSmithCAHP120_C_MP" : {
         "name" : "AOSmith CAHP 120 gallon Commercial Grade",
         "perfmap": [
             {
@@ -154,7 +154,7 @@
             }
         ]
     },
-    "MODELS_BWC2020_65_MP" : {
+    "MODELS_BWC2020_65_R_MP" : {
         "name" : "Bradford White 2020 65 gallon unit",
         "perfmap": [
             {
@@ -169,7 +169,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxV_5_SP" : {
+    "MODELS_ColmacCxV_5_C_SP" : {
         "name" : "Colmac CxA_5 external heat pump in Single Pass Mode",
         "bounds_pkl": "Colmac_CxV5_Single_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxV5_Single_Pass_power_in_interpolator.pkl",
@@ -184,7 +184,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxA_10_SP" : {
+    "MODELS_ColmacCxA_10_C_SP" : {
         "name" : "Colmac CxA_10 external heat pump in Single Pass Mode",
         "bounds_pkl": "Colmac_CxA10_Single_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxA10_Single_Pass_power_in_interpolator.pkl",
@@ -199,7 +199,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxA_15_SP" : {
+    "MODELS_ColmacCxA_15_C_SP" : {
         "name" : "Colmac CxA_15 external heat pump in Single Pass Mode",
         "bounds_pkl": "Colmac_CxA15_Single_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxA15_Single_Pass_power_in_interpolator.pkl",
@@ -214,7 +214,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxA_20_SP" : {
+    "MODELS_ColmacCxA_20_C_SP" : {
         "name" : "Colmac CxA_20 external heat pump in Single Pass Mode",
         "bounds_pkl": "Colmac_CxA20_Single_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxA20_Single_Pass_power_in_interpolator.pkl",
@@ -229,7 +229,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxA_25_SP" : {
+    "MODELS_ColmacCxA_25_C_SP" : {
         "name" : "Colmac CxA_25 external heat pump in Single Pass Mode",
         "bounds_pkl": "Colmac_CxA25_Single_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxA25_Single_Pass_power_in_interpolator.pkl",
@@ -244,7 +244,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxA_30_SP" : {
+    "MODELS_ColmacCxA_30_C_SP" : {
         "name" : "Colmac CxA_30 external heat pump in Single Pass Mode",
         "bounds_pkl": "Colmac_CxA30_Single_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxA30_Single_Pass_power_in_interpolator.pkl",
@@ -259,7 +259,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxV_5_MP" : {
+    "MODELS_ColmacCxV_5_C_MP" : {
         "name" : "Colmac CxV_5 external heat pump in Multi Pass Mode",
         "bounds_pkl": "Colmac_CxV5_Multi_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxV5_Multi_Pass_power_in_interpolator.pkl",
@@ -272,7 +272,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxA_10_MP" : {
+    "MODELS_ColmacCxA_10_C_MP" : {
         "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode",
         "bounds_pkl": "Colmac_CxA10_Multi_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxA10_Multi_Pass_power_in_interpolator.pkl",
@@ -285,7 +285,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxA_15_MP" : {
+    "MODELS_ColmacCxA_15_C_MP" : {
         "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode",
         "bounds_pkl": "Colmac_CxA15_Multi_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxA15_Multi_Pass_power_in_interpolator.pkl",
@@ -298,7 +298,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxA_20_MP" : {
+    "MODELS_ColmacCxA_20_C_MP" : {
         "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode",
         "bounds_pkl": "Colmac_CxA20_Multi_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxA20_Multi_Pass_power_in_interpolator.pkl",
@@ -311,7 +311,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxA_25_MP" : {
+    "MODELS_ColmacCxA_25_C_MP" : {
         "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode",
         "bounds_pkl": "Colmac_CxA25_Multi_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxA25_Multi_Pass_power_in_interpolator.pkl",
@@ -324,7 +324,7 @@
             }
         ]
     },
-    "MODELS_ColmacCxA_30_MP" : {
+    "MODELS_ColmacCxA_30_C_MP" : {
         "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode",
         "bounds_pkl": "Colmac_CxA30_Multi_Pass_bounds.pkl",
         "cap_in_pkl": "Colmac_CxA30_Multi_Pass_power_in_interpolator.pkl",
@@ -337,7 +337,7 @@
             }
         ]
     },
-    "MODELS_GE2014_MP" : {
+    "MODELS_GE2014_R_MP" : {
         "name" : "GE 2014 model run in efficiency mode",
         "perfmap": [
             {
@@ -352,7 +352,7 @@
             }
         ]
     },
-    "MODELS_GE2014_80_MP" : {
+    "MODELS_GE2014_80_R_MP" : {
         "name" : "GE 2014 model run in efficiency mode, 80 gallon unit",
         "perfmap": [
             {
@@ -367,7 +367,7 @@
             }
         ]
     },
-    "MODELS_GE2014STDMode_MP" : {
+    "MODELS_GE2014STDMode_R_MP" : {
         "name" : "GE 2014 model run in standard mode",
         "perfmap": [
             {
@@ -382,7 +382,7 @@
             }
         ]
     },
-    "MODELS_GE2014STDMode_80_MP" : {
+    "MODELS_GE2014STDMode_80_R_MP" : {
         "name" : "GE 2014 model run in standard mode, 80 gallon unit",
         "perfmap": [
             {
@@ -397,13 +397,13 @@
             }
         ]
     },
-    "MODELS_Mitsubishi_QAHV" : {
+    "MODELS_Mitsubishi_QAHV_C_SP" : {
         "name" : "Mitsubishi QAHV",
         "bounds_pkl": "Mitsubishi_QAHV_bounds.pkl",
         "cap_in_pkl": "Mitsubishi_QAHV_power_in_interpolator.pkl",
         "cap_out_pkl": "Mitsubishi_QAHV_capacity_interpolator.pkl"
     },
-    "MODELS_NyleC25A_SP" : {
+    "MODELS_NyleC25A_C_SP" : {
         "name" : "Nyle C25A external heat pump in Single Pass Mode",
         "bounds_pkl": "Nyle_C25A_bounds.pkl",
         "cap_in_pkl": "Nyle_C25A_power_in_interpolator.pkl",
@@ -418,7 +418,7 @@
             }
         ]
     },
-    "MODELS_NyleC60A_SP" : {
+    "MODELS_NyleC60A_C_SP" : {
         "name" : "Nyle C60A external heat pump in Single Pass Mode",
         "bounds_pkl": "Nyle_C60A_bounds.pkl",
         "cap_in_pkl": "Nyle_C60A_power_in_interpolator.pkl",
@@ -433,7 +433,7 @@
             }
         ]
     },
-    "MODELS_NyleC60A_C_SP" : {
+    "MODELS_NyleC60A_CW_C_SP" : {
         "name" : "Nyle C60A (Cold Weather Package) in Single Pass Mode",
         "bounds_pkl": "Nyle_C60A_bounds.pkl",
         "cap_in_pkl": "Nyle_C60A_power_in_interpolator.pkl",
@@ -448,7 +448,7 @@
             }
         ]
     },
-    "MODELS_NyleC90A_SP" : {
+    "MODELS_NyleC90A_C_SP" : {
         "name" : "Nyle C90A external heat pump in Single Pass Mode",
         "bounds_pkl": "Nyle_C90A_bounds.pkl",
         "cap_in_pkl": "Nyle_C90A_power_in_interpolator.pkl",
@@ -463,7 +463,7 @@
             }
         ]
     },
-    "MODELS_NyleC90A_C_SP" : {
+    "MODELS_NyleC90A_CW_C_SP" : {
         "name" : "Nyle C90A (Cold Weather Package) in Single Pass Mode",
         "bounds_pkl": "Nyle_C90A_bounds.pkl",
         "cap_in_pkl": "Nyle_C90A_power_in_interpolator.pkl",
@@ -478,7 +478,7 @@
             }
         ]
     },
-    "MODELS_NyleC125A_SP" : {
+    "MODELS_NyleC125A_C_SP" : {
         "name" : "Nyle C125A external heat pump in Single Pass Mode",
         "bounds_pkl": "Nyle_C125A_bounds.pkl",
         "cap_in_pkl": "Nyle_C125A_power_in_interpolator.pkl",
@@ -493,7 +493,7 @@
             }
         ]
     },
-    "MODELS_NyleC125A_C_SP" : {
+    "MODELS_NyleC125A_CW_C_SP" : {
         "name" : "Nyle C125A (Cold Weather Package) in Single Pass Mode",
         "bounds_pkl": "Nyle_C125A_bounds.pkl",
         "cap_in_pkl": "Nyle_C125A_power_in_interpolator.pkl",
@@ -507,7 +507,7 @@
             -1.4452E-05, -0.000492486, -0.000376814, 7.85911E-05, 1.47884E-06]
         }
     ]},
-    "MODELS_NyleC185A_SP" : {
+    "MODELS_NyleC185A_C_SP" : {
         "name" : "Nyle C185A external heat pump in Single Pass Mode",
         "bounds_pkl": "Nyle_C185A_bounds.pkl",
         "cap_in_pkl": "Nyle_C185A_power_in_interpolator.pkl",
@@ -522,7 +522,7 @@
             }
         ]
     },
-    "MODELS_NyleC185A_C_SP" : {
+    "MODELS_NyleC185A_CW_C_SP" : {
         "name" : "Nyle C185A (Cold Weather Package) in Single Pass Mode",
         "bounds_pkl": "Nyle_C185A_bounds.pkl",
         "cap_in_pkl": "Nyle_C185A_power_in_interpolator.pkl",
@@ -537,7 +537,7 @@
             }
         ]
     },
-    "MODELS_NyleC250A_SP" : {
+    "MODELS_NyleC250A_C_SP" : {
         "name" : "Nyle C250A external heat pump in Single Pass Mode",
         "bounds_pkl": "Nyle_C250A_bounds.pkl",
         "cap_in_pkl": "Nyle_C250A_power_in_interpolator.pkl",
@@ -552,7 +552,7 @@
             }
         ]
     },
-    "MODELS_NyleC250A_C_SP" : {
+    "MODELS_NyleC250A_CW_C_SP" : {
         "name" : "Nyle C250A (Cold Weather Package) in Single Pass Mode",
         "bounds_pkl": "Nyle_C250A_bounds.pkl",
         "cap_in_pkl": "Nyle_C250A_power_in_interpolator.pkl",
@@ -566,7 +566,7 @@
                 9.78042E-05, -0.000872708,-0.001013945, -0.00021852,	5.55444E-06]
             }
     ]},
-    "MODELS_RheemHB50_MP" : {
+    "MODELS_RheemHB50_R_MP" : {
         "name" : "Rheem 2014 Model",
         "perfmap": [
             {
@@ -580,7 +580,7 @@
                 "COP_coeffs" : [6.3, -0.03, 0.0]
             }
     ]},
-    "MODELS_RheemHBDR2250_MP" : {
+    "MODELS_RheemHBDR2250_R_MP" : {
         "name" : "Rheem HB Duct Ready 50 gallon, 2250 W resistance",
         "perfmap": [
             {
@@ -600,7 +600,7 @@
             }
         ]
     },
-    "MODELS_RheemHBDR4550_MP" : {
+    "MODELS_RheemHBDR4550_R_MP" : {
         "name" : "Rheem HB Duct Ready 50 gallon, 4500 W resistance",
         "perfmap": [
             {
@@ -620,7 +620,7 @@
             }
         ]
     },
-    "MODELS_RheemHBDR2265_MP" : {
+    "MODELS_RheemHBDR2265_R_MP" : {
         "name" : "Rheem HB Duct Ready 65 gallon, 2250 W resistance",
         "perfmap": [
             {
@@ -640,7 +640,7 @@
             }
         ]
     },
-    "MODELS_RheemHBDR4565_MP" : {
+    "MODELS_RheemHBDR4565_R_MP" : {
         "name" : "Rheem HB Duct Ready 65 gallon, 4500 W resistance",
         "perfmap": [
             {
@@ -660,7 +660,7 @@
             }
         ]
     },
-    "MODELS_RheemHBDR2280_MP" : {
+    "MODELS_RheemHBDR2280_R_MP" : {
         "name" : "Rheem HB Duct Ready 80 gallon, 2250 W resistance",
         "perfmap": [
             {
@@ -680,7 +680,7 @@
             }
         ]
     },
-    "MODELS_RheemHBDR4580_MP" : {
+    "MODELS_RheemHBDR4580_R_MP" : {
         "name" : "Rheem HB Duct Ready 80 gallon, 4500 W resistance",
         "perfmap": [
             {
@@ -700,7 +700,7 @@
             }
         ]
     },
-    "MODELS_RHEEM_HPHD60HNU_201_MP" : {
+    "MODELS_RHEEM_HPHD60HNU_201_R_MP" : {
         "name" : "Rheem MP 60 kBtu HNU",
         "perfmap": [
         {
@@ -709,7 +709,7 @@
             "COP_coeffs" : [3.6840046360, 0.0995685071, -0.0398107723, -0.0001903160, 0.0000980361, -0.0003469814]
         }
     ]},
-    "MODELS_RHEEM_HPHD60VNU_201_MP" : {
+    "MODELS_RHEEM_HPHD60VNU_201_R_MP" : {
         "name" : "Rheem MP 60 kBtu VNU",
         "perfmap": [
         {
@@ -718,7 +718,7 @@
             "COP_coeffs" : [3.6840046360, 0.0995685071, -0.0398107723, -0.0001903160, 0.0000980361, -0.0003469814]
         }
     ]},
-    "MODELS_RHEEM_HPHD135HNU_483_MP" : {
+    "MODELS_RHEEM_HPHD135HNU_483_R_MP" : {
         "name" : "Rheem MP 135 kBtu HNU",
         "bounds_pkl": "Rheem_HPHD_135HNU_483_bounds.pkl",
         "cap_in_pkl": "Rheem_HPHD_135HNU_483_power_in_interpolator.pkl",
@@ -730,7 +730,7 @@
             "COP_coeffs" : [5.0207181209, 0.0442525790, -0.0418284882, 0.0000793531, 0.0001132421, -0.0002491563]
         }
     ]},
-    "MODELS_RHEEM_HPHD135VNU_483_MP" : {
+    "MODELS_RHEEM_HPHD135VNU_483_R_MP" : {
         "name" : "Rheem MP 135 kBtu VNU",
         "bounds_pkl": "Rheem_HPHD_135VNU_483_bounds.pkl",
         "cap_in_pkl": "Rheem_HPHD_135VNU_483_power_in_interpolator.pkl",
@@ -742,7 +742,7 @@
             "COP_coeffs" : [5.0207181209, 0.0442525790, -0.0418284882, 0.0000793531, 0.0001132421, -0.0002491563]
         }
     ]},
-    "MODELS_RheemPlugInDedicated40_MP" : {
+    "MODELS_RheemPlugInDedicated40_R_MP" : {
         "name" : "Rheem 120V Dedicated-Circuit, 40 gallon",
         "perfmap": [
             {
@@ -757,7 +757,7 @@
             }
         ]
     },
-    "MODELS_RheemPlugInDedicated50_MP" : {
+    "MODELS_RheemPlugInDedicated50_R_MP" : {
         "name" : "Rheem 120V Dedicated-Circuit, 50 gallon",
         "perfmap": [
             {
@@ -772,7 +772,7 @@
             }
         ]
     },
-    "MODELS_RheemPlugInShared40_MP" : {
+    "MODELS_RheemPlugInShared40_R_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 40 gallon",
         "perfmap": [
             {
@@ -787,7 +787,7 @@
             }
         ]
     },
-    "MODELS_RheemPlugInShared50_MP" : {
+    "MODELS_RheemPlugInShared50_R_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 50 gallon",
         "perfmap": [
             {
@@ -802,7 +802,7 @@
             }
         ]
     },
-    "MODELS_RheemPlugInShared65_MP" : {
+    "MODELS_RheemPlugInShared65_R_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 65 gallon",
         "perfmap": [
             {
@@ -817,7 +817,7 @@
             }
         ]
     },
-    "MODELS_RheemPlugInShared80_MP" : {
+    "MODELS_RheemPlugInShared80_R_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 80 gallon",
         "perfmap": [
             {
@@ -832,7 +832,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Build40_MP" : {
+    "MODELS_Rheem2020Build40_R_MP" : {
         "name" : "Rheem 2020 Builder, 40 gallon",
         "perfmap": [
             {
@@ -847,7 +847,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Build50_MP" : {
+    "MODELS_Rheem2020Build50_R_MP" : {
         "name" : "Rheem 2020 Builder, 50 gallon",
         "perfmap": [
             {
@@ -862,7 +862,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Build65_MP" : {
+    "MODELS_Rheem2020Build65_R_MP" : {
         "name" : "Rheem 2020 Builder, 65 gallon",
         "perfmap": [
             {
@@ -877,7 +877,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Build80_MP" : {
+    "MODELS_Rheem2020Build80_R_MP" : {
         "name" : "Rheem 2020 Builder, 80 gallon",
         "perfmap": [
             {
@@ -892,7 +892,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Prem40_MP" : {
+    "MODELS_Rheem2020Prem40_R_MP" : {
         "name" : "Rheem 2020 Premium, 40 gallon",
         "perfmap": [
             {
@@ -907,7 +907,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Prem50_MP" : {
+    "MODELS_Rheem2020Prem50_R_MP" : {
         "name" : "Rheem 2020 Premium, 50 gallon",
         "perfmap": [
             {
@@ -922,7 +922,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Prem65_MP" : {
+    "MODELS_Rheem2020Prem65_R_MP" : {
         "name" : "Rheem 2020 Premium, 65 gallon",
         "perfmap": [
             {
@@ -937,7 +937,7 @@
             }
         ]
     },
-    "MODELS_Rheem2020Prem80_MP" : {
+    "MODELS_Rheem2020Prem80_R_MP" : {
         "name" : "Rheem 2020 Premium, 80 gallon",
         "perfmap": [
             {
@@ -952,7 +952,7 @@
             }
         ]
     },
-    "MODELS_SANCO2_43_MP" : {
+    "MODELS_SANCO2_43_C_MP" : {
         "name" : "SANCO2 43 gallon CO2 external heat pump",
         "perfmap": [
             {
@@ -982,8 +982,11 @@
             }
         ]
     },
-    "MODELS_SANCO2_GS3_45HPA_US_SP" : {
-        "name" : "SANCO2 GS3",
+    "MODELS_SANCO2_C_SP" : {
+        "name" : "SANCO2 GS4",
+        "bounds_pkl": "SANCO2_GS4_bounds.pkl",
+        "cap_in_pkl": "SANCO2_GS4_power_in_interpolator.pkl",
+        "cap_out_pkl": "SANCO2_GS4_capacity_interpolator.pkl",
         "perfmap": [
             {
                 "T_F" : 17,
@@ -1012,7 +1015,7 @@
             }
         ]
     },
-    "MODELS_SANCO2_83_MP" : {
+    "MODELS_SANCO2_83_C_MP" : {
         "name" : "SANCO2 83 gallon CO2 external heat pump",
         "perfmap": [
             {
@@ -1042,7 +1045,7 @@
             }
         ]
     },
-    "MODELS_SANCO2_119_MP" : {
+    "MODELS_SANCO2_119_C_MP" : {
         "name" : "SANCO2 120 gallon CO2 external heat pump",
         "perfmap": [
             {
@@ -1072,7 +1075,7 @@
             }
         ]
     },
-    "MODELS_Stiebel220E_MP" : {
+    "MODELS_Stiebel220E_R_MP" : {
         "name" : "Stiebel Eltron",
         "perfmap": [
             {
@@ -1087,7 +1090,7 @@
             }
         ]
     },
-    "MODELS_VOLTEX60_MP" : {
+    "MODELS_VOLTEX60_R_MP" : {
         "name" : "Voltex 60 gallon HPWH",
         "perfmap": [
             {
@@ -1102,7 +1105,7 @@
             }
         ]
     },
-    "MODELS_VOLTEX80_MP" : {
+    "MODELS_VOLTEX80_R_MP" : {
         "name" : "Voltex 80 gallon HPWH",
         "perfmap": [
             {

@@ -177,8 +177,9 @@ class PrefMapTracker:
         if modelName == "MODELS_Mitsubishi_QAHV":
             self.usePkl = True
             self.isQAHV = True
-        elif modelName[-2:] == 'MP' and modelName != "MODELS_RHEEM_HPHD135VNU_483_MP" and modelName != "MODELS_RHEEM_HPHD135HNU_483_MP":
+        elif modelName == "MODELS_SANCO2_C_SP" or (modelName[-2:] == 'MP' and modelName != "MODELS_RHEEM_HPHD135VNU_483_MP" and modelName != "MODELS_RHEEM_HPHD135HNU_483_MP"):
             # The two rheems with pkls function like single pass pkls
+            # TODO need a better flag than "isMultiPass" cuz that is not really accurate
             self.isMultiPass = True
         try:
             with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:

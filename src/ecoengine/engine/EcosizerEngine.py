@@ -534,7 +534,7 @@ class EcosizerEngine:
 # STATIC FUNCTIONS
 ##############################################################
     
-def getListOfModels(multiPass = False):
+def getListOfModels(multiPass = False, includeResidential = True, excludeModels = []):
     """
     Static Method to Return all Model Names as a list of strings
 
@@ -553,10 +553,12 @@ def getListOfModels(multiPass = False):
     with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
         data = json.load(json_file)
         for model_name, value in data.items():
-            if multiPass and model_name[-2:] == 'MP':
-                returnList.append([model_name,value["name"]])
-            elif not multiPass and model_name[-2:] != 'MP':
-                returnList.append([model_name,value["name"]])
+            if not model_name in excludeModels:
+                if includeResidential or model_name[-4] == "C":
+                    if multiPass and model_name[-2:] == 'MP':
+                        returnList.append([model_name,value["name"]])
+                    elif not multiPass and model_name[-2:] != 'MP':
+                        returnList.append([model_name,value["name"]])
     return returnList
 
 def getSizingCurvePlot(x, y, startind, loadshifting = False):
