@@ -397,6 +397,12 @@
             }
         ]
     },
+    "MODELS_LYNC_AEGIS_500_C_SP" : {
+        "name" : "Lync Aegis 500 Single Pass",
+        "bounds_pkl": "Lync_Aegis_500_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Lync_Aegis_500_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Lync_Aegis_500_Single_Pass_capacity_interpolator.pkl"
+    },
     "MODELS_Mitsubishi_QAHV_C_SP" : {
         "name" : "Mitsubishi QAHV",
         "bounds_pkl": "Mitsubishi_QAHV_bounds.pkl",
@@ -566,6 +572,18 @@
                 9.78042E-05, -0.000872708,-0.001013945, -0.00021852,	5.55444E-06]
             }
     ]},
+    "MODELS_NyleE360_HT_C_SP" : {
+        "name" : "Nyle E360 HT",
+        "bounds_pkl": "Nyle_e360_HT_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Nyle_e360_HT_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_e360_HT_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_NyleE360_LT_C_SP" : {
+        "name" : "Nyle E360 LT",
+        "bounds_pkl": "Nyle_e360_LT_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Nyle_e360_LT_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Nyle_e360_LT_Single_Pass_capacity_interpolator.pkl"
+    },
     "MODELS_RheemHB50_R_MP" : {
         "name" : "Rheem 2014 Model",
         "perfmap": [
@@ -700,8 +718,11 @@
             }
         ]
     },
-    "MODELS_RHEEM_HPHD60HNU_201_R_MP" : {
+    "MODELS_RHEEM_HPHD60HNU_201_C_MP" : {
         "name" : "Rheem MP 60 kBtu HNU",
+        "bounds_pkl": "Rheem_HPHD_60HNU_201_bounds.pkl",
+        "cap_in_pkl": "Rheem_HPHD_60HNU_201_power_in_interpolator.pkl",
+        "cap_out_pkl": "Rheem_HPHD_60HNU_201_capacity_interpolator.pkl",
         "perfmap": [
         {
             "T_F" : 110,
@@ -709,8 +730,11 @@
             "COP_coeffs" : [3.6840046360, 0.0995685071, -0.0398107723, -0.0001903160, 0.0000980361, -0.0003469814]
         }
     ]},
-    "MODELS_RHEEM_HPHD60VNU_201_R_MP" : {
+    "MODELS_RHEEM_HPHD60VNU_201_C_MP" : {
         "name" : "Rheem MP 60 kBtu VNU",
+        "bounds_pkl": "Rheem_HPHD_60VNU_201_bounds.pkl",
+        "cap_in_pkl": "Rheem_HPHD_60VNU_201_power_in_interpolator.pkl",
+        "cap_out_pkl": "Rheem_HPHD_60VNU_201_capacity_interpolator.pkl",
         "perfmap": [
         {
             "T_F" : 110,
@@ -718,7 +742,7 @@
             "COP_coeffs" : [3.6840046360, 0.0995685071, -0.0398107723, -0.0001903160, 0.0000980361, -0.0003469814]
         }
     ]},
-    "MODELS_RHEEM_HPHD135HNU_483_R_MP" : {
+    "MODELS_RHEEM_HPHD135HNU_483_C_MP" : {
         "name" : "Rheem MP 135 kBtu HNU",
         "bounds_pkl": "Rheem_HPHD_135HNU_483_bounds.pkl",
         "cap_in_pkl": "Rheem_HPHD_135HNU_483_power_in_interpolator.pkl",
@@ -730,7 +754,7 @@
             "COP_coeffs" : [5.0207181209, 0.0442525790, -0.0418284882, 0.0000793531, 0.0001132421, -0.0002491563]
         }
     ]},
-    "MODELS_RHEEM_HPHD135VNU_483_R_MP" : {
+    "MODELS_RHEEM_HPHD135VNU_483_C_MP" : {
         "name" : "Rheem MP 135 kBtu VNU",
         "bounds_pkl": "Rheem_HPHD_135VNU_483_bounds.pkl",
         "cap_in_pkl": "Rheem_HPHD_135VNU_483_power_in_interpolator.pkl",
@@ -952,7 +976,7 @@
             }
         ]
     },
-    "MODELS_SANCO2_43_C_MP" : {
+    "MODELS_SANCO2_43_R_MP" : {
         "name" : "SANCO2 43 gallon CO2 external heat pump",
         "perfmap": [
             {
@@ -1015,7 +1039,7 @@
             }
         ]
     },
-    "MODELS_SANCO2_83_C_MP" : {
+    "MODELS_SANCO2_83_R_MP" : {
         "name" : "SANCO2 83 gallon CO2 external heat pump",
         "perfmap": [
             {

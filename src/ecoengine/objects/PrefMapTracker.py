@@ -89,8 +89,9 @@ class PrefMapTracker:
                         input_kW = self.default_input_low
                     else:
                         if self.defaultCapacity is None:
+                            return 1,1 # set for QPL generator electric resistance
                             # TODO if we want to put this into ecosizer, we need to size default capacity here and give warning to engineers that ER will be required
-                            raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
+                            #raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
                         return self.defaultCapacity, self.defaultCapacity # externalT_F is low so use electric resistance to heat and assume COP of 1
                 else:
                     # externalT_F is high so assume same COP for highest temp in performance map
@@ -169,16 +170,18 @@ class PrefMapTracker:
         return [output_kW, input_kW]
 
     def _autoSetNumHeatPumps(self, modelCapacity):
-        # print(f"{self.defaultCapacity}/{modelCapacity}")
         heatPumps = math.ceil(self.defaultCapacity/modelCapacity)
         self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
     def setPrefMap(self, modelName):
-        if modelName == "MODELS_Mitsubishi_QAHV":
+        if modelName in ["MODELS_Mitsubishi_QAHV", "MODELS_NyleE360_HT_C_SP", "MODELS_NyleE360_LT_C_SP"]:
             self.usePkl = True
-            self.isQAHV = True
-        elif modelName == "MODELS_SANCO2_C_SP" or (modelName[-2:] == 'MP' and modelName != "MODELS_RHEEM_HPHD135VNU_483_MP" and modelName != "MODELS_RHEEM_HPHD135HNU_483_MP"):
-            # The two rheems with pkls function like single pass pkls
+            if modelName == "MODELS_Mitsubishi_QAHV":
+                self.isQAHV = True
+        elif modelName == "MODELS_SANCO2_C_SP" or (modelName[-2:] == 'MP' 
+                and not modelName in ["MODELS_RHEEM_HPHD135VNU_483_MP","MODELS_RHEEM_HPHD135HNU_483_MP",
+                "MODELS_RHEEM_HPHD60VNU_201_C_MP","MODELS_RHEEM_HPHD60HNU_201_C_MP"]):
+            # The rheems with pkls function like single pass pkls
             # TODO need a better flag than "isMultiPass" cuz that is not really accurate
             self.isMultiPass = True
         try:

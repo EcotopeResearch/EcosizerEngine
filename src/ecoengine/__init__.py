@@ -18,8 +18,9 @@
 """
 
 
-__all__ = ['EcosizerEngine', 'createBuilding', 'createSystem', 'SimulationRun']
+__all__ = ['EcosizerEngine', 'createBuilding', 'createSystem', 'SimulationRun', 'PrefMapTracker']
 from .engine.EcosizerEngine import *
 from .engine.BuildingCreator import createBuilding
 from .engine.SystemCreator import createSystem
 from .objects.SimulationRun import *
+from .objects.PrefMapTracker import *
