@@ -74,27 +74,27 @@ def test_multiFamilyWithBedroomsResults(multiFamilyWithBedrooms, expected):
     assert [multiFamilyWithBedrooms.recirc_loss, multiFamilyWithBedrooms.incomingT_F, multiFamilyWithBedrooms.supplyT_F, multiFamilyWithBedrooms.magnitude] == expected
 
 @pytest.mark.parametrize("expected", [
-   ([50, 120, 50121.21, 2093.25])
+   ([50, 120, 50121.21, 2497.5])
 ])
 def test_multiUseResults(nursingHomeAndOffice, expected):
     assert [nursingHomeAndOffice.incomingT_F, nursingHomeAndOffice.supplyT_F, round(nursingHomeAndOffice.recirc_loss, 2), round(nursingHomeAndOffice.magnitude, 2)] == expected
 
 @pytest.mark.parametrize("buildingType, loadshape, magnitude, expected", [
-   ("apartment",None,100,4280.0),
-   (["elementary_school"],None,100,108.1),
+   ("apartment",None,100,5460.0),
+   (["elementary_school"],None,100,134.0),
    ("food_service_a",None,100,1103.2),
-   ("food_service_b",None,100,628.8),
-   ("junior_high",None,100,327.0),
-   ("mens_dorm",None,[100],1890.),
+   ("food_service_b",None,100,644.0),
+   ("junior_high",None,100,375.0),
+   ("mens_dorm",None,[100],2360.0),
    (None,[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[100],100),
    (None,[0,0,0,0,0,0,0,0,100,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0],None,150),
-   (["office_building",None],[None, [0,0,0,0,0,0,0,0,100,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[100,None],261),
-   ("motel",None,100,2880.0),
-   (["nursing_home"],None,[100],2010),
-   ("office_building",None,100,111.0),
-   ("senior_high",None,100,302.),
-   ("womens_dorm",None,100,1640.),
-   (["womens_dorm", "junior_high"],None,[100,5],1656.3)
+   (["office_building",None],[None, [0,0,0,0,0,0,0,0,100,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[100,None],360.0),
+   ("motel",None,100,2140.0),
+   (["nursing_home"],None,[100],2340.0),
+   ("office_building",None,100,210.0),
+   ("senior_high",None,100,326.0),
+   ("womens_dorm",None,100,1960.0),
+   (["womens_dorm", "junior_high"],None,[100,5],1978.8)
 ])
 def test_magnitudes(buildingType, loadshape, magnitude, expected):
     building = createBuilding(
@@ -110,10 +110,10 @@ def test_magnitudes(buildingType, loadshape, magnitude, expected):
 
 @pytest.mark.parametrize("buildingType, magnitude, expected", [
    ("apartment",100,np.array([0.046728972, 0.044392523, 0.037383178])),
-   (["food_service_a", "nursing_home"],[100,50],np.array([0.0, 0.00237169, 0.00237169])),
-   (["womens_dorm", "junior_high"],[100,5],np.array([0.30189875, 0.1208078 , 0.0362846])),
-   (["womens_dorm", "junior_high"],[5,100],np.array([0.06356968, 0.02933985, 0.01222494])),
-   (["womens_dorm", "junior_high", "food_service_a", "nursing_home", "apartment"],[5,100, 50, 200, 500],np.array([0.03889, 0.03722, 0.03127]))
+   (["food_service_a", "nursing_home"],[100,50],np.array([0., 0.00256, 0.00256])),
+   (["womens_dorm", "junior_high"],[100,5],np.array([0.30202, 0.12085, 0.0363])),
+   (["womens_dorm", "junior_high"],[5,100],np.array([0.06559, 0.03012, 0.01243])),
+   (["womens_dorm", "junior_high", "food_service_a", "nursing_home", "apartment"],[5,100, 50, 200, 500],np.array([0.03959, 0.03786, 0.03181]))
 ])
 def test_default_loadshapes(buildingType, magnitude, expected):
     building = createBuilding(
@@ -129,7 +129,7 @@ def test_default_loadshapes(buildingType, magnitude, expected):
 @pytest.mark.parametrize("loadShape, buildingType, magnitude, expected", [
    ([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"apartment",100,np.array([1, 0, 0])),
    ([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],None,100,np.array([1, 0, 0])),
-   ([[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],["womens_dorm", "junior_high"],[5,100],np.array([0.20049, 0.79951, 0.]))
+   ([[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],["womens_dorm", "junior_high"],[5,100],np.array([0.20719, 0.79281, 0.]))
 ])
 def test_custom_loadshapes(loadShape, buildingType, magnitude, expected):
     building = createBuilding(
