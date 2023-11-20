@@ -976,7 +976,7 @@
             }
         ]
     },
-    "MODELS_SANCO2_43_R_MP" : {
+    "MODELS_SANCO2_43_R_SP" : {
         "name" : "SANCO2 43 gallon CO2 external heat pump",
         "perfmap": [
             {
@@ -1039,7 +1039,7 @@
             }
         ]
     },
-    "MODELS_SANCO2_83_R_MP" : {
+    "MODELS_SANCO2_83_R_SP" : {
         "name" : "SANCO2 83 gallon CO2 external heat pump",
         "perfmap": [
             {
@@ -1069,7 +1069,7 @@
             }
         ]
     },
-    "MODELS_SANCO2_119_C_MP" : {
+    "MODELS_SANCO2_119_C_SP" : {
         "name" : "SANCO2 120 gallon CO2 external heat pump",
         "perfmap": [
             {

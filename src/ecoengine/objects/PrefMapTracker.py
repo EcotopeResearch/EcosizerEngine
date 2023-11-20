@@ -174,12 +174,12 @@ class PrefMapTracker:
         self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
     def setPrefMap(self, modelName):
-        if modelName in ["MODELS_Mitsubishi_QAHV", "MODELS_NyleE360_HT_C_SP", "MODELS_NyleE360_LT_C_SP"]:
+        if modelName in ["MODELS_Mitsubishi_QAHV", "MODELS_NyleE360_HT_C_SP", "MODELS_NyleE360_LT_C_SP","MODELS_LYNC_AEGIS_500_C_SP"]:
             self.usePkl = True
             if modelName == "MODELS_Mitsubishi_QAHV":
                 self.isQAHV = True
         elif modelName == "MODELS_SANCO2_C_SP" or (modelName[-2:] == 'MP' 
-                and not modelName in ["MODELS_RHEEM_HPHD135VNU_483_MP","MODELS_RHEEM_HPHD135HNU_483_MP",
+                and not modelName in ["MODELS_RHEEM_HPHD135VNU_483_C_MP","MODELS_RHEEM_HPHD135HNU_483_C_MP",
                 "MODELS_RHEEM_HPHD60VNU_201_C_MP","MODELS_RHEEM_HPHD60HNU_201_C_MP"]):
             # The rheems with pkls function like single pass pkls
             # TODO need a better flag than "isMultiPass" cuz that is not really accurate
