@@ -96,12 +96,12 @@ class OfficeBuilding(Building):
 
 class FoodServiceA(Building):
     def __init__(self, n_meals, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_meals * 11.032 # ASHREA GPD per meal
+        magnitude = n_meals * 11.032 # ASHREA GPD per meal per hour
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class FoodServiceB(Building):
     def __init__(self, n_meals, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_meals * 6.44 # ASHREA GPD per meal from maximum daily usage
+        magnitude = n_meals * 6.44 # ASHREA GPD per meal per hour from maximum daily usage
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class Apartment(Building):
