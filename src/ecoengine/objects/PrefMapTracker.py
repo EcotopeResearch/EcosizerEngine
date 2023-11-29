@@ -17,6 +17,7 @@ class PrefMapTracker:
         self.perfMap = None
         self.kBTUhr = kBTUhr
         self.isMultiPass = isMultiPass
+        self.twoInputPkl = False
         self.oat_max = None
         self.oat_min = None
         self.inlet_max = None
@@ -76,7 +77,7 @@ class PrefMapTracker:
 
             #use pickled interpolation functions
             input_array = [condenserT_F, outT_F, externalT_F]
-            if self.isMultiPass:
+            if self.twoInputPkl:
                 input_array = [condenserT_F, externalT_F] # MultiPass performance maps do not account for outlet water temp
             output_kW = self.output_cap_interpolator(input_array)[0][0]
             input_kW = self.input_cap_interpolator(input_array)[0][0]
@@ -174,20 +175,20 @@ class PrefMapTracker:
         self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
     def setPrefMap(self, modelName):
-        if modelName in ["MODELS_Mitsubishi_QAHV", "MODELS_NyleE360_HT_C_SP", "MODELS_NyleE360_LT_C_SP","MODELS_LYNC_AEGIS_500_C_SP"]:
-            self.usePkl = True
-            if modelName == "MODELS_Mitsubishi_QAHV":
-                self.isQAHV = True
+        if modelName == "MODELS_Mitsubishi_QAHV":
+            self.isQAHV = True
         elif modelName == "MODELS_SANCO2_C_SP" or (modelName[-2:] == 'MP' 
                 and not modelName in ["MODELS_RHEEM_HPHD135VNU_483_C_MP","MODELS_RHEEM_HPHD135HNU_483_C_MP",
                 "MODELS_RHEEM_HPHD60VNU_201_C_MP","MODELS_RHEEM_HPHD60HNU_201_C_MP"]):
             # The rheems with pkls function like single pass pkls
-            # TODO need a better flag than "isMultiPass" cuz that is not really accurate
+            self.twoInputPkl = True
+        if modelName[-2:] == 'MP':
             self.isMultiPass = True
         try:
             with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
                 dataDict = json.load(json_file)
-                if self.usePkl:
+                if self.usePkl or not "perfmap" in dataDict[modelName]:
+                    self.usePkl = True
                     filepath = "../data/preformanceMaps/pkls/"
                     with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['cap_out_pkl']}"), 'rb') as f:
                         self.output_cap_interpolator = pickle.load(f)
@@ -195,7 +196,7 @@ class PrefMapTracker:
                         self.input_cap_interpolator = pickle.load(f)
                     with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['bounds_pkl']}"), 'rb') as f:
                         bounds = pickle.load(f)
-                        # Format: [[max_oat,min_oat],[max_inlet,min_inlet],[max_outlet,min_outlet],[default_output_high, default_input_high]]
+                        # Format: [[max_oat,min_oat],[max_inlet,min_inlet],[max_outlet,min_outlet],[default_output_high, default_input_high],[default_output_low, default_input_low]]
                         self.oat_max = bounds[0][0]
                         self.oat_min = bounds[0][1]
                         self.inlet_max = bounds[1][0]

@@ -335,20 +335,20 @@ def test__annual_swing_simulationResults_size(annual_swing_sizer):
     assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 35040
 
 @pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, climateZone", [
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'multipass_norecirc', 891, 48, None, None, True, 94503,2),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_norecirc', 891, 48, None, None, True, 93901,3),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_rtp', 891, 48, None, None, True, 93254,4),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120_MP', None, 'multipass_rtp', 891, 48, None, None, True, 93130,5),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'multipass_norecirc', 891, 48, None, None, True, 94503,2),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_C_MP', None, 'multipass_norecirc', 891, 48, None, None, True, 93901,3),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_C_MP', None, 'multipass_rtp', 891, 48, None, None, True, 93254,4),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120_C_MP', None, 'multipass_rtp', 891, 48, None, None, True, 93130,5),
    (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_rtp', 891, 48, None, None, True, 90009,6),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120_MP', None, 'singlepass_rtp', 891, 48, None, None, True, 91902,7),
-   (0.21, 0.8, 150, 120, None, 'MODELS_AOSmithCAHP120_MP', None, 'singlepass_rtp', 702, 41, None, None, False, 90003,8),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'singlepass_norecirc', 891, 48, None, None, True, 90006,9),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_Mitsubishi_QAHV', None, 'singlepass_norecirc', 891, 48, None, None, True, 91701,10),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_GS3_45HPA_US_SP', None, 'swingtank', 891, 48, 100, 19, True, 95603,11),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_25_SP', None, 'swingtank', 891, 48, 100, 19, True, 93620,12),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC185A_SP', 'paralleltank', 891, 31, 91, 19, True, 93203,13),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_SP', 'MODELS_ColmacCxA_20_SP', 'paralleltank', 891, 31, 91, 19, True, 91916,14),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC250A_C_SP', 'paralleltank', 891, 31, 91, 19, True, 92004,15)
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120_C_MP', None, 'singlepass_rtp', 891, 48, None, None, True, 91902,7),
+   (0.21, 0.8, 150, 120, None, 'MODELS_AOSmithCAHP120_C_MP', None, 'singlepass_rtp', 702, 41, None, None, False, 90003,8),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_norecirc', 891, 48, None, None, True, 90006,9),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_Mitsubishi_QAHV_C_SP', None, 'singlepass_norecirc', 891, 48, None, None, True, 91701,10),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_C_SP', None, 'swingtank', 891, 48, 100, 19, True, 95603,11),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_25_C_SP', None, 'swingtank', 891, 48, 100, 19, True, 93620,12),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', 'MODELS_NyleC185A_C_SP', 'paralleltank', 891, 31, 91, 19, True, 93203,13),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_C_SP', 'MODELS_ColmacCxA_20_C_SP', 'paralleltank', 891, 31, 91, 19, True, 91916,14),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', 'MODELS_NyleC250A_C_SP', 'paralleltank', 891, 31, 91, 19, True, 92004,15)
 ])
 def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, 
                               simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, climateZone):
@@ -427,12 +427,12 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
     assert equip_method_cop > boundry_method_cop - 0.005
 
 @pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, zipCode, climateZone", [
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'multipass_norecirc', 891, 48, None, None, 94922,1),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_rtp', 891, 48, None, None, 90001,8),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'multipass_norecirc', 891, 48, None, None, 94922,1),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_C_MP', None, 'multipass_rtp', 891, 48, None, None, 90001,8),
    (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_rtp', 891, 48, None, None, 90254,6),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'singlepass_norecirc', 891, 48, None, None, 90255,8),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_GS3_45HPA_US_SP', None, 'swingtank', 891, 48, 100, 19, 91380,16),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_SP', 'MODELS_ColmacCxA_20_MP', 'paralleltank', 891, 31, 91, 19, 91730,10),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_norecirc', 891, 48, None, None, 90255,8),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_C_SP', None, 'swingtank', 891, 48, 100, 19, 91380,16),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_C_SP', 'MODELS_ColmacCxA_20_C_MP', 'paralleltank', 891, 31, 91, 19, 91730,10),
 ])
 
 def test_annual_simRun_comparison_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, 
@@ -512,7 +512,7 @@ def test_annual_QAVH_for_all_climates(climateZone):
             PCap_kW = 48,
             annual = True,
             climateZone = climateZone,
-            systemModel = "MODELS_Mitsubishi_QAHV"
+            systemModel = "MODELS_Mitsubishi_QAHV_C_SP"
         )
     simRun = hpwh.getSimRun(minuteIntervals = 15, nDays = 365)
 

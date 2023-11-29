@@ -199,6 +199,38 @@
             }
         ]
     },
+    "MODELS_ColmacCxA_10_CW_C_SP" : {
+        "name" : "Colmac CxA_10 external heat pump in Single Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA10_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_10_FW_C_SP" : {
+        "name" : "Colmac CxA_10 external heat pump in Single Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA10_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_10_Oversized_C_SP" : {
+        "name" : "Colmac CxA_10 external heat pump in Single Pass Mode (Oversized Condenser)",
+        "bounds_pkl": "Colmac_CxA10_Oversized_Condenser_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_Oversized_Condenser_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_Oversized_Condenser_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_10_VFD_45_Hz_C_SP" : {
+        "name" : "Colmac CxA_10 external heat pump in Single Pass Mode (VFD 45 Hz)",
+        "bounds_pkl": "Colmac_CxA10_VFD_45_Hz_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_VFD_45_Hz_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_VFD_45_Hz_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_10_VFD_60_Hz_C_SP" : {
+        "name" : "Colmac CxA_10 external heat pump in Single Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA10_VFD_60_Hz_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_VFD_60_Hz_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_VFD_60_Hz_Single_Pass_capacity_interpolator.pkl"
+    },
     "MODELS_ColmacCxA_15_C_SP" : {
         "name" : "Colmac CxA_15 external heat pump in Single Pass Mode",
         "bounds_pkl": "Colmac_CxA15_Single_Pass_bounds.pkl",
@@ -214,6 +246,81 @@
             }
         ]
     },
+    "MODELS_ColmacCxA_15_CW_C_SP" : {
+        "name" : "Colmac CxA_15 external heat pump in Single Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA15_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_15_FW_C_SP" : {
+        "name" : "Colmac CxA_15 external heat pump in Single Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA15_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_15_VFD_45_Hz_C_SP" : {
+        "name" : "Colmac CxA_15 external heat pump in Single Pass Mode (VDF 45 Hz)",
+        "bounds_pkl": "Colmac_CxA15_VFD_45_Hz_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_VFD_45_Hz_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_VFD_45_Hz_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_15_VFD_60_Hz_C_SP" : {
+        "name" : "Colmac CxA_15 external heat pump in Single Pass Mode (VDF 60 Hz)",
+        "bounds_pkl": "Colmac_CxA15_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+
+    "MODELS_ColmacCxA_15_R513a_C_SP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Single Pass Mode",
+        "bounds_pkl": "Colmac_CxA15_R513a_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_R513a_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_R513a_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_15_R513a_CW_C_SP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Single Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA15_R513a_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_R513a_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_R513a_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_15_R513a_FW_C_SP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Single Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA15_R513a_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_R513a_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_R513a_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_15_R513a_VFD_45_Hz_C_SP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Single Pass Mode (VFD 45 Hz)",
+        "bounds_pkl": "Colmac_CxA15_R513a_VFD_45_Hz_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_R513a_VFD_45_Hz_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_R513a_VFD_45_Hz_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_15_R513a_VFD_60_Hz_C_SP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Single Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA15_R513a_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_R513a_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_R513a_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+
+    "MODELS_ColmacCxV_15_VFD_45_Hz_C_SP" : {
+        "name" : "Colmac CxV_15 external heat pump in Single Pass Mode (VFD 45 Hz)",
+        "bounds_pkl": "Colmac_CxV15_VFD_45_Hz_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxV15_VFD_45_Hz_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxV15_VFD_45_Hz_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxV_15_VFD_60_Hz_C_SP" : {
+        "name" : "Colmac CxV_15 external heat pump in Single Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxV15_VFD_60_Hz_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxV15_VFD_60_Hz_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxV15_VFD_60_Hz_Single_Pass_capacity_interpolator.pkl"
+    },
+
     "MODELS_ColmacCxA_20_C_SP" : {
         "name" : "Colmac CxA_20 external heat pump in Single Pass Mode",
         "bounds_pkl": "Colmac_CxA20_Single_Pass_bounds.pkl",
@@ -229,6 +336,40 @@
             }
         ]
     },
+    "MODELS_ColmacCxA_20_CW_C_SP" : {
+        "name" : "Colmac CxA_20 external heat pump in Single Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA20_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_20_FW_C_SP" : {
+        "name" : "Colmac CxA_20 external heat pump in Single Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA20_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_20_Oversized_C_SP" : {
+        "name" : "Colmac CxA_20 external heat pump in Single Pass Mode (Oversized Condenser)",
+        "bounds_pkl": "Colmac_CxA20_Oversized_Condenser_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_Oversized_Condenser_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_Oversized_Condenser_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_20_VFD_35_Hz_C_SP" : {
+        "name" : "Colmac CxA_20 external heat pump in Single Pass Mode (VFD 35 Hz)",
+        "bounds_pkl": "Colmac_CxA20_VFD_35_Hz_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_VFD_35_Hz_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_VFD_35_Hz_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_20_VFD_60_Hz_C_SP" : {
+        "name" : "Colmac CxA_20 external heat pump in Single Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA20_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+
     "MODELS_ColmacCxA_25_C_SP" : {
         "name" : "Colmac CxA_25 external heat pump in Single Pass Mode",
         "bounds_pkl": "Colmac_CxA25_Single_Pass_bounds.pkl",
@@ -243,6 +384,39 @@
                 -0.0000378740, -0.0004146401, -0.0001213363, -0.0000031856, 0.0000006306]
             }
         ]
+    },
+    "MODELS_ColmacCxA_25_CW_C_SP" : {
+        "name" : "Colmac CxA_25 external heat pump in Single Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA25_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_25_FW_C_SP" : {
+        "name" : "Colmac CxA_25 external heat pump in Single Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA25_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_25_Oversized_C_SP" : {
+        "name" : "Colmac CxA_25 external heat pump in Single Pass Mode (Oversized Condenser)",
+        "bounds_pkl": "Colmac_CxA25_Oversized_Condenser_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_Oversized_Condenser_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_Oversized_Condenser_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_25_VFD_35_Hz_C_SP" : {
+        "name" : "Colmac CxA_25 external heat pump in Single Pass Mode (VFD 35 Hz)",
+        "bounds_pkl": "Colmac_CxA25_VFD_35_Hz_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_VFD_35_Hz_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_VFD_35_Hz_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_25_VFD_60_Hz_C_SP" : {
+        "name" : "Colmac CxA_25 external heat pump in Single Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA25_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
     },
     "MODELS_ColmacCxA_30_C_SP" : {
         "name" : "Colmac CxA_30 external heat pump in Single Pass Mode",
@@ -259,6 +433,87 @@
             }
         ]
     },
+    "MODELS_ColmacCxA_30_CW_C_SP" : {
+        "name" : "Colmac CxA_30 external heat pump in Single Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA30_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_30_FW_C_SP" : {
+        "name" : "Colmac CxA_30 external heat pump in Single Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA30_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_30_Oversized_C_SP" : {
+        "name" : "Colmac CxA_30 external heat pump in Single Pass Mode (Oversized Condenser)",
+        "bounds_pkl": "Colmac_CxA30_Oversized_Condenser_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_Oversized_Condenser_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_Oversized_Condenser_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_30_VFD_35_Hz_C_SP" : {
+        "name" : "Colmac CxA_30 external heat pump in Single Pass Mode (VFD 35 Hz)",
+        "bounds_pkl": "Colmac_CxA30_VFD_35_Hz_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_VFD_35_Hz_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_VFD_35_Hz_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_30_VFD_60_Hz_C_SP" : {
+        "name" : "Colmac CxA_30 external heat pump in Single Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA30_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+
+    "MODELS_ColmacCxA_30_R513a_C_SP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Single Pass Mode",
+        "bounds_pkl": "Colmac_CxA30_R513a_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_R513a_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_R513a_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_30_R513a_CW_C_SP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Single Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA30_R513a_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_R513a_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_R513a_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_30_R513a_FW_C_SP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Single Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA30_R513a_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_R513a_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_R513a_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_30_R513a_VFD_35_Hz_C_SP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Single Pass Mode (VFD 35 Hz)",
+        "bounds_pkl": "Colmac_CxA30_R513a_VFD_35_Hz_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_R513a_VFD_35_Hz_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_R513a_VFD_35_Hz_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_30_R513a_VFD_60_Hz_C_SP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Single Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA30_R513a_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_R513a_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_R513a_Single_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+
+    "MODELS_Colmac_HPA4_C_SP" : {
+        "name" : "Colmac HPA4 in Single Pass Mode",
+        "bounds_pkl": "Colmac_HPA4_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_HPA4_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_HPA4_Single_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_Colmac_HPA4_R513a_C_SP" : {
+        "name" : "Colmac HPA4 R513a in Single Pass Mode",
+        "bounds_pkl": "Colmac_HPA4_R513a_Single_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_HPA4_R513a_Single_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_HPA4_R513a_Single_Pass_capacity_interpolator.pkl"
+    },
+
     "MODELS_ColmacCxV_5_C_MP" : {
         "name" : "Colmac CxV_5 external heat pump in Multi Pass Mode",
         "bounds_pkl": "Colmac_CxV5_Multi_Pass_bounds.pkl",
@@ -285,6 +540,39 @@
             }
         ]
     },
+    "MODELS_ColmacCxA_10_CW_C_MP" : {
+        "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA10_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_10_FW_C_MP" : {
+        "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA10_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_10_Oversized_C_MP" : {
+        "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode (Oversized Condenser)",
+        "bounds_pkl": "Colmac_CxA10_Oversized_Condenser_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_Oversized_Condenser_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_Oversized_Condenser_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_10_VFD_45_Hz_C_MP" : {
+        "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode (VFD 45 Hz)",
+        "bounds_pkl": "Colmac_CxA10_VFD_45_Hz_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_VFD_45_Hz_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_VFD_45_Hz_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_10_VFD_60_Hz_C_MP" : {
+        "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA10_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA10_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA10_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
     "MODELS_ColmacCxA_15_C_MP" : {
         "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode",
         "bounds_pkl": "Colmac_CxA15_Multi_Pass_bounds.pkl",
@@ -298,6 +586,87 @@
             }
         ]
     },
+    "MODELS_ColmacCxA_15_CW_C_MP" : {
+        "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA15_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_15_FW_C_MP" : {
+        "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA15_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_15_Oversized_C_MP" : {
+        "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode (Oversized Condenser)",
+        "bounds_pkl": "Colmac_CxA15_Oversized_Condenser_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_Oversized_Condenser_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_Oversized_Condenser_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_15_VFD_45_Hz_C_MP" : {
+        "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode (VFD 45 Hz)",
+        "bounds_pkl": "Colmac_CxA15_VFD_45_Hz_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_VFD_45_Hz_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_VFD_45_Hz_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_15_VFD_60_Hz_C_MP" : {
+        "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA15_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+
+    "MODELS_ColmacCxA_15_R513a_C_MP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Multi Pass Mode",
+        "bounds_pkl": "Colmac_CxA15_R513a_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_R513a_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_R513a_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_15_R513a_CW_C_MP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Multi Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA15_R513a_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_R513a_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_R513a_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_15_R513a_FW_C_MP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Multi Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA15_R513a_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_R513a_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_R513a_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_15_R513a_VFD_45_Hz_C_MP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Multi Pass Mode (VFD 45 Hz)",
+        "bounds_pkl": "Colmac_CxA15_R513a_VFD_45_Hz_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_R513a_VFD_45_Hz_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_R513a_VFD_45_Hz_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_15_R513a_VFD_60_Hz_C_MP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Multi Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA15_R513a_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA15_R513a_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA15_R513a_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+
+    "MODELS_ColmacCxV_15_VFD_45_Hz_C_MP" : {
+        "name" : "Colmac CxV_15 external heat pump in Multi Pass Mode (VFD 45 Hz)",
+        "bounds_pkl": "Colmac_CxV15_VFD_45_Hz_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxV15_VFD_45_Hz_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxV15_VFD_45_Hz_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxV_15_VFD_60_Hz_C_MP" : {
+        "name" : "Colmac CxV_15 external heat pump in Multi Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxV15_VFD_60_Hz_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxV15_VFD_60_Hz_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxV15_VFD_60_Hz_Multi_Pass_capacity_interpolator.pkl"
+    },
+
     "MODELS_ColmacCxA_20_C_MP" : {
         "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode",
         "bounds_pkl": "Colmac_CxA20_Multi_Pass_bounds.pkl",
@@ -311,6 +680,40 @@
             }
         ]
     },
+    "MODELS_ColmacCxA_20_CW_C_MP" : {
+        "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA20_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_20_FW_C_MP" : {
+        "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA20_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_20_Oversized_C_MP" : {
+        "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode (Oversized Condenser)",
+        "bounds_pkl": "Colmac_CxA20_Oversized_Condenser_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_Oversized_Condenser_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_Oversized_Condenser_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_20_VFD_35_Hz_C_MP" : {
+        "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode (VFD 35 Hz)",
+        "bounds_pkl": "Colmac_CxA20_VFD_35_Hz_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_VFD_35_Hz_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_VFD_35_Hz_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_20_VFD_60_Hz_C_MP" : {
+        "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA20_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA20_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA20_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+
     "MODELS_ColmacCxA_25_C_MP" : {
         "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode",
         "bounds_pkl": "Colmac_CxA25_Multi_Pass_bounds.pkl",
@@ -324,6 +727,40 @@
             }
         ]
     },
+    "MODELS_ColmacCxA_25_CW_C_MP" : {
+        "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA25_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_25_FW_C_MP" : {
+        "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA25_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_25_Oversized_C_MP" : {
+        "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode (Oversized Condenser)",
+        "bounds_pkl": "Colmac_CxA25_Oversized_Condenser_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_Oversized_Condenser_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_Oversized_Condenser_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_25_VFD_35_Hz_C_MP" : {
+        "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode (VFD 35 Hz)",
+        "bounds_pkl": "Colmac_CxA25_VFD_35_Hz_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_VFD_35_Hz_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_VFD_35_Hz_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_25_VFD_60_Hz_C_MP" : {
+        "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA25_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA25_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA25_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+
     "MODELS_ColmacCxA_30_C_MP" : {
         "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode",
         "bounds_pkl": "Colmac_CxA30_Multi_Pass_bounds.pkl",
@@ -337,6 +774,87 @@
             }
         ]
     },
+    "MODELS_ColmacCxA_30_CW_C_MP" : {
+        "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA30_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_30_FW_C_MP" : {
+        "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA30_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_30_Oversized_C_MP" : {
+        "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode (Oversized Condenser)",
+        "bounds_pkl": "Colmac_CxA30_Oversized_Condenser_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_Oversized_Condenser_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_Oversized_Condenser_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_30_VFD_35_Hz_C_MP" : {
+        "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode (VFD 35 Hz)",
+        "bounds_pkl": "Colmac_CxA30_VFD_35_Hz_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_VFD_35_Hz_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_VFD_35_Hz_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_30_VFD_60_Hz_C_MP" : {
+        "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA30_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+
+    "MODELS_ColmacCxA_30_R513a_C_MP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Multi Pass Mode",
+        "bounds_pkl": "Colmac_CxA30_R513a_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_R513a_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_R513a_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_30_R513a_CW_C_MP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Multi Pass Mode (Cool Weather Package)",
+        "bounds_pkl": "Colmac_CxA30_R513a_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_R513a_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_R513a_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_30_R513a_FW_C_MP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Multi Pass Mode (Freezing Weather Package)",
+        "bounds_pkl": "Colmac_CxA30_R513a_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_R513a_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_R513a_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+    "MODELS_ColmacCxA_30_R513a_VFD_35_Hz_C_MP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Multi Pass Mode (VFD 35 Hz)",
+        "bounds_pkl": "Colmac_CxA30_R513a_VFD_35_Hz_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_R513a_VFD_35_Hz_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_R513a_VFD_35_Hz_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_ColmacCxA_30_R513a_VFD_60_Hz_C_MP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Multi Pass Mode (VFD 60 Hz)",
+        "bounds_pkl": "Colmac_CxA30_R513a_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_CxA30_R513a_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_CxA30_R513a_Multi_Pass_capacity_interpolator.pkl",
+        "notes": "There is no difference in the performance map of this model and the base model"
+    },
+
+    "MODELS_Colmac_HPA4_C_MP" : {
+        "name" : "Colmac HPA4 in Multi Pass Mode",
+        "bounds_pkl": "Colmac_HPA4_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_HPA4_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_HPA4_Multi_Pass_capacity_interpolator.pkl"
+    },
+    "MODELS_Colmac_HPA4_R513a_C_MP" : {
+        "name" : "Colmac HPA4 R513a in Multi Pass Mode",
+        "bounds_pkl": "Colmac_HPA4_R513a_Multi_Pass_bounds.pkl",
+        "cap_in_pkl": "Colmac_HPA4_R513a_Multi_Pass_power_in_interpolator.pkl",
+        "cap_out_pkl": "Colmac_HPA4_R513a_Multi_Pass_capacity_interpolator.pkl"
+    },
+
     "MODELS_GE2014_R_MP" : {
         "name" : "GE 2014 model run in efficiency mode",
         "perfmap": [
