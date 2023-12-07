@@ -921,6 +921,12 @@
         "cap_in_pkl": "Lync_Aegis_500_Single_Pass_power_in_interpolator.pkl",
         "cap_out_pkl": "Lync_Aegis_500_Single_Pass_capacity_interpolator.pkl"
     },
+    "MODELS_Laars_eTherm_C_SP" : {
+        "name" : "Laars eTherm",
+        "bounds_pkl": "Laars_eTherm_bounds.pkl",
+        "cap_in_pkl": "Laars_eTherm_power_in_interpolator.pkl",
+        "cap_out_pkl": "Laars_eTherm_capacity_interpolator.pkl"
+    },
     "MODELS_Mitsubishi_QAHV_C_SP" : {
         "name" : "Mitsubishi QAHV",
         "bounds_pkl": "Mitsubishi_QAHV_bounds.pkl",
