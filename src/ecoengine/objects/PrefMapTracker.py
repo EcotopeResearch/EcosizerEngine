@@ -6,14 +6,49 @@ from scipy.interpolate import LinearNDInterpolator
 import math
 
 class PrefMapTracker:
-    def __init__(self, defaultCapacity = None, modelName = None, kBTUhr = False, numHeatPumps = None, 
+    """
+    An object that uses the preformance map data of varrious models to accuratly predict the kW input and output of 
+    HPWH systems under different climates and temperatures.
+
+    Attributes
+    ----------
+    defaultCapacity_kBTUhr : float
+        the default output capacity for the system in kBTUhr
+    modelName : String
+        The string name for the HPWH model. Must match one of the model names in maps.json. If set to None, this will
+        be a default generic HPWH with a COP of 2.5
+    kBTUhr : boolean
+        Set to True to return input and output capacity in kBTUhr, set to False to return in kW
+    numHeatPumps : int
+        the Number of heat pumps in the system. If set to None, will be autosized to produce defaultCapacity_kBTUhr output capacity.
+        If auto-sizing the number of heat pumps for extreme weather environments outside of available preformance map scope, 
+        you will also need to enter parameters for designOAT_F, designIncomingT_F, and designOutT_F to ensure no exceptions occur.
+    isMultiPass : boolean
+        Set to True for multipass systems, set to False for singlepass
+    designOAT_F : float
+        The worst-case outdoor air temperature for the climate the preformance map is being tested in. This ensures number of heat pumps is 
+        auto-sized appropriatly
+    designIncomingT_F : float
+        The worst-case inlet water temperature for the climate the preformance map is being tested in. This ensures number of heat pumps is 
+        auto-sized appropriatly
+    designOutT_F : float
+        The worst-case outlet water temperature for the system the preformance map is being tested in. This ensures number of heat pumps is 
+        auto-sized appropriatly
+    usePkl : boolean
+        Default to True. Set to True to use most recent preformance map model. Set to false to use HPWHsim model
+    prefMapOnly : boolean
+        Set to True when not using preformance map in te larger EcoEngine system. This provides some shortcuts to avoid certain error handling
+    erBaseline : boolean
+        Set to true to indicate this preformance map is meant to model a ER system with a COP of 1
+    """
+    def __init__(self, defaultCapacity_kBTUhr = None, modelName = None, kBTUhr = False, numHeatPumps = None, 
                  isMultiPass = False, designOAT_F : float = None, designIncomingT_F : float = None, 
                  designOutT_F : float = None, usePkl = True, prefMapOnly = False, erBaseline = False):
         self.usePkl = usePkl
         self.isQAHV = False
         self.output_cap_interpolator = None
         self.input_cap_interpolator = None
-        self.defaultCapacity = defaultCapacity
+        self.defaultCapacity_kBTUhr = defaultCapacity_kBTUhr
         self.perfMap = None
         self.kBTUhr = kBTUhr
         self.isMultiPass = isMultiPass
@@ -30,8 +65,8 @@ class PrefMapTracker:
         self.default_input_low = None
         self.prefMapOnly = prefMapOnly
         self.erBaseline = erBaseline
-        if defaultCapacity is None and numHeatPumps is None:
-            raise Exception("Invalid input given for preformance map, requires either defaultCapacity or numHeatPumps.")
+        if defaultCapacity_kBTUhr is None and numHeatPumps is None:
+            raise Exception("Invalid input given for preformance map, requires either defaultCapacity_kBTUhr or numHeatPumps.")
         elif not numHeatPumps is None and not ((isinstance(numHeatPumps, int) or isinstance(numHeatPumps, float)) and numHeatPumps > 0):
             raise Exception("Invalid input given for numHeatPumps, must be a number greater than zero")
         self.numHeatPumps = numHeatPumps
@@ -49,7 +84,10 @@ class PrefMapTracker:
                 self.getCapacity(designOAT_F, designIncomingT_F, designOutT_F, sizingNumHP = True) # will set self.numHeatPumps in this function
 
     def getDefaultCapacity(self):
-        return self.defaultCapacity
+        """
+        Returns default capacity for the system in kBTUhr
+        """
+        return self.defaultCapacity_kBTUhr
 
     def getCapacity(self, externalT_F, condenserT_F, outT_F, sizingNumHP = False):
         """
@@ -67,9 +105,9 @@ class PrefMapTracker:
         Returns
         -------
         output_kW
-            The output capacity of the primary HPWH in kW as a float
+            The output capacity of the primary HPWH in kW (or kBTUhr if the PrefMapTracker object was initialized with kBTUhr=True) as a float
         input_kW
-            The input capacity of the primary HPWH in kW as a float
+            The input capacity of the primary HPWH in kW (or kBTUhr if the PrefMapTracker object was initialized with kBTUhr=True) as a float
         """
         if self.usePkl:
             # edit incoming values to extrapolate if need be
@@ -92,14 +130,18 @@ class PrefMapTracker:
                         output_kW =self.default_output_low
                         input_kW = self.default_input_low
                     else:
-                        if self.defaultCapacity is None:
+                        if self.defaultCapacity_kBTUhr is None:
                             if self.prefMapOnly:
                                 return 1.,1. # set for QPL generator electric resistance
                             else:
                                 # TODO if we want to put this into ecosizer, we need to size default capacity here and give warning to engineers that ER will be required
                                 raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
                         # SEE ABOVE TODO ^^^
-                        return self.defaultCapacity, self.defaultCapacity # externalT_F is low so use electric resistance to heat and assume COP of 1
+                        if self.kBTUhr:
+                            return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr # externalT_F is low so use electric resistance to heat and assume COP of 1
+                        else:
+                            # return in kW
+                            return self.defaultCapacity_kBTUhr/W_TO_BTUHR, self.defaultCapacity_kBTUhr/W_TO_BTUHR
                 else:
                     # externalT_F is high so assume same COP for highest temp in performance map
                     output_kW = self.default_output_high
@@ -107,9 +149,13 @@ class PrefMapTracker:
 
         elif self.perfMap is None or len(self.perfMap) == 0:
             if self.erBaseline:
-                return self.defaultCapacity, self.defaultCapacity # ER has COP of 1
-            return self.defaultCapacity, self.defaultCapacity / 2.5 # assume COP of 2.5 for input_capactiy calculation for default HPWH
-        
+                if self.kBTUhr:
+                    return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr # ER has COP of 1
+                return self.defaultCapacity_kBTUhr/W_TO_BTUHR, self.defaultCapacity_kBTUhr/W_TO_BTUHR
+            elif self.kBTUhr:
+                return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr / 2.5 # assume COP of 2.5 for input_capactiy calculation for default HPWH
+            return self.defaultCapacity_kBTUhr/W_TO_BTUHR, (self.defaultCapacity_kBTUhr/W_TO_BTUHR)/2.5
+
         elif len(self.perfMap) > 1:
             # cop at ambient temperatures T1 and T2
             COP_T1 = 0 
@@ -173,13 +219,17 @@ class PrefMapTracker:
             output_kW *= W_TO_BTUHR # convert kW to kBTU
             input_kW *= W_TO_BTUHR
         if self.numHeatPumps is None:
-            self._autoSetNumHeatPumps(output_kW)
+            if self.kBTUhr:
+                # output has already been converted to kBTUhr
+                self._autoSetNumHeatPumps(output_kW)
+            else:
+                self._autoSetNumHeatPumps(output_kW*W_TO_BTUHR)
         output_kW *= self.numHeatPumps
         input_kW *= self.numHeatPumps
         return [output_kW, input_kW]
 
-    def _autoSetNumHeatPumps(self, modelCapacity):
-        heatPumps = math.ceil(self.defaultCapacity/modelCapacity)
+    def _autoSetNumHeatPumps(self, modelCapacity_kBTUhr):
+        heatPumps = math.ceil(self.defaultCapacity_kBTUhr/modelCapacity_kBTUhr)
         self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
     def setPrefMap(self, modelName):
