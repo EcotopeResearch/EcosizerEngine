@@ -8,7 +8,7 @@ from ecoengine.constants.Constants import *
 class Building:
     def __init__(self, magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
         
-        self._checkParams(magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc)
+        self._checkParams(magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc, loadshape, avgLoadshape)
         
         # Does not check loadshape as that is checked in buildingCreator
         self.magnitude = magnitude
@@ -25,7 +25,7 @@ class Building:
                 raise Exception("Error: Recirculation losses may not exceed 108 kW, consider using multiple central plants.")
         self.climateZone = climate
 
-    def _checkParams(self, magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc):
+    def _checkParams(self, magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc, loadshape, avgLoadshape):
         if not (isinstance(supplyT_F, int) or isinstance(supplyT_F, float)):
             raise Exception("Error: Supply temp must be a number.")
         if not ignoreRecirc:
@@ -39,6 +39,12 @@ class Building:
             raise Exception("Error: City water temp must be a number.")
         if not (isinstance(magnitude, int) or isinstance(magnitude, float)) or magnitude < 0:
             raise Exception("Magnitude must be a number larger than 0.")
+        if max(loadshape) <= 1./16. or max(avgLoadshape) <= 1./16.:
+            raise Exception("The Ecosizer was designed to size for systems " +\
+                            "with peaking loads. The input load here is too "+\
+                            "flat to meet the recommended design conditions. "+\
+                            "We recommend sizing to meet the daily load in 16 "+\
+                            "hours.")
         
     def setToAnnualLS(self):
         raise Exception("Annual loadshape not available for this building type. This feature is only available for multi-family buildings.")
