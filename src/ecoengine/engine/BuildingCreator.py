@@ -108,7 +108,6 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
         checkLoadShape(loadshape, normalized=False)
         magnitudeStat = sum(loadshape)
         loadshape = normalizeLoadShape(loadshape)
-        print("hey hey", sum(loadshape))
     # if using custom load shape, check or set avg loadshape
     if not loadshape is None:
         if avgLoadshape is None:
