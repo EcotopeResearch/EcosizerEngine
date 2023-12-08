@@ -2,7 +2,7 @@ from ecoengine import EcosizerEngine, getListOfModels, SimulationRun, getAnnualS
 import time
 import math
 
-pm = PrefMapTracker(None, 'MODELS_ColmacCxA_20_C_SP', numHeatPumps=1, usePkl=True)
+pm = PrefMapTracker(None, 'MODELS_ColmacCxA_20_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
 
 print(pm.default_input_low)
 print(pm.default_output_low)

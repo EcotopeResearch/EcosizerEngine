@@ -12,7 +12,7 @@ class SystemConfig:
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building : Building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
                  aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
-                 PCap_kBTUhr = None, ignoreShortCycleEr = False):
+                 PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False):
         # check inputs. Schedule not checked because it is checked elsewhere
         self._checkInputs(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent)
         self.doLoadShift = doLoadShift
@@ -60,10 +60,10 @@ class SystemConfig:
             # size number of heatpumps based on the coldest day
             self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
                                           designOAT_F=building.getLowestOAT(), designIncomingT_F=building.getLowestIncomingT_F(),
-                                          designOutT_F=self.storageT_F, usePkl=True if not systemModel is None else False) # TODO usePkl should not be set here in final version. This should be a param
+                                          designOutT_F=self.storageT_F, usePkl=True if not (systemModel is None or useHPWHsimPrefMap) else False)
         else:
             self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
-                                          usePkl=True if not systemModel is None else False) # TODO usePkl should not be set here in final version. This should be a param
+                                          usePkl=True if not (systemModel is None or useHPWHsimPrefMap) else False)
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):
         if not (isinstance(storageT_F, int) or isinstance(storageT_F, float)) or not checkLiqudWater(storageT_F): 
@@ -858,9 +858,10 @@ class SystemConfig:
 class Primary(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, ignoreShortCycleEr = False):
+                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, 
+                 ignoreShortCycleEr = False, useHPWHsimPrefMap = False):
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, doLoadShift, 
                 loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, systemModel, 
-                numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr)
+                numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
 
 

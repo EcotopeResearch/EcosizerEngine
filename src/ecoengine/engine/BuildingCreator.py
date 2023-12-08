@@ -63,13 +63,16 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
                 raise Exception("Missing values for multi-use building. Collected " + str(len(buildingType)) + " building types but collected " + 
                                 ("1" if not isinstance(magnitudeStat, list) else str(len(magnitudeStat)))+ " magnitude varriables")
             
-            # TODO: probably won't ever happen but need a case for 24 len buildingType
             if not loadshape is None:
                 if not isinstance(loadshape, list):
                     raise Exception("loadshape must be a list")
                 elif len(loadshape) != len(buildingType):
                     raise Exception("Missing values for multi-use building. Collected " + str(len(buildingType)) + " building types but collected " + 
                                 str(len(loadshape))+ " loadshape values")
+                elif len(loadshape) == 24 and not isinstance(loadshape[0], list):
+                    # edge case for loadshape list because a single loadshape is length 24
+                    raise Exception("Missing values for multi-use building. Collected 24 building types but collected 1 loadshape value")
+
             else:
                 loadshape = [None] * len(buildingType)
 
@@ -189,7 +192,7 @@ def checkLoadShape(loadshape, avgLS = False, normalized = True):
 def getClimateZone(zipCode = None, climateZone = None):
     if not climateZone is None:
         if not isinstance(climateZone, int) or climateZone < 1 or climateZone > 19:
-            raise Exception("Climate Zone must be a number between 1 and 19.")
+            raise Exception("Climate Zone must be a number between 1 and 19, or between 1 and 16 if making a kWh calculation.")
         return climateZone
     elif not zipCode is None:
         with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/ZipCode_ClimateZone_Lookup.csv'), 'r') as file:
@@ -206,5 +209,4 @@ def normalizeLoadShape(loadshape):
         ls_sum = sum(loadshape)
         for i in range(len(loadshape)):
             loadshape[i] = loadshape[i]/ls_sum
-    print("hey hey heyo", sum(loadshape))
     return loadshape

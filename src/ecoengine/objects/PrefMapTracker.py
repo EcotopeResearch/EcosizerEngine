@@ -8,7 +8,7 @@ import math
 class PrefMapTracker:
     def __init__(self, defaultCapacity = None, modelName = None, kBTUhr = False, numHeatPumps = None, 
                  isMultiPass = False, designOAT_F : float = None, designIncomingT_F : float = None, 
-                 designOutT_F : float = None, usePkl = False):
+                 designOutT_F : float = None, usePkl = True, prefMapOnly = False, erBaseline = False):
         self.usePkl = usePkl
         self.isQAHV = False
         self.output_cap_interpolator = None
@@ -28,6 +28,8 @@ class PrefMapTracker:
         self.default_input_high = None
         self.default_output_low = None
         self.default_input_low = None
+        self.prefMapOnly = prefMapOnly
+        self.erBaseline = erBaseline
         if defaultCapacity is None and numHeatPumps is None:
             raise Exception("Invalid input given for preformance map, requires either defaultCapacity or numHeatPumps.")
         elif not numHeatPumps is None and not ((isinstance(numHeatPumps, int) or isinstance(numHeatPumps, float)) and numHeatPumps > 0):
@@ -73,7 +75,8 @@ class PrefMapTracker:
             # edit incoming values to extrapolate if need be
             extrapolate = False
             if self.isQAHV:
-                condenserT_F += 10 # add 10 degrees to incoming water temp for QAHV only
+                # TODO check for outT_F, may need to be plus 10 for QAHV///secondary heat exchanger systems
+                condenserT_F += 10. # add 10 degrees to incoming water temp for QAHV only
 
             #use pickled interpolation functions
             input_array = [condenserT_F, outT_F, externalT_F]
@@ -90,9 +93,12 @@ class PrefMapTracker:
                         input_kW = self.default_input_low
                     else:
                         if self.defaultCapacity is None:
-                            return 1,1 # set for QPL generator electric resistance
-                            # TODO if we want to put this into ecosizer, we need to size default capacity here and give warning to engineers that ER will be required
-                            #raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
+                            if self.prefMapOnly:
+                                return 1.,1. # set for QPL generator electric resistance
+                            else:
+                                # TODO if we want to put this into ecosizer, we need to size default capacity here and give warning to engineers that ER will be required
+                                raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
+                        # SEE ABOVE TODO ^^^
                         return self.defaultCapacity, self.defaultCapacity # externalT_F is low so use electric resistance to heat and assume COP of 1
                 else:
                     # externalT_F is high so assume same COP for highest temp in performance map
@@ -100,7 +106,9 @@ class PrefMapTracker:
                     input_kW = self.default_input_high
 
         elif self.perfMap is None or len(self.perfMap) == 0:
-            return self.defaultCapacity, self.defaultCapacity #/ 2.5 # assume COP of 2.5 for input_capactiy calculation
+            if self.erBaseline:
+                return self.defaultCapacity, self.defaultCapacity # ER has COP of 1
+            return self.defaultCapacity, self.defaultCapacity / 2.5 # assume COP of 2.5 for input_capactiy calculation for default HPWH
         
         elif len(self.perfMap) > 1:
             # cop at ambient temperatures T1 and T2
@@ -157,7 +165,7 @@ class PrefMapTracker:
                 input_kW = self._regressedMethodMP(externalT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs'])
                 cop = self._regressedMethodMP(externalT_F, condenserT_F, self.perfMap[0]['COP_coeffs'])
             else:
-                input_kW = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs']) # TODO check for outT_F, may need to be plus 10 for QAHV
+                input_kW = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs'])
                 cop = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['COP_coeffs'])
             output_kW = cop * input_kW
 
