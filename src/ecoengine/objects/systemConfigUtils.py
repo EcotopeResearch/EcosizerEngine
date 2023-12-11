@@ -63,6 +63,31 @@ def convertVolume(originalVol, convertToT_F, referenceT_F, convertFromT_F):
 
     return originalVol * fraction
 
+def getMixedTemp(temp1_F, temp2_F, vol1_G, vol2_G):
+        """
+        Calculates average tank temperature for a tank with vol1_G gallons of water at temp1_F degrees F and
+        vol2_G gallons of water at temp2_F degrees F
+        Parameters
+        ----------
+        temp1_F : float
+            Temperature (F) of first volume of water 
+        temp2_F : float
+            Temperature (F) of second volume of water 
+        vol1_G : float
+            Volume (gallons) of first temperature (temp1_F) of water
+        vol2_G : float
+            Volume (gallons) of first temperature (temp2_F) of water
+        Returns
+        ----------
+        mixStorageT_F: float
+            Average storage temperature calcuated with normal setpoint and load up setpoint.
+        """
+        totalVol_G = vol1_G + vol2_G
+        f1 = vol1_G/totalVol_G
+        f2 = vol2_G/totalVol_G
+
+        return (f1 * temp1_F) + (f2 * temp2_F)
+
 def hrToMinList(a_list):
     """
     Repeats each element of a_list 60 times to go from hourly to minute.

@@ -47,10 +47,7 @@ class SystemConfig:
         else: 
             #size system based off of building
             self.sizeSystem(building)
-            if self.doLoadShift:
-                self.PConvertedLoadUPV_G_atStorageT = convertVolume(self.PVol_G_atStorageT, self.storageT_F, building.incomingT_F, self.loadUpT_F)
-                self.adjustedPConvertedLoadUPV_G_atStorageT = np.ceil(self.PConvertedLoadUPV_G_atStorageT * self.percentUseable)
-                self.Vtrig_loadUp = self.PConvertedLoadUPV_G_atStorageT * (1 - self.aquaFractLoadUp)
+            self.setLoadUPVolumeAndTrigger(building.incomingT_F)
 
         self.adjustedPVol_G_atStorageT = np.ceil(self.PVol_G_atStorageT * self.percentUseable)
         self.Vtrig_normal = self.PVol_G_atStorageT * (1 - self.aquaFract)
@@ -149,7 +146,7 @@ class SystemConfig:
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr]
     
-    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
+    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3) -> SimulationRun:
         """
         Returns initialized arrays needed for nDay simulation
 
@@ -735,7 +732,7 @@ class SystemConfig:
         return fig
 
     
-    def runOnePrimaryStep(self, pheating, Vcurr, hw_out, hw_in, mode, modeChanged, minuteIntervals = 1):
+    def runOnePrimaryStep(self, pheating, Vcurr, hw_out, hw_in, mode, modeChanged, minuteIntervals = 1, erCalc = False):
         """
         Runs one step on the primary system. This changes the volume of the primary system
         by assuming there is hot water removed at a volume of hw_out and hot water
@@ -819,7 +816,7 @@ class SystemConfig:
         hw_generated = hw_in * time_ran
         Vnew += hw_generated
         
-        if Vnew < 0:
+        if Vnew < 0 and not erCalc:
            raise Exception("Primary storage ran out of Volume!")
         if time_ran < 0:
            raise Exception("Internal system error. time_ran was negative")

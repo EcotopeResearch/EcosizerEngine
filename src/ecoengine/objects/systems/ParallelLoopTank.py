@@ -117,7 +117,7 @@ class ParallelLoopTank(SystemConfig):
         simRun.tmRun[i] = time_running * minuteIntervals
         simRun.tmT_F[i] = Tnew
 
-    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
+    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3) -> SimulationRun:
         simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
         simRun.initializeTMValue(self.setpointTM_F, self.storageT_F, self.TMCap_kBTUhr, swingOut = False)
         return simRun
