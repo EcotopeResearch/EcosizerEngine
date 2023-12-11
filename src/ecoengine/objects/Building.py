@@ -8,7 +8,7 @@ from ecoengine.constants.Constants import *
 class Building:
     def __init__(self, magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
         
-        self._checkParams(magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc)
+        self._checkParams(magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc, loadshape, avgLoadshape)
         
         # Does not check loadshape as that is checked in buildingCreator
         self.magnitude = magnitude
@@ -25,7 +25,7 @@ class Building:
                 raise Exception("Error: Recirculation losses may not exceed 108 kW, consider using multiple central plants.")
         self.climateZone = climate
 
-    def _checkParams(self, magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc):
+    def _checkParams(self, magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc, loadshape, avgLoadshape):
         if not (isinstance(supplyT_F, int) or isinstance(supplyT_F, float)):
             raise Exception("Error: Supply temp must be a number.")
         if not ignoreRecirc:
@@ -39,6 +39,12 @@ class Building:
             raise Exception("Error: City water temp must be a number.")
         if not (isinstance(magnitude, int) or isinstance(magnitude, float)) or magnitude < 0:
             raise Exception("Magnitude must be a number larger than 0.")
+        if max(loadshape) <= 1./16. or max(avgLoadshape) <= 1./16.:
+            raise Exception("The Ecosizer was designed to size for systems " +\
+                            "with peaking loads. The input load here is too "+\
+                            "flat to meet the recommended design conditions. "+\
+                            "We recommend sizing to meet the daily load in 16 "+\
+                            "hours.")
         
     def setToAnnualLS(self):
         raise Exception("Annual loadshape not available for this building type. This feature is only available for multi-family buildings.")
@@ -71,57 +77,57 @@ class Building:
 
 class MensDorm(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_students * 18.9 # ASHREA GPD per student
+        magnitude = n_students * 23.6 # ASHREA GPD per student from maximum daily usage
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class WomensDorm(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_students * 16.4 # ASHREA GPD per student
+        magnitude = n_students * 19.6 # ASHREA GPD per student from maximum daily usage
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class Motel(Building):
     def __init__(self, n_units, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_units * 28.8 # ASHREA GPD per unit
+        magnitude = n_units * 21.4 # ASHREA GPD per unit from maximum daily usage
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class NursingHome(Building):
     def __init__(self, n_beds, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_beds * 20.1 # ASHREA GPD per bed
+        magnitude = n_beds * 23.4 # ASHREA GPD per bed from maximum daily usage
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class OfficeBuilding(Building):
     def __init__(self, n_people, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_people * 1.11 # ASHREA GPD per person
+        magnitude = n_people * 2.1 # ASHREA GPD per person from maximum daily usage
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class FoodServiceA(Building):
     def __init__(self, n_meals, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_meals * 11.032 # ASHREA GPD per meal
+        magnitude = n_meals * 11.032 # ASHREA GPD per meal per hour
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class FoodServiceB(Building):
     def __init__(self, n_meals, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_meals * 6.288 # ASHREA GPD per meal
+        magnitude = n_meals * 6.44 # ASHREA GPD per meal per hour from maximum daily usage
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class Apartment(Building):
     def __init__(self, n_units, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_units * 42.8 # ASHREA GPD per unit
+        magnitude = n_units * 54.6 # ASHREA GPD per unit from maximum daily usage
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class ElementarySchool(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_students * 1.081 # ASHREA GPD per student
+        magnitude = n_students * 1.34 # ASHREA GPD per student from maximum daily usage
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class JuniorHigh(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_students * 3.27 # ASHREA GPD per student
+        magnitude = n_students * 3.75 # ASHREA GPD per student from maximum daily usage
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
 
 class SeniorHigh(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
-        magnitude = n_students * 3.02 # ASHREA GPD per student
+        magnitude = n_students * 3.26 # ASHREA GPD per student from maximum daily usage
         super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
     
 class MultiFamily(Building):
