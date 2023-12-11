@@ -45,7 +45,7 @@ class PrefMapTracker:
                  isMultiPass = False, designOAT_F : float = None, designIncomingT_F : float = None, 
                  designOutT_F : float = None, usePkl = True, prefMapOnly = False, erBaseline = False):
         self.usePkl = usePkl
-        self.isQAHV = False
+        self.secondaryHeatExchanger = False
         self.output_cap_interpolator = None
         self.input_cap_interpolator = None
         self.defaultCapacity_kBTUhr = defaultCapacity_kBTUhr
@@ -112,8 +112,8 @@ class PrefMapTracker:
         if self.usePkl:
             # edit incoming values to extrapolate if need be
             extrapolate = False
-            if self.isQAHV:
-                # TODO check for outT_F, may need to be plus 10 for QAHV///secondary heat exchanger systems
+            if self.secondaryHeatExchanger:
+                outT_F += 10.
                 condenserT_F += 10. # add 10 degrees to incoming water temp for QAHV only
 
             #use pickled interpolation functions
@@ -233,9 +233,7 @@ class PrefMapTracker:
         self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
     def setPrefMap(self, modelName):
-        if modelName == "MODELS_Mitsubishi_QAHV":
-            self.isQAHV = True
-        elif modelName == "MODELS_SANCO2_C_SP" or (modelName[-2:] == 'MP' 
+        if modelName == "MODELS_SANCO2_C_SP" or (modelName[-2:] == 'MP' 
                 and not modelName in ["MODELS_RHEEM_HPHD135VNU_483_C_MP","MODELS_RHEEM_HPHD135HNU_483_C_MP",
                 "MODELS_RHEEM_HPHD60VNU_201_C_MP","MODELS_RHEEM_HPHD60HNU_201_C_MP"]):
             # The rheems with pkls function like single pass pkls
@@ -248,11 +246,12 @@ class PrefMapTracker:
                 if self.usePkl or not "perfmap" in dataDict[modelName]:
                     self.usePkl = True
                     filepath = "../data/preformanceMaps/pkls/"
-                    with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['cap_out_pkl']}"), 'rb') as f:
+                    self.secondaryHeatExchanger = dataDict[modelName]['secondary_heat_exchanger']
+                    with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['pkl_prefix']}_capacity_interpolator.pkl"), 'rb') as f:
                         self.output_cap_interpolator = pickle.load(f)
-                    with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['cap_in_pkl']}"), 'rb') as f:
+                    with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['pkl_prefix']}_power_in_interpolator.pkl"), 'rb') as f:
                         self.input_cap_interpolator = pickle.load(f)
-                    with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['bounds_pkl']}"), 'rb') as f:
+                    with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['pkl_prefix']}_bounds.pkl"), 'rb') as f:
                         bounds = pickle.load(f)
                         # Format: [[max_oat,min_oat],[max_inlet,min_inlet],[max_outlet,min_outlet],[default_output_high, default_input_high],[default_output_low, default_input_low]]
                         self.oat_max = bounds[0][0]

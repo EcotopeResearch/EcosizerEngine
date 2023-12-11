@@ -133,8 +133,8 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
         else:
             checkLoadShape(avgLoadshape, True)
 
-    loadshape = np.array(loadshape) # TODO - this changes values of loadshape a bit, show this to scott
-    avgLoadshape = np.array(avgLoadshape) # TODO - this changes values of loadshape a bit, show this to scott
+    loadshape = np.array(loadshape)
+    avgLoadshape = np.array(avgLoadshape)
 
     climate = getClimateZone(zipCode, climateZone)
 
