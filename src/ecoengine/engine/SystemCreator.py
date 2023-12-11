@@ -8,7 +8,8 @@ from ecoengine.objects.systems.PrimaryWithRecirc import *
 def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None, doLoadShift = False, 
                  aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, safetyTM = 1.75, 
                  setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None,
-                 systemModel = None, numHeatPumps = None, tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None, ignoreShortCycleEr = False):
+                 systemModel = None, numHeatPumps = None, tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None, ignoreShortCycleEr = False,
+                 useHPWHsimPrefMap = False):
     """
     Initializes and sizes the HPWH system. Both primary and tempurature maintenance (for parrallel loop and swing tank) are set up in this function.
 
@@ -71,7 +72,9 @@ def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRunti
         adjustment for inlet water temperature fraction for primary recirculation systems
     ignoreShortCycleEr : boolean
         ignores errors for short cycling (when the AQ fract is too low in the system). The engineer should be informed to use multiple heat pumps to avoid shortcycling if they are overriding short cycling errors
-
+    useHPWHsimPrefMap : boolean
+        if available for the HPWH model in systemModel and/or tmModel, the system will use the preformance map from HPWHsim if useHPWHsimPrefMap is set to True. 
+        Otherwise, it will use the most recent data model.
 
     Raises
     ----------
@@ -83,43 +86,43 @@ def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRunti
         case 'swingtank':
             return SwingTank(safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
-                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, TMVol_G, TMCap_kBTUhr)        
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, TMVol_G, TMCap_kBTUhr)        
         case 'paralleltank':
             return ParallelLoopTank(safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                 building, doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
-                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, TMVol_G, TMCap_kBTUhr, tmModel, tmNumHeatPumps)
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, TMVol_G, TMCap_kBTUhr, tmModel, tmNumHeatPumps)
         case 'multipass_norecirc': # same as multipass
             if inletWaterAdjustment is None:
                 inletWaterAdjustment = 0.5
             return MultiPass(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
-                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, inletWaterAdjustment)
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, inletWaterAdjustment)
         case 'multipass': # same as multipass_norecirc
             if inletWaterAdjustment is None:
                 inletWaterAdjustment = 0.5
             return MultiPass(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
-                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, inletWaterAdjustment)
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, inletWaterAdjustment)
         case 'multipass_rtp':
             if inletWaterAdjustment is None:
                 inletWaterAdjustment = 0.5
             return MultiPassRecirc(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
-                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, inletWaterAdjustment)
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, inletWaterAdjustment)
         case 'primary': # same as singlepass_norecirc
             return Primary(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
-                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr)
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
         case 'singlepass_norecirc': # same as primary
             return Primary(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
-                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr)
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
         case 'singlepass_rtp':
             if inletWaterAdjustment is None:
                 inletWaterAdjustment = 0.25
             return PrimaryWithRecirc(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, 
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
-                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, inletWaterAdjustment)
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, inletWaterAdjustment)
         case _:
             raise Exception("Unknown system schematic type: "+str(schematic))
         

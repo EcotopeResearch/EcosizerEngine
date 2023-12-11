@@ -7,7 +7,7 @@ from ecoengine.objects.systemConfigUtils import convertVolume, hrToMinList, getP
 
 class SwingTank(SystemConfig):
 
-    #Assuming that these swing sizing methodologies will be dropped in next code cycle so they likely can be removed, it not we will need to implement additional swing sizing
+    #Assuming that these swing sizing methodologies will be dropped in next code cycle so they likely can be removed, if not we will need to implement additional swing sizing
     Table_Napts = [0, 12, 24, 48, 96]
     sizingTable = [40, 50, 80, 100, 120, 160, 175, 240, 350, 400, 500, 600, 800, 1000, 1250] #multiples of standard tank sizes 
     sizingTable_CA = [80, 96, 168, 288, 480]
@@ -15,7 +15,7 @@ class SwingTank(SystemConfig):
     def __init__(self, safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
                  aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
-                 PCap_kBTUhr = None, ignoreShortCycleEr = False, TMVol_G = None, TMCap_kBTUhr = None):
+                 PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, TMVol_G = None, TMCap_kBTUhr = None):
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
@@ -35,7 +35,7 @@ class SwingTank(SystemConfig):
 
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
-                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr)
+                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
         
     def getSizingResults(self):
         """

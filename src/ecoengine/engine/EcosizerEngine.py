@@ -107,7 +107,9 @@ class EcosizerEngine:
         adjustment for inlet water temperature fraction for primary recirculation systems
     ignoreShortCycleEr : boolean
         ignores errors for short cycling (when the AQ fract is too low in the system). The engineer should be informed to use multiple heat pumps to avoid shortcycling if they are overriding short cycling errors
-
+    useHPWHsimPrefMap : boolean
+        if available for the HPWH model in systemModel and/or tmModel, the system will use the preformance map from HPWHsim if useHPWHsimPrefMap is set to True. 
+        Otherwise, it will use the most recent data model.
     """
 
     def __init__(self, incomingT_F, supplyT_F, storageT_F, percentUseable, aquaFract,
@@ -119,7 +121,8 @@ class EcosizerEngine:
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None,
                             PVol_G_atStorageT = None, PCap_kW = None, TMVol_G = None, TMCap_kW = None,
                             annual = False, zipCode = None, climateZone = None, systemModel = None, numHeatPumps = None, 
-                            tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None, ignoreShortCycleEr = False):
+                            tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None, ignoreShortCycleEr = False,
+                            useHPWHsimPrefMap = False):
         
         ignoreRecirc = False
         if schematic == 'singlepass_norecirc' or schematic == 'primary' or schematic == 'multipass_norecirc' or schematic == 'multipass':
@@ -182,7 +185,8 @@ class EcosizerEngine:
                                 tmModel = tmModel,
                                 tmNumHeatPumps = tmNumHeatPumps,
                                 inletWaterAdjustment = inletWaterAdjustment,
-                                ignoreShortCycleEr = ignoreShortCycleEr
+                                ignoreShortCycleEr = ignoreShortCycleEr,
+                                useHPWHsimPrefMap = useHPWHsimPrefMap
         )
     
     def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False, optimizeNLS = False):
@@ -534,7 +538,7 @@ class EcosizerEngine:
 # STATIC FUNCTIONS
 ##############################################################
     
-def getListOfModels(multiPass = False):
+def getListOfModels(multiPass = False, includeResidential = True, excludeModels = []):
     """
     Static Method to Return all Model Names as a list of strings
 
@@ -553,10 +557,12 @@ def getListOfModels(multiPass = False):
     with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
         data = json.load(json_file)
         for model_name, value in data.items():
-            if multiPass and model_name[-2:] == 'MP':
-                returnList.append([model_name,value["name"]])
-            elif not multiPass and model_name[-2:] != 'MP':
-                returnList.append([model_name,value["name"]])
+            if not model_name in excludeModels:
+                if includeResidential or model_name[-4] == "C":
+                    if multiPass and model_name[-2:] == 'MP':
+                        returnList.append([model_name,value["name"]])
+                    elif not multiPass and model_name[-2:] != 'MP':
+                        returnList.append([model_name,value["name"]])
     return returnList
 
 def getSizingCurvePlot(x, y, startind, loadshifting = False):

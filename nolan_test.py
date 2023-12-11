@@ -1,51 +1,81 @@
-from ecoengine import EcosizerEngine, getListOfModels, SimulationRun, getAnnualSimLSComparison
+from ecoengine import EcosizerEngine, getListOfModels, SimulationRun, getAnnualSimLSComparison, PrefMapTracker
 import time
 import math
 
-hpwh_for_sizing = EcosizerEngine(
-    incomingT_F = 50.0,
-    magnitudeStat = 1,
-    supplyT_F = 110.0,
-    storageT_F = 165.0,
-    percentUseable = 0.85,
-    aquaFract = 0.45,
-    aquaFractLoadUp = None,
-    aquaFractShed = None,
-    loadUpT_F = None,
-    loadUpHours = None,
-    schematic = "swingtank",
-    buildingType  = "multi_family",
-    returnT_F = 100,
-    flowRate = 8.0,
-    loadshape = [0.07272037, 0.03588551, 0.01756301, 0.02060094, 0.00778469, 0.00830683,
-    0.00028481, 0.01571178, 0.03484122, 0.08401766, 0.06925523, 0.05135995
-    , 0.03213557, 0.03137609, 0.05957184, 0.05197703, 0.06223003, 0.05150235
-    , 0.08112213, 0.05207196, 0.04452461, 0.02829069, 0.04480942, 0.0420563],
-    gpdpp = 21067.0,
-    nBR = None,
-    safetyTM = 1.75,
-    defrostFactor  = 1.0,
-    compRuntime_hr = 16,
-    nApt = 1,
-    Wapt = None,
-    setpointTM_F = 135.0,
-    TMonTemp_F = 125.0,
-    offTime_hr = 0.33,
-    standardGPD = None,
-    loadShiftSchedule = [],
-    doLoadShift   = False,
-    loadShiftPercent = None,
-    ignoreShortCycleEr = True
-)
+pm = PrefMapTracker(None, 'MODELS_ColmacCxA_20_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
 
-print('+++++++++++++++++++++++++++++++++++++++')
-print('SIZING RESULTS')
-print('+++++++++++++++++++++++++++++++++++++++')
-print('recirc loss', hpwh_for_sizing.building.recirc_loss)
-PVol_G_atStorageT = hpwh_for_sizing.getSizingResults()[0] 
-PCap_kBTUhr = hpwh_for_sizing.getSizingResults()[1] 
-print('PVol_G_atStorageT = ',PVol_G_atStorageT)
-print('PCap_kBTUhr = ',PCap_kBTUhr)
+print(pm.default_input_low)
+print(pm.default_output_low)
+for i in range(10):
+    print(f"pm.getCapacity({25},{63+i},{140}) {pm.getCapacity(25,63+i,140)}")
+
+print(f"pm.getCapacity({25},{40},{148}) {pm.getCapacity(25,40,148)}")
+print(f"pm.getCapacity({25},{83},{134}) {pm.getCapacity(25,83,134)}")
+# W_TO_BTUHR = 3.412142
+# hpwh_for_sizing = EcosizerEngine(
+#             incomingT_F     = 33.5,
+#             magnitudeStat  = 222.95,
+#             supplyT_F       = 120,
+#             storageT_F      = 150,
+#             percentUseable  = 0.85, 
+#             aquaFract       = 0.4,
+#             schematic       = 'paralleltank', 
+#             buildingType   = 'multi_family',
+#             safetyTM        = 1.75,
+#             defrostFactor   = 1, 
+#             compRuntime_hr  = 16, 
+#             nBR             = [20, 30, 25, 15, 10, 0],
+#             standardGPD     = 'ecoMark',
+#             nApt            = 100, 
+#             Wapt            = 100,
+#             loadUpHours     = 3,
+#             doLoadShift     = False
+#         )
+
+# # print('+++++++++++++++++++++++++++++++++++++++')
+# # print('SIZING RESULTS')
+# # print('+++++++++++++++++++++++++++++++++++++++')
+# TMVol_G = None 
+# TMCap_kW = None
+# # print('recirc loss', hpwh_for_sizing.building.recirc_loss)
+# sizing_result = hpwh_for_sizing.getSizingResults()
+# PVol_G_atStorageT = sizing_result[0] 
+# PCap_kBTUhr = sizing_result[1] 
+# if len(sizing_result) > 2:
+#     TMVol_G = sizing_result[2] 
+#     TMCap_kW = sizing_result[3]/W_TO_BTUHR
+# # print('PVol_G_atStorageT = ',PVol_G_atStorageT)
+# # print('PCap_kBTUhr = ',PCap_kBTUhr)
+# # print('TMVol_G = ',TMVol_G)
+# # print('TMCap_kW = ',TMCap_kW)
+
+# hpwh = EcosizerEngine(
+#             incomingT_F     = 33.5,
+#             magnitudeStat  = 222.95,
+#             supplyT_F       = 120,
+#             storageT_F      = 150,
+#             percentUseable  = 0.85, 
+#             aquaFract       = 0.4,
+#             schematic       = 'paralleltank', 
+#             buildingType   = 'multi_family',
+#             defrostFactor   = 1, 
+#             compRuntime_hr  = 16, 
+#             nBR             = [20, 30, 25, 15, 10, 0],
+#             standardGPD     = 'ecoMark',
+#             nApt            = 100, 
+#             Wapt            = 100,
+#             doLoadShift     = False,
+#             PVol_G_atStorageT = PVol_G_atStorageT, 
+#             PCap_kW = PCap_kBTUhr/W_TO_BTUHR, 
+#             TMVol_G = TMVol_G, 
+#             TMCap_kW = TMCap_kW,
+#             annual = True,
+#             climateZone = 17,
+#             systemModel = "MODELS_Mitsubishi_QAHV"
+#         )
+# simRun = hpwh.getSimRun(minuteIntervals = 60, nDays = 365, exceptOnWaterShortage=False)
+# simRun.writeCSV("here.csv")
+
 #########################################################################################################
 # rhoCp = 8.353535 
 # W_TO_BTUHR = 3.412142
