@@ -34,7 +34,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
     simRun : SimulationRun
         resulting simulation run object containing information from each timestep interval of the simulation for further analysis
     """
-
+    system.resetPerfMap()
     simRun = system.getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
 
     # do preliminary work for annual simulation
@@ -64,7 +64,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
             next(kG_reader)
             oat_F = None
 
-            # Run the "simulation"
+            # Run the simulation
             try:
                 for i in range(len(simRun.hwDemand)):
                     if nDays == 365:

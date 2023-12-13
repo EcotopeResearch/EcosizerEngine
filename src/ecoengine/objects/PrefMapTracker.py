@@ -65,6 +65,7 @@ class PrefMapTracker:
         self.default_input_low = None
         self.prefMapOnly = prefMapOnly
         self.erBaseline = erBaseline
+        self.reliedOnER = False # flag to indicate if the system at any point needed to rely on Electric Resistance during the simulation
         if defaultCapacity_kBTUhr is None and numHeatPumps is None:
             raise Exception("Invalid input given for preformance map, requires either defaultCapacity_kBTUhr or numHeatPumps.")
         elif not numHeatPumps is None and not ((isinstance(numHeatPumps, int) or isinstance(numHeatPumps, float)) and numHeatPumps > 0):
@@ -83,11 +84,33 @@ class PrefMapTracker:
                         designOutT_F = self.outlet_min
                 self.getCapacity(designOAT_F, designIncomingT_F, designOutT_F, sizingNumHP = True) # will set self.numHeatPumps in this function
 
-    def getDefaultCapacity(self):
+    def getDefaultCapacity(self, AsKW = False):
         """
         Returns default capacity for the system in kBTUhr
+        Inputs
+        ------
+        AsKWh : Boolean
+            Set to True to return as kW. False (default) returns as kBTUhr
+        Returns
+        -------
+        defaultCapacity
+            The default output capacity of the model in kW or kBTUhr
         """
+        if AsKW:
+            return self.defaultCapacity_kBTUhr/W_TO_BTUHR
         return self.defaultCapacity_kBTUhr
+    
+    def didRelyOnEr(self):
+        """
+        Returns True if the model had to rely on Electric Resistance at any point during the simulation (e.g. when the outdoor tempuratures were too cold for the HPWH to work)
+        """
+        return self.reliedOnER
+    
+    def resetReliedOnEr(self):
+        """
+        Sets the reliedOnER field to False to so that a new simulation can be run on the model
+        """
+        self.reliedOnER = False
 
     def getCapacity(self, externalT_F, condenserT_F, outT_F, sizingNumHP = False):
         """
@@ -130,13 +153,14 @@ class PrefMapTracker:
                         output_kW =self.default_output_low
                         input_kW = self.default_input_low
                     else:
+                        if self.reliedOnER == False:
+                            print("Warning: System had to rely on Electric Resistance to meet demand during times with a cold outdoor air temperature.")
+                        self.reliedOnER = True
                         if self.defaultCapacity_kBTUhr is None:
                             if self.prefMapOnly:
-                                return 1.,1. # set for QPL generator electric resistance
+                                return 1.,1. # return 1, 1 when just assessing preformance map only
                             else:
-                                # TODO if we want to put this into ecosizer, we need to size default capacity here and give warning to engineers that ER will be required
                                 raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
-                        # SEE ABOVE TODO ^^^
                         if self.kBTUhr:
                             return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr # externalT_F is low so use electric resistance to heat and assume COP of 1
                         else:

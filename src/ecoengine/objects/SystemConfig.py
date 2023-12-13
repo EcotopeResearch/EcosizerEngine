@@ -35,6 +35,7 @@ class SystemConfig:
         self.maxDayRun_hr = min(self.compRuntime_hr, sum(self.loadShiftSchedule))
 
         #size system
+        default_PCap_kBTUhr = None
         if not PVol_G_atStorageT is None:
             if not (isinstance(PVol_G_atStorageT, int) or isinstance(PVol_G_atStorageT, float)) or PVol_G_atStorageT <= 0: 
                 raise Exception('Invalid input given for Primary Storage Volume, it must be a number greater than zero.')
@@ -42,12 +43,18 @@ class SystemConfig:
                 # if systemModel and numHeatPumps are defined we do not nessesarily need PCap_kBTUhr
                 if systemModel is None or numHeatPumps is None:
                     raise Exception('Invalid input given for Primary Output Capacity, must be a number greater than zero.')
+            if PCap_kBTUhr is None and isinstance(building, Building):
+                # get default capacity needed incase we need this for the simulation with performance maps
+                self.sizeSystem(building)
+                default_PCap_kBTUhr = self.PCap_kBTUhr
             self.PVol_G_atStorageT = PVol_G_atStorageT
             self.PCap_kBTUhr = PCap_kBTUhr
         else: 
             #size system based off of building
             self.sizeSystem(building)
-            self.setLoadUPVolumeAndTrigger(building.incomingT_F)
+        if isinstance(building, Building):
+            # calculate load up triggers if we know the incoming water temp
+            self.setLoadUPVolumeAndTrigger(building.getLowestIncomingT_F())
 
         self.adjustedPVol_G_atStorageT = np.ceil(self.PVol_G_atStorageT * self.percentUseable)
         self.Vtrig_normal = self.PVol_G_atStorageT * (1 - self.aquaFract)
@@ -55,11 +62,13 @@ class SystemConfig:
             self.Vtrig_shed = self.PVol_G_atStorageT * (1 - self.aquaFractShed)
         if numHeatPumps is None and not systemModel is None and not building is None and not building.getClimateZone() is None:
             # size number of heatpumps based on the coldest day
-            self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
+            self.perfMap = PrefMapTracker(self.PCap_kBTUhr if default_PCap_kBTUhr is None else default_PCap_kBTUhr, 
+                                          modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
                                           designOAT_F=building.getLowestOAT(), designIncomingT_F=building.getLowestIncomingT_F(),
                                           designOutT_F=self.storageT_F, usePkl=True if not (systemModel is None or useHPWHsimPrefMap) else False)
         else:
-            self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
+            self.perfMap = PrefMapTracker(self.PCap_kBTUhr if default_PCap_kBTUhr is None else default_PCap_kBTUhr, 
+                                          modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
                                           usePkl=True if not (systemModel is None or useHPWHsimPrefMap) else False)
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):
@@ -97,6 +106,12 @@ class SystemConfig:
     def resetToDefaultCapacity(self):
         self.PCap_kBTUhr = self.perfMap.getDefaultCapacity()
 
+    def resetPerfMap(self):
+        self.perfMap.resetReliedOnEr()
+    
+    def reliedOnEr(self):
+        return self.perfMap.didRelyOnEr()
+
     def getOutputCapacity(self, kW = False):
         if kW:
             return self.PCap_kBTUhr/W_TO_BTUHR
@@ -131,9 +146,21 @@ class SystemConfig:
         """
         if not isinstance(building, Building):
                 raise Exception("Error: Building is not valid.")
+        
+        buildingWasAnnual = False
+        if building.isAnnualLS():
+            # set building load shape from annual to daily for sizing
+            buildingWasAnnual = True
+            building.setToDailyLS()
+
+        # size the szystem
         self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr, self.loadUpHours, building, lsFractTotalVol = self.fract_total_vol)
         self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, building, 
             effSwingVolFract = self.effSwingFract, primaryCurve = False, lsFractTotalVol = self.fract_total_vol)[0]
+        
+        if buildingWasAnnual:
+            # set building load shape back to annual
+            building.setToAnnualLS()
         
     def getSizingResults(self):
         """
@@ -362,7 +389,7 @@ class SystemConfig:
             genRate = max(LUgenRate, genRate)
             
         heatCap = genRate * rhoCp * \
-            (building.supplyT_F - building.incomingT_F) / self.defrostFactor / 1000
+            (building.supplyT_F - building.getLowestIncomingT_F()) / self.defrostFactor / 1000
        
         return heatCap, genRate
     

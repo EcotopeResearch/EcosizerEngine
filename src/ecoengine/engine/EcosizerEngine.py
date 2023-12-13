@@ -253,7 +253,8 @@ class EcosizerEngine:
                 and array[1] will be the result without load shifting.
         """
         if kGDiff:
-            # TODO unit tests
+            # TODO retite this
+            print("Warning: getSimResult() is a depricated function. Please use getSimRunWithkWCalc instead")
             if not self.system.doLoadShift:
                 raise Exception('Cannot preform kgCO2/kWh calculation on non-loadshifting systems.')
             if nDays != 365 or len(self.building.loadshape) != 8760:
@@ -533,6 +534,15 @@ class EcosizerEngine:
             A number between 1 and 16 that represents the coorespondiong California climate zone. Returns None if this value has not been set.
         """
         return self.building.getClimateZone()
+    
+    def systemReliedOnEr(self):
+        """
+        Returns
+        -------
+        reliedOnER : boolean
+            True if the system relied on electric resistance during it's last simulation. False otherwise.
+        """
+        return self.system.reliedOnEr()
     
 ##############################################################
 # STATIC FUNCTIONS

@@ -146,17 +146,21 @@ def test_custom_loadshapes(loadShape, buildingType, magnitude, expected):
 def test_annualLS_for_multi_family(multiFamilyWithBedrooms):
     assert len(multiFamilyWithBedrooms.loadshape) == 24
     assert len(multiFamilyWithBedrooms.avgLoadshape) == 24
+    assert not multiFamilyWithBedrooms.isAnnualLS()
     multiFamilyWithBedrooms.setToAnnualLS()
     assert len(multiFamilyWithBedrooms.loadshape) == 8760
     assert len(multiFamilyWithBedrooms.avgLoadshape) == 8760
+    assert multiFamilyWithBedrooms.isAnnualLS()
 
 def test_annualLS_for_non_multi_family(nursingHomeAndOffice):
     assert len(nursingHomeAndOffice.loadshape) == 24
     assert len(nursingHomeAndOffice.avgLoadshape) == 24
+    assert not nursingHomeAndOffice.isAnnualLS()
     with pytest.raises(Exception, match="Annual loadshape not available for this building type. This feature is only available for multi-family buildings."):
         nursingHomeAndOffice.setToAnnualLS()
     assert len(nursingHomeAndOffice.loadshape) == 24
     assert len(nursingHomeAndOffice.avgLoadshape) == 24
+    assert not nursingHomeAndOffice.isAnnualLS()
 
 def test_annualLS_from_instantiation(nursingHomeAndOffice):
     building = createBuilding(

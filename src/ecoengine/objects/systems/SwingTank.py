@@ -423,7 +423,7 @@ class SwingTank(SystemConfig):
 
         return swingheating, Tnew, time_run
     
-    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building, effSwingVolFract, primaryCurve = False, lsFractTotalVol = 1):
+    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building : Building, effSwingVolFract, primaryCurve = False, lsFractTotalVol = 1):
         """
         Converts from hours of heating in a day to heating capacity. Takes maximum from 
         standard method based on number of heating hours and load shift method based on
@@ -452,17 +452,17 @@ class SwingTank(SystemConfig):
             The generation rate in [gal/hr].
         """
         checkHeatHours(heathours)
-        
+        coldest_incomingT_F = building.getLowestIncomingT_F()
         genRate = building.magnitude * effSwingVolFract / heathours
         heatCap = genRate * rhoCp * \
-            (self.storageT_F - building.incomingT_F) / self.defrostFactor / 1000 #use storage temp instead of supply temp
+            (self.storageT_F - coldest_incomingT_F) / self.defrostFactor / 1000 #use storage temp instead of supply temp
         
         if self.doLoadShift and not primaryCurve:
             Vshift, VconsumedLU = self._calcPrelimVol(loadUpHours, building.avgLoadshape, building, lsFractTotalVol = lsFractTotalVol) 
             Vload = Vshift * (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) #volume in 'load up' portion of tank
             LUgenRate = (Vload + VconsumedLU) / loadUpHours #rate needed to load up tank and offset use 
             LUheatCap = LUgenRate * rhoCp * \
-                (self.storageT_F - building.incomingT_F) / self.defrostFactor / 1000
+                (self.storageT_F - coldest_incomingT_F) / self.defrostFactor / 1000
             #TODO putting these in supply temp instead of storage... make sure this is correct
             #compare swing and loadshift capacity
             
