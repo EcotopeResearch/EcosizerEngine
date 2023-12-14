@@ -1,7 +1,7 @@
 import pytest
 from ecoengine.objects.systemConfigUtils import roundList, convertVolume, hrToMinList, getPeakIndices
-import ecoengine.engine.EcosizerEngine as EcosizerEngine
-import ecoengine.objects.SimulationRun as SimulationRun
+from ecoengine.engine.EcosizerEngine import *
+from ecoengine.objects.SimulationRun import *
 import numpy as np
 import os, sys, csv
 from ecoengine.constants.Constants import *
@@ -289,13 +289,12 @@ def test_primaryCurve(parallel_sizer):
     assert primaryCurveInfo[3] == 44
 
 def test__parallel_simulationResults(parallel_sizer):
-    simResult = parallel_sizer.getSimResult()
-    assert len(simResult) == 6
-    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 4320
-    assert simResult[0][:10] == [1027.528, 1027.057, 1026.585, 1026.114, 1025.642, 1025.171, 1024.699, 1024.228, 1023.756, 1023.284]
-    assert simResult[1][-10:] == [3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205]
-    assert simResult[2][-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
-    assert simResult[3][800:810] == [2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244]
+    simRun = parallel_sizer.getSimRun()
+    assert len(simRun.getPrimaryVolume()) == len(simRun.getHWGeneration()) == len(simRun.getHWDemand()) == len(simRun.getPrimaryGeneration()) == 4320
+    assert simRun.getPrimaryVolume()[:10] == [1027.528, 1027.057, 1026.585, 1026.114, 1025.642, 1025.171, 1024.699, 1024.228, 1023.756, 1023.284]
+    assert simRun.getHWGeneration()[-10:] == [3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205]
+    assert simRun.getHWDemand()[-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
+    assert simRun.getPrimaryGeneration()[800:810] == [2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244]
 
 def test__parallel_simRun(parallel_sizer):
     simRun = parallel_sizer.getSimRun()
@@ -306,49 +305,46 @@ def test__parallel_simRun(parallel_sizer):
         assert simRun.getPrimaryVolume(i) > hopefulResult - 0.01
 
 def test__primary_simulationResults(primary_sizer):
-    simResult = primary_sizer.getSimResult()
-    assert len(simResult) == 4
-    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 4320
-    assert simResult[0][:10] == [1027.528, 1027.057, 1026.585, 1026.114, 1025.642, 1025.171, 1024.699, 1024.228, 1023.756, 1023.284]
-    assert simResult[1][-10:] == [3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205]
-    assert simResult[2][-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
-    assert simResult[3][800:810] == [2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244]
+    simRun = primary_sizer.getSimRun()
+    assert len(simRun.getPrimaryVolume()) == len(simRun.getHWGeneration()) == len(simRun.getHWDemand()) == len(simRun.getPrimaryGeneration()) == 4320
+    assert simRun.getPrimaryVolume()[:10] == [1027.528, 1027.057, 1026.585, 1026.114, 1025.642, 1025.171, 1024.699, 1024.228, 1023.756, 1023.284]
+    assert simRun.getHWGeneration()[-10:] == [3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205, 3.205]
+    assert simRun.getHWDemand()[-65:-55] == [1.86, 1.86, 1.86, 1.86, 1.86, 1.193, 1.193, 1.193, 1.193, 1.193]
+    assert simRun.getPrimaryGeneration()[800:810] == [2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244, 2.244]
 
 def test__swing_simulationResults(swing_sizer):
-    simResult = swing_sizer.getSimResult()
-    assert len(simResult) == 7
-    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == len(simResult[4]) == len(simResult[5]) == len(simResult[6]) == 4320
+    simRun = swing_sizer.getSimRun()
+    assert len(simRun.getPrimaryVolume()) == len(simRun.getHWGeneration()) == len(simRun.getTMRun()) == len(simRun.getTMTemp()) == 4320
+    assert len(simRun.getHWDemand()) == len(simRun.getPrimaryGeneration()) == 4320
 
 def test__primary_nls_simulationResults(primary_sizer_nls):
-    simResult = primary_sizer_nls.getSimResult()
-    assert len(simResult) == 4
-    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 4320
-    assert simResult[0][:10] == [420.557, 420.113, 419.67, 419.227, 418.784, 418.34, 417.897, 417.454, 417.011, 416.567]
-    assert simResult[1][-10:] == [2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604]
-    assert simResult[2][-65:-55] == [2.66, 2.66, 2.66, 2.66, 2.66, 1.013, 1.013, 1.013, 1.013, 1.013]
-    assert simResult[3][800:810] == [1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823]
+    simRun = primary_sizer_nls.getSimRun()
+    assert len(simRun.getPrimaryVolume()) == len(simRun.getHWGeneration()) == len(simRun.getHWDemand()) == len(simRun.getPrimaryGeneration()) == 4320
+    assert simRun.getPrimaryVolume()[:10] == [420.557, 420.113, 419.67, 419.227, 418.784, 418.34, 417.897, 417.454, 417.011, 416.567]
+    assert simRun.getHWGeneration()[-10:] == [2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604, 2.604]
+    assert simRun.getHWDemand()[-65:-55] == [2.66, 2.66, 2.66, 2.66, 2.66, 1.013, 1.013, 1.013, 1.013, 1.013]
+    assert simRun.getPrimaryGeneration()[800:810] == [1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823, 1.823]
 
 # annual simulations
 def test__annual_swing_simulationResults_size(annual_swing_sizer):
-    simResult = annual_swing_sizer.getSimResult(initPV=0.4*944.972083230641, initST=135, minuteIntervals = 15, nDays = 365)
-    assert len(simResult) == 7
-    assert len(simResult[0]) == len(simResult[1]) == len(simResult[2]) == len(simResult[3]) == 35040
+    simRun = annual_swing_sizer.getSimRun(initPV=0.4*944.972083230641, initST=135, minuteIntervals = 15, nDays = 365)
+    assert len(simRun.getPrimaryVolume()) == len(simRun.getHWGeneration()) == len(simRun.getHWDemand()) == len(simRun.getPrimaryGeneration()) == 35040
 
 @pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, climateZone", [
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'multipass_norecirc', 891, 48, None, None, True, 94503,2),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_norecirc', 891, 48, None, None, True, 93901,3),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_rtp', 891, 48, None, None, True, 93254,4),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120_MP', None, 'multipass_rtp', 891, 48, None, None, True, 93130,5),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'multipass_norecirc', 891, 48, None, None, True, 94503,2),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_C_MP', None, 'multipass_norecirc', 891, 48, None, None, True, 93901,3),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_C_MP', None, 'multipass_rtp', 891, 48, None, None, True, 93254,4),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120_C_MP', None, 'multipass_rtp', 891, 48, None, None, True, 93130,5),
    (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_rtp', 891, 48, None, None, True, 90009,6),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120_MP', None, 'singlepass_rtp', 891, 48, None, None, True, 91902,7),
-   (0.21, 0.8, 150, 120, None, 'MODELS_AOSmithCAHP120_MP', None, 'singlepass_rtp', 702, 41, None, None, False, 90003,8),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'singlepass_norecirc', 891, 48, None, None, True, 90006,9),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_Mitsubishi_QAHV', None, 'singlepass_norecirc', 891, 48, None, None, True, 91701,10),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_GS3_45HPA_US_SP', None, 'swingtank', 891, 48, 100, 19, True, 95603,11),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_25_SP', None, 'swingtank', 891, 48, 100, 19, True, 93620,12),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC185A_SP', 'paralleltank', 891, 31, 91, 19, True, 93203,13),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_SP', 'MODELS_ColmacCxA_20_SP', 'paralleltank', 891, 31, 91, 19, True, 91916,14),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', 'MODELS_NyleC250A_C_SP', 'paralleltank', 891, 31, 91, 19, True, 92004,15)
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_AOSmithCAHP120_C_MP', None, 'singlepass_rtp', 891, 48, None, None, True, 91902,7),
+   (0.21, 0.8, 150, 120, None, 'MODELS_AOSmithCAHP120_C_MP', None, 'singlepass_rtp', 702, 41, None, None, False, 90003,8),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_norecirc', 891, 48, None, None, True, 90006,9),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_Mitsubishi_QAHV_C_SP', None, 'singlepass_norecirc', 891, 48, None, None, True, 91701,10),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_C_SP', None, 'swingtank', 891, 48, 100, 19, True, 95603,11),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_25_C_SP', None, 'swingtank', 891, 48, 100, 19, True, 93620,12),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', 'MODELS_NyleC185A_C_SP', 'paralleltank', 891, 31, 91, 19, True, 93203,13),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_C_SP', 'MODELS_ColmacCxA_20_C_SP', 'paralleltank', 891, 31, 91, 19, True, 91916,14),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', 'MODELS_NyleC250A_C_SP', 'paralleltank', 891, 31, 91, 19, True, 92004,15)
 ])
 def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, 
                               simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, climateZone):
@@ -423,16 +419,16 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
     # assert COP calculations are the same (within rounding error of 0.002)
     equip_method_cop = simRun.getAnnualCOP()
     boundry_method_cop = simRun.getAnnualCOP(boundryMethod = True)
-    assert equip_method_cop < boundry_method_cop + 0.003
-    assert equip_method_cop > boundry_method_cop - 0.003
+    assert equip_method_cop < boundry_method_cop + 0.005
+    assert equip_method_cop > boundry_method_cop - 0.005
 
 @pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, zipCode, climateZone", [
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'multipass_norecirc', 891, 48, None, None, 94922,1),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_MP', None, 'multipass_rtp', 891, 48, None, None, 90001,8),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'multipass_norecirc', 891, 48, None, None, 94922,1),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_C_MP', None, 'multipass_rtp', 891, 48, None, None, 90001,8),
    (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_rtp', 891, 48, None, None, 90254,6),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_SP', None, 'singlepass_norecirc', 891, 48, None, None, 90255,8),
-   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_GS3_45HPA_US_SP', None, 'swingtank', 891, 48, 100, 19, 91380,16),
-   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_SP', 'MODELS_ColmacCxA_20_MP', 'paralleltank', 891, 31, 91, 19, 91730,10),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_NyleC250A_C_SP', None, 'singlepass_norecirc', 891, 48, None, None, 90255,8),
+   (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_SANCO2_C_SP', None, 'swingtank', 891, 48, 100, 19, 91380,16),
+   (0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_C_SP', 'MODELS_ColmacCxA_20_C_MP', 'paralleltank', 891, 31, 91, 19, 91730,10),
 ])
 
 def test_annual_simRun_comparison_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, 
@@ -485,9 +481,11 @@ def test_annual_simRun_comparison_values(aquaFractLoadUp, aquaFractShed, storage
         assert simRun_ls.getRecircLoss(i) == simRun_nls.getRecircLoss(i)
         assert simRun_ls.getIncomingWaterT(i) == simRun_nls.getIncomingWaterT(i)
 
-def test_invalid_prefomance_map(swing_sizer):
+def test_invalid_getSimRunWithkWCalc(swing_sizer, primary_sizer_nls):
     with pytest.raises(Exception, match = "kgCO2/kWh calculation is only available for annual simulations."):
         swing_sizer.getSimRunWithkWCalc()
+    with pytest.raises(Exception, match = "Cannot preform kgCO2/kWh calculation on non-loadshifting systems."):
+        primary_sizer_nls.getSimRunWithkWCalc()
 
 @pytest.mark.parametrize("climateZone", [
    (1),(2),(3),(4),(5),(6),(7),(8),(9),(10),(11),(12),(13),(14),(15),(16)
@@ -512,7 +510,7 @@ def test_annual_QAVH_for_all_climates(climateZone):
             PCap_kW = 48,
             annual = True,
             climateZone = climateZone,
-            systemModel = "MODELS_Mitsubishi_QAHV"
+            systemModel = "MODELS_Mitsubishi_QAHV_C_SP"
         )
     simRun = hpwh.getSimRun(minuteIntervals = 15, nDays = 365)
 

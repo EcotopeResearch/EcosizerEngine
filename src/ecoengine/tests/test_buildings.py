@@ -146,17 +146,21 @@ def test_custom_loadshapes(loadShape, buildingType, magnitude, expected):
 def test_annualLS_for_multi_family(multiFamilyWithBedrooms):
     assert len(multiFamilyWithBedrooms.loadshape) == 24
     assert len(multiFamilyWithBedrooms.avgLoadshape) == 24
+    assert not multiFamilyWithBedrooms.isAnnualLS()
     multiFamilyWithBedrooms.setToAnnualLS()
     assert len(multiFamilyWithBedrooms.loadshape) == 8760
     assert len(multiFamilyWithBedrooms.avgLoadshape) == 8760
+    assert multiFamilyWithBedrooms.isAnnualLS()
 
 def test_annualLS_for_non_multi_family(nursingHomeAndOffice):
     assert len(nursingHomeAndOffice.loadshape) == 24
     assert len(nursingHomeAndOffice.avgLoadshape) == 24
+    assert not nursingHomeAndOffice.isAnnualLS()
     with pytest.raises(Exception, match="Annual loadshape not available for this building type. This feature is only available for multi-family buildings."):
         nursingHomeAndOffice.setToAnnualLS()
     assert len(nursingHomeAndOffice.loadshape) == 24
     assert len(nursingHomeAndOffice.avgLoadshape) == 24
+    assert not nursingHomeAndOffice.isAnnualLS()
 
 def test_annualLS_from_instantiation(nursingHomeAndOffice):
     building = createBuilding(
@@ -237,13 +241,13 @@ def test_invalid_building_parameter_errors():
         createBuilding(35, [4,7,8] , 120, ["mens_dorm"])
     with pytest.raises(Exception, match="No default loadshape found for building type yep."):
         createBuilding(35, [1,2], 120, ["mens_dorm","yep"])
-    with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 19."):
+    with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 19, or between 1 and 16 if making a kWh calculation."):
         createBuilding(35, 4, 120, "mens_dorm", climateZone = 100)
     with pytest.raises(Exception, match="Both buildingType and loadshape are undefined. Must define at least one to construct building object."):
         createBuilding(35, 4, 120, None)
-    with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 19."):
+    with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 19, or between 1 and 16 if making a kWh calculation."):
         createBuilding(35, 4, 120, "mens_dorm", climateZone = 'yes')
-    with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 19."):
+    with pytest.raises(Exception, match="Climate Zone must be a number between 1 and 19, or between 1 and 16 if making a kWh calculation."):
         createBuilding(35, 4, 120, "mens_dorm", climateZone = 0)
     with pytest.raises(Exception, match="18 is not a California zip code."):
         createBuilding(35, 4, 120, "mens_dorm", zipCode = 18)

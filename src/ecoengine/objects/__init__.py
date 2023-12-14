@@ -22,6 +22,7 @@ from .SystemConfig import *
 from .systemConfigUtils import *
 from .systems.ParallelLoopTank import *
 from .systems.SwingTank import *
+from .systems.SwingTankER import *
 from .systems.MultiPass import *
 from .systems.MultiPassRecirc import *
 from .systems.PrimaryWithRecirc import *

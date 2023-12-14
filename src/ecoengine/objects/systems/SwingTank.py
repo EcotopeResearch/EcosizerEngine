@@ -7,7 +7,7 @@ from ecoengine.objects.systemConfigUtils import convertVolume, hrToMinList, getP
 
 class SwingTank(SystemConfig):
 
-    #Assuming that these swing sizing methodologies will be dropped in next code cycle so they likely can be removed, it not we will need to implement additional swing sizing
+    #Assuming that these swing sizing methodologies will be dropped in next code cycle so they likely can be removed, if not we will need to implement additional swing sizing
     Table_Napts = [0, 12, 24, 48, 96]
     sizingTable = [40, 50, 80, 100, 120, 160, 175, 240, 350, 400, 500, 600, 800, 1000, 1250] #multiples of standard tank sizes 
     sizingTable_CA = [80, 96, 168, 288, 480]
@@ -15,7 +15,7 @@ class SwingTank(SystemConfig):
     def __init__(self, safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
                  aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
-                 PCap_kBTUhr = None, ignoreShortCycleEr = False, TMVol_G = None, TMCap_kBTUhr = None):
+                 PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, TMVol_G = None, TMCap_kBTUhr = None):
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
             raise Exception("The saftey factor for the temperature maintenance system must be greater than 1 or the system will never keep up with the losses.")
@@ -35,7 +35,7 @@ class SwingTank(SystemConfig):
 
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
-                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr)
+                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
         
     def getSizingResults(self):
         """
@@ -339,7 +339,7 @@ class SwingTank(SystemConfig):
         
         return [swingT_F, tmRun, hw_outSwing]
     
-    def _runOneSwingStep(self, building : Building, swingheating, Tcurr, hw_out, primaryStorageT_F, minuteIntervals = 1):
+    def _runOneSwingStep(self, building : Building, swingheating, Tcurr, hw_out, primaryStorageT_F, minuteIntervals = 1, erCalc = False):
         """
         Runs one step on the swing tank step. Since the swing tank is in series
         with the primary system the temperature needs to be tracked to inform
@@ -385,7 +385,7 @@ class SwingTank(SystemConfig):
             if volAtTcurr <= 0:
                 # we need to do things with more granularity because more water is folowing throught the tank than the tank's volume
                 if minuteIntervals == 1:
-                    raise Exception(f"swing tank is undersized. The swing tank must be larger than {hw_out} gallons given the demand of the building.")
+                    raise Exception(f"Swing tank is undersized. The swing tank must be larger than {hw_out} gallons given the demand of the building.")
                 swingRun = [0] * minuteIntervals
                 for i in range(minuteIntervals):
                     swingheating, Tnew, swingRun[i] = self._runOneSwingStep(building, swingheating, Tnew, hw_out/minuteIntervals, primaryStorageT_F, 1)
@@ -415,14 +415,15 @@ class SwingTank(SystemConfig):
             swingheating = True # Start heating
 
         if Tnew < building.supplyT_F: # Check for errors
-            raise Exception("The swing tank dropped below the supply temperature! The system is undersized")
+            if not erCalc:
+                raise Exception("The swing tank dropped below the supply temperature! The system is undersized")
                 
         # multiply time_running to reflect the time durration of the interval.
         time_run = time_running * minuteIntervals
 
         return swingheating, Tnew, time_run
     
-    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building, effSwingVolFract, primaryCurve = False, lsFractTotalVol = 1):
+    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building : Building, effSwingVolFract, primaryCurve = False, lsFractTotalVol = 1):
         """
         Converts from hours of heating in a day to heating capacity. Takes maximum from 
         standard method based on number of heating hours and load shift method based on
@@ -451,17 +452,17 @@ class SwingTank(SystemConfig):
             The generation rate in [gal/hr].
         """
         checkHeatHours(heathours)
-        
+        coldest_incomingT_F = building.getLowestIncomingT_F()
         genRate = building.magnitude * effSwingVolFract / heathours
         heatCap = genRate * rhoCp * \
-            (self.storageT_F - building.incomingT_F) / self.defrostFactor / 1000 #use storage temp instead of supply temp
+            (self.storageT_F - coldest_incomingT_F) / self.defrostFactor / 1000 #use storage temp instead of supply temp
         
         if self.doLoadShift and not primaryCurve:
             Vshift, VconsumedLU = self._calcPrelimVol(loadUpHours, building.avgLoadshape, building, lsFractTotalVol = lsFractTotalVol) 
             Vload = Vshift * (self.aquaFract - self.aquaFractLoadUp) / (self.aquaFractShed - self.aquaFractLoadUp) #volume in 'load up' portion of tank
             LUgenRate = (Vload + VconsumedLU) / loadUpHours #rate needed to load up tank and offset use 
             LUheatCap = LUgenRate * rhoCp * \
-                (self.storageT_F - building.incomingT_F) / self.defrostFactor / 1000
+                (self.storageT_F - coldest_incomingT_F) / self.defrostFactor / 1000
             #TODO putting these in supply temp instead of storage... make sure this is correct
             #compare swing and loadshift capacity
             
@@ -471,12 +472,12 @@ class SwingTank(SystemConfig):
             
         return heatCap, genRate
     
-    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
+    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3) -> SimulationRun:
         simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
         simRun.initializeTMValue(initST, self.storageT_F, self.TMCap_kBTUhr)
         return simRun
 
-    def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
+    def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None, erCalc = False):
         incomingWater_T = simRun.getIncomingWaterT(i)
         if i > 0 and incomingWater_T != simRun.getIncomingWaterT(i-1):
             self.setLoadUPVolumeAndTrigger(incomingWater_T)
@@ -489,7 +490,8 @@ class SwingTank(SystemConfig):
         # aquire draw amount for time step
         simRun.hw_outSwing[i] = convertVolume(simRun.hwDemand[i], simRun.tmT_F[i-1], incomingWater_T, simRun.building.supplyT_F)
             
-        simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, simRun.tmheating, simRun.tmT_F[i-1], simRun.hw_outSwing[i], self.storageT_F, minuteIntervals = minuteIntervals)
+        simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, simRun.tmheating, simRun.tmT_F[i-1], simRun.hw_outSwing[i], self.storageT_F, minuteIntervals = minuteIntervals,
+                                                                                   erCalc = erCalc)
         
         #Get the mixed generation
         mixedGHW = convertVolume(simRun.hwGenRate, self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
@@ -500,7 +502,8 @@ class SwingTank(SystemConfig):
                                                                                                 hw_in = mixedGHW, 
                                                                                                 mode = simRun.getLoadShiftMode(i),
                                                                                                 modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
-                                                                                                minuteIntervals = minuteIntervals)
+                                                                                                minuteIntervals = minuteIntervals,
+                                                                                                erCalc = erCalc)
     
     def getTMOutputCapacity(self, kW = False):
         if kW:

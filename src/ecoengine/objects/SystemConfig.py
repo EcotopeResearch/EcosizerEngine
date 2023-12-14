@@ -12,7 +12,7 @@ class SystemConfig:
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building : Building = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
                  aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
-                 PCap_kBTUhr = None, ignoreShortCycleEr = False):
+                 PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False):
         # check inputs. Schedule not checked because it is checked elsewhere
         self._checkInputs(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent)
         self.doLoadShift = doLoadShift
@@ -35,6 +35,7 @@ class SystemConfig:
         self.maxDayRun_hr = min(self.compRuntime_hr, sum(self.loadShiftSchedule))
 
         #size system
+        default_PCap_kBTUhr = None
         if not PVol_G_atStorageT is None:
             if not (isinstance(PVol_G_atStorageT, int) or isinstance(PVol_G_atStorageT, float)) or PVol_G_atStorageT <= 0: 
                 raise Exception('Invalid input given for Primary Storage Volume, it must be a number greater than zero.')
@@ -42,15 +43,18 @@ class SystemConfig:
                 # if systemModel and numHeatPumps are defined we do not nessesarily need PCap_kBTUhr
                 if systemModel is None or numHeatPumps is None:
                     raise Exception('Invalid input given for Primary Output Capacity, must be a number greater than zero.')
+            if PCap_kBTUhr is None and isinstance(building, Building):
+                # get default capacity needed incase we need this for the simulation with performance maps
+                self.sizeSystem(building)
+                default_PCap_kBTUhr = self.PCap_kBTUhr
             self.PVol_G_atStorageT = PVol_G_atStorageT
             self.PCap_kBTUhr = PCap_kBTUhr
         else: 
             #size system based off of building
             self.sizeSystem(building)
-            if self.doLoadShift:
-                self.PConvertedLoadUPV_G_atStorageT = convertVolume(self.PVol_G_atStorageT, self.storageT_F, building.incomingT_F, self.loadUpT_F)
-                self.adjustedPConvertedLoadUPV_G_atStorageT = np.ceil(self.PConvertedLoadUPV_G_atStorageT * self.percentUseable)
-                self.Vtrig_loadUp = self.PConvertedLoadUPV_G_atStorageT * (1 - self.aquaFractLoadUp)
+        if isinstance(building, Building):
+            # calculate load up triggers if we know the incoming water temp
+            self.setLoadUPVolumeAndTrigger(building.getLowestIncomingT_F())
 
         self.adjustedPVol_G_atStorageT = np.ceil(self.PVol_G_atStorageT * self.percentUseable)
         self.Vtrig_normal = self.PVol_G_atStorageT * (1 - self.aquaFract)
@@ -58,11 +62,14 @@ class SystemConfig:
             self.Vtrig_shed = self.PVol_G_atStorageT * (1 - self.aquaFractShed)
         if numHeatPumps is None and not systemModel is None and not building is None and not building.getClimateZone() is None:
             # size number of heatpumps based on the coldest day
-            self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
+            self.perfMap = PrefMapTracker(self.PCap_kBTUhr if default_PCap_kBTUhr is None else default_PCap_kBTUhr, 
+                                          modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
                                           designOAT_F=building.getLowestOAT(), designIncomingT_F=building.getLowestIncomingT_F(),
-                                          designOutT_F=self.storageT_F) 
+                                          designOutT_F=self.storageT_F, usePkl=True if not (systemModel is None or useHPWHsimPrefMap) else False)
         else:
-            self.perfMap = PrefMapTracker(self.PCap_kBTUhr, modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True)
+            self.perfMap = PrefMapTracker(self.PCap_kBTUhr if default_PCap_kBTUhr is None else default_PCap_kBTUhr, 
+                                          modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
+                                          usePkl=True if not (systemModel is None or useHPWHsimPrefMap) else False)
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):
         if not (isinstance(storageT_F, int) or isinstance(storageT_F, float)) or not checkLiqudWater(storageT_F): 
@@ -99,6 +106,12 @@ class SystemConfig:
     def resetToDefaultCapacity(self):
         self.PCap_kBTUhr = self.perfMap.getDefaultCapacity()
 
+    def resetPerfMap(self):
+        self.perfMap.resetReliedOnEr()
+    
+    def reliedOnEr(self):
+        return self.perfMap.didRelyOnEr()
+
     def getOutputCapacity(self, kW = False):
         if kW:
             return self.PCap_kBTUhr/W_TO_BTUHR
@@ -133,9 +146,21 @@ class SystemConfig:
         """
         if not isinstance(building, Building):
                 raise Exception("Error: Building is not valid.")
+        
+        buildingWasAnnual = False
+        if building.isAnnualLS():
+            # set building load shape from annual to daily for sizing
+            buildingWasAnnual = True
+            building.setToDailyLS()
+
+        # size the szystem
         self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr, self.loadUpHours, building, lsFractTotalVol = self.fract_total_vol)
         self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, building, 
             effSwingVolFract = self.effSwingFract, primaryCurve = False, lsFractTotalVol = self.fract_total_vol)[0]
+        
+        if buildingWasAnnual:
+            # set building load shape back to annual
+            building.setToAnnualLS()
         
     def getSizingResults(self):
         """
@@ -148,7 +173,7 @@ class SystemConfig:
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr]
     
-    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3):
+    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3) -> SimulationRun:
         """
         Returns initialized arrays needed for nDay simulation
 
@@ -364,7 +389,7 @@ class SystemConfig:
             genRate = max(LUgenRate, genRate)
             
         heatCap = genRate * rhoCp * \
-            (building.supplyT_F - building.incomingT_F) / self.defrostFactor / 1000
+            (building.supplyT_F - building.getLowestIncomingT_F()) / self.defrostFactor / 1000
        
         return heatCap, genRate
     
@@ -734,7 +759,7 @@ class SystemConfig:
         return fig
 
     
-    def runOnePrimaryStep(self, pheating, Vcurr, hw_out, hw_in, mode, modeChanged, minuteIntervals = 1):
+    def runOnePrimaryStep(self, pheating, Vcurr, hw_out, hw_in, mode, modeChanged, minuteIntervals = 1, erCalc = False):
         """
         Runs one step on the primary system. This changes the volume of the primary system
         by assuming there is hot water removed at a volume of hw_out and hot water
@@ -818,7 +843,7 @@ class SystemConfig:
         hw_generated = hw_in * time_ran
         Vnew += hw_generated
         
-        if Vnew < 0:
+        if Vnew < 0 and not erCalc:
            raise Exception("Primary storage ran out of Volume!")
         if time_ran < 0:
            raise Exception("Internal system error. time_ran was negative")
@@ -857,9 +882,10 @@ class SystemConfig:
 class Primary(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, ignoreShortCycleEr = False):
+                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, 
+                 ignoreShortCycleEr = False, useHPWHsimPrefMap = False):
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, doLoadShift, 
                 loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, systemModel, 
-                numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr)
+                numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
 
 

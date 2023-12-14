@@ -6,30 +6,113 @@ from scipy.interpolate import LinearNDInterpolator
 import math
 
 class PrefMapTracker:
-    def __init__(self, defaultCapacity = None, modelName = None, kBTUhr = False, numHeatPumps = None, 
-                 isMultiPass = False, designOAT_F : float = None, designIncomingT_F : float = None, designOutT_F : float = None):
-        self.isQAHV = False
+    """
+    An object that uses the preformance map data of varrious models to accuratly predict the kW input and output of 
+    HPWH systems under different climates and temperatures.
+
+    Attributes
+    ----------
+    defaultCapacity_kBTUhr : float
+        the default output capacity for the system in kBTUhr
+    modelName : String
+        The string name for the HPWH model. Must match one of the model names in maps.json. If set to None, this will
+        be a default generic HPWH with a COP of 2.5
+    kBTUhr : boolean
+        Set to True to return input and output capacity in kBTUhr, set to False to return in kW
+    numHeatPumps : int
+        the Number of heat pumps in the system. If set to None, will be autosized to produce defaultCapacity_kBTUhr output capacity.
+        If auto-sizing the number of heat pumps for extreme weather environments outside of available preformance map scope, 
+        you will also need to enter parameters for designOAT_F, designIncomingT_F, and designOutT_F to ensure no exceptions occur.
+    isMultiPass : boolean
+        Set to True for multipass systems, set to False for singlepass
+    designOAT_F : float
+        The worst-case outdoor air temperature for the climate the preformance map is being tested in. This ensures number of heat pumps is 
+        auto-sized appropriatly
+    designIncomingT_F : float
+        The worst-case inlet water temperature for the climate the preformance map is being tested in. This ensures number of heat pumps is 
+        auto-sized appropriatly
+    designOutT_F : float
+        The worst-case outlet water temperature for the system the preformance map is being tested in. This ensures number of heat pumps is 
+        auto-sized appropriatly
+    usePkl : boolean
+        Default to True. Set to True to use most recent preformance map model. Set to false to use HPWHsim model
+    prefMapOnly : boolean
+        Set to True when not using preformance map in te larger EcoEngine system. This provides some shortcuts to avoid certain error handling
+    erBaseline : boolean
+        Set to true to indicate this preformance map is meant to model a ER system with a COP of 1
+    """
+    def __init__(self, defaultCapacity_kBTUhr = None, modelName = None, kBTUhr = False, numHeatPumps = None, 
+                 isMultiPass = False, designOAT_F : float = None, designIncomingT_F : float = None, 
+                 designOutT_F : float = None, usePkl = True, prefMapOnly = False, erBaseline = False):
+        self.usePkl = usePkl
+        self.secondaryHeatExchanger = False
         self.output_cap_interpolator = None
-        self.cop_interpolator = None
         self.input_cap_interpolator = None
-        self.defaultCapacity = defaultCapacity
+        self.defaultCapacity_kBTUhr = defaultCapacity_kBTUhr
         self.perfMap = None
         self.kBTUhr = kBTUhr
         self.isMultiPass = isMultiPass
-        if defaultCapacity is None and numHeatPumps is None:
-            raise Exception("Invalid input given for preformance map, requires either defaultCapacity or numHeatPumps.")
+        self.twoInputPkl = False
+        self.oat_max = None
+        self.oat_min = None
+        self.inlet_max = None
+        self.inlet_min = None
+        self.outlet_max = None
+        self.outlet_min = None
+        self.default_output_high = None
+        self.default_input_high = None
+        self.default_output_low = None
+        self.default_input_low = None
+        self.prefMapOnly = prefMapOnly
+        self.erBaseline = erBaseline
+        self.reliedOnER = False # flag to indicate if the system at any point needed to rely on Electric Resistance during the simulation
+        if defaultCapacity_kBTUhr is None and numHeatPumps is None:
+            raise Exception("Invalid input given for preformance map, requires either defaultCapacity_kBTUhr or numHeatPumps.")
         elif not numHeatPumps is None and not ((isinstance(numHeatPumps, int) or isinstance(numHeatPumps, float)) and numHeatPumps > 0):
             raise Exception("Invalid input given for numHeatPumps, must be a number greater than zero")
         self.numHeatPumps = numHeatPumps
         if not modelName is None: 
             self.setPrefMap(modelName)
             if numHeatPumps is None and not (designOAT_F is None or designIncomingT_F is None or designOutT_F is None):
-                self.getCapacity(designOAT_F, designIncomingT_F, designOutT_F) # will set self.numHeatPumps in this function
+                if self.usePkl:
+                    # Need pkl'd to not return default for sizing number of heat pumps so must set design temp
+                    if designOAT_F < self.oat_min:
+                        designOAT_F = self.oat_min
+                    if designIncomingT_F < self.inlet_min:
+                        designIncomingT_F = self.inlet_min
+                    if designOutT_F < self.outlet_min:
+                        designOutT_F = self.outlet_min
+                self.getCapacity(designOAT_F, designIncomingT_F, designOutT_F, sizingNumHP = True) # will set self.numHeatPumps in this function
 
-    def getDefaultCapacity(self):
-        return self.defaultCapacity
+    def getDefaultCapacity(self, AsKW = False):
+        """
+        Returns default capacity for the system in kBTUhr
+        Inputs
+        ------
+        AsKWh : Boolean
+            Set to True to return as kW. False (default) returns as kBTUhr
+        Returns
+        -------
+        defaultCapacity
+            The default output capacity of the model in kW or kBTUhr
+        """
+        if AsKW:
+            return self.defaultCapacity_kBTUhr/W_TO_BTUHR
+        return self.defaultCapacity_kBTUhr
+    
+    def didRelyOnEr(self):
+        """
+        Returns True if the model had to rely on Electric Resistance at any point during the simulation (e.g. when the outdoor tempuratures were too cold for the HPWH to work)
+        """
+        return self.reliedOnER
+    
+    def resetReliedOnEr(self):
+        """
+        Sets the reliedOnER field to False to so that a new simulation can be run on the model
+        """
+        self.reliedOnER = False
 
-    def getCapacity(self, externalT_F, condenserT_F, outT_F):
+    def getCapacity(self, externalT_F, condenserT_F, outT_F, sizingNumHP = False):
         """
         Returns the current output capacity of of the HPWH model for the simulation given external and condesor temperatures.
         If no HPWH model has been set, returns the default output capacity of the system.
@@ -45,44 +128,58 @@ class PrefMapTracker:
         Returns
         -------
         output_kW
-            The output capacity of the primary HPWH in kW as a float
+            The output capacity of the primary HPWH in kW (or kBTUhr if the PrefMapTracker object was initialized with kBTUhr=True) as a float
         input_kW
-            The input capacity of the primary HPWH in kW as a float
+            The input capacity of the primary HPWH in kW (or kBTUhr if the PrefMapTracker object was initialized with kBTUhr=True) as a float
         """
-        if self.isQAHV:
+        if self.usePkl:
             # edit incoming values to extrapolate if need be
             extrapolate = False
-            condenserT_F += 10 # add 10 degrees to incoming water temp for QAHV only
-            
-            if condenserT_F > 120:
-                condenserT_F = 120
-                extrapolate = True
-            elif condenserT_F < 41:
-                condenserT_F = 41
-                extrapolate = True
-            
-            if outT_F > 170:
-                outT_F = 170
-                extrapolate = True
-            elif outT_F < 149:
-                outT_F = 149
-                extrapolate = True
-            
-            if externalT_F > 100.0:
-                externalT_F = 100.0
-                extrapolate = True
-            elif externalT_F < -13.0:
-                externalT_F = -13.0
-                extrapolate = True
+            if self.secondaryHeatExchanger:
+                outT_F += 10.
+                condenserT_F += 10. # add 10 degrees to incoming water temp for QAHV only
 
             #use pickled interpolation functions
-            input_array = [condenserT_F, outT_F, externalT_F] # add 10 degrees to inlet water temp for QAHV
+            input_array = [condenserT_F, outT_F, externalT_F]
+            if self.twoInputPkl:
+                input_array = [condenserT_F, externalT_F] # MultiPass performance maps do not account for outlet water temp
             output_kW = self.output_cap_interpolator(input_array)[0][0]
             input_kW = self.input_cap_interpolator(input_array)[0][0]
+            if math.isnan(output_kW) or math.isnan(input_kW):
+                extrapolate = True
+                if abs(externalT_F - self.oat_max) > abs(externalT_F - self.oat_min): # if closer to coldest temp than warmest temp in perf map
+                    if sizingNumHP:
+                        print(f"Error in preformance map for input array of {input_array}. Using default capacity values to size.")
+                        output_kW =self.default_output_low
+                        input_kW = self.default_input_low
+                    else:
+                        if self.reliedOnER == False:
+                            print("Warning: System had to rely on Electric Resistance to meet demand during times with a cold outdoor air temperature.")
+                        self.reliedOnER = True
+                        if self.defaultCapacity_kBTUhr is None:
+                            if self.prefMapOnly:
+                                return 1.,1. # return 1, 1 when just assessing preformance map only
+                            else:
+                                raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
+                        if self.kBTUhr:
+                            return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr # externalT_F is low so use electric resistance to heat and assume COP of 1
+                        else:
+                            # return in kW
+                            return self.defaultCapacity_kBTUhr/W_TO_BTUHR, self.defaultCapacity_kBTUhr/W_TO_BTUHR
+                else:
+                    # externalT_F is high so assume same COP for highest temp in performance map
+                    output_kW = self.default_output_high
+                    input_kW = self.default_input_high
 
         elif self.perfMap is None or len(self.perfMap) == 0:
-            return self.defaultCapacity, self.defaultCapacity / 2.5 # assume COP of 2.5 for input_capactiy calculation
-        
+            if self.erBaseline:
+                if self.kBTUhr:
+                    return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr # ER has COP of 1
+                return self.defaultCapacity_kBTUhr/W_TO_BTUHR, self.defaultCapacity_kBTUhr/W_TO_BTUHR
+            elif self.kBTUhr:
+                return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr / 2.5 # assume COP of 2.5 for input_capactiy calculation for default HPWH
+            return self.defaultCapacity_kBTUhr/W_TO_BTUHR, (self.defaultCapacity_kBTUhr/W_TO_BTUHR)/2.5
+
         elif len(self.perfMap) > 1:
             # cop at ambient temperatures T1 and T2
             COP_T1 = 0 
@@ -138,7 +235,7 @@ class PrefMapTracker:
                 input_kW = self._regressedMethodMP(externalT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs'])
                 cop = self._regressedMethodMP(externalT_F, condenserT_F, self.perfMap[0]['COP_coeffs'])
             else:
-                input_kW = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs']) # TODO check for outT_F, may need to be plus 10 for QAHV
+                input_kW = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs'])
                 cop = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['COP_coeffs'])
             output_kW = cop * input_kW
 
@@ -146,33 +243,59 @@ class PrefMapTracker:
             output_kW *= W_TO_BTUHR # convert kW to kBTU
             input_kW *= W_TO_BTUHR
         if self.numHeatPumps is None:
-            self._autoSetNumHeatPumps(output_kW)
+            if self.kBTUhr:
+                # output has already been converted to kBTUhr
+                self._autoSetNumHeatPumps(output_kW)
+            else:
+                self._autoSetNumHeatPumps(output_kW*W_TO_BTUHR)
         output_kW *= self.numHeatPumps
         input_kW *= self.numHeatPumps
         return [output_kW, input_kW]
 
-    def _autoSetNumHeatPumps(self, modelCapacity):
-        heatPumps = round(self.defaultCapacity/modelCapacity)
+    def _autoSetNumHeatPumps(self, modelCapacity_kBTUhr):
+        heatPumps = math.ceil(self.defaultCapacity_kBTUhr/modelCapacity_kBTUhr)
         self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
     def setPrefMap(self, modelName):
-        if modelName == "MODELS_Mitsubishi_QAHV":
-            self.isQAHV = True
-            filepath = "../data/preformanceMaps/pkls/"
-            with open(os.path.join(os.path.dirname(__file__), f"{filepath}QAHV_capacity_interpolator.pkl"), 'rb') as f:
-                self.output_cap_interpolator = pickle.load(f)
-            with open(os.path.join(os.path.dirname(__file__), f"{filepath}QAHV_cop_interpolator.pkl"), 'rb') as f:
-                self.cop_interpolator = pickle.load(f)
-            with open(os.path.join(os.path.dirname(__file__), f"{filepath}QAHV_power_in_interpolator.pkl"), 'rb') as f:
-                self.input_cap_interpolator = pickle.load(f)
-        else:
-            try:
-                with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
-                    dataDict = json.load(json_file)
-                    self.perfMap = dataDict[modelName]["perfmap"]
-                    if modelName[-2:] == 'MP':
-                        self.isMultiPass = True
-            except:
+        if modelName == "MODELS_SANCO2_C_SP" or (modelName[-2:] == 'MP' 
+                and not modelName in ["MODELS_RHEEM_HPHD135VNU_483_C_MP","MODELS_RHEEM_HPHD135HNU_483_C_MP",
+                "MODELS_RHEEM_HPHD60VNU_201_C_MP","MODELS_RHEEM_HPHD60HNU_201_C_MP"]):
+            # The rheems with pkls function like single pass pkls
+            self.twoInputPkl = True
+        if modelName[-2:] == 'MP':
+            self.isMultiPass = True
+        try:
+            with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
+                dataDict = json.load(json_file)
+                if self.usePkl or not "perfmap" in dataDict[modelName]:
+                    self.usePkl = True
+                    filepath = "../data/preformanceMaps/pkls/"
+                    self.secondaryHeatExchanger = dataDict[modelName]['secondary_heat_exchanger']
+                    with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['pkl_prefix']}_capacity_interpolator.pkl"), 'rb') as f:
+                        self.output_cap_interpolator = pickle.load(f)
+                    with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['pkl_prefix']}_power_in_interpolator.pkl"), 'rb') as f:
+                        self.input_cap_interpolator = pickle.load(f)
+                    with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['pkl_prefix']}_bounds.pkl"), 'rb') as f:
+                        bounds = pickle.load(f)
+                        # Format: [[max_oat,min_oat],[max_inlet,min_inlet],[max_outlet,min_outlet],[default_output_high, default_input_high],[default_output_low, default_input_low]]
+                        self.oat_max = bounds[0][0]
+                        self.oat_min = bounds[0][1]
+                        self.inlet_max = bounds[1][0]
+                        self.inlet_min = bounds[1][1]
+                        self.outlet_max = bounds[2][0]
+                        self.outlet_min = bounds[2][1]
+                        self.default_output_high = bounds[3][0]
+                        self.default_input_high = bounds[3][1]
+                        self.default_output_low = bounds[4][0]
+                        self.default_input_low = bounds[4][1]
+                else:
+                        self.perfMap = dataDict[modelName]["perfmap"]
+        except:
+            if self.usePkl and modelName != "MODELS_Mitsubishi_QAHV":
+                print("No preformance map pkl file found for " + modelName + ". Attempting to use non-pkl preformance map")
+                self.usePkl = False
+                self.setPrefMap(modelName)
+            else:
                 raise Exception("No preformance map found for HPWH model type " + modelName + ".")
     
     def _linearInterp(self, xnew, x0, x1, y0, y1):

@@ -22,6 +22,9 @@ EcosizerEngine Documentation
 .. automodule:: objects.SimulationRun
     :members:
 
+.. automodule:: objects.PrefMapTracker
+    :members:
+
 Indices and tables
 ==================
 
