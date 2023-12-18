@@ -18,13 +18,16 @@ print("=============================================================")
 pm = PrefMapTracker(None, 'MODELS_Mitsubishi_QAHV_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
 print("MODELS_Mitsubishi_QAHV_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
 
-print(pm.default_input_low)
-print(pm.default_output_low)
-for i in range(10):
-    print(f"pm.getCapacity({25},{63+i},{140}) {pm.getCapacity(25,63+i,140)}")
+print(f"pm.getCapacity({-13},{67-10},{160-10}) {pm.getCapacity(-13,67-10,160-10)}")
+print(f"pm.getCapacity({-13-10},{67-10},{160}) {pm.getCapacity(-13-10,67-10,160)}")
 
-print(f"pm.getCapacity({25},{40},{148}) {pm.getCapacity(25,40,148)}")
-print(f"pm.getCapacity({25},{83},{134}) {pm.getCapacity(25,83,134)}")
+print("=============================================================")
+
+pm = PrefMapTracker(None, 'MODELS_LYNC_AEGIS_500_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
+print("MODELS_LYNC_AEGIS_500_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
+
+print(f"pm.getCapacity({34},{74-10},{160-10}) {pm.getCapacity(34,74-10,160-10)}")
+print(f"pm.getCapacity({34-10},{74-10},{160}) {pm.getCapacity(34-10,74-10,160)}")
 # W_TO_BTUHR = 3.412142
 # hpwh_for_sizing = EcosizerEngine(
 #             incomingT_F     = 33.5,
