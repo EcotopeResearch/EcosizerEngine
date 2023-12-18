@@ -842,7 +842,7 @@
     "MODELS_LYNC_AEGIS_500_C_SP" : {
         "name" : "Lync Aegis 500 Single Pass",
         "pkl_prefix": "Lync_Aegis_500_Single_Pass",
-        "secondary_heat_exchanger" : false
+        "secondary_heat_exchanger" : true
     },
     "MODELS_Laars_eTherm_C_SP" : {
         "name" : "Laars eTherm",
