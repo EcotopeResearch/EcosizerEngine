@@ -642,7 +642,7 @@ def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationR
     
     max_kw = max(max(energy_nls),max(energy_ls))
     
-    ls_off = [max_kw + 10 if i > 16 and i < 22 else 0 for i in range(24)]
+    ls_off = [max_kw + 10 if i >= 16 and i < 21 else 0 for i in range(24)]
     ls_off.append(ls_off[0])
     fig.add_trace(Scatter(
         x=hour_axis, 
