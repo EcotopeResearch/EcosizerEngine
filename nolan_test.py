@@ -2,52 +2,72 @@ from ecoengine import EcosizerEngine, getListOfModels, SimulationRun, getAnnualS
 import time
 import math
 
-pm = PrefMapTracker(None, 'MODELS_ColmacCxA_20_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
-print("MODELS_ColmacCxA_20_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
+# pm = PrefMapTracker(None, 'MODELS_ColmacCxA_20_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
+# print("MODELS_ColmacCxA_20_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
 
-print(pm.default_input_low)
-print(pm.default_output_low)
-for i in range(10):
-    print(f"pm.getCapacity({25},{63+i},{140}) {pm.getCapacity(25,63+i,140)}")
+# print(pm.default_input_low)
+# print(pm.default_output_low)
+# for i in range(10):
+#     print(f"pm.getCapacity({25},{63+i},{140}) {pm.getCapacity(25,63+i,140)}")
 
-print(f"pm.getCapacity({25},{40},{148}) {pm.getCapacity(25,40,148)}")
-print(f"pm.getCapacity({25},{83},{134}) {pm.getCapacity(25,83,134)}")
+# print(f"pm.getCapacity({25},{40},{148}) {pm.getCapacity(25,40,148)}")
+# print(f"pm.getCapacity({25},{83},{134}) {pm.getCapacity(25,83,134)}")
 
-print("=============================================================")
+# print("=============================================================")
 
-pm = PrefMapTracker(None, 'MODELS_Mitsubishi_QAHV_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
-print("MODELS_Mitsubishi_QAHV_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
+# pm = PrefMapTracker(None, 'MODELS_Mitsubishi_QAHV_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
+# print("MODELS_Mitsubishi_QAHV_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
 
-print(f"pm.getCapacity({-13},{67-10},{160-10}) {pm.getCapacity(-13,67-10,160-10)}")
-print(f"pm.getCapacity({-13-10},{67-10},{160}) {pm.getCapacity(-13-10,67-10,160)}")
+# print(f"pm.getCapacity({-13},{67-10},{160-10}) {pm.getCapacity(-13,67-10,160-10)}")
+# print(f"pm.getCapacity({-13-10},{67-10},{160}) {pm.getCapacity(-13-10,67-10,160)}")
 
-print("=============================================================")
+# print("=============================================================")
 
-pm = PrefMapTracker(None, 'MODELS_LYNC_AEGIS_500_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
-print("MODELS_LYNC_AEGIS_500_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
+# pm = PrefMapTracker(None, 'MODELS_LYNC_AEGIS_500_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
+# print("MODELS_LYNC_AEGIS_500_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
 
-print(f"pm.getCapacity({34},{74-10},{160-10}) {pm.getCapacity(34,74-10,160-10)}")
-print(f"pm.getCapacity({34-10},{74-10},{160}) {pm.getCapacity(34-10,74-10,160)}")
-# W_TO_BTUHR = 3.412142
-# hpwh_for_sizing = EcosizerEngine(
-#             incomingT_F     = 33.5,
-#             magnitudeStat  = 222.95,
-#             supplyT_F       = 120,
-#             storageT_F      = 150,
-#             percentUseable  = 0.85, 
-#             aquaFract       = 0.4,
-#             schematic       = 'paralleltank', 
-#             buildingType   = 'multi_family',
-#             safetyTM        = 1.75,
-#             defrostFactor   = 1, 
-#             compRuntime_hr  = 16, 
-#             nBR             = [20, 30, 25, 15, 10, 0],
-#             standardGPD     = 'ecoMark',
-#             nApt            = 100, 
-#             Wapt            = 100,
-#             loadUpHours     = 3,
-#             doLoadShift     = False
-#         )
+# print(f"pm.getCapacity({34},{74-10},{160-10}) {pm.getCapacity(34,74-10,160-10)}")
+# print(f"pm.getCapacity({34-10},{74-10},{160}) {pm.getCapacity(34-10,74-10,160)}")
+W_TO_BTUHR = 3.412142
+hpwh = EcosizerEngine(
+            incomingT_F = 0,
+            magnitudeStat = 100,
+            supplyT_F = 120,
+            storageT_F = 150,
+            percentUseable = 0.95,
+            aquaFract = 0.4,
+            aquaFractLoadUp = 0.1,
+            aquaFractShed = 0.8,
+            loadUpT_F = 160,
+            loadUpHours = 2, # might need to change for future
+            schematic = "swingtank",
+            buildingType  = "multi_family",
+            gpdpp = 34.6,
+            nBR =  [73,0,0,0,0,0],
+            compRuntime_hr = 16,
+            nApt = 73,
+            Wapt = 60,
+            # standardGPD = 'ca',
+            # The 3 params below have to do with loadshift, the logic from here will have to be translated to get the right values https://github.com/EcotopeResearch/Ecosizer/blob/ee7cc4dee9014b40963c3a4323d878acb30b0501/HPWHulator/sizer/views.py#L309-L322
+            loadShiftSchedule = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
+            doLoadShift   = True,
+            zipCode=95823,
+            annual=True,
+            systemModel='MODELS_Laars_eTherm_C_SP',
+            numHeatPumps=1,
+            PVol_G_atStorageT=1000,
+            TMCap_kW=36,
+            tmModel=None,
+            TMVol_G=200,
+            tmNumHeatPumps = None,   
+        )
+
+outlist = hpwh.getSimRunWithkWCalc(minuteIntervals = 15, nDays = 365)
+
+print(f"loadshift_capacity {round(outlist[2],2)}")
+print(f"kGperkWh_saved {round(outlist[3],2)}")
+print(f"annual_kGCO2_saved {round(outlist[4],2)}")
+print(f"climate_zone CZ{hpwh.getClimateZone()}")
 
 # # print('+++++++++++++++++++++++++++++++++++++++')
 # # print('SIZING RESULTS')

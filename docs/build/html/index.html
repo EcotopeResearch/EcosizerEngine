@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.2.0 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -172,6 +172,13 @@ Otherwise, it will use the most recent data model.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.primaryCurve" title="engine.EcosizerEngine.EcosizerEngine.primaryCurve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">primaryCurve</span></code></a>()</p></td>
 <td><p>Sizes the primary system curve.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr" title="engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemReliedOnEr</span></code></a>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
 </tr>
 </tbody>
 </table>
@@ -473,6 +480,19 @@ fraction is too small for system and cuts the return arrays to match cutoff poin
 <dt><strong>heatHours</strong><span class="classifier">array</span></dt><dd><p>Array of running hours per day corresponding to primaryHeatHrs2kBTUHR</p>
 </dd>
 <dt><strong>recIndex</strong><span class="classifier">int</span></dt><dd><p>The index of the recommended heating rate.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr">
+<span class="sig-name descname"><span class="pre">systemReliedOnEr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>reliedOnER</strong><span class="classifier">boolean</span></dt><dd><p>True if the system relied on electric resistance during it’s last simulation. False otherwise.</p>
 </dd>
 </dl>
 </dd>
@@ -793,7 +813,7 @@ Otherwise, it will use the most recent data model.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.initializeTMValue" title="objects.SimulationRun.SimulationRun.initializeTMValue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initializeTMValue</span></code></a>(initST, storageT_F, ...[, ...])</p></td>
 <td><p>Initializes temperature maintenance values</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim" title="objects.SimulationRun.SimulationRun.plotStorageLoadSim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotStorageLoadSim</span></code></a>([return_as_div])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim" title="objects.SimulationRun.SimulationRun.plotStorageLoadSim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotStorageLoadSim</span></code></a>([return_as_div, numDays])</p></td>
 <td><p>Returns a plot of the of the simulation for the minimum sized primary system as a div or plotly figure.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.returnSimResult" title="objects.SimulationRun.SimulationRun.returnSimResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">returnSimResult</span></code></a>([kWhCalc])</p></td>
@@ -1262,14 +1282,8 @@ amount of time the temperature maintenance tank is running in minutes at every i
 <span class="sig-name descname"><span class="pre">getTMTemp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getTMTemp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a list from the simulation of the temperature maintenance tank temperature in (F) by timestep</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
 <dt><strong>temperature</strong><span class="classifier">float</span></dt><dd><p>the temperature maintenance tank temperature in (F) at interval i or the entire list of
 temperature maintenance tank temperature in (F) at every interval if i is undefined</p>
 </dd>
@@ -1358,7 +1372,7 @@ output of CO2 in kilograms at every interval if i is undefined</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.plotStorageLoadSim">
-<span class="sig-name descname"><span class="pre">plotStorageLoadSim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_as_div</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plotStorageLoadSim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_as_div</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numDays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a plot of the of the simulation for the minimum sized primary
 system as a div or plotly figure. Can plot the minute level simulation</p>
 <dl class="field-list simple">
@@ -1460,11 +1474,17 @@ auto-sized appropriatly</p>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.getCapacity" title="objects.PrefMapTracker.PrefMapTracker.getCapacity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCapacity</span></code></a>(externalT_F, condenserT_F, outT_F)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.didRelyOnEr" title="objects.PrefMapTracker.PrefMapTracker.didRelyOnEr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">didRelyOnEr</span></code></a>()</p></td>
+<td><p>Returns True if the model had to rely on Electric Resistance at any point during the simulation (e.g.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.getCapacity" title="objects.PrefMapTracker.PrefMapTracker.getCapacity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCapacity</span></code></a>(externalT_F, condenserT_F, outT_F)</p></td>
 <td><p>Returns the current output capacity of of the HPWH model for the simulation given external and condesor temperatures.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity" title="objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDefaultCapacity</span></code></a>()</p></td>
-<td><p>Returns default capacity for the system in kBTUhr</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity" title="objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDefaultCapacity</span></code></a>([AsKW])</p></td>
+<td><p>Returns default capacity for the system in kBTUhr Inputs ------ AsKWh : Boolean     Set to True to return as kW. False (default) returns as kBTUhr :returns: The default output capacity of the model in kW or kBTUhr :rtype: defaultCapacity.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.resetReliedOnEr" title="objects.PrefMapTracker.PrefMapTracker.resetReliedOnEr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resetReliedOnEr</span></code></a>()</p></td>
+<td><p>Sets the reliedOnER field to False to so that a new simulation can be run on the model</p></td>
 </tr>
 </tbody>
 </table>
@@ -1476,6 +1496,12 @@ auto-sized appropriatly</p>
 </tbody>
 </table>
 <dl class="py method">
+<dt class="sig sig-object py" id="objects.PrefMapTracker.PrefMapTracker.didRelyOnEr">
+<span class="sig-name descname"><span class="pre">didRelyOnEr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#objects.PrefMapTracker.PrefMapTracker.didRelyOnEr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the model had to rely on Electric Resistance at any point during the simulation (e.g. when the outdoor tempuratures were too cold for the HPWH to work)</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="objects.PrefMapTracker.PrefMapTracker.getCapacity">
 <span class="sig-name descname"><span class="pre">getCapacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">externalT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condenserT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizingNumHP</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.PrefMapTracker.PrefMapTracker.getCapacity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the current output capacity of of the HPWH model for the simulation given external and condesor temperatures.
@@ -1484,8 +1510,28 @@ If no HPWH model has been set, returns the default output capacity of the system
 
 <dl class="py method">
 <dt class="sig sig-object py" id="objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity">
-<span class="sig-name descname"><span class="pre">getDefaultCapacity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns default capacity for the system in kBTUhr</p>
+<span class="sig-name descname"><span class="pre">getDefaultCapacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">AsKW</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns default capacity for the system in kBTUhr
+Inputs
+——
+AsKWh : Boolean</p>
+<blockquote>
+<div><p>Set to True to return as kW. False (default) returns as kBTUhr</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The default output capacity of the model in kW or kBTUhr</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>defaultCapacity</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.PrefMapTracker.PrefMapTracker.resetReliedOnEr">
+<span class="sig-name descname"><span class="pre">resetReliedOnEr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#objects.PrefMapTracker.PrefMapTracker.resetReliedOnEr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the reliedOnER field to False to so that a new simulation can be run on the model</p>
 </dd></dl>
 
 </dd></dl>
@@ -1522,6 +1568,7 @@ If no HPWH model has been set, returns the default output capacity of the system
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotSizingCurve"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.plotSizingCurve()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.plotStorageLoadSim()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.primaryCurve"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.primaryCurve()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.systemReliedOnEr()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getAnnualSimLSComparison"><code class="docutils literal notranslate"><span class="pre">getAnnualSimLSComparison()</span></code></a></li>
@@ -1564,8 +1611,10 @@ If no HPWH model has been set, returns the default output capacity of the system
 </ul>
 </li>
 <li><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker"><code class="docutils literal notranslate"><span class="pre">PrefMapTracker</span></code></a><ul>
+<li><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.didRelyOnEr"><code class="docutils literal notranslate"><span class="pre">PrefMapTracker.didRelyOnEr()</span></code></a></li>
 <li><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.getCapacity"><code class="docutils literal notranslate"><span class="pre">PrefMapTracker.getCapacity()</span></code></a></li>
 <li><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity"><code class="docutils literal notranslate"><span class="pre">PrefMapTracker.getDefaultCapacity()</span></code></a></li>
+<li><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.resetReliedOnEr"><code class="docutils literal notranslate"><span class="pre">PrefMapTracker.resetReliedOnEr()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1604,7 +1653,7 @@ If no HPWH model has been set, returns the default output capacity of the system
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>

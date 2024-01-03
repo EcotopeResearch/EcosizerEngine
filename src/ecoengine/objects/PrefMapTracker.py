@@ -122,7 +122,8 @@ class PrefMapTracker:
         externalT_F : float
             The external air temperature in fahrenheit
         condenserT_F : float
-            The condenser temperature (incoming water temperature) in fahrenheit
+            The condenser temperature (incoming water temperature) in fahrenheit. If this temperature is higher than the highest in the performance map data
+            for the model, the temperature will be shrunk to be the maximum in the performance map data
         outT_F : float
             The temperature of water leaving the system in fahrenheit
         Returns
@@ -139,6 +140,10 @@ class PrefMapTracker:
                 outT_F += 10.
                 condenserT_F += 10. # add 10 degrees to incoming water temp for QAHV only
 
+            if condenserT_F > self.inlet_max:
+                extrapolate = True
+                condenserT_F = self.inlet_max
+
             #use pickled interpolation functions
             input_array = [condenserT_F, outT_F, externalT_F]
             if self.twoInputPkl:
@@ -154,6 +159,7 @@ class PrefMapTracker:
                         input_kW = self.default_input_low
                     else:
                         if self.reliedOnER == False:
+                            print(f"condenserT_F {condenserT_F}, outT_F {outT_F}, externalT_F {externalT_F}")
                             print("Warning: System had to rely on Electric Resistance to meet demand during times with a cold outdoor air temperature.")
                         self.reliedOnER = True
                         if self.defaultCapacity_kBTUhr is None:
