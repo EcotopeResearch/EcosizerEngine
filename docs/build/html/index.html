@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.3.5 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.3.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.6 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -173,7 +173,14 @@ Otherwise, it will use the most recent data model.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.primaryCurve" title="engine.EcosizerEngine.EcosizerEngine.primaryCurve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">primaryCurve</span></code></a>()</p></td>
 <td><p>Sizes the primary system curve.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr" title="engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemReliedOnEr</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemCapedInlet" title="engine.EcosizerEngine.EcosizerEngine.systemCapedInlet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemCapedInlet</span></code></a>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr" title="engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemReliedOnEr</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
@@ -480,6 +487,19 @@ fraction is too small for system and cuts the return arrays to match cutoff poin
 <dt><strong>heatHours</strong><span class="classifier">array</span></dt><dd><p>Array of running hours per day corresponding to primaryHeatHrs2kBTUHR</p>
 </dd>
 <dt><strong>recIndex</strong><span class="classifier">int</span></dt><dd><p>The index of the recommended heating rate.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.systemCapedInlet">
+<span class="sig-name descname"><span class="pre">systemCapedInlet</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.systemCapedInlet" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>capedInlet</strong><span class="classifier">boolean</span></dt><dd><p>Returns True if the model had to reduce the inlet water temperature to stay within the bounds of the available performance map for the model. False otherwise.</p>
 </dd>
 </dl>
 </dd>
@@ -1580,6 +1600,7 @@ AsKWh : Boolean</p>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotSizingCurve"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.plotSizingCurve()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.plotStorageLoadSim()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.primaryCurve"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.primaryCurve()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemCapedInlet"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.systemCapedInlet()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.systemReliedOnEr()</span></code></a></li>
 </ul>
 </li>
@@ -1666,7 +1687,7 @@ AsKWh : Boolean</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.6 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>

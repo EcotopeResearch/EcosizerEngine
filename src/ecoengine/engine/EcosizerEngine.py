@@ -544,6 +544,15 @@ class EcosizerEngine:
         """
         return self.system.reliedOnEr()
     
+    def systemCapedInlet(self):
+        """
+        Returns
+        -------
+        capedInlet : boolean
+            Returns True if the model had to reduce the inlet water temperature to stay within the bounds of the available performance map for the model. False otherwise.
+        """
+        return self.system.capedInlet()
+    
 ##############################################################
 # STATIC FUNCTIONS
 ##############################################################
