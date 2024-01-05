@@ -12,7 +12,8 @@ class QuietPrint:
         sys.stdout.close()
         sys.stdout = self._original_stdout
 
-@pytest.mark.parametrize("hpwhModel, pretty_name", [*getListOfModels(multiPass = False), *getListOfModels(multiPass = True)])
+@pytest.mark.parametrize("hpwhModel, pretty_name", [*getListOfModels(multiPass = False,excludeColmacVarrients=False), 
+                                                    *getListOfModels(multiPass = True,excludeColmacVarrients=False)])
 def test_perfMaps(hpwhModel, pretty_name):
     assert isinstance(pretty_name, str)
     perfMap = PrefMapTracker(None, hpwhModel, False, 1, usePkl= False, prefMapOnly = True)
@@ -61,3 +62,9 @@ def test_perfMaps(hpwhModel, pretty_name):
 def test_perfMaps_hxTempIncrease(hpwhModel, hxTempIncrease, expectedHXTempIncrease):
     perfMap = PrefMapTracker(None, hpwhModel, False, 1, prefMapOnly = True, hxTempIncrease = hxTempIncrease)
     assert perfMap.hxTempIncrease == expectedHXTempIncrease
+
+def test_getListOfModels():
+    assert len(getListOfModels(multiPass = False,excludeColmacVarrients=False)) > len(getListOfModels(multiPass = False,excludeColmacVarrients=True))
+    assert len(getListOfModels(multiPass = True,excludeColmacVarrients=False)) > len(getListOfModels(multiPass = True,excludeColmacVarrients=True))
+    assert len(getListOfModels(multiPass = True,excludeModels=["MODELS_ColmacCxV_15_VFD_45_Hz_C_MP"])) == len(getListOfModels(multiPass = True))
+    assert len(getListOfModels(multiPass = False,excludeModels=["MODELS_LYNC_AEGIS_500_C_SP"])) < len(getListOfModels(multiPass = False))
