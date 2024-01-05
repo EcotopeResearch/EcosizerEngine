@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.3.6 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.3.7 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.6 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.7 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -547,18 +547,28 @@ fraction is too small for system and cuts the return arrays to match cutoff poin
 
 <dl class="py function">
 <dt class="sig sig-object py" id="engine.EcosizerEngine.getListOfModels">
-<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getListOfModels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multiPass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">includeResidential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excludeModels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getListOfModels" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getListOfModels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multiPass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">includeResidential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excludeModels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excludeColmacVarrients</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getListOfModels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Static Method to Return all Model Names as a list of strings</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>multiPass</strong><span class="classifier">boolean</span></dt><dd><p>return multi-pass models only (True) or single=pass models only (False)</p>
+</dd>
+<dt><strong>includeResidential</strong><span class="classifier">boolean</span></dt><dd><p>Set to True to include residential HPWH models. Set to False to only include commercial HPWH models.</p>
+</dd>
+<dt><strong>excludeModels</strong><span class="classifier">List[str]</span></dt><dd><blockquote>
+<div><p>A list of models you wish to not include in the model list. Defaults to empty list.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>excludeColmacVarrients<span class="classifier">boolean</span></dt><dd><p>Defaults to True. If True, excludes all varrients on Colmac base models from the model list (like Oversized Condensers and VFD 60 Hz)</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>model_list</strong><span class="classifier">List</span></dt><dd><p>a list of tuples containing strings in the form [model_code, display_name] where model_code is the string to set as the systemModel parameter for EcosizerEngine and
+<dt><strong>model_list</strong><span class="classifier">List[str]</span></dt><dd><p>a list of tuples containing strings in the form [model_code, display_name] where model_code is the string to set as the systemModel parameter for EcosizerEngine and
 display_name is the corresponding friendly display name for that model.</p>
 </dd>
 </dl>
@@ -1687,7 +1697,7 @@ AsKWh : Boolean</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.6 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.7 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>
