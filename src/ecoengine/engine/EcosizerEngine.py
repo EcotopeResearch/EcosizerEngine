@@ -610,7 +610,7 @@ def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationR
     simRun_nls : SimulationRun
         The object carrying details from the simulation of the system with load shifting deactivated
     return_as_div : boolean
-            A logical on the output, as a div string (true) or as a figure (false)
+        A logical on the output, as a div string (true) or as a figure (false)
 
     Returns
     -------

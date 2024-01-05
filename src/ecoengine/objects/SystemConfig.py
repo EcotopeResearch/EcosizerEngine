@@ -107,10 +107,13 @@ class SystemConfig:
         self.PCap_kBTUhr = self.perfMap.getDefaultCapacity()
 
     def resetPerfMap(self):
-        self.perfMap.resetReliedOnEr()
+        self.perfMap.resetFlags()
     
     def reliedOnEr(self):
         return self.perfMap.didRelyOnEr()
+    
+    def capedInlet(self):
+        return self.perfMap.didCapInlet()
 
     def getOutputCapacity(self, kW = False):
         if kW:

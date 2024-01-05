@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../src/ecoengine'))
 project = 'EcosizerEngine'
 copyright = '2023, Ecotope Inc.'
 author = 'Nolan Price, Madison Johnson, Scott Spielman'
-release = '1.3.4'
+release = '1.3.5'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

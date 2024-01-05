@@ -585,7 +585,8 @@
     "MODELS_LYNC_AEGIS_500_C_SP" : {
         "name" : "Lync Aegis 500 Single Pass",
         "pkl_prefix": "Lync_Aegis_500_Single_Pass",
-        "secondary_heat_exchanger" : true
+        "secondary_heat_exchanger" : true,
+        "hx_increase" : 10
     },
     "MODELS_Laars_eTherm_C_SP" : {
         "name" : "Laars eTherm",
@@ -595,7 +596,8 @@
     "MODELS_Mitsubishi_QAHV_C_SP" : {
         "name" : "Mitsubishi QAHV",
         "pkl_prefix": "Mitsubishi_QAHV",
-        "secondary_heat_exchanger" : true
+        "secondary_heat_exchanger" : true,
+        "hx_increase" : 10
     },
     "MODELS_NyleC25A_C_SP" : {
         "name" : "Nyle C25A external heat pump in Single Pass Mode",

@@ -48,3 +48,16 @@ def test_perfMaps(hpwhModel, pretty_name):
         assert hot_results[1] > 0.0
         assert cold_results[0] > 0.0
         assert cold_results[1] > 0.0
+
+@pytest.mark.parametrize("hpwhModel, hxTempIncrease, expectedHXTempIncrease", 
+                         [
+                            ("MODELS_LYNC_AEGIS_500_C_SP", 15, 15),
+                            ("MODELS_LYNC_AEGIS_500_C_SP", None, 10),
+                            ("MODELS_Mitsubishi_QAHV_C_SP", 5, 5),
+                            ("MODELS_Mitsubishi_QAHV_C_SP", None, 10),
+                            ("MODELS_Laars_eTherm_C_SP", 15, 15),
+                            ("MODELS_Laars_eTherm_C_SP", None, None)
+                        ])
+def test_perfMaps_hxTempIncrease(hpwhModel, hxTempIncrease, expectedHXTempIncrease):
+    perfMap = PrefMapTracker(None, hpwhModel, False, 1, prefMapOnly = True, hxTempIncrease = hxTempIncrease)
+    assert perfMap.hxTempIncrease == expectedHXTempIncrease

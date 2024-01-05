@@ -40,10 +40,14 @@ class PrefMapTracker:
         Set to True when not using preformance map in te larger EcoEngine system. This provides some shortcuts to avoid certain error handling
     erBaseline : boolean
         Set to true to indicate this preformance map is meant to model a ER system with a COP of 1
+    hxTempIncrease : int
+        The amount of to increase the inlet and outlet water temperatures for models with heat exchangers. If set to None, the temperature
+        will increase by the amount in the performance map configuration (../data/preformanceMaps/maps.json) file for the model
     """
     def __init__(self, defaultCapacity_kBTUhr = None, modelName = None, kBTUhr = False, numHeatPumps = None, 
                  isMultiPass = False, designOAT_F : float = None, designIncomingT_F : float = None, 
-                 designOutT_F : float = None, usePkl = True, prefMapOnly = False, erBaseline = False):
+                 designOutT_F : float = None, usePkl = True, prefMapOnly = False, erBaseline = False,
+                 hxTempIncrease = None):
         self.usePkl = usePkl
         self.secondaryHeatExchanger = False
         self.output_cap_interpolator = None
@@ -65,7 +69,9 @@ class PrefMapTracker:
         self.default_input_low = None
         self.prefMapOnly = prefMapOnly
         self.erBaseline = erBaseline
+        self.hxTempIncrease = hxTempIncrease
         self.reliedOnER = False # flag to indicate if the system at any point needed to rely on Electric Resistance during the simulation
+        self.capedInlet = False # flag to indicate if the system at any point needed to shrink inlet water temperature if it was higher than maximum in performance map
         if defaultCapacity_kBTUhr is None and numHeatPumps is None:
             raise Exception("Invalid input given for preformance map, requires either defaultCapacity_kBTUhr or numHeatPumps.")
         elif not numHeatPumps is None and not ((isinstance(numHeatPumps, int) or isinstance(numHeatPumps, float)) and numHeatPumps > 0):
@@ -106,11 +112,18 @@ class PrefMapTracker:
         """
         return self.reliedOnER
     
-    def resetReliedOnEr(self):
+    def didCapInlet(self):
         """
-        Sets the reliedOnER field to False to so that a new simulation can be run on the model
+        Returns True if the model had to reduce the inlet water temperature to stay within the bounds of the available performance map for the model
+        """
+        return self.capedInlet
+    
+    def resetFlags(self):
+        """
+        Sets the reliedOnER and capedInlet fields to False to so that a new simulation can be run on the model
         """
         self.reliedOnER = False
+        self.capedInlet = False
 
     def getCapacity(self, externalT_F, condenserT_F, outT_F, sizingNumHP = False):
         """
@@ -137,11 +150,14 @@ class PrefMapTracker:
             # edit incoming values to extrapolate if need be
             extrapolate = False
             if self.secondaryHeatExchanger:
-                outT_F += 10.
-                condenserT_F += 10. # add 10 degrees to incoming water temp for QAHV only
+                outT_F += self.hxTempIncrease + 0.0 # adding 0.0 to ensure float
+                condenserT_F += self.hxTempIncrease + 0.0
 
             if condenserT_F > self.inlet_max:
                 extrapolate = True
+                if self.capedInlet == False:
+                    print("Warning: Inlet water temperature simulated exceeds performance map boundaries. Simulation accuracy may be impacted.")
+                self.capedInlet = True
                 condenserT_F = self.inlet_max
 
             #use pickled interpolation functions
@@ -159,7 +175,6 @@ class PrefMapTracker:
                         input_kW = self.default_input_low
                     else:
                         if self.reliedOnER == False:
-                            print(f"condenserT_F {condenserT_F}, outT_F {outT_F}, externalT_F {externalT_F}")
                             print("Warning: System had to rely on Electric Resistance to meet demand during times with a cold outdoor air temperature.")
                         self.reliedOnER = True
                         if self.defaultCapacity_kBTUhr is None:
@@ -277,6 +292,9 @@ class PrefMapTracker:
                     self.usePkl = True
                     filepath = "../data/preformanceMaps/pkls/"
                     self.secondaryHeatExchanger = dataDict[modelName]['secondary_heat_exchanger']
+                    if self.secondaryHeatExchanger and (self.hxTempIncrease is None):
+                        # set self.hxTempIncrease to default
+                        self.hxTempIncrease = dataDict[modelName]['hx_increase']
                     with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['pkl_prefix']}_capacity_interpolator.pkl"), 'rb') as f:
                         self.output_cap_interpolator = pickle.load(f)
                     with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['pkl_prefix']}_power_in_interpolator.pkl"), 'rb') as f:
