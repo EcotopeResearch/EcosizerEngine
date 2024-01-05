@@ -557,7 +557,7 @@ class EcosizerEngine:
 # STATIC FUNCTIONS
 ##############################################################
     
-def getListOfModels(multiPass = False, includeResidential = True, excludeModels = [], excludeColmacVarrients = True):
+def getListOfModels(multiPass = False, includeResidential = True, excludeModels = [], qplModelsOnly = True):
     """
     Static Method to Return all Model Names as a list of strings
 
@@ -569,8 +569,8 @@ def getListOfModels(multiPass = False, includeResidential = True, excludeModels 
         Set to True to include residential HPWH models. Set to False to only include commercial HPWH models.
     excludeModels : List[str]
         A list of models you wish to not include in the model list. Defaults to empty list.
-     excludeColmacVarrients : boolean
-        Defaults to True. If True, excludes all varrients on Colmac base models from the model list (like Oversized Condensers and VFD 60 Hz) 
+     qplModelsOnly : boolean
+        Defaults to True. If True, excludes all non-QPL listed models from the model list 
 
     Returns
     -------
@@ -579,23 +579,23 @@ def getListOfModels(multiPass = False, includeResidential = True, excludeModels 
         display_name is the corresponding friendly display name for that model.
     """
     returnList = []
-    if excludeColmacVarrients:
-        excludeModels = excludeModels + ["MODELS_ColmacCxA_10_Oversized_C_SP","MODELS_ColmacCxA_10_VFD_45_Hz_C_SP","MODELS_ColmacCxA_10_VFD_60_Hz_C_SP",
-                                         "MODELS_ColmacCxA_15_VFD_45_Hz_C_SP","MODELS_ColmacCxA_15_R513a_C_SP","MODELS_ColmacCxA_15_R513a_VFD_45_Hz_C_SP",
-                                         "MODELS_ColmacCxV_15_VFD_45_Hz_C_SP","MODELS_ColmacCxV_15_VFD_60_Hz_C_SP","MODELS_ColmacCxA_20_Oversized_C_SP",
-                                         "MODELS_ColmacCxA_20_VFD_35_Hz_C_SP","MODELS_ColmacCxA_25_Oversized_C_SP","MODELS_ColmacCxA_25_VFD_35_Hz_C_SP",
-                                         "MODELS_ColmacCxA_30_Oversized_C_SP","MODELS_ColmacCxA_30_VFD_35_Hz_C_SP","MODELS_ColmacCxA_30_R513a_C_SP",
-                                         "MODELS_ColmacCxA_30_R513a_VFD_35_Hz_C_SP","MODELS_Colmac_HPA4_C_SP","MODELS_Colmac_HPA4_R513a_C_SP",
-                                         "MODELS_ColmacCxA_10_Oversized_C_MP","MODELS_ColmacCxA_10_VFD_45_Hz_C_MP","MODELS_ColmacCxA_15_Oversized_C_MP",
-                                         "MODELS_ColmacCxA_15_VFD_45_Hz_C_MP","MODELS_ColmacCxA_15_R513a_C_MP","MODELS_ColmacCxA_15_R513a_VFD_45_Hz_C_MP",
-                                         "MODELS_ColmacCxV_15_VFD_45_Hz_C_MP","MODELS_ColmacCxV_15_VFD_60_Hz_C_MP","MODELS_ColmacCxA_20_Oversized_C_MP",
-                                         "MODELS_ColmacCxA_20_VFD_35_Hz_C_MP","MODELS_ColmacCxA_25_Oversized_C_MP","MODELS_ColmacCxA_25_VFD_35_Hz_C_MP",
-                                         "MODELS_ColmacCxA_30_Oversized_C_MP","MODELS_ColmacCxA_30_VFD_35_Hz_C_MP","MODELS_ColmacCxA_30_R513a_C_MP",
-                                         "MODELS_ColmacCxA_30_R513a_VFD_35_Hz_C_MP","MODELS_Colmac_HPA4_C_MP","MODELS_Colmac_HPA4_R513a_C_MP"]
+    # if qplModelsOnly:
+    #     excludeModels = excludeModels + ["MODELS_ColmacCxA_10_Oversized_C_SP","MODELS_ColmacCxA_10_VFD_45_Hz_C_SP","MODELS_ColmacCxA_10_VFD_60_Hz_C_SP",
+    #                                      "MODELS_ColmacCxA_15_VFD_45_Hz_C_SP","MODELS_ColmacCxA_15_R513a_C_SP","MODELS_ColmacCxA_15_R513a_VFD_45_Hz_C_SP",
+    #                                      "MODELS_ColmacCxV_15_VFD_45_Hz_C_SP","MODELS_ColmacCxV_15_VFD_60_Hz_C_SP","MODELS_ColmacCxA_20_Oversized_C_SP",
+    #                                      "MODELS_ColmacCxA_20_VFD_35_Hz_C_SP","MODELS_ColmacCxA_25_Oversized_C_SP","MODELS_ColmacCxA_25_VFD_35_Hz_C_SP",
+    #                                      "MODELS_ColmacCxA_30_Oversized_C_SP","MODELS_ColmacCxA_30_VFD_35_Hz_C_SP","MODELS_ColmacCxA_30_R513a_C_SP",
+    #                                      "MODELS_ColmacCxA_30_R513a_VFD_35_Hz_C_SP","MODELS_Colmac_HPA4_C_SP","MODELS_Colmac_HPA4_R513a_C_SP",
+    #                                      "MODELS_ColmacCxA_10_Oversized_C_MP","MODELS_ColmacCxA_10_VFD_45_Hz_C_MP","MODELS_ColmacCxA_15_Oversized_C_MP",
+    #                                      "MODELS_ColmacCxA_15_VFD_45_Hz_C_MP","MODELS_ColmacCxA_15_R513a_C_MP","MODELS_ColmacCxA_15_R513a_VFD_45_Hz_C_MP",
+    #                                      "MODELS_ColmacCxV_15_VFD_45_Hz_C_MP","MODELS_ColmacCxV_15_VFD_60_Hz_C_MP","MODELS_ColmacCxA_20_Oversized_C_MP",
+    #                                      "MODELS_ColmacCxA_20_VFD_35_Hz_C_MP","MODELS_ColmacCxA_25_Oversized_C_MP","MODELS_ColmacCxA_25_VFD_35_Hz_C_MP",
+    #                                      "MODELS_ColmacCxA_30_Oversized_C_MP","MODELS_ColmacCxA_30_VFD_35_Hz_C_MP","MODELS_ColmacCxA_30_R513a_C_MP",
+    #                                      "MODELS_ColmacCxA_30_R513a_VFD_35_Hz_C_MP","MODELS_Colmac_HPA4_C_MP","MODELS_Colmac_HPA4_R513a_C_MP"]
     with open(os.path.join(os.path.dirname(__file__), '../data/preformanceMaps/maps.json')) as json_file:
         data = json.load(json_file)
         for model_name, value in data.items():
-            if not model_name in excludeModels:
+            if (not model_name in excludeModels) and (qplModelsOnly == False or value["QPL_listed"]):
                 if includeResidential or model_name[-4] == "C":
                     if multiPass and model_name[-2:] == 'MP':
                         returnList.append([model_name,value["name"]])
