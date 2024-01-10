@@ -159,6 +159,9 @@ class PrefMapTracker:
                     print("Warning: Inlet water temperature simulated exceeds performance map boundaries. Simulation accuracy may be impacted.")
                 self.capedInlet = True
                 condenserT_F = self.inlet_max
+            elif condenserT_F < self.inlet_min:
+                extrapolate = True
+                condenserT_F = self.inlet_min
 
             #use pickled interpolation functions
             input_array = [condenserT_F, outT_F, externalT_F]
