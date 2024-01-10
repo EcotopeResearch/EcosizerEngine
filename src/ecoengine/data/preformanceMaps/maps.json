@@ -19,7 +19,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_AOSmithHPTS66_R_MP" : {
         "name" : "AOSmith HPTS 66 gallon",
@@ -41,7 +41,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_AOSmithHPTS80_R_MP" : {
         "name" : "AOSmith HPTS 80 gallon",
@@ -63,7 +63,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_AOSmithHPTU50_R_MP" : {
         "name" : "AOSmith HPTU 50 gallon",
@@ -85,7 +85,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_AOSmithHPTU66_R_MP" : {
         "name" : "AOSmith HPTU 66 gallon",
@@ -107,7 +107,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_AOSmithHPTU80_R_MP" : {
         "name" : "AOSmith HPTU 80 gallon",
@@ -129,7 +129,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_AOSmithHPTU80_DR_R_MP" : {
         "name" : "AOSmith HPTU 80 gallon DR",
@@ -146,7 +146,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_AOSmithCAHP120_C_MP" : {
         "name" : "AOSmith CAHP 120 gallon Commercial Grade",
@@ -168,7 +168,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_BWC2020_65_R_MP" : {
         "name" : "Bradford White 2020 65 gallon unit",
@@ -185,7 +185,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxV_5_C_SP" : {
         "name" : "Colmac CxA_5 external heat pump in Single Pass Mode",
@@ -200,7 +200,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_10_C_SP" : {
         "name" : "Colmac CxA_10 external heat pump in Single Pass Mode",
@@ -215,25 +215,25 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_10_Oversized_C_SP" : {
         "name" : "Colmac CxA_10 external heat pump in Single Pass Mode (Oversized Condenser)",
         "pkl_prefix": "Colmac_CxA10_Oversized_Condenser_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_10_VFD_45_Hz_C_SP" : {
         "name" : "Colmac CxA_10 external heat pump in Single Pass Mode (VFD 45 Hz)",
         "pkl_prefix": "Colmac_CxA10_VFD_45_Hz_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_10_VFD_60_Hz_C_SP" : {
         "name" : "Colmac CxA_10 external heat pump in Single Pass Mode (VFD 60 Hz)",
         "pkl_prefix": "Colmac_CxA10_VFD_60_Hz_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_15_C_SP" : {
         "name" : "Colmac CxA_15 external heat pump in Single Pass Mode",
@@ -248,37 +248,37 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_15_VFD_45_Hz_C_SP" : {
         "name" : "Colmac CxA_15 external heat pump in Single Pass Mode (VDF 45 Hz)",
         "pkl_prefix": "Colmac_CxA15_VFD_45_Hz_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_15_R513a_C_SP" : {
         "name" : "Colmac CxA_15 R513a external heat pump in Single Pass Mode",
         "pkl_prefix": "Colmac_CxA15_R513a_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_15_R513a_VFD_45_Hz_C_SP" : {
         "name" : "Colmac CxA_15 R513a external heat pump in Single Pass Mode (VFD 45 Hz)",
         "pkl_prefix": "Colmac_CxA15_R513a_VFD_45_Hz_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxV_15_VFD_45_Hz_C_SP" : {
         "name" : "Colmac CxV_15 external heat pump in Single Pass Mode (VFD 45 Hz)",
         "pkl_prefix": "Colmac_CxV15_VFD_45_Hz_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxV_15_VFD_60_Hz_C_SP" : {
         "name" : "Colmac CxV_15 external heat pump in Single Pass Mode (VFD 60 Hz)",
         "pkl_prefix": "Colmac_CxV15_VFD_60_Hz_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
 
     "MODELS_ColmacCxA_20_C_SP" : {
@@ -294,19 +294,19 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_20_Oversized_C_SP" : {
         "name" : "Colmac CxA_20 external heat pump in Single Pass Mode (Oversized Condenser)",
         "pkl_prefix": "Colmac_CxA20_Oversized_Condenser_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_20_VFD_35_Hz_C_SP" : {
         "name" : "Colmac CxA_20 external heat pump in Single Pass Mode (VFD 35 Hz)",
         "pkl_prefix": "Colmac_CxA20_VFD_35_Hz_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_25_C_SP" : {
         "name" : "Colmac CxA_25 external heat pump in Single Pass Mode",
@@ -321,19 +321,19 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_25_Oversized_C_SP" : {
         "name" : "Colmac CxA_25 external heat pump in Single Pass Mode (Oversized Condenser)",
         "pkl_prefix": "Colmac_CxA25_Oversized_Condenser_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_25_VFD_35_Hz_C_SP" : {
         "name" : "Colmac CxA_25 external heat pump in Single Pass Mode (VFD 35 Hz)",
         "pkl_prefix": "Colmac_CxA25_VFD_35_Hz_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_30_C_SP" : {
         "name" : "Colmac CxA_30 external heat pump in Single Pass Mode",
@@ -348,43 +348,43 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_30_Oversized_C_SP" : {
         "name" : "Colmac CxA_30 external heat pump in Single Pass Mode (Oversized Condenser)",
         "pkl_prefix": "Colmac_CxA30_Oversized_Condenser_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_30_VFD_35_Hz_C_SP" : {
         "name" : "Colmac CxA_30 external heat pump in Single Pass Mode (VFD 35 Hz)",
         "pkl_prefix": "Colmac_CxA30_VFD_35_Hz_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_30_R513a_C_SP" : {
         "name" : "Colmac CxA_30 R513a external heat pump in Single Pass Mode",
         "pkl_prefix": "Colmac_CxA30_R513a_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_30_R513a_VFD_35_Hz_C_SP" : {
         "name" : "Colmac CxA_30 R513a external heat pump in Single Pass Mode (VFD 35 Hz)",
         "pkl_prefix": "Colmac_CxA30_R513a_VFD_35_Hz_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_Colmac_HPA4_C_SP" : {
         "name" : "Colmac HPA4 in Single Pass Mode",
         "pkl_prefix": "Colmac_HPA4_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_Colmac_HPA4_R513a_C_SP" : {
         "name" : "Colmac HPA4 R513a in Single Pass Mode",
         "pkl_prefix": "Colmac_HPA4_R513a_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
 
     "MODELS_ColmacCxV_5_C_MP" : {
@@ -398,7 +398,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_10_C_MP" : {
         "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode",
@@ -411,19 +411,19 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_10_Oversized_C_MP" : {
         "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode (Oversized Condenser)",
         "pkl_prefix": "Colmac_CxA10_Oversized_Condenser_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_10_VFD_45_Hz_C_MP" : {
         "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode (VFD 45 Hz)",
         "pkl_prefix": "Colmac_CxA10_VFD_45_Hz_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_15_C_MP" : {
         "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode",
@@ -436,43 +436,43 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_15_Oversized_C_MP" : {
         "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode (Oversized Condenser)",
         "pkl_prefix": "Colmac_CxA15_Oversized_Condenser_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_15_VFD_45_Hz_C_MP" : {
         "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode (VFD 45 Hz)",
         "pkl_prefix": "Colmac_CxA15_VFD_45_Hz_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_15_R513a_C_MP" : {
         "name" : "Colmac CxA_15 R513a external heat pump in Multi Pass Mode",
         "pkl_prefix": "Colmac_CxA15_R513a_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_15_R513a_VFD_45_Hz_C_MP" : {
         "name" : "Colmac CxA_15 R513a external heat pump in Multi Pass Mode (VFD 45 Hz)",
         "pkl_prefix": "Colmac_CxA15_R513a_VFD_45_Hz_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxV_15_VFD_45_Hz_C_MP" : {
         "name" : "Colmac CxV_15 external heat pump in Multi Pass Mode (VFD 45 Hz)",
         "pkl_prefix": "Colmac_CxV15_VFD_45_Hz_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxV_15_VFD_60_Hz_C_MP" : {
         "name" : "Colmac CxV_15 external heat pump in Multi Pass Mode (VFD 60 Hz)",
         "pkl_prefix": "Colmac_CxV15_VFD_60_Hz_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
 
     "MODELS_ColmacCxA_20_C_MP" : {
@@ -486,19 +486,19 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_20_Oversized_C_MP" : {
         "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode (Oversized Condenser)",
         "pkl_prefix": "Colmac_CxA20_Oversized_Condenser_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_20_VFD_35_Hz_C_MP" : {
         "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode (VFD 35 Hz)",
         "pkl_prefix": "Colmac_CxA20_VFD_35_Hz_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_25_C_MP" : {
         "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode",
@@ -511,19 +511,19 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_25_Oversized_C_MP" : {
         "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode (Oversized Condenser)",
         "pkl_prefix": "Colmac_CxA25_Oversized_Condenser_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_25_VFD_35_Hz_C_MP" : {
         "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode (VFD 35 Hz)",
         "pkl_prefix": "Colmac_CxA25_VFD_35_Hz_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_30_C_MP" : {
         "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode",
@@ -536,43 +536,43 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_ColmacCxA_30_Oversized_C_MP" : {
         "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode (Oversized Condenser)",
         "pkl_prefix": "Colmac_CxA30_Oversized_Condenser_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_30_VFD_35_Hz_C_MP" : {
         "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode (VFD 35 Hz)",
         "pkl_prefix": "Colmac_CxA30_VFD_35_Hz_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_30_R513a_C_MP" : {
         "name" : "Colmac CxA_30 R513a external heat pump in Multi Pass Mode",
         "pkl_prefix": "Colmac_CxA30_R513a_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_ColmacCxA_30_R513a_VFD_35_Hz_C_MP" : {
         "name" : "Colmac CxA_30 R513a external heat pump in Multi Pass Mode (VFD 35 Hz)",
         "pkl_prefix": "Colmac_CxA30_R513a_VFD_35_Hz_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_Colmac_HPA4_C_MP" : {
         "name" : "Colmac HPA4 in Multi Pass Mode",
         "pkl_prefix": "Colmac_HPA4_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
     "MODELS_Colmac_HPA4_R513a_C_MP" : {
         "name" : "Colmac HPA4 R513a in Multi Pass Mode",
         "pkl_prefix": "Colmac_HPA4_R513a_Multi_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : false
+        "SGIP_avail" : false
     },
 
     "MODELS_GE2014_R_MP" : {
@@ -590,7 +590,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_GE2014_80_R_MP" : {
         "name" : "GE 2014 model run in efficiency mode, 80 gallon unit",
@@ -607,7 +607,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_GE2014STDMode_R_MP" : {
         "name" : "GE 2014 model run in standard mode",
@@ -624,7 +624,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_GE2014STDMode_80_R_MP" : {
         "name" : "GE 2014 model run in standard mode, 80 gallon unit",
@@ -641,27 +641,27 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_LYNC_AEGIS_500_C_SP" : {
         "name" : "Lync Aegis 500 Single Pass",
         "pkl_prefix": "Lync_Aegis_500_Single_Pass",
         "secondary_heat_exchanger" : true,
         "hx_increase" : 10,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_Laars_eTherm_C_SP" : {
         "name" : "Laars eTherm",
         "pkl_prefix": "Laars_eTherm",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_Mitsubishi_QAHV_C_SP" : {
         "name" : "Mitsubishi QAHV",
         "pkl_prefix": "Mitsubishi_QAHV",
         "secondary_heat_exchanger" : true,
         "hx_increase" : 10,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleC25A_C_SP" : {
         "name" : "Nyle C25A external heat pump in Single Pass Mode",
@@ -676,7 +676,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleC60A_C_SP" : {
         "name" : "Nyle C60A external heat pump in Single Pass Mode",
@@ -691,7 +691,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleC60A_CW_C_SP" : {
         "name" : "Nyle C60A (Cold Weather Package) in Single Pass Mode",
@@ -706,7 +706,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleC90A_C_SP" : {
         "name" : "Nyle C90A external heat pump in Single Pass Mode",
@@ -721,7 +721,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleC90A_CW_C_SP" : {
         "name" : "Nyle C90A (Cold Weather Package) in Single Pass Mode",
@@ -736,7 +736,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleC125A_C_SP" : {
         "name" : "Nyle C125A external heat pump in Single Pass Mode",
@@ -751,7 +751,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleC125A_CW_C_SP" : {
         "name" : "Nyle C125A (Cold Weather Package) in Single Pass Mode",
@@ -766,7 +766,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleC185A_C_SP" : {
         "name" : "Nyle C185A external heat pump in Single Pass Mode",
@@ -781,7 +781,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleC185A_CW_C_SP" : {
         "name" : "Nyle C185A (Cold Weather Package) in Single Pass Mode",
@@ -796,7 +796,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleC250A_C_SP" : {
         "name" : "Nyle C250A external heat pump in Single Pass Mode",
@@ -811,7 +811,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleC250A_CW_C_SP" : {
         "name" : "Nyle C250A (Cold Weather Package) in Single Pass Mode",
@@ -826,19 +826,19 @@
                 }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleE360_HT_C_SP" : {
         "name" : "Nyle E360 HT",
         "pkl_prefix": "Nyle_e360_HT_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_NyleE360_LT_C_SP" : {
         "name" : "Nyle E360 LT",
         "pkl_prefix": "Nyle_e360_LT_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemHB50_R_MP" : {
         "name" : "Rheem 2014 Model",
@@ -855,7 +855,7 @@
                 }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemHBDR2250_R_MP" : {
         "name" : "Rheem HB Duct Ready 50 gallon, 2250 W resistance",
@@ -877,7 +877,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemHBDR4550_R_MP" : {
         "name" : "Rheem HB Duct Ready 50 gallon, 4500 W resistance",
@@ -899,7 +899,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemHBDR2265_R_MP" : {
         "name" : "Rheem HB Duct Ready 65 gallon, 2250 W resistance",
@@ -921,7 +921,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemHBDR4565_R_MP" : {
         "name" : "Rheem HB Duct Ready 65 gallon, 4500 W resistance",
@@ -943,7 +943,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemHBDR2280_R_MP" : {
         "name" : "Rheem HB Duct Ready 80 gallon, 2250 W resistance",
@@ -965,7 +965,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemHBDR4580_R_MP" : {
         "name" : "Rheem HB Duct Ready 80 gallon, 4500 W resistance",
@@ -987,7 +987,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RHEEM_HPHD60HNU_201_C_MP" : {
         "name" : "Rheem MP 60 kBtu HNU",
@@ -1000,7 +1000,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RHEEM_HPHD60VNU_201_C_MP" : {
         "name" : "Rheem MP 60 kBtu VNU",
@@ -1013,7 +1013,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RHEEM_HPHD135HNU_483_C_MP" : {
         "name" : "Rheem MP 135 kBtu HNU",
@@ -1026,7 +1026,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RHEEM_HPHD135VNU_483_C_MP" : {
         "name" : "Rheem MP 135 kBtu VNU",
@@ -1039,7 +1039,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemPlugInDedicated40_R_MP" : {
         "name" : "Rheem 120V Dedicated-Circuit, 40 gallon",
@@ -1056,7 +1056,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemPlugInDedicated50_R_MP" : {
         "name" : "Rheem 120V Dedicated-Circuit, 50 gallon",
@@ -1073,7 +1073,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemPlugInShared40_R_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 40 gallon",
@@ -1090,7 +1090,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemPlugInShared50_R_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 50 gallon",
@@ -1107,7 +1107,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemPlugInShared65_R_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 65 gallon",
@@ -1124,7 +1124,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_RheemPlugInShared80_R_MP" : {
         "name" : "Rheem 120V Shared-Circuit, 80 gallon",
@@ -1141,7 +1141,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_Rheem2020Build40_R_MP" : {
         "name" : "Rheem 2020 Builder, 40 gallon",
@@ -1158,7 +1158,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_Rheem2020Build50_R_MP" : {
         "name" : "Rheem 2020 Builder, 50 gallon",
@@ -1175,7 +1175,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_Rheem2020Build65_R_MP" : {
         "name" : "Rheem 2020 Builder, 65 gallon",
@@ -1192,7 +1192,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_Rheem2020Build80_R_MP" : {
         "name" : "Rheem 2020 Builder, 80 gallon",
@@ -1209,7 +1209,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_Rheem2020Prem40_R_MP" : {
         "name" : "Rheem 2020 Premium, 40 gallon",
@@ -1226,7 +1226,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_Rheem2020Prem50_R_MP" : {
         "name" : "Rheem 2020 Premium, 50 gallon",
@@ -1243,7 +1243,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_Rheem2020Prem65_R_MP" : {
         "name" : "Rheem 2020 Premium, 65 gallon",
@@ -1260,7 +1260,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_Rheem2020Prem80_R_MP" : {
         "name" : "Rheem 2020 Premium, 80 gallon",
@@ -1277,7 +1277,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_SANCO2_43_R_SP" : {
         "name" : "SANCO2 43 gallon CO2 external heat pump",
@@ -1309,7 +1309,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_SANCO2_C_SP" : {
         "name" : "SANCO2 GS4",
@@ -1342,7 +1342,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_SANCO2_83_R_SP" : {
         "name" : "SANCO2 83 gallon CO2 external heat pump",
@@ -1374,7 +1374,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_SANCO2_119_C_SP" : {
         "name" : "SANCO2 120 gallon CO2 external heat pump",
@@ -1406,7 +1406,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_Stiebel220E_R_MP" : {
         "name" : "Stiebel Eltron",
@@ -1423,7 +1423,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_VOLTEX60_R_MP" : {
         "name" : "Voltex 60 gallon HPWH",
@@ -1440,7 +1440,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     },
     "MODELS_VOLTEX80_R_MP" : {
         "name" : "Voltex 80 gallon HPWH",
@@ -1457,6 +1457,6 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "QPL_listed" : true
+        "SGIP_avail" : true
     }
 }
