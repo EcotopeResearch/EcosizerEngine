@@ -4,6 +4,7 @@ from ecoengine.constants.Constants import KWH_TO_BTU, W_TO_BTUHR
 import pickle
 from scipy.interpolate import LinearNDInterpolator
 import math
+import pandas as pd
 
 class PrefMapTracker:
     """
@@ -59,10 +60,13 @@ class PrefMapTracker:
         self.twoInputPkl = False
         self.oat_max = None
         self.oat_min = None
+        self.inT_by_oat_values = []
         self.inlet_max = None
         self.inlet_min = None
-        self.outlet_max = None
-        self.outlet_min = None
+        self.oat_min_list = []
+        self.unique_oats = []
+        self.max_outT_values = []
+        self.min_outT_values = []
         self.default_output_high = None
         self.default_input_high = None
         self.default_output_low = None
@@ -86,8 +90,9 @@ class PrefMapTracker:
                         designOAT_F = self.oat_min
                     if designIncomingT_F < self.inlet_min:
                         designIncomingT_F = self.inlet_min
-                    if designOutT_F < self.outlet_min:
-                        designOutT_F = self.outlet_min
+                    outlet_min, outlet_max = self.getStorageTempMinMaxAtNearestOAT(designOAT_F)
+                    if designOutT_F < outlet_min:
+                        designOutT_F = outlet_min
                 self.getCapacity(designOAT_F, designIncomingT_F, designOutT_F, sizingNumHP = True) # will set self.numHeatPumps in this function
 
     def getDefaultCapacity(self, AsKW = False):
@@ -159,41 +164,42 @@ class PrefMapTracker:
                     print("Warning: Inlet water temperature simulated exceeds performance map boundaries. Simulation accuracy may be impacted.")
                 self.capedInlet = True
                 condenserT_F = self.inlet_max
-            elif condenserT_F < self.inlet_min:
-                extrapolate = True
-                condenserT_F = self.inlet_min
 
             #use pickled interpolation functions
-            input_array = [condenserT_F, outT_F, externalT_F]
-            if self.twoInputPkl:
-                input_array = [condenserT_F, externalT_F] # MultiPass performance maps do not account for outlet water temp
-            output_kW = self.output_cap_interpolator(input_array)[0][0]
-            input_kW = self.input_cap_interpolator(input_array)[0][0]
+            input_kW, output_kW = self._getInputOutputKWThruPckl(condenserT_F, outT_F, externalT_F)
+
             if math.isnan(output_kW) or math.isnan(input_kW):
                 extrapolate = True
-                if abs(externalT_F - self.oat_max) > abs(externalT_F - self.oat_min): # if closer to coldest temp than warmest temp in perf map
+                if externalT_F < self.oat_min: # if OAT is colder than coldest OAT in performance map
                     if sizingNumHP:
-                        print(f"Error in preformance map for input array of {input_array}. Using default capacity values to size.")
+                        print(f"Warning: Design OAT of {externalT_F} is colder than coldest OAT in performance map for model. Using default capacity values to size.")
                         output_kW =self.default_output_low
                         input_kW = self.default_input_low
                     else:
                         if self.reliedOnER == False:
+                            print(f"OAT: {externalT_F}, Inlet: {condenserT_F}, out: {outT_F}")
                             print("Warning: System had to rely on Electric Resistance to meet demand during times with a cold outdoor air temperature.")
                         self.reliedOnER = True
+                        
                         if self.defaultCapacity_kBTUhr is None:
                             if self.prefMapOnly:
                                 return 1.,1. # return 1, 1 when just assessing preformance map only
                             else:
                                 raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
+                        
                         if self.kBTUhr:
                             return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr # externalT_F is low so use electric resistance to heat and assume COP of 1
                         else:
                             # return in kW
                             return self.defaultCapacity_kBTUhr/W_TO_BTUHR, self.defaultCapacity_kBTUhr/W_TO_BTUHR
-                else:
+                        
+                elif externalT_F > self.oat_max: # if OAT is hotter than hottest OAT in performance map
                     # externalT_F is high so assume same COP for highest temp in performance map
                     output_kW = self.default_output_high
                     input_kW = self.default_input_high
+
+                else:
+                    input_kW, output_kW = self._forceClosestInputOutputKw(condenserT_F, outT_F, externalT_F)
 
         elif self.perfMap is None or len(self.perfMap) == 0:
             if self.erBaseline:
@@ -275,16 +281,147 @@ class PrefMapTracker:
         output_kW *= self.numHeatPumps
         input_kW *= self.numHeatPumps
         return [output_kW, input_kW]
+    
+    def getStorageTempMinMaxAtNearestOAT(self, oat_F, nextLowest = False):
+        #maybe make it next lowest? TODO
+        closest_index, second_closest_index = self._getIdxOfNearestOATs(oat_F)
+        if nextLowest and second_closest_index < closest_index:
+            return self.min_outT_values[second_closest_index], self.max_outT_values[second_closest_index]
+        return self.min_outT_values[closest_index], self.max_outT_values[closest_index]
+
+    def _getIdxOfNearestOATs(self, oat_F):
+        """
+        returns the indexes of the closest and second closest oats in self.unique_oats
+        """
+        dif = abs(self.unique_oats[0] - oat_F)
+        closest_index = 0
+        for i in range(1, len(self.unique_oats)):
+            new_dif = abs(self.unique_oats[i] - oat_F)
+            if new_dif < dif:
+                dif = new_dif
+                closest_index = i
+
+        second_closest_index = closest_index
+        if closest_index != 0 and oat_F < self.unique_oats[closest_index]:
+            second_closest_index = closest_index - 1
+        elif closest_index != len(self.unique_oats)-1 and oat_F > self.unique_oats[closest_index]:
+            second_closest_index = closest_index + 1
+        return closest_index, second_closest_index
+    
+    def _getIdxOfNearestInlet(self, oat_idx, inlet_T):
+        """
+        returns the index of the closest and second closest oats in self.inT_by_oat_values
+        """
+        dif = abs(self.inT_by_oat_values[oat_idx][0] - inlet_T)
+        closest_index = 0
+        for i in range(1, len(self.inT_by_oat_values[oat_idx])):
+            new_dif = abs(self.inT_by_oat_values[oat_idx][i] - inlet_T)
+            if new_dif < dif:
+                dif = new_dif
+                closest_index = i
+        second_closest_index = closest_index
+        if closest_index != 0 and inlet_T < self.inT_by_oat_values[oat_idx][closest_index]:
+            second_closest_index = closest_index - 1
+        elif closest_index != len(self.inT_by_oat_values[oat_idx])-1 and inlet_T > self.inT_by_oat_values[oat_idx][closest_index]:
+            second_closest_index = closest_index + 1
+        return closest_index, second_closest_index
+    
+    def _getInputOutputKWThruPckl(self, inletWaterT_F, outletWaterT_F, oat_F):
+        if not self.usePkl:
+            raise Exception("Attempted to use lab data performance map but none was available for the model.")
+        input_array = [inletWaterT_F, outletWaterT_F, oat_F]
+        if self.twoInputPkl:
+            input_array = [inletWaterT_F, oat_F] # MultiPass performance maps do not account for outlet water temp
+        output_kW = self.output_cap_interpolator(input_array)[0][0]
+        input_kW = self.input_cap_interpolator(input_array)[0][0]
+        return input_kW, output_kW
+    
+    def _forceClosestInputOutputKw(self, inletWaterT_F, outletWaterT_F, oat_F):
+        closest_index, second_closest_index = self._getIdxOfNearestOATs(oat_F)
+        
+        closest_outletWaterT_F = outletWaterT_F
+        
+        closest_inletWaterT_idx, second_closest_outletWaterT_F = self._getIdxOfNearestInlet(closest_index, inletWaterT_F)
+        closest_inletWaterT_F = self.inT_by_oat_values[closest_index][closest_inletWaterT_idx]
+        second_closest_inletWaterT_F = self.inT_by_oat_values[closest_index][second_closest_outletWaterT_F]
+        # second_closest_outletWaterT_F = outletWaterT_F
+        # second_closest_inletWaterT_F = inletWaterT_F
+
+        if outletWaterT_F > self.max_outT_values[closest_index]:
+            closest_outletWaterT_F = self.max_outT_values[closest_index]
+        elif outletWaterT_F < self.min_outT_values[closest_index]:
+            closest_outletWaterT_F = self.min_outT_values[closest_index]
+        # if inletWaterT_F > self.inT_by_oat_values[closest_index]:
+        #     closest_inletWaterT_F = self.inT_by_oat_values[closest_index]
+
+        if outletWaterT_F > self.max_outT_values[second_closest_index]:
+            second_closest_outletWaterT_F = self.max_outT_values[second_closest_index]
+        elif outletWaterT_F < self.min_outT_values[second_closest_index]:
+            second_closest_outletWaterT_F = self.min_outT_values[second_closest_index]
+        # if inletWaterT_F > self.inT_by_oat_values[second_closest_index]:
+        #     second_closest_inletWaterT_F = self.inT_by_oat_values[second_closest_index]
+            
+        
+        # first try with new oat
+        input_kW, output_kW = self._getInputOutputKWThruPckl(inletWaterT_F, outletWaterT_F, self.unique_oats[closest_index])
+        if not (math.isnan(output_kW) or math.isnan(input_kW)):
+            print(f"Warning: changed oat from {oat_F} to {self.unique_oats[closest_index]} (which is closest).")
+            return input_kW, output_kW
+        if second_closest_index != closest_index:
+            input_kW, output_kW = self._getInputOutputKWThruPckl(inletWaterT_F, outletWaterT_F, self.unique_oats[second_closest_index])
+            if not (math.isnan(output_kW) or math.isnan(input_kW)):
+                print(f"Warning: changed oat from {oat_F} to {self.unique_oats[second_closest_index]} (which is second closest).")
+                return input_kW, output_kW
+        
+        # next try with new inlet
+        input_kW, output_kW = self._getInputOutputKWThruPckl(closest_inletWaterT_F, outletWaterT_F, self.unique_oats[closest_index])
+        if not (math.isnan(output_kW) or math.isnan(input_kW)):
+            print(f"Warning: changed oat from {oat_F} to {self.unique_oats[closest_index]} (which is closest). Also changed inlet water temp from {inletWaterT_F} to {closest_inletWaterT_F}")
+            return input_kW, output_kW
+        if second_closest_inletWaterT_F != closest_inletWaterT_F:
+            input_kW, output_kW = self._getInputOutputKWThruPckl(second_closest_inletWaterT_F, outletWaterT_F, self.unique_oats[closest_index])
+            if not (math.isnan(output_kW) or math.isnan(input_kW)):
+                print(f"Warning: changed oat from {oat_F} to {self.unique_oats[closest_index]} (which is closest). Also changed inlet water temp from {inletWaterT_F} to {second_closest_inletWaterT_F}")
+                return input_kW, output_kW
+        
+        # next try with new outlet
+        input_kW, output_kW = self._getInputOutputKWThruPckl(closest_inletWaterT_F, closest_outletWaterT_F, self.unique_oats[closest_index])
+        if not (math.isnan(output_kW) or math.isnan(input_kW)):
+            print(f"Warning: changed oat from {oat_F} to {self.unique_oats[closest_index]} (which is closest). Also changed inlet water temp from {inletWaterT_F} to {closest_inletWaterT_F} " + 
+                  f"and outlet from {outletWaterT_F} to {closest_outletWaterT_F}")
+            return input_kW, output_kW
+        
+        # last effort. move inlet water temp to nearest two to see if someting hits
+        if second_closest_inletWaterT_F != closest_inletWaterT_F:
+            input_kW, output_kW = self._getInputOutputKWThruPckl(second_closest_inletWaterT_F, closest_outletWaterT_F, self.unique_oats[closest_index])
+            if not (math.isnan(output_kW) or math.isnan(input_kW)):
+                print(f"Warning: changed oat from {oat_F} to {self.unique_oats[closest_index]} (which is closest). Also changed inlet water temp from {inletWaterT_F} to {second_closest_inletWaterT_F} " + 
+                    f"and outlet from {outletWaterT_F} to {closest_outletWaterT_F}")
+                return input_kW, output_kW
+            
+        if closest_inletWaterT_idx != 0 and second_closest_inletWaterT_F >= closest_inletWaterT_F:
+            third_closest_inletWaterT_F = self.inT_by_oat_values[closest_index][closest_inletWaterT_idx-1]
+            input_kW, output_kW = self._getInputOutputKWThruPckl(third_closest_inletWaterT_F, closest_outletWaterT_F, self.unique_oats[closest_index])
+            if not (math.isnan(output_kW) or math.isnan(input_kW)):
+                print(f"Warning: changed oat from {oat_F} to {self.unique_oats[closest_index]} (which is closest). Also changed inlet water temp from {inletWaterT_F} to {third_closest_inletWaterT_F} " + 
+                    f"and outlet from {outletWaterT_F} to {closest_outletWaterT_F}")
+                return input_kW, output_kW
+        elif closest_inletWaterT_idx != len(self.inT_by_oat_values[closest_index])-1:
+            third_closest_inletWaterT_F = self.inT_by_oat_values[closest_index][closest_inletWaterT_idx+1]
+            input_kW, output_kW = self._getInputOutputKWThruPckl(third_closest_inletWaterT_F, closest_outletWaterT_F, self.unique_oats[closest_index])
+            if not (math.isnan(output_kW) or math.isnan(input_kW)):
+                print(f"Warning: changed oat from {oat_F} to {self.unique_oats[closest_index]} (which is closest). Also changed inlet water temp from {inletWaterT_F} to {third_closest_inletWaterT_F} " + 
+                    f"and outlet from {outletWaterT_F} to {closest_outletWaterT_F}")
+                return input_kW, output_kW
+            
+        raise Exception(f"Input climate values for [inletWaterT_F, outletWaterT_F, OAT_F], [{inletWaterT_F}, {outletWaterT_F}, {oat_F}], were too far outside the performance map of the model.")
 
     def _autoSetNumHeatPumps(self, modelCapacity_kBTUhr):
         heatPumps = math.ceil(self.defaultCapacity_kBTUhr/modelCapacity_kBTUhr)
         self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
     def setPrefMap(self, modelName):
-        if modelName == "MODELS_SANCO2_C_SP" or (modelName[-2:] == 'MP' 
-                and not modelName in ["MODELS_RHEEM_HPHD135VNU_483_C_MP","MODELS_RHEEM_HPHD135HNU_483_C_MP",
-                "MODELS_RHEEM_HPHD60VNU_201_C_MP","MODELS_RHEEM_HPHD60HNU_201_C_MP"]):
-            # The rheems with pkls function like single pass pkls
+        if modelName == "MODELS_SANCO2_C_SP" or modelName[-2:] == 'MP':
             self.twoInputPkl = True
         if modelName[-2:] == 'MP':
             self.isMultiPass = True
@@ -305,16 +442,23 @@ class PrefMapTracker:
                     with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['pkl_prefix']}_bounds.pkl"), 'rb') as f:
                         bounds = pickle.load(f)
                         # Format: [[max_oat,min_oat],[max_inlet,min_inlet],[max_outlet,min_outlet],[default_output_high, default_input_high],[default_output_low, default_input_low]]
-                        self.oat_max = bounds[0][0]
-                        self.oat_min = bounds[0][1]
-                        self.inlet_max = bounds[1][0]
-                        self.inlet_min = bounds[1][1]
-                        self.outlet_max = bounds[2][0]
-                        self.outlet_min = bounds[2][1]
-                        self.default_output_high = bounds[3][0]
-                        self.default_input_high = bounds[3][1]
-                        self.default_output_low = bounds[4][0]
-                        self.default_input_low = bounds[4][1]
+                        # self.inlet_max = bounds[1][0]
+                        # self.inlet_min = bounds[1][1]
+                        # self.outlet_max = bounds[2][0]
+                        # self.outlet_min = bounds[2][1]
+                        self.unique_oats = bounds[0]
+                        self.inT_by_oat_values = bounds[1]
+                        self.inlet_min = bounds[2][0]
+                        self.inlet_max = bounds[2][1]
+                        self.max_outT_values = bounds[3]
+                        self.min_outT_values = bounds[4]
+                        self.default_output_high = bounds[5][0]
+                        self.default_input_high = bounds[5][1]
+                        self.default_output_low = bounds[6][0]
+                        self.default_input_low = bounds[6][1]
+
+                        self.oat_min = self.unique_oats[0]
+                        self.oat_max = self.unique_oats[-1]
                 else:
                         self.perfMap = dataDict[modelName]["perfmap"]
         except:

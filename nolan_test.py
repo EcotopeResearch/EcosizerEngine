@@ -31,35 +31,32 @@ import math
 W_TO_BTUHR = 3.412142
 hpwh = EcosizerEngine(
             incomingT_F = 0,
-            magnitudeStat = 100,
+            magnitudeStat = 174,
             supplyT_F = 120,
             storageT_F = 150,
             percentUseable = 0.95,
             aquaFract = 0.4,
-            aquaFractLoadUp = 0.1,
+            aquaFractLoadUp = 0.2,
             aquaFractShed = 0.8,
             loadUpT_F = 160,
             loadUpHours = 2, # might need to change for future
             schematic = "swingtank",
             buildingType  = "multi_family",
-            gpdpp = 34.6,
-            nBR =  [73,0,0,0,0,0],
-            compRuntime_hr = 16,
-            nApt = 73,
+            gpdpp = 32.5,
+            nApt = 100,
             Wapt = 60,
             # standardGPD = 'ca',
             # The 3 params below have to do with loadshift, the logic from here will have to be translated to get the right values https://github.com/EcotopeResearch/Ecosizer/blob/ee7cc4dee9014b40963c3a4323d878acb30b0501/HPWHulator/sizer/views.py#L309-L322
             loadShiftSchedule = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
             doLoadShift   = True,
-            zipCode=95823,
+            zipCode=93635, # CZ12
             annual=True,
-            systemModel='MODELS_Laars_eTherm_C_SP',
-            numHeatPumps=1,
+            systemModel='MODELS_NyleC60A_C_SP',
             PVol_G_atStorageT=1000,
-            TMCap_kW=36,
-            tmModel=None,
-            TMVol_G=200,
-            tmNumHeatPumps = None,   
+            # PCap_kW=262/W_TO_BTUHR,
+            numHeatPumps=6,
+            TMCap_kW=30,
+            TMVol_G=200,   
         )
 
 outlist = hpwh.getSimRunWithkWCalc(minuteIntervals = 15, nDays = 365)
