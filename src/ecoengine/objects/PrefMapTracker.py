@@ -4,7 +4,6 @@ from ecoengine.constants.Constants import KWH_TO_BTU, W_TO_BTUHR
 import pickle
 from scipy.interpolate import LinearNDInterpolator
 import math
-import pandas as pd
 
 class PrefMapTracker:
     """

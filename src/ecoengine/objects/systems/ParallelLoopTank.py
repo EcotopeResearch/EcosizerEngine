@@ -35,6 +35,8 @@ class ParallelLoopTank(SystemConfig):
            self.TMCap_kBTUhr = TMCap_kBTUhr
 
         # set performance map for tm tank
+        if not tmModel is None and not tmModel[-2:] == 'MP':
+            raise Exception("Parallel loop tank model must be a multipass system.")
         self.tmPerfMap = PrefMapTracker(self.TMCap_kBTUhr, modelName = tmModel, numHeatPumps = tmNumHeatPumps, kBTUhr = True, 
                                         usePkl=True if not (tmModel is None or useHPWHsimPrefMap) else False)
 
