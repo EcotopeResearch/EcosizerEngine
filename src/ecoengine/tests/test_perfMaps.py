@@ -63,6 +63,25 @@ def test_perfMaps_hxTempIncrease(hpwhModel, hxTempIncrease, expectedHXTempIncrea
     perfMap = PrefMapTracker(None, hpwhModel, False, 1, prefMapOnly = True, hxTempIncrease = hxTempIncrease)
     assert perfMap.hxTempIncrease == expectedHXTempIncrease
 
+@pytest.mark.parametrize("hpwhModel, expectedNumHP, expectedCap, expectedPower, oat, inlet, outlet", 
+                         [
+                            ("MODELS_Mitsubishi_QAHV_C_SP", 3, 40.0, 10.3, 61.0, 53.0, 139.0),
+                            ("MODELS_NyleC125A_C_SP", 5, 34.18, 13.54, 60.0, 75.0, 140.0),
+                            ("MODELS_ColmacCxA_20_C_SP", 35, 53.3, 18.8, 58.0, 40.0, 120.0),
+                        ])
+def test_perfMaps_autosize_and_kW_to_kBTU(hpwhModel, expectedNumHP, expectedCap, expectedPower, oat, inlet, outlet):
+    perfMap = PrefMapTracker(expectedCap * expectedNumHP * W_TO_BTUHR, hpwhModel, False)
+    results = perfMap.getCapacity(oat, inlet, outlet)
+    assert results[0] == expectedCap * expectedNumHP
+    assert results[1] == expectedPower * expectedNumHP
+    assert perfMap.numHeatPumps == expectedNumHP
+
+    perfMap_kBTU = PrefMapTracker(expectedCap * expectedNumHP * W_TO_BTUHR, hpwhModel, True)
+    results_kBTU = perfMap_kBTU.getCapacity(oat, inlet, outlet)
+    assert round(results_kBTU[0], 4) == round(expectedCap * expectedNumHP * W_TO_BTUHR, 4) 
+    assert round(results_kBTU[1], 4) == round(expectedPower * expectedNumHP * W_TO_BTUHR, 4)
+    assert perfMap.numHeatPumps == expectedNumHP
+
 def test_getListOfModels():
     assert len(getListOfModels(multiPass = False,sgipModelsOnly=False)) > len(getListOfModels(multiPass = False,sgipModelsOnly=True))
     assert len(getListOfModels(multiPass = True,sgipModelsOnly=False)) > len(getListOfModels(multiPass = True,sgipModelsOnly=True))

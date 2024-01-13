@@ -269,17 +269,12 @@ class PrefMapTracker:
                 cop = self._regressedMethod(externalT_F, outT_F, condenserT_F, self.perfMap[0]['COP_coeffs'])
             output_kW = cop * input_kW
 
-        if self.kBTUhr:
-            output_kW *= W_TO_BTUHR # convert kW to kBTU
-            input_kW *= W_TO_BTUHR
         if self.numHeatPumps is None:
-            if self.kBTUhr:
-                # output has already been converted to kBTUhr
-                self._autoSetNumHeatPumps(output_kW)
-            else:
-                self._autoSetNumHeatPumps(output_kW*W_TO_BTUHR)
+            self._autoSetNumHeatPumps(output_kW*W_TO_BTUHR)
         output_kW *= self.numHeatPumps
         input_kW *= self.numHeatPumps
+        if self.kBTUhr:
+            return [output_kW * W_TO_BTUHR, input_kW * W_TO_BTUHR]
         return [output_kW, input_kW]
     
     def getStorageTempMinMaxAtNearestOAT(self, oat_F, nextLowest = False):
@@ -417,6 +412,7 @@ class PrefMapTracker:
         raise Exception(f"Input climate values for [inletWaterT_F, outletWaterT_F, OAT_F], [{inletWaterT_F}, {outletWaterT_F}, {oat_F}], were too far outside the performance map of the model.")
 
     def _autoSetNumHeatPumps(self, modelCapacity_kBTUhr):
+        print(f"made it here {modelCapacity_kBTUhr} {self.defaultCapacity_kBTUhr}")
         heatPumps = math.ceil(self.defaultCapacity_kBTUhr/modelCapacity_kBTUhr)
         self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
