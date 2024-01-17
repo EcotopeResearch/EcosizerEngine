@@ -114,48 +114,7 @@ class SimulationRun:
         waterT_F : float
             The incoming water temperature (F) at interval i of the simulation 
         """
-        if self.monthlyCityWaterT_F is None:
-            return self.building.incomingT_F # default city water temp
-        else:
-            dayOfYear = (i // (60/self.minuteIntervals)) // 24
-            if dayOfYear < 31:
-                # jan
-                return self.monthlyCityWaterT_F[0]
-            elif dayOfYear < 59:
-                # feb
-                return self.monthlyCityWaterT_F[1]
-            elif dayOfYear < 90:
-                # mar
-                return self.monthlyCityWaterT_F[2]
-            elif dayOfYear < 120:
-                # apr
-                return self.monthlyCityWaterT_F[3]
-            elif dayOfYear < 151:
-                # may
-                return self.monthlyCityWaterT_F[4]
-            elif dayOfYear < 181:
-                # jun
-                return self.monthlyCityWaterT_F[5]
-            elif dayOfYear < 212:
-                # jul
-                return self.monthlyCityWaterT_F[6]
-            elif dayOfYear < 243:
-                # aug
-                return self.monthlyCityWaterT_F[7]
-            elif dayOfYear < 273:
-                # sep
-                return self.monthlyCityWaterT_F[8]
-            elif dayOfYear < 304:
-                # oct
-                return self.monthlyCityWaterT_F[9]
-            elif dayOfYear < 334:
-                # nov
-                return self.monthlyCityWaterT_F[10]
-            elif dayOfYear < 365:
-                # dec
-                return self.monthlyCityWaterT_F[11]
-            else:
-                raise Exception("Cold water temperature data not available past one year.")    
+        return self.building.getIncomingWaterT(i, self.minuteIntervals)   
             
     def getAvgIncomingWaterT(self):
         """
@@ -173,26 +132,26 @@ class SimulationRun:
                 + (self.monthlyCityWaterT_F[4]*31) + (self.monthlyCityWaterT_F[5]*30) + (self.monthlyCityWaterT_F[6]*31) + (self.monthlyCityWaterT_F[7]*31) \
                 + (self.monthlyCityWaterT_F[8]*30) + (self.monthlyCityWaterT_F[9]*31) + (self.monthlyCityWaterT_F[10]*30) + (self.monthlyCityWaterT_F[11]*31)) / 365
     
-    def setMonthlyCityWaterT_F(self, monthlyCityWaterT_F):
-        """
-        sets monthly incoming water temperature (F) for each month of an annual simulation
+    # def setMonthlyCityWaterT_F(self, monthlyCityWaterT_F):
+    #     """
+    #     sets monthly incoming water temperature (F) for each month of an annual simulation
 
-        Parameters
-        ----------
-        monthlyCityWaterT_F : List
-            List of floats representing the incoming water temperature at each month. must be length 12.
+    #     Parameters
+    #     ----------
+    #     monthlyCityWaterT_F : List
+    #         List of floats representing the incoming water temperature at each month. must be length 12.
 
-        Raises
-        ----------
-        Exception: Error if monthlyCityWaterT_F is not length 12 or contains wrong data type
+    #     Raises
+    #     ----------
+    #     Exception: Error if monthlyCityWaterT_F is not length 12 or contains wrong data type
 
-        """
-        if len(monthlyCityWaterT_F) != 12:
-            raise Exception("Monthly city water temperature data must have 12 entries (one for every month).")
-        for i in range(12):
-            if not isinstance(monthlyCityWaterT_F[i], float):
-                raise Exception(str(monthlyCityWaterT_F[i]) + " is an invalid city water tempurature for month "+str(i+1)+".")
-        self.monthlyCityWaterT_F = monthlyCityWaterT_F
+    #     """
+    #     if len(monthlyCityWaterT_F) != 12:
+    #         raise Exception("Monthly city water temperature data must have 12 entries (one for every month).")
+    #     for i in range(12):
+    #         if not isinstance(monthlyCityWaterT_F[i], float):
+    #             raise Exception(str(monthlyCityWaterT_F[i]) + " is an invalid city water tempurature for month "+str(i+1)+".")
+    #     self.monthlyCityWaterT_F = monthlyCityWaterT_F
 
     def generateRecircLoss(self, i : int):
         """

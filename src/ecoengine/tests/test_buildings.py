@@ -193,6 +193,33 @@ def test_zipCodes_to_climateZones(zipCode, climateZone, buildingType, magnitude)
     )
     assert building.climateZone == climateZone
 
+@pytest.mark.parametrize("climateZone, jan_in_T, sep_in_t, oct_in_T", [
+   (1, 50.108, 54.734, 54.59),
+   (6, 59.306, 65.876, 64.742),
+   (18, 46.9, 61.0, 58.6)
+])
+def test_climateZone_temps(climateZone, jan_in_T, sep_in_t, oct_in_T):
+    building = createBuilding(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            buildingType   = "multi_family",
+            flowRate       = 5,
+            returnT_F       = 100,
+            climateZone    = climateZone
+    )
+    assert building.getIncomingWaterT(0, 60) == jan_in_T
+    assert building.getIncomingWaterT(100, 15) == jan_in_T
+    assert building.getIncomingWaterT(80000, 16, month=1) == jan_in_T
+
+    assert building.getIncomingWaterT(6551, 60) == sep_in_t
+    assert building.getIncomingWaterT((6551*4)+3, 15) == sep_in_t
+    assert building.getIncomingWaterT((6551*60)+45, 1) == sep_in_t
+
+    assert building.getIncomingWaterT(6552, 60) == oct_in_T
+    assert building.getIncomingWaterT(26242, 15) == oct_in_T
+    assert building.getIncomingWaterT(80000, 16, month=10) == oct_in_T
+
 # Check for building initialization errors
 def test_invalid_building_parameter_errors():
     with pytest.raises(Exception, match="Error: Number of apartments must be an integer."):

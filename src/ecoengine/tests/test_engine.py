@@ -507,7 +507,8 @@ def test_annual_QAVH_for_all_climates(climateZone):
             Wapt            = 60,
             doLoadShift     = False,
             PVol_G_atStorageT = 891,
-            PCap_kW = 48,
+            # PCap_kW = 48,
+            numHeatPumps=1,
             annual = True,
             climateZone = climateZone,
             systemModel = "MODELS_Mitsubishi_QAHV_C_SP"
