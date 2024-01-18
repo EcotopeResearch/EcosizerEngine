@@ -13,15 +13,15 @@ import math
 # print(f"pm.getCapacity({25},{40},{148}) {pm.getCapacity(25,40,148)}")
 # print(f"pm.getCapacity({25},{83},{134}) {pm.getCapacity(25,83,134)}")
 
-# print("=============================================================")
+print("=============================================================")
 
-# pm = PrefMapTracker(None, 'MODELS_Mitsubishi_QAHV_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
-# print("MODELS_Mitsubishi_QAHV_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
+pm = PrefMapTracker(None, 'MODELS_Mitsubishi_QAHV_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
+print("MODELS_Mitsubishi_QAHV_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
 
-# print(f"pm.getCapacity({-13},{67-10},{160-10}) {pm.getCapacity(-13,67-10,160-10)}")
+print(f"pm.getCapacity({105.8},{89.51},{160-10}) {pm.getCapacity(105.8,89.51,160-10)}")
 # print(f"pm.getCapacity({-13-10},{67-10},{160}) {pm.getCapacity(-13-10,67-10,160)}")
 
-# print("=============================================================")
+print("=============================================================")
 
 # pm = PrefMapTracker(None, 'MODELS_LYNC_AEGIS_500_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
 # print("MODELS_LYNC_AEGIS_500_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
@@ -29,9 +29,37 @@ import math
 # print(f"pm.getCapacity({34},{74-10},{160-10}) {pm.getCapacity(34,74-10,160-10)}")
 # print(f"pm.getCapacity({34-10},{74-10},{160}) {pm.getCapacity(34-10,74-10,160)}")
 W_TO_BTUHR = 3.412142
+
+hpwh = EcosizerEngine(
+            incomingT_F=0,
+            magnitudeStat = 48,
+            supplyT_F = 120,
+            storageT_F = 145,
+            percentUseable = 0.95,
+            aquaFract = 0.40,
+            loadUpT_F = 145 + 10,
+            loadUpHours = 2,
+            schematic = 'swingtank',
+            buildingType  = 'multi_family',
+            nApt = 19,
+            Wapt = 100,
+            doLoadShift   = False,
+            zipCode= 91380,
+            annual=True,
+            gpdpp=25,
+            systemModel="MODELS_SANCO2_C_SP",
+            numHeatPumps=4,
+            PVol_G_atStorageT=230,
+            TMCap_kW=4,
+            TMVol_G=40
+)
+
+# simRun = hpwh.getSimRun(minuteIntervals = 15, nDays = 365)
+# simRun.writeCSV('SANCO2_test.csv')
+
 hpwh = EcosizerEngine(
             incomingT_F = 0,
-            magnitudeStat = 174,
+            magnitudeStat = 110,
             supplyT_F = 120,
             storageT_F = 150,
             percentUseable = 0.95,
@@ -42,29 +70,71 @@ hpwh = EcosizerEngine(
             loadUpHours = 2, # might need to change for future
             schematic = "swingtank",
             buildingType  = "multi_family",
-            gpdpp = 32.5,
+            gpdpp = 25,
             nApt = 100,
             Wapt = 60,
             # standardGPD = 'ca',
             # The 3 params below have to do with loadshift, the logic from here will have to be translated to get the right values https://github.com/EcotopeResearch/Ecosizer/blob/ee7cc4dee9014b40963c3a4323d878acb30b0501/HPWHulator/sizer/views.py#L309-L322
             loadShiftSchedule = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
             doLoadShift   = True,
-            zipCode=93635, # CZ12
+            zipCode=91708, # CZ10
             annual=True,
-            systemModel='MODELS_NyleC60A_C_SP',
+            systemModel='MODELS_Mitsubishi_QAHV_C_SP',
             PVol_G_atStorageT=1000,
             # PCap_kW=262/W_TO_BTUHR,
-            numHeatPumps=6,
+            numHeatPumps=1,
             TMCap_kW=30,
             TMVol_G=200,   
         )
 
 outlist = hpwh.getSimRunWithkWCalc(minuteIntervals = 15, nDays = 365)
+simRun_ls = outlist[0]
 
 print(f"loadshift_capacity {round(outlist[2],2)}")
 print(f"kGperkWh_saved {round(outlist[3],2)}")
 print(f"annual_kGCO2_saved {round(outlist[4],2)}")
 print(f"climate_zone CZ{hpwh.getClimateZone()}")
+# simRun_ls.writeCSV('QAHV_test.csv')
+
+
+aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, zipCode, climateZone = 0.21, 0.8, 150, 122, [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1], 'MODELS_ColmacCxA_15_C_SP', 'MODELS_ColmacCxA_20_C_MP', 'paralleltank', 891, 31, 91, 19, 91730,10
+
+hpwh_ls = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = supplyT_F,
+            storageT_F      = storageT_F,
+            loadUpT_F       = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            aquaFractLoadUp = aquaFractLoadUp,
+            aquaFractShed   = aquaFractShed,
+            schematic       = simSchematic, 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 60,
+            loadShiftSchedule  = loadShiftSchedule,
+            loadUpHours     = 3,
+            doLoadShift     = True,
+            loadShiftPercent       = 0.8,
+            PVol_G_atStorageT = PVol_G_atStorageT, 
+            PCap_kW = PCap_kW,
+            TMVol_G = TMVol_G,
+            TMCap_kW = TMCap_kW,
+            annual = True,
+            zipCode = zipCode,
+            systemModel = hpwhModel,
+            tmModel = tmModel
+        )
+simRunsAndCalcs = hpwh_ls.getSimRunWithkWCalc(initPV=0.4*PVol_G_atStorageT, initST=135)
+# simRunsAndCalcs[0].writeCSV('parallel_ls.csv')
+# simRunsAndCalcs[1].writeCSV('parallel_nls.csv')
 
 # # print('+++++++++++++++++++++++++++++++++++++++')
 # # print('SIZING RESULTS')

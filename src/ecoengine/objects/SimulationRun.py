@@ -6,6 +6,7 @@ from plotly.graph_objs import Figure, Scatter
 from plotly.offline import plot
 from plotly.subplots import make_subplots
 import csv
+import math
 
 class SimulationRun:
     """
@@ -39,6 +40,7 @@ class SimulationRun:
         self.pheating = False # set to false. Simulation starts with primary heating off
         self.pGen = [0] * len(hwDemand) # The generation of HW with time at the storage temperature
         self.pRun = [0] * len(hwDemand) # amount of time in interval primary tank is heating
+        self.copAssumeThreshold = math.floor(len(hwDemand) * 0.02) # The threshold that, if COP is assumed more times than this, the simulation results will be unreliable and an error will be thrown
         self.building = building
         self.minuteIntervals = minuteIntervals
         self.doLoadShift = doLoadshift
@@ -52,6 +54,12 @@ class SimulationRun:
         self.hwGean_at_storage_t = []
         self.recircLoss = []
         self.LS_sched = LS_sched
+
+    def passedCOPAssumptionThreshold(self, times_COP_assumed : int):
+        """
+        returns True if COP has been assumed more times than the threshold. False Otherwise.
+        """
+        return times_COP_assumed > self.copAssumeThreshold
 
     def initializeTMValue(self, initST, storageT_F, TMCap_kBTUhr, swingOut = True):
         """
@@ -115,43 +123,6 @@ class SimulationRun:
             The incoming water temperature (F) at interval i of the simulation 
         """
         return self.building.getIncomingWaterT(i, self.minuteIntervals)   
-            
-    def getAvgIncomingWaterT(self):
-        """
-        Returns the average incoming water temperature for the year in fahrenheit as a float
-
-        Returns
-        -------
-        waterT_F : float
-            The average incoming water temperature (F) of the simulation 
-        """
-        if self.monthlyCityWaterT_F is None:
-            return self.building.incomingT_F # default city water temp
-        else:
-            return ((self.monthlyCityWaterT_F[0]*31) + (self.monthlyCityWaterT_F[1]*28) + (self.monthlyCityWaterT_F[2]*31) + (self.monthlyCityWaterT_F[3]*30) \
-                + (self.monthlyCityWaterT_F[4]*31) + (self.monthlyCityWaterT_F[5]*30) + (self.monthlyCityWaterT_F[6]*31) + (self.monthlyCityWaterT_F[7]*31) \
-                + (self.monthlyCityWaterT_F[8]*30) + (self.monthlyCityWaterT_F[9]*31) + (self.monthlyCityWaterT_F[10]*30) + (self.monthlyCityWaterT_F[11]*31)) / 365
-    
-    # def setMonthlyCityWaterT_F(self, monthlyCityWaterT_F):
-    #     """
-    #     sets monthly incoming water temperature (F) for each month of an annual simulation
-
-    #     Parameters
-    #     ----------
-    #     monthlyCityWaterT_F : List
-    #         List of floats representing the incoming water temperature at each month. must be length 12.
-
-    #     Raises
-    #     ----------
-    #     Exception: Error if monthlyCityWaterT_F is not length 12 or contains wrong data type
-
-    #     """
-    #     if len(monthlyCityWaterT_F) != 12:
-    #         raise Exception("Monthly city water temperature data must have 12 entries (one for every month).")
-    #     for i in range(12):
-    #         if not isinstance(monthlyCityWaterT_F[i], float):
-    #             raise Exception(str(monthlyCityWaterT_F[i]) + " is an invalid city water tempurature for month "+str(i+1)+".")
-    #     self.monthlyCityWaterT_F = monthlyCityWaterT_F
 
     def generateRecircLoss(self, i : int):
         """
@@ -302,6 +273,54 @@ class SimulationRun:
         if i is None:
             return self.cap_in
         return self.cap_in[i]
+    
+    def getPrimaryCOP(self, i : int = None):
+        """
+        Returns a list of COP values for the primary system at every timestep
+        or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        COP : float
+            the input capacity in kW for the primary system at interval i in gallons or the entire list of input capacity in kW at every interval if i is undefined
+        """
+        if i is None:
+            ret_list = []
+            for j in range(len(self.cap_in)):
+                ret_list.append(self.cap_out[j]/self.cap_in[j])
+            return ret_list
+        return self.cap_out[i]/self.cap_in[i]
+    
+    def getTMCOP(self, i : int = None):
+        """
+        Returns a list of COP values for the temperature maintenance system at every timestep
+        or, if i is defined, returns index i of that list
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+
+        Returns
+        -------
+        tm_COP : float
+            the input capacity in kW for the primary system at interval i in gallons or the entire list of input capacity in kW at every interval if i is undefined
+        """
+        if hasattr(self, 'tm_cap_out'):
+            if i is None:
+                ret_list = []
+                for j in range(len(self.tm_cap_in)):
+                    ret_list.append(self.tm_cap_out[j]/self.tm_cap_in[j])
+                return ret_list
+            return self.tm_cap_out[i]/self.tm_cap_in[i]
+        elif i is None:
+            return []
+        return 0
     
     def getTMCapOut(self, i : int = None):
         """
@@ -652,7 +671,7 @@ class SimulationRun:
             retList.append(self.cap_out)
             retList.append(self.kGCO2)
             retList.append(sum(self.kGCO2))
-            retList.append(self.getAvgIncomingWaterT())               
+            retList.append(self.building.getAvgIncomingWaterT())               
         return retList
     
     def plotStorageLoadSim(self, return_as_div=True, numDays = 1):
@@ -764,7 +783,8 @@ class SimulationRun:
         """
         
         hours = [(i // (60/self.minuteIntervals)) + 1 for i in range(len(self.getPrimaryVolume()))]
-        column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'Primary Generation (Gallons Storage Temp)', 'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)','Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'OAT (F)', 'Input Capacity (kW)', 'Output Capacity (kW)']
+        column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'Primary Generation (Gallons Storage Temp)', 'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)',
+                        'Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'OAT (F)', 'Input Capacity (kW)', 'Output Capacity (kW)', 'Primary COP']
         columns = [
             hours,
             self.getPrimaryVolume(),
@@ -775,7 +795,8 @@ class SimulationRun:
             self.getPrimaryRun(),
             self.getOAT(),
             self.getCapIn(),
-            self.getCapOut()
+            self.getCapOut(),
+            self.getPrimaryCOP()
         ]
 
         if hasattr(self, 'tmRun'):
@@ -787,6 +808,8 @@ class SimulationRun:
             columns.append(self.getTMCapIn())
             column_names.append('TM Output Capacity (kW)')
             columns.append(self.getTMCapOut())
+            column_names.append('TM COP')
+            columns.append(self.getTMCOP())
             if hasattr(self, 'hw_outSwing'):
                 column_names.append('Water Leaving SwingTank (Gallons at TM Temp)')
                 columns.append(self.gethwOutSwing())

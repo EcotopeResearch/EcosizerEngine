@@ -202,7 +202,23 @@ class Building:
                 # dec
                 return self.monthlyCityWaterT_F[11]
             else:
-                raise Exception("Cold water temperature data not available past one year.") 
+                raise Exception("Cold water temperature data not available past one year.")
+            
+    def getAvgIncomingWaterT(self):
+        """
+        Returns the average incoming water temperature for the year in fahrenheit as a float
+
+        Returns
+        -------
+        waterT_F : float
+            The average incoming water temperature (F) of the simulation 
+        """
+        if len(self.monthlyCityWaterT_F) == 0:
+            return self.incomingT_F # default city water temp
+        else:
+            return ((self.monthlyCityWaterT_F[0]*31) + (self.monthlyCityWaterT_F[1]*28) + (self.monthlyCityWaterT_F[2]*31) + (self.monthlyCityWaterT_F[3]*30) \
+                + (self.monthlyCityWaterT_F[4]*31) + (self.monthlyCityWaterT_F[5]*30) + (self.monthlyCityWaterT_F[6]*31) + (self.monthlyCityWaterT_F[7]*31) \
+                + (self.monthlyCityWaterT_F[8]*30) + (self.monthlyCityWaterT_F[9]*31) + (self.monthlyCityWaterT_F[10]*30) + (self.monthlyCityWaterT_F[11]*31)) / 365
 
 class MensDorm(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):

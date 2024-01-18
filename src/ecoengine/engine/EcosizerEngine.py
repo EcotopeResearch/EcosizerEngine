@@ -354,7 +354,7 @@ class EcosizerEngine:
         
         simRun_ls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
         
-        loadshift_capacity = (rhoCp*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.loadUpT_F-simRun_ls.getAvgIncomingWaterT()))/KWH_TO_BTU # stored energy, not input energy
+        loadshift_capacity = (rhoCp*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.loadUpT_F-self.building.getAvgIncomingWaterT()))/KWH_TO_BTU # stored energy, not input energy
         kG_sum_ls = simRun_ls.getkGCO2Sum()
         kGperkWh_ls = kG_sum_ls/loadshift_capacity
 

@@ -89,8 +89,10 @@ class ParallelLoopTank(SystemConfig):
         super().runOneSystemStep(simRun, i, minuteIntervals, oat)
 
         if not (oat is None or self.tmPerfMap is None):
-            # set temperature maintenence capacity based on outdoor air temp and recirc water temp 
+            # set temperature maintenance capacity based on outdoor air temp and recirc water temp 
             self.setTMCapacity(oat = oat, incomingWater_T = (self.setpointTM_F + self.TMonTemp_F)/2.0)
+            if simRun.passedCOPAssumptionThreshold(self.tmPerfMap.timesAssumedCOP):
+                raise Exception("Could not run simulation because internal performance map for the temperature maintenance model does not account for the climate zone of the input zip code. Please try with a different temperature maintenance model or zip code.")
 
         timeDivisor = 60 // minuteIntervals
         time_running = 0
@@ -124,12 +126,16 @@ class ParallelLoopTank(SystemConfig):
         simRun.initializeTMValue(self.setpointTM_F, self.storageT_F, self.TMCap_kBTUhr, swingOut = False)
         return simRun
     
+    def resetToDefaultCapacity(self):
+        self.TMCap_kBTUhr = self.tmPerfMap.getDefaultCapacity()
+        super().resetToDefaultCapacity()
+    
     def setTMCapacity(self, TMCap_kBTUhr = None, oat = None, incomingWater_T = None):
         if not TMCap_kBTUhr is None:
             self.TMCap_kBTUhr = TMCap_kBTUhr
             self.TMCap_input_kBTUhr = self.TMCap_kBTUhr / 2.5 # Assume COP of 2.5
         elif not (oat is None or incomingWater_T is None or self.tmPerfMap is None):
-            self.TMCap_kBTUhr, self.TMCap_input_kBTUhr = self.tmPerfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
+            self.TMCap_kBTUhr, self.TMCap_input_kBTUhr = self.tmPerfMap.getCapacity(oat, incomingWater_T, self.storageT_F, fallbackCapacity_kW = self.getTMOutputCapacity(kW = True))
         else:
            raise Exception("No capacity given or preformance map has not been set.")
         

@@ -82,6 +82,42 @@ def test_perfMaps_autosize_and_kW_to_kBTU(hpwhModel, expectedNumHP, expectedCap,
     assert round(results_kBTU[1], 4) == round(expectedPower * expectedNumHP * W_TO_BTUHR, 4)
     assert perfMap.numHeatPumps == expectedNumHP
 
+@pytest.mark.parametrize("hpwhModel, expectedCap, expectedPower, oat, inlet, outlet", 
+                         [
+                            ("MODELS_Mitsubishi_QAHV_C_SP", 6, 4, 103.8, 90.0, 150.0), # this one tests the default return with a COP of 1.5
+                            ("MODELS_Mitsubishi_QAHV_C_SP", 40, 12.7, 105.8, 90.0, 150.0), # this one tests the default return when OAT is larger than max OAT
+                            ("MODELS_Mitsubishi_QAHV_C_SP", 6, 6, -80, 90.0, 150.0), # this one tests the default return when OAT is smaller than min OAT
+                            (None, 15, 6, -80, 90.0, 150.0), # this one tests the default with no perf map
+                        ])
+def test_perfMaps_outside_perf_map_and_kW_to_kBTU(hpwhModel, expectedCap, expectedPower, oat, inlet, outlet):
+    perfMap = PrefMapTracker(expectedCap * W_TO_BTUHR, hpwhModel, False)
+    results = perfMap.getCapacity(oat, inlet, outlet)
+    assert round(results[0], 4) == round(expectedCap, 4)
+    assert round(results[1], 4) == round(expectedPower, 4)
+
+    perfMap_kBTU = PrefMapTracker(expectedCap * W_TO_BTUHR, hpwhModel, True)
+    results_kBTU = perfMap_kBTU.getCapacity(oat, inlet, outlet)
+    assert round(results_kBTU[0], 4) == round(expectedCap  * W_TO_BTUHR, 4) 
+    assert round(results_kBTU[1], 4) == round(expectedPower * W_TO_BTUHR, 4)
+
+@pytest.mark.parametrize("hpwhModel, expectedCap, expectedPower, oat, inlet, outlet, fallbackCapacity", 
+                         [
+                            ("MODELS_Mitsubishi_QAHV_C_SP", 12, 8, 103.8, 90.0, 150.0, 12), # this one tests the default return with a COP of 1.5
+                            ("MODELS_Mitsubishi_QAHV_C_SP", 40, 12.7, 105.8, 90.0, 150.0, 12), # this one tests the default return when OAT is larger than max OAT
+                            ("MODELS_Mitsubishi_QAHV_C_SP", 15, 15, -80, 90.0, 150.0, 15), # this one tests the default return when OAT is smaller than min OAT
+                            (None, 250, 100, -80, 90.0, 150.0, 250), # this one tests the default with no perf map
+                        ])
+def test_perfMaps_fallback_and_kW_to_kBTU(hpwhModel, expectedCap, expectedPower, oat, inlet, outlet, fallbackCapacity):
+    perfMap = PrefMapTracker(10, hpwhModel, False)
+    results = perfMap.getCapacity(oat, inlet, outlet, fallbackCapacity_kW = fallbackCapacity)
+    assert round(results[0], 4) == round(expectedCap, 4)
+    assert round(results[1], 4) == round(expectedPower, 4)
+
+    perfMap_kBTU = PrefMapTracker(10, hpwhModel, True)
+    results_kBTU = perfMap_kBTU.getCapacity(oat, inlet, outlet, fallbackCapacity_kW = fallbackCapacity)
+    assert round(results_kBTU[0], 4) == round(expectedCap  * W_TO_BTUHR, 4) 
+    assert round(results_kBTU[1], 4) == round(expectedPower * W_TO_BTUHR, 4)
+
 def test_getListOfModels():
     assert len(getListOfModels(multiPass = False,sgipModelsOnly=False)) > len(getListOfModels(multiPass = False,sgipModelsOnly=True))
     assert len(getListOfModels(multiPass = True,sgipModelsOnly=False)) > len(getListOfModels(multiPass = True,sgipModelsOnly=True))

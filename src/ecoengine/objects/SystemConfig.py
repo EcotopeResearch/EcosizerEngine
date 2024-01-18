@@ -92,7 +92,7 @@ class SystemConfig:
             self.PCap_kBTUhr = PCap_kBTUhr
             self.PCap_input_kBTUhr = self.PCap_kBTUhr / 2.5 # Assume COP of 2.5
         elif not (oat is None or incomingWater_T is None or self.perfMap is None):
-            self.PCap_kBTUhr, self.PCap_input_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F)
+            self.PCap_kBTUhr, self.PCap_input_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F, fallbackCapacity_kW = self.getOutputCapacity(kW = True))
         else:
            raise Exception("No capacity given or preformance map has not been set.")
         
@@ -116,6 +116,8 @@ class SystemConfig:
         return self.perfMap.didCapInlet()
 
     def getOutputCapacity(self, kW = False):
+        if self.PCap_kBTUhr is None:
+            return None
         if kW:
             return self.PCap_kBTUhr/W_TO_BTUHR
         return self.PCap_kBTUhr
@@ -262,15 +264,28 @@ class SystemConfig:
 
         return SimulationRun(hwGenRate, hwDemand, V0_normal, pV, building, loadshiftSched, minuteIntervals, self.doLoadShift, LS_sched)
     
+    def preSystemStepSetUp(self, simRun : SimulationRun, i, incomingWater_T, minuteIntervals, oat):
+        """
+        helper function for runOneSystemStep
+        """
+        if i > 0 and simRun.getIncomingWaterT(i) != simRun.getIncomingWaterT(i-1):
+            self.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(i)) #adjust load up volume to reflect usefull energy
+        if not (oat is None or self.perfMap is None):
+            if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus be at the next OAT
+                # set primary system capacity based on outdoor air temp and incoming water temp 
+                self.setCapacity(oat = oat, incomingWater_T = incomingWater_T) # TODO do I need to be inputing load up temp during load up hours for capacity?
+                if simRun.passedCOPAssumptionThreshold(self.perfMap.timesAssumedCOP*(60/minuteIntervals)):
+                    raise Exception("Could not run simulation because internal performance map for the primary model does not account for the climate zone of the input zip code. Please try with a different primary model or zip code.")
+                # elif not self.perfMap.lastSeenOutletTemp is None and self.perfMap.lastSeenOutletTemp < self.storageT_F:
+
+                hw_gen_for_interval = (1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - simRun.getIncomingWaterT(i)) * self.defrostFactor)/(60/minuteIntervals)
+                for j in range(60//minuteIntervals):
+                    simRun.addHWGen(hw_gen_for_interval)
+        
+    
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         incomingWater_T = simRun.getIncomingWaterT(i)
-        if i > 0 and incomingWater_T != simRun.getIncomingWaterT(i-1):
-            self.setLoadUPVolumeAndTrigger(incomingWater_T) #adjust load up volume to reflect usefull energy
-        if not (oat is None or self.perfMap is None):
-            # set primary system capacity based on outdoor ait temp and incoming water temp 
-            self.setCapacity(oat = oat, incomingWater_T = incomingWater_T)
-            simRun.addHWGen((1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - incomingWater_T) \
-               * self.defrostFactor)/(60/minuteIntervals))
+        self.preSystemStepSetUp(simRun, i, incomingWater_T, minuteIntervals, oat)
         
         # Get exiting and generating water volumes at storage temp
         mixedDHW = convertVolume(simRun.hwDemand[i], self.storageT_F, incomingWater_T, simRun.building.supplyT_F)

@@ -64,8 +64,6 @@ class PrefMapTracker:
         self.inlet_min = None
         self.oat_min_list = []
         self.unique_oats = []
-        # self.max_outT_values = []
-        # self.min_outT_values = []
         self.default_output_high = None
         self.default_input_high = None
         self.default_output_low = None
@@ -73,46 +71,40 @@ class PrefMapTracker:
         self.prefMapOnly = prefMapOnly
         self.erBaseline = erBaseline
         self.hxTempIncrease = hxTempIncrease
+        self.lastSeenOutletTemp = None # tracker for if we need to change outlet temp in a simulation. TODO can probably have a cleaner solution for this
         self.reliedOnER = False # flag to indicate if the system at any point needed to rely on Electric Resistance during the simulation
         self.capedInlet = False # flag to indicate if the system at any point needed to shrink inlet water temperature if it was higher than maximum in performance map
+        self.timesAssumedCOP = 0 # number of times a system has assumed a COP of 1.5 during a simulation due to performance map constraints
         if defaultCapacity_kBTUhr is None and numHeatPumps is None:
             raise Exception("Invalid input given for preformance map, requires either defaultCapacity_kBTUhr or numHeatPumps.")
         elif not numHeatPumps is None and not ((isinstance(numHeatPumps, int) or isinstance(numHeatPumps, float)) and numHeatPumps > 0):
             raise Exception("Invalid input given for numHeatPumps, must be a number greater than zero")
         self.numHeatPumps = numHeatPumps
-        if not modelName is None: 
+        if modelName is None:
+            # Can't use pkl if no model
+            self.usePkl = False
+        else: 
             self.setPrefMap(modelName)
             if numHeatPumps is None and not (designOAT_F is None or designIncomingT_F is None or designOutT_F is None):
-                # if self.usePkl:
-                #     # Need pkl'd to not return default for sizing number of heat pumps so must set design temp
-                #     closest_oat_index = self._getIdxOfNearestOATs(designOAT_F)
-                #     closest_inletWaterT_idx = self._getIdxOfNearestInlet(closest_oat_index, inletT_F)
-                #     return self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][1][0]
-                #     if designOAT_F < self.oat_min:
-                #         designOAT_F = self.oat_min
-                #     if designIncomingT_F < self.inlet_min:
-                #         designIncomingT_F = self.inlet_min
-                #     # outlet_min, outlet_max = self.getStorageTempMinMaxAtNearestOAT(designOAT_F)
-                #     outlet_min = self.getMinStorageTempAtNearestOATandInlet(designOAT_F, designIncomingT_F)
-                #     if designOutT_F < outlet_min:
-                #         designOutT_F = outlet_min
                 self.getCapacity(designOAT_F, designIncomingT_F, designOutT_F, sizingNumHP = True) # will set self.numHeatPumps in this function
 
-    def getDefaultCapacity(self, AsKW = False):
+    def getDefaultCapacity(self, AsKBTUhr = True):
         """
         Returns default capacity for the system in kBTUhr
         Inputs
         ------
-        AsKWh : Boolean
-            Set to True to return as kW. False (default) returns as kBTUhr
+        AsKBTUhr : Boolean
+            Set to False to return as kW. True (default) returns as kBTUhr
         Returns
         -------
         defaultCapacity
             The default output capacity of the model in kW or kBTUhr
         """
-        if AsKW:
-            return self.defaultCapacity_kBTUhr/W_TO_BTUHR
-        return self.defaultCapacity_kBTUhr
+        if self.defaultCapacity_kBTUhr is None:
+            return None
+        if AsKBTUhr:
+            return self.defaultCapacity_kBTUhr
+        return self.defaultCapacity_kBTUhr/W_TO_BTUHR
     
     def didRelyOnEr(self):
         """
@@ -132,8 +124,10 @@ class PrefMapTracker:
         """
         self.reliedOnER = False
         self.capedInlet = False
+        self.timesAssumedCOP = 0
+        self.lastSeenOutletTemp = None
 
-    def getCapacity(self, externalT_F, condenserT_F, outT_F, sizingNumHP = False):
+    def getCapacity(self, externalT_F, condenserT_F, outT_F, sizingNumHP = False, fallbackCapacity_kW = None):
         """
         Returns the current output capacity of of the HPWH model for the simulation given external and condesor temperatures.
         If no HPWH model has been set, returns the default output capacity of the system.
@@ -147,6 +141,9 @@ class PrefMapTracker:
             for the model, the temperature will be shrunk to be the maximum in the performance map data
         outT_F : float
             The temperature of water leaving the system in fahrenheit
+        fallbackCapacity_kW : float
+            If the input OAT, Inlet water temp, and outlet temp is too far outside the heatpump's performance map, the system will assume an output capacity of this number.
+            Defaults to the default capacity.
         Returns
         -------
         output_kW
@@ -154,6 +151,13 @@ class PrefMapTracker:
         input_kW
             The input capacity of the primary HPWH in kW (or kBTUhr if the PrefMapTracker object was initialized with kBTUhr=True) as a float
         """
+        self.lastSeenOutletTemp = outT_F
+        fallbackCapacity = fallbackCapacity_kW
+        if fallbackCapacity_kW is None:
+            fallbackCapacity = self.getDefaultCapacity(AsKBTUhr = self.kBTUhr)
+        elif self.kBTUhr:
+            fallbackCapacity = fallbackCapacity_kW * W_TO_BTUHR
+
         if self.usePkl:
             # edit incoming values to extrapolate if need be
             extrapolate = False
@@ -180,23 +184,19 @@ class PrefMapTracker:
                         input_kW = self.default_input_low
                     else:
                         if self.reliedOnER == False:
-                            print(f"OAT: {externalT_F}, Inlet: {condenserT_F}, out: {outT_F}")
+                            # print(f"OAT: {externalT_F}, Inlet: {condenserT_F}, out: {outT_F}")
                             print("Warning: System had to rely on Electric Resistance to meet demand during times with a cold outdoor air temperature.")
                         self.reliedOnER = True
                         
-                        if self.defaultCapacity_kBTUhr is None:
+                        if fallbackCapacity is None:
                             if self.prefMapOnly:
                                 return 1.,1. # return 1, 1 when just assessing preformance map only
                             else:
                                 raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
                         
-                        if self.kBTUhr:
-                            return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr # externalT_F is low so use electric resistance to heat and assume COP of 1
-                        else:
-                            # return in kW
-                            return self.defaultCapacity_kBTUhr/W_TO_BTUHR, self.defaultCapacity_kBTUhr/W_TO_BTUHR
+                        return fallbackCapacity, fallbackCapacity
                         
-                elif externalT_F > self.oat_max: # if OAT is hotter than hottest OAT in performance map
+                elif externalT_F >= self.oat_max: # if OAT is equal to or hotter than hottest OAT in performance map
                     # externalT_F is high so assume same COP for highest temp in performance map
                     output_kW = self.default_output_high
                     input_kW = self.default_input_high
@@ -206,24 +206,20 @@ class PrefMapTracker:
                         input_kW, output_kW = self._forceClosestInputOutputKw(condenserT_F, outT_F, externalT_F)
                     except:
                         # condenserT_F, outT_F, externalT_F were too far outside the perf map, so we return a COP of 1.5
-                        if self.defaultCapacity_kBTUhr is None:
+                        self.timesAssumedCOP = self.timesAssumedCOP + 1
+                        if fallbackCapacity is None:
                             if self.prefMapOnly:
                                 return 1.5,1. # return 1.5, 1 for COP of 1.5 when just assessing preformance map only
                             else:
                                 raise Exception(f"Climate inputs of OAT: {externalT_F}, inlet temperature: {condenserT_F}, and outlet temperature: {outT_F} are outside of available preformance maps for this model. The model will need a default capacity to fall back on in order to simulate.")
-                        if self.kBTUhr:
-                            return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr / 1.5
-                        return self.defaultCapacity_kBTUhr/W_TO_BTUHR, (self.defaultCapacity_kBTUhr/W_TO_BTUHR)/1.5
+                        return fallbackCapacity, fallbackCapacity / 1.5
 
 
         elif self.perfMap is None or len(self.perfMap) == 0:
+            # if there is no performance map, it should have a default capacity
             if self.erBaseline:
-                if self.kBTUhr:
-                    return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr # ER has COP of 1
-                return self.defaultCapacity_kBTUhr/W_TO_BTUHR, self.defaultCapacity_kBTUhr/W_TO_BTUHR
-            elif self.kBTUhr:
-                return self.defaultCapacity_kBTUhr, self.defaultCapacity_kBTUhr / 2.5 # assume COP of 2.5 for input_capactiy calculation for default HPWH
-            return self.defaultCapacity_kBTUhr/W_TO_BTUHR, (self.defaultCapacity_kBTUhr/W_TO_BTUHR)/2.5
+                return fallbackCapacity, fallbackCapacity # ER has COP of 1
+            return fallbackCapacity, fallbackCapacity / 2.5 # assume COP of 2.5 for input_capactiy calculation for default HPWH
 
         elif len(self.perfMap) > 1:
             # cop at ambient temperatures T1 and T2
@@ -360,7 +356,8 @@ class PrefMapTracker:
         # first try with new oat
         input_kW, output_kW = self._getInputOutputKWThruPckl(self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][0], closest_outletWaterT_F, self.unique_oats[closest_oat_index])
         if not (math.isnan(output_kW) or math.isnan(input_kW)):
-            # print(f"Warning: changed oat from {oat_F} to {self.unique_oats[closest_index]} (which is closest).")
+            if closest_outletWaterT_F < outletWaterT_F:
+                self.lastSeenOutletTemp = closest_outletWaterT_F
             return input_kW, output_kW
         
         raise Exception(f"Input climate values for [inletWaterT_F, outletWaterT_F, OAT_F], [{inletWaterT_F}, {outletWaterT_F}, {oat_F}], were too far outside the performance map of the model.")
@@ -391,17 +388,11 @@ class PrefMapTracker:
                         self.input_cap_interpolator = pickle.load(f)
                     with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['pkl_prefix']}_bounds.pkl"), 'rb') as f:
                         bounds = pickle.load(f)
-                        # Format: [[max_oat,min_oat],[max_inlet,min_inlet],[max_outlet,min_outlet],[default_output_high, default_input_high],[default_output_low, default_input_low]]
-                        # self.inlet_max = bounds[1][0]
-                        # self.inlet_min = bounds[1][1]
-                        # self.outlet_max = bounds[2][0]
-                        # self.outlet_min = bounds[2][1]
+                        # TODO correct this --- Format: [[max_oat,min_oat],[max_inlet,min_inlet],[max_outlet,min_outlet],[default_output_high, default_input_high],[default_output_low, default_input_low]]
                         self.unique_oats = bounds[0]
                         self.inTs_and_outTs_by_oat = bounds[1]
                         self.inlet_min = bounds[2][0]
                         self.inlet_max = bounds[2][1]
-                        # self.max_outT_values = bounds[3]
-                        # self.min_outT_values = bounds[4]
                         self.default_output_high = bounds[3][0]
                         self.default_input_high = bounds[3][1]
                         self.default_output_low = bounds[4][0]
