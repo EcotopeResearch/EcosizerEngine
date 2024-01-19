@@ -2,7 +2,6 @@ import os
 import json
 import numpy as np
 import csv
-
 from ecoengine.constants.Constants import *
 
 class Building:
@@ -24,6 +23,16 @@ class Building:
             if(self.recirc_loss > RECIRC_LOSS_MAX_BTUHR):
                 raise Exception("Error: Recirculation losses may not exceed 108 kW, consider using multiple central plants.")
         self.climateZone = climate
+        self.monthlyCityWaterT_F = []
+        
+        if not self.climateZone is None:
+            # add city water tempuratures to simRun
+            with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as cw_file:
+                csv_reader = csv.reader(cw_file)
+                next(csv_reader) # get past header row
+                for i in range(12):
+                    cw_row = next(csv_reader)
+                    self.monthlyCityWaterT_F.append(float(cw_row[self.climateZone - 1]))
 
     def _checkParams(self, magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc, loadshape, avgLoadshape):
         if not (isinstance(supplyT_F, int) or isinstance(supplyT_F, float)):
@@ -54,28 +63,179 @@ class Building:
         return False
     def getClimateZone(self):
         return self.climateZone
-    def getLowestOAT(self):
+    
+    def getLowestOAT(self, month = None):
         if self.climateZone is None:
             return None
+        if month is None:
+            with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
+                oat_reader = csv.reader(oat_file)
+                next(oat_reader)# Skip the header row
+                lowest_oat = float('inf')
+                for oat_row in oat_reader:
+                    oat_value = float(oat_row[self.climateZone - 1])
+                    lowest_oat = min(lowest_oat, oat_value)
+                return lowest_oat
+
+        if month not in month_to_hour:
+            raise ValueError("Invalid month specified. Please provide a valid month.")
+
         with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
-            oat_reader = csv.reader(oat_file)
-            next(oat_reader)# Skip the header row
+            temp_reader = csv.reader(oat_file)
+            next(temp_reader)  # Skip the header row
+
+            month_hours = month_to_hour[month]
             lowest_oat = float('inf')
-            for oat_row in oat_reader:
-                oat_value = float(oat_row[self.climateZone - 1])
-                lowest_oat = min(lowest_oat, oat_value)
+
+            for row_number, t_row in enumerate(temp_reader, start=1):
+                if row_number in month_hours:
+                    t_value = float(t_row[self.climateZone - 1])
+                    lowest_oat = min(lowest_oat, t_value)
+
             return lowest_oat
+        
+    def getHighestOAT(self, month = None):
+        if self.climateZone is None:
+            return None
+        if month is None:
+            with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
+                oat_reader = csv.reader(oat_file)
+                next(oat_reader)# Skip the header row
+                highest_oat = float('-inf')
+                for oat_row in oat_reader:
+                    oat_value = float(oat_row[self.climateZone - 1])
+                    highest_oat = max(highest_oat, oat_value)
+                return highest_oat
+
+        if month not in month_to_hour:
+            raise ValueError("Invalid month specified. Please provide a valid month.")
+
+        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
+            temp_reader = csv.reader(oat_file)
+            next(temp_reader)  # Skip the header row
+
+            month_hours = month_to_hour[month]
+            highest_oat = float('-inf')
+
+            for row_number, t_row in enumerate(temp_reader, start=1):
+                if row_number in month_hours:
+                    t_value = float(t_row[self.climateZone - 1])
+                    highest_oat = max(highest_oat, t_value)
+
+            return highest_oat
+        
     def getLowestIncomingT_F(self):
         if self.climateZone is None:
             return self.incomingT_F
-        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as oat_file:
-            temp_reader = csv.reader(oat_file)
+        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as inlet_file:
+            temp_reader = csv.reader(inlet_file)
             next(temp_reader)# Skip the header row
             lowest_t = float('inf')
             for t_row in temp_reader:
                 t_value = float(t_row[self.climateZone - 1])
                 lowest_t = min(lowest_t, t_value)
-            return lowest_t
+            return lowest_t    
+
+    def getLowestWaterAndAirTempCombos(self):
+        if self.climateZone is None:
+            return []
+        min_water_temp = min(self.monthlyCityWaterT_F)
+        min_water_temp_month = self.monthlyCityWaterT_F.index(min_water_temp)
+        min_oat = self.getLowestOAT()
+        low_oat_at_month = self.getLowestOAT(min_water_temp_month)
+        ret_list = [[low_oat_at_month, min_water_temp]]
+        if min_oat != low_oat_at_month:
+            for i in range(12):
+                oat_at_month = self.getLowestOAT(i)
+                if oat_at_month == min_oat:
+                    ret_list.append([oat_at_month, self.monthlyCityWaterT_F[i]])
+        return ret_list
+
+
+        
+    def getIncomingWaterT(self, i : int, interval_length : int = 15, month : int = None):
+        """
+        returns incoming water temperature (F) at interval i of a year for intervals of interval_length minutes
+
+        Parameters
+        ----------
+        i : int
+            interval of the simulation
+        interval_length : int
+            length of intervals in minutes. Must be 1, 15, or 60
+        month : int
+            if filled out, ignores interval and just returns incoming water temperature for the specified month (numbered 1-12)
+
+        Returns
+        -------
+        waterT_F : float
+            The incoming water temperature (F) at interval i of the simulation 
+        """
+        if len(self.monthlyCityWaterT_F) == 0:
+            return self.incomingT_F # default city water temp
+        elif not month is None:
+            return self.monthlyCityWaterT_F[month - 1]
+        else:
+        #     hourOfYear = i // (60/interval_length)
+        #     for max_hour, month in max_hour_to_month.items():
+        #         if hourOfYear < max_hour:
+        #             return self.monthlyCityWaterT_F[month]
+        # raise Exception("Cold water temperature data not available past one year.") 
+            dayOfYear = (i // (60/interval_length)) // 24
+            if dayOfYear < 31:
+                # jan
+                return self.monthlyCityWaterT_F[0]
+            elif dayOfYear < 59:
+                # feb
+                return self.monthlyCityWaterT_F[1]
+            elif dayOfYear < 90:
+                # mar
+                return self.monthlyCityWaterT_F[2]
+            elif dayOfYear < 120:
+                # apr
+                return self.monthlyCityWaterT_F[3]
+            elif dayOfYear < 151:
+                # may
+                return self.monthlyCityWaterT_F[4]
+            elif dayOfYear < 181:
+                # jun
+                return self.monthlyCityWaterT_F[5]
+            elif dayOfYear < 212:
+                # jul
+                return self.monthlyCityWaterT_F[6]
+            elif dayOfYear < 243:
+                # aug
+                return self.monthlyCityWaterT_F[7]
+            elif dayOfYear < 273:
+                # sep
+                return self.monthlyCityWaterT_F[8]
+            elif dayOfYear < 304:
+                # oct
+                return self.monthlyCityWaterT_F[9]
+            elif dayOfYear < 334:
+                # nov
+                return self.monthlyCityWaterT_F[10]
+            elif dayOfYear < 365:
+                # dec
+                return self.monthlyCityWaterT_F[11]
+            else:
+                raise Exception("Cold water temperature data not available past one year.")
+            
+    def getAvgIncomingWaterT(self):
+        """
+        Returns the average incoming water temperature for the year in fahrenheit as a float
+
+        Returns
+        -------
+        waterT_F : float
+            The average incoming water temperature (F) of the simulation 
+        """
+        if len(self.monthlyCityWaterT_F) == 0:
+            return self.incomingT_F # default city water temp
+        else:
+            return ((self.monthlyCityWaterT_F[0]*31) + (self.monthlyCityWaterT_F[1]*28) + (self.monthlyCityWaterT_F[2]*31) + (self.monthlyCityWaterT_F[3]*30) \
+                + (self.monthlyCityWaterT_F[4]*31) + (self.monthlyCityWaterT_F[5]*30) + (self.monthlyCityWaterT_F[6]*31) + (self.monthlyCityWaterT_F[7]*31) \
+                + (self.monthlyCityWaterT_F[8]*30) + (self.monthlyCityWaterT_F[9]*31) + (self.monthlyCityWaterT_F[10]*30) + (self.monthlyCityWaterT_F[11]*31)) / 365
 
 class MensDorm(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):

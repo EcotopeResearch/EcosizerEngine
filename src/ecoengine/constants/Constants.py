@@ -17,3 +17,33 @@ norm_mean = 0.7052988591269841 # mean of normalized stream data
 norm_std = 0.08236427664525116 # standard deviation of normalized stream data
 
 possibleStandardGPDs = ['ca', 'ashLow', 'ashMed', 'ecoMark']
+
+month_to_hour = {
+    0: range(0, 744),         # January
+    1: range(744, 1416),       # February
+    2: range(1416, 2160),      # March
+    3: range(2160, 2880),      # April
+    4: range(2880, 3624),      # May
+    5: range(3624, 4356),      # June
+    6: range(4356, 5088),      # July
+    7: range(5088, 5832),      # August
+    8: range(5832, 6552),      # September
+    9: range(6552, 7296),      # October
+    10: range(7296, 8016),     # November
+    11: range(8016, 8760)      # December
+}
+
+max_hour_to_month = {
+    744: 0,         # January
+    1416: 1,       # February
+    2160: 2,      # March
+    2880: 3,      # April
+    3624: 4,      # May
+    4356: 5,      # June
+    5088: 6,      # July
+    5832: 7,      # August
+    6552: 8,      # September
+    7296: 9,      # October
+    8016: 10,     # November
+    8760: 11      # December
+}

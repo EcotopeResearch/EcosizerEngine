@@ -43,16 +43,6 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
         # check for climateZone
         if building.climateZone is None:
             raise Exception("Cannot run annual simulation with out setting building climate zone to be a number between 1 and 16.")
-        
-        # add city water tempuratures to simRun
-        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as cw_file:
-            csv_reader = csv.reader(cw_file)
-            next(csv_reader) # get past header row
-            cw_temp_by_month = []
-            for i in range(12):
-                cw_row = next(csv_reader)
-                cw_temp_by_month.append(float(cw_row[building.climateZone - 1]))
-            simRun.setMonthlyCityWaterT_F(cw_temp_by_month)
 
     system.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(0)) # set initial load up volume and aquafraction adjusted for useful energy
 

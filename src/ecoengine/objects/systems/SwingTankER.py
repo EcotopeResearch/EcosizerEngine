@@ -119,13 +119,7 @@ class SwingTankER(SwingTank):
 
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None, erCalc=False):
         incomingWater_T = simRun.getIncomingWaterT(i)
-        if i > 0 and incomingWater_T != simRun.getIncomingWaterT(i-1):
-            self.setLoadUPVolumeAndTrigger(incomingWater_T)
-        if not (oat is None or self.perfMap is None):
-            # set primary system capacity based on outdoor ait temp and incoming water temp 
-            self.setCapacity(oat = oat, incomingWater_T = incomingWater_T)
-            simRun.addHWGen((1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - incomingWater_T) \
-               * self.defrostFactor)/(60/minuteIntervals))
+        self.preSystemStepSetUp(simRun, i, incomingWater_T, minuteIntervals, oat)
 
         # aquire draw amount for time step
         last_temp = simRun.tmT_F[i-1]

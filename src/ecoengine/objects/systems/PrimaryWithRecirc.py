@@ -17,15 +17,8 @@ class PrimaryWithRecirc(SystemConfig):
         
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         
-        incomingWater_T = simRun.getIncomingWaterT(i) + ((self.storageT_F - simRun.getIncomingWaterT(i)) * self.inletWaterAdjustment)    
-        if i > 0 and simRun.getIncomingWaterT(i) != simRun.getIncomingWaterT(i-1):
-            self.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(i))
-        if not (oat is None or self.perfMap is None):
-            # set primary system capacity based on outdoor ait temp and incoming water temp 
-            self.setCapacity(oat = oat, incomingWater_T = incomingWater_T)
-            simRun.addHWGen((1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - simRun.getIncomingWaterT(i)) \
-               * self.defrostFactor)/(60/minuteIntervals))    
-            
+        incomingWater_T = simRun.getIncomingWaterT(i) + ((self.storageT_F - simRun.getIncomingWaterT(i)) * self.inletWaterAdjustment) 
+        self.preSystemStepSetUp(simRun, i, incomingWater_T, minuteIntervals, oat)
         # Account for recirculation losses at storage temperature
         exitingWater = simRun.hwDemand[i] + simRun.generateRecircLoss(i)
         

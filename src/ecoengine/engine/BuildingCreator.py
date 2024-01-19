@@ -4,7 +4,7 @@ import csv
 
 def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshape = None, avgLoadshape = None,
                     returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0, standardGPD = None,
-                    annual = False, zipCode = None, climateZone = None, ignoreRecirc = False):
+                    annual = False, zipCode = None, climateZone = None, ignoreRecirc = False) -> Building:
     
     """
     Initializes the building in which the HPWH system will be sized for
