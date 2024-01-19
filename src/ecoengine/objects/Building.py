@@ -134,7 +134,24 @@ class Building:
             for t_row in temp_reader:
                 t_value = float(t_row[self.climateZone - 1])
                 lowest_t = min(lowest_t, t_value)
-            return lowest_t        
+            return lowest_t    
+
+    def getLowestWaterAndAirTempCombos(self):
+        if self.climateZone is None:
+            return []
+        min_water_temp = min(self.monthlyCityWaterT_F)
+        min_water_temp_month = self.monthlyCityWaterT_F.index(min_water_temp)
+        min_oat = self.getLowestOAT()
+        low_oat_at_month = self.getLowestOAT(min_water_temp_month)
+        ret_list = [[low_oat_at_month, min_water_temp]]
+        if min_oat != low_oat_at_month:
+            for i in range(12):
+                oat_at_month = self.getLowestOAT(i)
+                if oat_at_month == min_oat:
+                    ret_list.append([oat_at_month, self.monthlyCityWaterT_F[i]])
+        return ret_list
+
+
         
     def getIncomingWaterT(self, i : int, interval_length : int = 15, month : int = None):
         """

@@ -70,6 +70,17 @@ class SystemConfig:
             self.perfMap = PrefMapTracker(self.PCap_kBTUhr if default_PCap_kBTUhr is None else default_PCap_kBTUhr, 
                                           modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
                                           usePkl=True if not (systemModel is None or useHPWHsimPrefMap) else False)
+        if not building is None and not building.getClimateZone() is None and not systemModel is None and not systemModel[-2:] == 'MP':
+            # check that storage temp is acceptable for climate
+            temp_combos_list = building.getLowestWaterAndAirTempCombos()
+            highest_possible_storage_temp = self.storageT_F
+            for temp_combo in temp_combos_list:
+                highest_storage_temp = self.perfMap.getMaxStorageTempAtNearestOATandInlet(*temp_combo)
+                if highest_storage_temp < highest_possible_storage_temp:
+                    highest_possible_storage_temp = highest_storage_temp
+            if highest_possible_storage_temp < self.storageT_F:
+                raise Exception(f"The selected model can not produce a storage temperature of {self.storageT_F} degrees during the coldest months in the selected climate (zip code). Please lower the storage temperature to at least {highest_possible_storage_temp} or select a diferent model.")
+
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):
         if not (isinstance(storageT_F, int) or isinstance(storageT_F, float)) or not checkLiqudWater(storageT_F): 
@@ -114,6 +125,15 @@ class SystemConfig:
     
     def capedInlet(self):
         return self.perfMap.didCapInlet()
+    
+    def assumedHighDefaultCap(self):
+        return self.perfMap.assumedHighDefaultCap
+    
+    def raisedInletTemp(self):
+        return self.perfMap.raisedInletTemp
+    
+    def assumedCOP(self):
+        return self.perfMap.timesAssumedCOP > 0
 
     def getOutputCapacity(self, kW = False):
         if self.PCap_kBTUhr is None:
@@ -158,7 +178,7 @@ class SystemConfig:
             buildingWasAnnual = True
             building.setToDailyLS()
 
-        # size the szystem
+        # size the system
         self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr, self.loadUpHours, building, lsFractTotalVol = self.fract_total_vol)
         self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, building, 
             effSwingVolFract = self.effSwingFract, primaryCurve = False, lsFractTotalVol = self.fract_total_vol)[0]
@@ -276,8 +296,6 @@ class SystemConfig:
                 self.setCapacity(oat = oat, incomingWater_T = incomingWater_T) # TODO do I need to be inputing load up temp during load up hours for capacity?
                 if simRun.passedCOPAssumptionThreshold(self.perfMap.timesAssumedCOP*(60/minuteIntervals)):
                     raise Exception("Could not run simulation because internal performance map for the primary model does not account for the climate zone of the input zip code. Please try with a different primary model or zip code.")
-                # elif not self.perfMap.lastSeenOutletTemp is None and self.perfMap.lastSeenOutletTemp < self.storageT_F:
-
                 hw_gen_for_interval = (1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - simRun.getIncomingWaterT(i)) * self.defrostFactor)/(60/minuteIntervals)
                 for j in range(60//minuteIntervals):
                     simRun.addHWGen(hw_gen_for_interval)

@@ -71,10 +71,13 @@ class PrefMapTracker:
         self.prefMapOnly = prefMapOnly
         self.erBaseline = erBaseline
         self.hxTempIncrease = hxTempIncrease
-        self.lastSeenOutletTemp = None # tracker for if we need to change outlet temp in a simulation. TODO can probably have a cleaner solution for this
         self.reliedOnER = False # flag to indicate if the system at any point needed to rely on Electric Resistance during the simulation
         self.capedInlet = False # flag to indicate if the system at any point needed to shrink inlet water temperature if it was higher than maximum in performance map
+        self.raisedInletTemp = False # flag to indicate if the system at any point needed to raise inlet water temperature if it was less than minimum in performance map
+        self.assumedHighDefaultCap = False # flag to indicate if the system at any point needed to OAT if it was higher than maximum in performance map and needed to assume default high temp in and out capacity values
         self.timesAssumedCOP = 0 # number of times a system has assumed a COP of 1.5 during a simulation due to performance map constraints
+        self.timesForcedCOP = 0
+        self.timeStorageTempNeedToBeLowered = 0
         if defaultCapacity_kBTUhr is None and numHeatPumps is None:
             raise Exception("Invalid input given for preformance map, requires either defaultCapacity_kBTUhr or numHeatPumps.")
         elif not numHeatPumps is None and not ((isinstance(numHeatPumps, int) or isinstance(numHeatPumps, float)) and numHeatPumps > 0):
@@ -124,8 +127,11 @@ class PrefMapTracker:
         """
         self.reliedOnER = False
         self.capedInlet = False
-        self.timesAssumedCOP = 0
-        self.lastSeenOutletTemp = None
+        self.raisedInletTemp = False
+        self.assumedHighCOP = False
+        self.assumedHighDefaultCap = 0
+        self.timesForcedCOP = 0
+        self.timeStorageTempNeedToBeLowered = 0
 
     def getCapacity(self, externalT_F, condenserT_F, outT_F, sizingNumHP = False, fallbackCapacity_kW = None):
         """
@@ -151,7 +157,6 @@ class PrefMapTracker:
         input_kW
             The input capacity of the primary HPWH in kW (or kBTUhr if the PrefMapTracker object was initialized with kBTUhr=True) as a float
         """
-        self.lastSeenOutletTemp = outT_F
         fallbackCapacity = fallbackCapacity_kW
         if fallbackCapacity_kW is None:
             fallbackCapacity = self.getDefaultCapacity(AsKBTUhr = self.kBTUhr)
@@ -160,44 +165,32 @@ class PrefMapTracker:
 
         if self.usePkl:
             # edit incoming values to extrapolate if need be
-            extrapolate = False
             if self.secondaryHeatExchanger:
                 outT_F += self.hxTempIncrease + 0.0 # adding 0.0 to ensure float
                 condenserT_F += self.hxTempIncrease + 0.0
 
             if condenserT_F > self.inlet_max:
-                extrapolate = True
-                if self.capedInlet == False:
-                    print("Warning: Inlet water temperature simulated exceeds performance map boundaries. Simulation accuracy may be impacted.")
-                self.capedInlet = True
-                condenserT_F = self.inlet_max
+                if condenserT_F <= self.inlet_max + 15:
+                    if self.capedInlet == False:
+                        print("Warning: Inlet water temperature simulated exceeds performance map boundaries. Simulation accuracy may be impacted.")
+                    self.capedInlet = True
+                    condenserT_F = self.inlet_max
 
             #use pickled interpolation functions
             input_kW, output_kW = self._getInputOutputKWThruPckl(condenserT_F, outT_F, externalT_F)
 
             if math.isnan(output_kW) or math.isnan(input_kW):
-                extrapolate = True
                 if externalT_F < self.oat_min: # if OAT is colder than coldest OAT in performance map
                     if sizingNumHP:
                         print(f"Warning: Design OAT of {externalT_F} is colder than coldest OAT in performance map for model. Using default capacity values to size.")
                         output_kW =self.default_output_low
                         input_kW = self.default_input_low
                     else:
-                        if self.reliedOnER == False:
-                            # print(f"OAT: {externalT_F}, Inlet: {condenserT_F}, out: {outT_F}")
-                            print("Warning: System had to rely on Electric Resistance to meet demand during times with a cold outdoor air temperature.")
-                        self.reliedOnER = True
-                        
-                        if fallbackCapacity is None:
-                            if self.prefMapOnly:
-                                return 1.,1. # return 1, 1 when just assessing preformance map only
-                            else:
-                                raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
-                        
-                        return fallbackCapacity, fallbackCapacity
+                        return self._getERReturnValues(fallbackCapacity)
                         
                 elif externalT_F >= self.oat_max: # if OAT is equal to or hotter than hottest OAT in performance map
                     # externalT_F is high so assume same COP for highest temp in performance map
+                    self.assumedHighDefaultCap = True
                     output_kW = self.default_output_high
                     input_kW = self.default_input_high
 
@@ -221,6 +214,7 @@ class PrefMapTracker:
                 return fallbackCapacity, fallbackCapacity # ER has COP of 1
             return fallbackCapacity, fallbackCapacity / 2.5 # assume COP of 2.5 for input_capactiy calculation for default HPWH
 
+        # HPWHsim Performance Maps
         elif len(self.perfMap) > 1:
             # cop at ambient temperatures T1 and T2
             COP_T1 = 0 
@@ -231,11 +225,11 @@ class PrefMapTracker:
 
             i_prev = 0
             i_next = 1
-            extrapolate = False
             for i in range(0, len(self.perfMap)):
                 if externalT_F < self.perfMap[i]['T_F']:
                     if i == 0:
-                        extrapolate = True # TODO warning message
+                        # external temp is lower than lowest OAT in perf map. Assume Electric Resistance
+                        return self._getERReturnValues(fallbackCapacity)
                     else:
                        i_prev = i - 1
                        i_next = i
@@ -270,7 +264,7 @@ class PrefMapTracker:
             input_kW = (self._linearInterp(externalT_F, self.perfMap[i_prev]['T_F'], self.perfMap[i_next]['T_F'], inputPower_T1_kW, inputPower_T2_kW))
             output_kW = cop * input_kW
         else:
-            if(externalT_F > self.perfMap[0]['T_F']):
+            if externalT_F > self.perfMap[0]['T_F']:
                 extrapolate = True
             if self.isMultiPass:
                 input_kW = self._regressedMethodMP(externalT_F, condenserT_F, self.perfMap[0]['inputPower_coeffs'])
@@ -289,9 +283,32 @@ class PrefMapTracker:
         return [output_kW, input_kW]
     
     def getMinStorageTempAtNearestOATandInlet(self, oat_F, inletT_F):
+        if not self.usePkl:
+            return float('-inf')
         closest_oat_index = self._getIdxOfNearestOATs(oat_F)
-        closest_inletWaterT_idx = self._getIdxOfNearestInlet(closest_oat_index, inletT_F)
+        closest_inletWaterT_idx = self._getIdxOfNearestInlet(closest_oat_index, inletT_F, ignoreOutsideException = True)
         return self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][1][0]
+    
+    def getMaxStorageTempAtNearestOATandInlet(self, oat_F, inletT_F):
+        if not self.usePkl:
+            return float('inf')
+        closest_oat_index = self._getIdxOfNearestOATs(oat_F)
+        closest_inletWaterT_idx = self._getIdxOfNearestInlet(closest_oat_index, inletT_F, ignoreOutsideException = True)
+        return self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][1][-1]
+    
+    def _getERReturnValues(self, fallbackCapacity):
+        """
+        Helper function for returning electric resistance input and output capacity
+        """
+        if self.reliedOnER == False:
+            print("Warning: System had to rely on Electric Resistance to meet demand during times with a cold outdoor air temperature.")
+        self.reliedOnER = True
+        if fallbackCapacity is None:
+            if self.prefMapOnly:
+                return 1.,1. # return 1, 1 when just assessing preformance map only
+            else:
+                raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
+        return fallbackCapacity, fallbackCapacity
 
     def _getIdxOfNearestOATs(self, oat_F):
         """
@@ -307,7 +324,7 @@ class PrefMapTracker:
 
         return closest_index #, second_closest_index
     
-    def _getIdxOfNearestInlet(self, oat_idx, inlet_T):
+    def _getIdxOfNearestInlet(self, oat_idx, inlet_T, ignoreOutsideException = False):
         """
         returns the index of the closest inlet water temp in self.inTs_and_outTs_by_oat[oat_idx]
         """
@@ -318,12 +335,7 @@ class PrefMapTracker:
             if new_dif < dif:
                 dif = new_dif
                 closest_index = i
-        # second_closest_index = closest_index
-        # if closest_index != 0 and inlet_T < self.inT_by_oat_values[oat_idx][closest_index]:
-        #     second_closest_index = closest_index - 1
-        # elif closest_index != len(self.inT_by_oat_values[oat_idx])-1 and inlet_T > self.inT_by_oat_values[oat_idx][closest_index]:
-        #     second_closest_index = closest_index + 1
-        if abs(self.inTs_and_outTs_by_oat[oat_idx][closest_index][0] - inlet_T) > 15.0: # TODO make this a variable
+        if not ignoreOutsideException and abs(self.inTs_and_outTs_by_oat[oat_idx][closest_index][0] - inlet_T) > 15.0: # TODO make this a variable
             raise Exception(f"Inlet temperature of {inlet_T} too far outside performance map for model at a OAT of {self.unique_oats[oat_idx]}")
         return closest_index #, second_closest_index
     
@@ -356,8 +368,15 @@ class PrefMapTracker:
         # first try with new oat
         input_kW, output_kW = self._getInputOutputKWThruPckl(self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][0], closest_outletWaterT_F, self.unique_oats[closest_oat_index])
         if not (math.isnan(output_kW) or math.isnan(input_kW)):
+            
+            if not self.raisedInletTemp and self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][0] > inletWaterT_F:
+                self.raisedInletTemp = True
+            elif not self.capedInlet and self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][0] < inletWaterT_F:
+                self.capedInlet = True
+            
+            self.timesForcedCOP = self.timesForcedCOP + 1
             if closest_outletWaterT_F < outletWaterT_F:
-                self.lastSeenOutletTemp = closest_outletWaterT_F
+                self.timeStorageTempNeedToBeLowered = self.timeStorageTempNeedToBeLowered + 1
             return input_kW, output_kW
         
         raise Exception(f"Input climate values for [inletWaterT_F, outletWaterT_F, OAT_F], [{inletWaterT_F}, {outletWaterT_F}, {oat_F}], were too far outside the performance map of the model.")
@@ -388,7 +407,15 @@ class PrefMapTracker:
                         self.input_cap_interpolator = pickle.load(f)
                     with open(os.path.join(os.path.dirname(__file__), f"{filepath}{dataDict[modelName]['pkl_prefix']}_bounds.pkl"), 'rb') as f:
                         bounds = pickle.load(f)
-                        # TODO correct this --- Format: [[max_oat,min_oat],[max_inlet,min_inlet],[max_outlet,min_outlet],[default_output_high, default_input_high],[default_output_low, default_input_low]]
+                        # The following is the structure of the bounds pickle:
+                        # bounds = [
+                        #     unique_oats - a list of all unique OATs in the performance map
+                        #     outs_and_inlets_by_oat - A list of lists of possible inlet and outlet water temps for each OAT. 
+                        #           Each list is arranged as [[inlet_1,[possible_outlet_for_inlet_1_1, possible_outlet_for_inlet_1_2,...]],[inlet_2,[possible_outlet_for_inlet_2_1, ,...]],...]
+                        #     [min_inlet_temp, max_inlet_temp],
+                        #     [default_output_high, default_input_high],
+                        #     [default_output_low, default_input_low]
+                        # ]
                         self.unique_oats = bounds[0]
                         self.inTs_and_outTs_by_oat = bounds[1]
                         self.inlet_min = bounds[2][0]

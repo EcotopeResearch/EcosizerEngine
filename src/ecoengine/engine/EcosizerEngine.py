@@ -553,6 +553,42 @@ class EcosizerEngine:
         """
         return self.system.capedInlet()
     
+    def assumedHighDefaultCap(self):
+        """
+        Returns
+        -------
+        assumedHighIO : boolean
+            Returns True if the model had to assume default high OAT input and output capacity because the climate's OAT was greater than the values in available performance map. False otherwise.
+        """
+        return self.system.assumedHighDefaultCap()
+    
+    def raisedInletTemp(self):
+        """
+        Returns
+        -------
+        raisedInlet : boolean
+            Returns True if the system at any point needed to raise inlet water temperature if it was less than minimum in performance map. False otherwise.
+        """
+        return self.system.raisedInletTemp()
+    
+    def assumedCOP(self):
+        """
+        Returns
+        -------
+        assumedCOP : boolean
+            Returns True if, at any time, the system has assumed a COP of 1.5 during a simulation due to performance map constraints. False otherwise.
+        """
+        return self.system.assumedCOP()
+    
+    def usedHPWHsim(self):
+        """
+        Returns
+        -------
+        usedHPWHsim : boolean
+            Returns True if the performance map used was from HPWHsim. False otherwise.
+        """
+        return not self.system.perfMap.usePkl
+    
 ##############################################################
 # STATIC FUNCTIONS
 ##############################################################

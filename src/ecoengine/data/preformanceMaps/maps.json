@@ -607,7 +607,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "SGIP_avail" : true
+        "SGIP_avail" : false
     },
     "MODELS_GE2014STDMode_R_MP" : {
         "name" : "GE 2014 model run in standard mode",
@@ -641,7 +641,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "SGIP_avail" : true
+        "SGIP_avail" : false
     },
     "MODELS_LYNC_AEGIS_500_C_SP" : {
         "name" : "Lync Aegis 500 Single Pass",
@@ -706,7 +706,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "SGIP_avail" : true
+        "SGIP_avail" : false
     },
     "MODELS_NyleC90A_C_SP" : {
         "name" : "Nyle C90A external heat pump in Single Pass Mode",
@@ -736,7 +736,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "SGIP_avail" : true
+        "SGIP_avail" : false
     },
     "MODELS_NyleC125A_C_SP" : {
         "name" : "Nyle C125A external heat pump in Single Pass Mode",
@@ -766,7 +766,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "SGIP_avail" : true
+        "SGIP_avail" : false
     },
     "MODELS_NyleC185A_C_SP" : {
         "name" : "Nyle C185A external heat pump in Single Pass Mode",
@@ -796,7 +796,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "SGIP_avail" : true
+        "SGIP_avail" : false
     },
     "MODELS_NyleC250A_C_SP" : {
         "name" : "Nyle C250A external heat pump in Single Pass Mode",
@@ -826,10 +826,10 @@
                 }
         ],
         "secondary_heat_exchanger" : false,
-        "SGIP_avail" : true
+        "SGIP_avail" : false
     },
     "MODELS_NyleE360_HT_C_SP" : {
-        "name" : "Nyle E360 HT",
+        "name" : "Nyle E360",
         "pkl_prefix": "Nyle_e360_HT_Single_Pass",
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
@@ -838,7 +838,7 @@
         "name" : "Nyle E360 LT",
         "pkl_prefix": "Nyle_e360_LT_Single_Pass",
         "secondary_heat_exchanger" : false,
-        "SGIP_avail" : true
+        "SGIP_avail" : false
     },
     "MODELS_RheemHB50_R_MP" : {
         "name" : "Rheem 2014 Model",
@@ -1309,7 +1309,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "SGIP_avail" : true
+        "SGIP_avail" : false
     },
     "MODELS_SANCO2_C_SP" : {
         "name" : "SANCO2 GS4",
@@ -1374,7 +1374,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "SGIP_avail" : true
+        "SGIP_avail" : false
     },
     "MODELS_SANCO2_119_C_SP" : {
         "name" : "SANCO2 120 gallon CO2 external heat pump",
@@ -1406,7 +1406,7 @@
             }
         ],
         "secondary_heat_exchanger" : false,
-        "SGIP_avail" : true
+        "SGIP_avail" : false
     },
     "MODELS_Stiebel220E_R_MP" : {
         "name" : "Stiebel Eltron",
