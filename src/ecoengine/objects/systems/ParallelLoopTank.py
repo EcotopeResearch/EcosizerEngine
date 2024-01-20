@@ -140,6 +140,8 @@ class ParallelLoopTank(SystemConfig):
            raise Exception("No capacity given or preformance map has not been set.")
         
     def getTMOutputCapacity(self, kW = False):
+        if self.TMCap_kBTUhr is None:
+            return None
         if kW:
             return self.TMCap_kBTUhr/W_TO_BTUHR
         return self.TMCap_kBTUhr
