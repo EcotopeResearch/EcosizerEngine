@@ -80,6 +80,8 @@ class SystemConfig:
                     highest_possible_storage_temp = highest_storage_temp
             if highest_possible_storage_temp < self.storageT_F:
                 raise Exception(f"The selected model can not produce a storage temperature of {self.storageT_F} degrees during the coldest months in the selected climate (zip code). Please lower the storage temperature to at least {highest_possible_storage_temp} or select a diferent model.")
+            elif hasattr(self, 'loadUpT_F') and not self.loadUpT_F is None and highest_possible_storage_temp < self.loadUpT_F:
+                raise Exception(f"The selected model can not produce a load up temperature of {self.loadUpT_F} degrees during the coldest months in the selected climate (zip code). Please lower the load up temperature to at least {highest_possible_storage_temp} or select a diferent model.")
 
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):

@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; EcosizerEngine 1.3.9 documentation</title>
+    <title>Index &#8212; EcosizerEngine 1.4.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -23,7 +23,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">EcosizerEngine 1.3.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EcosizerEngine 1.4.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Index</a></li> 
       </ul>
     </div>  
@@ -49,6 +49,7 @@
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
 </div>
@@ -59,13 +60,17 @@
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.addHWGen">addHWGen() (objects.SimulationRun.SimulationRun method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.addKGCO2">addKGCO2() (objects.SimulationRun.SimulationRun method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.addOat">addOat() (objects.SimulationRun.SimulationRun method)</a>
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.addTMCap">addTMCap() (objects.SimulationRun.SimulationRun method)</a>
+</li>
+      <li><a href="index.html#engine.EcosizerEngine.EcosizerEngine.assumedCOP">assumedCOP() (engine.EcosizerEngine.EcosizerEngine method)</a>
+</li>
+      <li><a href="index.html#engine.EcosizerEngine.EcosizerEngine.assumedHighDefaultCap">assumedHighDefaultCap() (engine.EcosizerEngine.EcosizerEngine method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -134,8 +139,6 @@
 </li>
       <li><a href="index.html#engine.EcosizerEngine.getAnnualSimLSComparison">getAnnualSimLSComparison() (in module engine.EcosizerEngine)</a>
 </li>
-      <li><a href="index.html#objects.SimulationRun.SimulationRun.getAvgIncomingWaterT">getAvgIncomingWaterT() (objects.SimulationRun.SimulationRun method)</a>
-</li>
       <li><a href="index.html#objects.PrefMapTracker.PrefMapTracker.getCapacity">getCapacity() (objects.PrefMapTracker.PrefMapTracker method)</a>
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getCapIn">getCapIn() (objects.SimulationRun.SimulationRun method)</a>
@@ -160,13 +163,15 @@
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getkGCO2Sum">getkGCO2Sum() (objects.SimulationRun.SimulationRun method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#engine.EcosizerEngine.getListOfModels">getListOfModels() (in module engine.EcosizerEngine)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getLoadShiftMode">getLoadShiftMode() (objects.SimulationRun.SimulationRun method)</a>
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getOAT">getOAT() (objects.SimulationRun.SimulationRun method)</a>
+</li>
+      <li><a href="index.html#objects.SimulationRun.SimulationRun.getPrimaryCOP">getPrimaryCOP() (objects.SimulationRun.SimulationRun method)</a>
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getPrimaryGeneration">getPrimaryGeneration() (objects.SimulationRun.SimulationRun method)</a>
 </li>
@@ -189,6 +194,8 @@
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getTMCapIn">getTMCapIn() (objects.SimulationRun.SimulationRun method)</a>
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getTMCapOut">getTMCapOut() (objects.SimulationRun.SimulationRun method)</a>
+</li>
+      <li><a href="index.html#objects.SimulationRun.SimulationRun.getTMCOP">getTMCOP() (objects.SimulationRun.SimulationRun method)</a>
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getTMRun">getTMRun() (objects.SimulationRun.SimulationRun method)</a>
 </li>
@@ -259,6 +266,8 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#objects.SimulationRun.SimulationRun.passedCOPAssumptionThreshold">passedCOPAssumptionThreshold() (objects.SimulationRun.SimulationRun method)</a>
+</li>
       <li><a href="index.html#engine.EcosizerEngine.EcosizerEngine.plotSizingCurve">plotSizingCurve() (engine.EcosizerEngine.EcosizerEngine method)</a>
 </li>
       <li><a href="index.html#engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim">plotStorageLoadSim() (engine.EcosizerEngine.EcosizerEngine method)</a>
@@ -279,10 +288,12 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#objects.PrefMapTracker.PrefMapTracker.resetFlags">resetFlags() (objects.PrefMapTracker.PrefMapTracker method)</a>
+      <li><a href="index.html#engine.EcosizerEngine.EcosizerEngine.raisedInletTemp">raisedInletTemp() (engine.EcosizerEngine.EcosizerEngine method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#objects.PrefMapTracker.PrefMapTracker.resetFlags">resetFlags() (objects.PrefMapTracker.PrefMapTracker method)</a>
+</li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.returnSimResult">returnSimResult() (objects.SimulationRun.SimulationRun method)</a>
 </li>
   </ul></td>
@@ -291,8 +302,6 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#objects.SimulationRun.SimulationRun.setMonthlyCityWaterT_F">setMonthlyCityWaterT_F() (objects.SimulationRun.SimulationRun method)</a>
-</li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun">SimulationRun (class in objects.SimulationRun)</a>
 </li>
   </ul></td>
@@ -300,6 +309,14 @@
       <li><a href="index.html#engine.EcosizerEngine.EcosizerEngine.systemCapedInlet">systemCapedInlet() (engine.EcosizerEngine.EcosizerEngine method)</a>
 </li>
       <li><a href="index.html#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr">systemReliedOnEr() (engine.EcosizerEngine.EcosizerEngine method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#engine.EcosizerEngine.EcosizerEngine.usedHPWHsim">usedHPWHsim() (engine.EcosizerEngine.EcosizerEngine method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -343,7 +360,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">EcosizerEngine 1.3.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EcosizerEngine 1.4.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Index</a></li> 
       </ul>
     </div>

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.3.9 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.4.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.4.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -143,6 +143,20 @@ Otherwise, it will use the most recent data model.</p>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.assumedCOP" title="engine.EcosizerEngine.EcosizerEngine.assumedCOP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assumedCOP</span></code></a>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.assumedHighDefaultCap" title="engine.EcosizerEngine.EcosizerEngine.assumedHighDefaultCap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assumedHighDefaultCap</span></code></a>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getClimateZone" title="engine.EcosizerEngine.EcosizerEngine.getClimateZone"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getClimateZone</span></code></a>()</p></td>
 <td><p>Returns climate zone of the simulation building as an int or None if it has not been set.</p></td>
 </tr>
@@ -173,14 +187,28 @@ Otherwise, it will use the most recent data model.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.primaryCurve" title="engine.EcosizerEngine.EcosizerEngine.primaryCurve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">primaryCurve</span></code></a>()</p></td>
 <td><p>Sizes the primary system curve.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemCapedInlet" title="engine.EcosizerEngine.EcosizerEngine.systemCapedInlet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemCapedInlet</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.raisedInletTemp" title="engine.EcosizerEngine.EcosizerEngine.raisedInletTemp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">raisedInletTemp</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr" title="engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemReliedOnEr</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemCapedInlet" title="engine.EcosizerEngine.EcosizerEngine.systemCapedInlet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemCapedInlet</span></code></a>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr" title="engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemReliedOnEr</span></code></a>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.usedHPWHsim" title="engine.EcosizerEngine.EcosizerEngine.usedHPWHsim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">usedHPWHsim</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
@@ -189,6 +217,32 @@ Otherwise, it will use the most recent data model.</p>
 </tr>
 </tbody>
 </table>
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.assumedCOP">
+<span class="sig-name descname"><span class="pre">assumedCOP</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.assumedCOP" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>assumedCOP</strong><span class="classifier">boolean</span></dt><dd><p>Returns True if, at any time, the system has assumed a COP of 1.5 during a simulation due to performance map constraints. False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.assumedHighDefaultCap">
+<span class="sig-name descname"><span class="pre">assumedHighDefaultCap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.assumedHighDefaultCap" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>assumedHighIO</strong><span class="classifier">boolean</span></dt><dd><p>Returns True if the model had to assume default high OAT input and output capacity because the climate’s OAT was greater than the values in available performance map. False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.getClimateZone">
 <span class="sig-name descname"><span class="pre">getClimateZone</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.getClimateZone" title="Permalink to this definition">¶</a></dt>
@@ -494,6 +548,19 @@ fraction is too small for system and cuts the return arrays to match cutoff poin
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.raisedInletTemp">
+<span class="sig-name descname"><span class="pre">raisedInletTemp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.raisedInletTemp" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>raisedInlet</strong><span class="classifier">boolean</span></dt><dd><p>Returns True if the system at any point needed to raise inlet water temperature if it was less than minimum in performance map. False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.systemCapedInlet">
 <span class="sig-name descname"><span class="pre">systemCapedInlet</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.systemCapedInlet" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -513,6 +580,19 @@ fraction is too small for system and cuts the return arrays to match cutoff poin
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>reliedOnER</strong><span class="classifier">boolean</span></dt><dd><p>True if the system relied on electric resistance during it’s last simulation. False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.usedHPWHsim">
+<span class="sig-name descname"><span class="pre">usedHPWHsim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.usedHPWHsim" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>usedHPWHsim</strong><span class="classifier">boolean</span></dt><dd><p>Returns True if the performance map used was from HPWHsim. False otherwise.</p>
 </dd>
 </dl>
 </dd>
@@ -606,7 +686,7 @@ Otherwise, it will label the plot as Storage Volume vs. Capacity.</p>
 
 <span class="target" id="module-engine.BuildingCreator"></span><dl class="py function">
 <dt class="sig sig-object py" id="engine.BuildingCreator.createBuilding">
-<span class="sig-prename descclassname"><span class="pre">engine.BuildingCreator.</span></span><span class="sig-name descname"><span class="pre">createBuilding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incomingT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitudeStat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supplyT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buildingType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avgLoadshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returnT_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flowRate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpdpp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nBR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nApt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wapt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standardGPD</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annual</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zipCode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">climateZone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignoreRecirc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.BuildingCreator.createBuilding" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">engine.BuildingCreator.</span></span><span class="sig-name descname"><span class="pre">createBuilding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incomingT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitudeStat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supplyT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buildingType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avgLoadshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returnT_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flowRate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpdpp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nBR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nApt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wapt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standardGPD</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annual</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zipCode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">climateZone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignoreRecirc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Building</span></span></span><a class="headerlink" href="#engine.BuildingCreator.createBuilding" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes the building in which the HPWH system will be sized for</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
@@ -659,7 +739,7 @@ Otherwise, it will label the plot as Storage Volume vs. Capacity.</p>
 
 <span class="target" id="module-engine.SystemCreator"></span><dl class="py function">
 <dt class="sig sig-object py" id="engine.SystemCreator.createSystem">
-<span class="sig-prename descclassname"><span class="pre">engine.SystemCreator.</span></span><span class="sig-name descname"><span class="pre">createSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schematic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defrostFactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentUseable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compRuntime_hr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doLoadShift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFractLoadUp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFractShed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadUpT_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadShiftPercent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadShiftSchedule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadUpHours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safetyTM</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setpointTM_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">135</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMonTemp_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offTime_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.333</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PVol_G_atStorageT</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PCap_kBTUhr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMVol_G</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMCap_kBTUhr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">systemModel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numHeatPumps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmModel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmNumHeatPumps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inletWaterAdjustment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignoreShortCycleEr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useHPWHsimPrefMap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.SystemCreator.createSystem" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">engine.SystemCreator.</span></span><span class="sig-name descname"><span class="pre">createSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schematic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storageT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defrostFactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentUseable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compRuntime_hr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doLoadShift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFractLoadUp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aquaFractShed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadUpT_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadShiftPercent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadShiftSchedule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadUpHours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safetyTM</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setpointTM_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">135</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMonTemp_F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offTime_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.333</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PVol_G_atStorageT</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PCap_kBTUhr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMVol_G</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMCap_kBTUhr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">systemModel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numHeatPumps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmModel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmNumHeatPumps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inletWaterAdjustment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignoreShortCycleEr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useHPWHsimPrefMap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SystemConfig</span></span></span><a class="headerlink" href="#engine.SystemCreator.createSystem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes and sizes the HPWH system. Both primary and tempurature maintenance (for parrallel loop and swing tank) are set up in this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
@@ -783,29 +863,29 @@ Otherwise, it will use the most recent data model.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getAnnualCOP" title="objects.SimulationRun.SimulationRun.getAnnualCOP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getAnnualCOP</span></code></a>([boundryMethod])</p></td>
 <td><p>Returns annual COP for the simulation</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getAvgIncomingWaterT" title="objects.SimulationRun.SimulationRun.getAvgIncomingWaterT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getAvgIncomingWaterT</span></code></a>()</p></td>
-<td><p>Returns the average incoming water temperature for the year in fahrenheit as a float</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapIn" title="objects.SimulationRun.SimulationRun.getCapIn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCapIn</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapIn" title="objects.SimulationRun.SimulationRun.getCapIn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCapIn</span></code></a>([i])</p></td>
 <td><p>Returns a list of the input capacity in kW for the primary system at every timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapOut" title="objects.SimulationRun.SimulationRun.getCapOut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCapOut</span></code></a>([i])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapOut" title="objects.SimulationRun.SimulationRun.getCapOut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCapOut</span></code></a>([i])</p></td>
 <td><p>Returns a list of the output capacity in kW for the primary system at every timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWDemand" title="objects.SimulationRun.SimulationRun.getHWDemand"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWDemand</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWDemand" title="objects.SimulationRun.SimulationRun.getHWDemand"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWDemand</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the hot water demand by timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWGeneration" title="objects.SimulationRun.SimulationRun.getHWGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWGeneration</span></code></a>([i])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWGeneration" title="objects.SimulationRun.SimulationRun.getHWGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWGeneration</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the theoretical hot water generation of the primary tank at supply temperature by timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getIncomingWaterT" title="objects.SimulationRun.SimulationRun.getIncomingWaterT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getIncomingWaterT</span></code></a>(i)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getIncomingWaterT" title="objects.SimulationRun.SimulationRun.getIncomingWaterT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getIncomingWaterT</span></code></a>(i)</p></td>
 <td><p>returns incoming water temperature (F) at interval i of the simulation</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getLoadShiftMode" title="objects.SimulationRun.SimulationRun.getLoadShiftMode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getLoadShiftMode</span></code></a>(i)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getLoadShiftMode" title="objects.SimulationRun.SimulationRun.getLoadShiftMode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getLoadShiftMode</span></code></a>(i)</p></td>
 <td><p>returns the load shifting setting at interval i of the simulation</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getOAT" title="objects.SimulationRun.SimulationRun.getOAT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getOAT</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getOAT" title="objects.SimulationRun.SimulationRun.getOAT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getOAT</span></code></a>()</p></td>
 <td><p>Returns a list from the simulation of the Outdoor Air Temperature in (F) by timestep</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryCOP" title="objects.SimulationRun.SimulationRun.getPrimaryCOP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryCOP</span></code></a>([i])</p></td>
+<td><p>Returns a list of COP values for the primary system at every timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryGeneration" title="objects.SimulationRun.SimulationRun.getPrimaryGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryGeneration</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the actual hot water generation of the primary tank by timestep</p></td>
@@ -819,29 +899,35 @@ Otherwise, it will use the most recent data model.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getRecircLoss" title="objects.SimulationRun.SimulationRun.getRecircLoss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getRecircLoss</span></code></a>([i])</p></td>
 <td><p>Returns list of recirculation loss from primary system at supply temp in gallons at every interval in simulation</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapIn" title="objects.SimulationRun.SimulationRun.getTMCapIn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCapIn</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCOP" title="objects.SimulationRun.SimulationRun.getTMCOP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCOP</span></code></a>([i])</p></td>
+<td><p>Returns a list of COP values for the temperature maintenance system at every timestep or, if i is defined, returns index i of that list</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapIn" title="objects.SimulationRun.SimulationRun.getTMCapIn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCapIn</span></code></a>([i])</p></td>
 <td><p>Returns a list of the input capacity in kW for the temperature maintenance system at every timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapOut" title="objects.SimulationRun.SimulationRun.getTMCapOut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCapOut</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapOut" title="objects.SimulationRun.SimulationRun.getTMCapOut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCapOut</span></code></a>([i])</p></td>
 <td><p>Returns a list of the output capacity in kW for the temperature maintenance system at every timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMRun" title="objects.SimulationRun.SimulationRun.getTMRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMRun</span></code></a>([i])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMRun" title="objects.SimulationRun.SimulationRun.getTMRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMRun</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the amount of time the temperature maintenance tank is running in minutes per timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMTemp" title="objects.SimulationRun.SimulationRun.getTMTemp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMTemp</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMTemp" title="objects.SimulationRun.SimulationRun.getTMTemp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMTemp</span></code></a>()</p></td>
 <td><p>Returns a list from the simulation of the temperature maintenance tank temperature in (F) by timestep</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.gethwOutSwing" title="objects.SimulationRun.SimulationRun.gethwOutSwing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gethwOutSwing</span></code></a>([i])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.gethwOutSwing" title="objects.SimulationRun.SimulationRun.gethwOutSwing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gethwOutSwing</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the amount of water coming out of the swing tank at tempurature in gallons by timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2" title="objects.SimulationRun.SimulationRun.getkGCO2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getkGCO2</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2" title="objects.SimulationRun.SimulationRun.getkGCO2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getkGCO2</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the get output of CO2 by timestep in kilograms or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2Sum" title="objects.SimulationRun.SimulationRun.getkGCO2Sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getkGCO2Sum</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2Sum" title="objects.SimulationRun.SimulationRun.getkGCO2Sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getkGCO2Sum</span></code></a>()</p></td>
 <td><p>Returns the sum from the simulation of the output of CO2 in kilograms</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.initializeTMValue" title="objects.SimulationRun.SimulationRun.initializeTMValue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initializeTMValue</span></code></a>(initST, storageT_F, ...[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.initializeTMValue" title="objects.SimulationRun.SimulationRun.initializeTMValue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initializeTMValue</span></code></a>(initST, storageT_F, ...[, ...])</p></td>
 <td><p>Initializes temperature maintenance values</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.passedCOPAssumptionThreshold" title="objects.SimulationRun.SimulationRun.passedCOPAssumptionThreshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">passedCOPAssumptionThreshold</span></code></a>(times_COP_assumed)</p></td>
+<td><p>returns True if COP has been assumed more times than the threshold.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim" title="objects.SimulationRun.SimulationRun.plotStorageLoadSim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotStorageLoadSim</span></code></a>([return_as_div, numDays])</p></td>
 <td><p>Returns a plot of the of the simulation for the minimum sized primary system as a div or plotly figure.</p></td>
@@ -849,10 +935,7 @@ Otherwise, it will use the most recent data model.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.returnSimResult" title="objects.SimulationRun.SimulationRun.returnSimResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">returnSimResult</span></code></a>([kWhCalc])</p></td>
 <td><p><strong>*LEGACY FUNCTION*</strong> to be depricated.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.setMonthlyCityWaterT_F" title="objects.SimulationRun.SimulationRun.setMonthlyCityWaterT_F"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setMonthlyCityWaterT_F</span></code></a>(monthlyCityWaterT_F)</p></td>
-<td><p>sets monthly incoming water temperature (F) for each month of an annual simulation</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.writeCSV" title="objects.SimulationRun.SimulationRun.writeCSV"><code class="xref py py-obj docutils literal notranslate"><span class="pre">writeCSV</span></code></a>(file_path)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.writeCSV" title="objects.SimulationRun.SimulationRun.writeCSV"><code class="xref py py-obj docutils literal notranslate"><span class="pre">writeCSV</span></code></a>(file_path)</p></td>
 <td><p>writes all simulation data to a formated csv</p></td>
 </tr>
 </tbody>
@@ -995,20 +1078,6 @@ Otherwise, it will use the most recent data model.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt><strong>COP</strong><span class="classifier">float</span></dt><dd><p>the COP value for the system over the annual simulation</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getAvgIncomingWaterT">
-<span class="sig-name descname"><span class="pre">getAvgIncomingWaterT</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getAvgIncomingWaterT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the average incoming water temperature for the year in fahrenheit as a float</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>waterT_F</strong><span class="classifier">float</span></dt><dd><p>The average incoming water temperature (F) of the simulation</p>
 </dd>
 </dl>
 </dd>
@@ -1161,6 +1230,27 @@ Outdoor Air Temperature in (F) at every interval if i is undefined</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getPrimaryCOP">
+<span class="sig-name descname"><span class="pre">getPrimaryCOP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getPrimaryCOP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of COP values for the primary system at every timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>COP</strong><span class="classifier">float</span></dt><dd><p>the input capacity in kW for the primary system at interval i in gallons or the entire list of input capacity in kW at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getPrimaryGeneration">
 <span class="sig-name descname"><span class="pre">getPrimaryGeneration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getPrimaryGeneration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a list from the simulation of the actual hot water generation of the primary tank by timestep</p>
@@ -1237,6 +1327,27 @@ or, if i is defined, returns index i of that list</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt><strong>recirculationLoss</strong><span class="classifier">float</span></dt><dd><p>the recirculation loss from primary system at supply temp at interval i in gallons or the entire list of recirculation losses at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getTMCOP">
+<span class="sig-name descname"><span class="pre">getTMCOP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getTMCOP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of COP values for the temperature maintenance system at every timestep
+or, if i is defined, returns index i of that list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>interval of the simulation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>tm_COP</strong><span class="classifier">float</span></dt><dd><p>the input capacity in kW for the primary system at interval i in gallons or the entire list of input capacity in kW at every interval if i is undefined</p>
 </dd>
 </dl>
 </dd>
@@ -1401,6 +1512,12 @@ output of CO2 in kilograms at every interval if i is undefined</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.passedCOPAssumptionThreshold">
+<span class="sig-name descname"><span class="pre">passedCOPAssumptionThreshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times_COP_assumed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.passedCOPAssumptionThreshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns True if COP has been assumed more times than the threshold. False Otherwise.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.plotStorageLoadSim">
 <span class="sig-name descname"><span class="pre">plotStorageLoadSim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_as_div</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numDays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a plot of the of the simulation for the minimum sized primary
@@ -1425,25 +1542,6 @@ system as a div or plotly figure. Can plot the minute level simulation</p>
 <dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.returnSimResult">
 <span class="sig-name descname"><span class="pre">returnSimResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kWhCalc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.returnSimResult" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>*LEGACY FUNCTION*</strong> to be depricated.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.setMonthlyCityWaterT_F">
-<span class="sig-name descname"><span class="pre">setMonthlyCityWaterT_F</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monthlyCityWaterT_F</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.setMonthlyCityWaterT_F" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets monthly incoming water temperature (F) for each month of an annual simulation</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>monthlyCityWaterT_F</strong><span class="classifier">List</span></dt><dd><p>List of floats representing the incoming water temperature at each month. must be length 12.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>Exception: Error if monthlyCityWaterT_F is not length 12 or contains wrong data type</dt><dd></dd>
-</dl>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1516,8 +1614,8 @@ will increase by the amount in the performance map configuration (../data/prefor
 <tr class="row-odd"><td><p><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.getCapacity" title="objects.PrefMapTracker.PrefMapTracker.getCapacity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCapacity</span></code></a>(externalT_F, condenserT_F, outT_F)</p></td>
 <td><p>Returns the current output capacity of of the HPWH model for the simulation given external and condesor temperatures.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity" title="objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDefaultCapacity</span></code></a>([AsKW])</p></td>
-<td><p>Returns default capacity for the system in kBTUhr Inputs ------ AsKWh : Boolean     Set to True to return as kW. False (default) returns as kBTUhr :returns: The default output capacity of the model in kW or kBTUhr :rtype: defaultCapacity.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity" title="objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDefaultCapacity</span></code></a>([AsKBTUhr])</p></td>
+<td><p>Returns default capacity for the system in kBTUhr Inputs ------ AsKBTUhr : Boolean     Set to False to return as kW. True (default) returns as kBTUhr :returns: The default output capacity of the model in kW or kBTUhr :rtype: defaultCapacity.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.resetFlags" title="objects.PrefMapTracker.PrefMapTracker.resetFlags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resetFlags</span></code></a>()</p></td>
 <td><p>Sets the reliedOnER and capedInlet fields to False to so that a new simulation can be run on the model</p></td>
@@ -1526,6 +1624,12 @@ will increase by the amount in the performance map configuration (../data/prefor
 </table>
 <table class="docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><strong>getMaxStorageTempAtNearestOATandInlet</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>getMinStorageTempAtNearestOATandInlet</strong></p></td>
+<td></td>
+</tr>
 <tr class="row-odd"><td><p><strong>setPrefMap</strong></p></td>
 <td></td>
 </tr>
@@ -1545,20 +1649,20 @@ will increase by the amount in the performance map configuration (../data/prefor
 
 <dl class="py method">
 <dt class="sig sig-object py" id="objects.PrefMapTracker.PrefMapTracker.getCapacity">
-<span class="sig-name descname"><span class="pre">getCapacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">externalT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condenserT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizingNumHP</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.PrefMapTracker.PrefMapTracker.getCapacity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">getCapacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">externalT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condenserT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outT_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizingNumHP</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallbackCapacity_kW</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.PrefMapTracker.PrefMapTracker.getCapacity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the current output capacity of of the HPWH model for the simulation given external and condesor temperatures.
 If no HPWH model has been set, returns the default output capacity of the system.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity">
-<span class="sig-name descname"><span class="pre">getDefaultCapacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">AsKW</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">getDefaultCapacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">AsKBTUhr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns default capacity for the system in kBTUhr
 Inputs
 ——
-AsKWh : Boolean</p>
+AsKBTUhr : Boolean</p>
 <blockquote>
-<div><p>Set to True to return as kW. False (default) returns as kBTUhr</p>
+<div><p>Set to False to return as kW. True (default) returns as kBTUhr</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1600,6 +1704,8 @@ AsKWh : Boolean</p>
     <ul>
 <li><a class="reference internal" href="#">EcosizerEngine Documentation</a><ul>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine</span></code></a><ul>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.assumedCOP"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.assumedCOP()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.assumedHighDefaultCap"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.assumedHighDefaultCap()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getClimateZone"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getClimateZone()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getHWMagnitude"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getHWMagnitude()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimResult"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getSimResult()</span></code></a></li>
@@ -1610,8 +1716,10 @@ AsKWh : Boolean</p>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotSizingCurve"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.plotSizingCurve()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.plotStorageLoadSim()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.primaryCurve"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.primaryCurve()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.raisedInletTemp"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.raisedInletTemp()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemCapedInlet"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.systemCapedInlet()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.systemReliedOnEr()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.usedHPWHsim"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.usedHPWHsim()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getAnnualSimLSComparison"><code class="docutils literal notranslate"><span class="pre">getAnnualSimLSComparison()</span></code></a></li>
@@ -1627,7 +1735,6 @@ AsKWh : Boolean</p>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.addTMCap"><code class="docutils literal notranslate"><span class="pre">SimulationRun.addTMCap()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.generateRecircLoss"><code class="docutils literal notranslate"><span class="pre">SimulationRun.generateRecircLoss()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getAnnualCOP"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getAnnualCOP()</span></code></a></li>
-<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getAvgIncomingWaterT"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getAvgIncomingWaterT()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapIn"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getCapIn()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapOut"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getCapOut()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWDemand"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getHWDemand()</span></code></a></li>
@@ -1635,10 +1742,12 @@ AsKWh : Boolean</p>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getIncomingWaterT"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getIncomingWaterT()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getLoadShiftMode"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getLoadShiftMode()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getOAT"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getOAT()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryCOP"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getPrimaryCOP()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryGeneration"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getPrimaryGeneration()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryRun"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getPrimaryRun()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryVolume"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getPrimaryVolume()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getRecircLoss"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getRecircLoss()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCOP"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getTMCOP()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapIn"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getTMCapIn()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapOut"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getTMCapOut()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMRun"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getTMRun()</span></code></a></li>
@@ -1647,9 +1756,9 @@ AsKWh : Boolean</p>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getkGCO2()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2Sum"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getkGCO2Sum()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.initializeTMValue"><code class="docutils literal notranslate"><span class="pre">SimulationRun.initializeTMValue()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.passedCOPAssumptionThreshold"><code class="docutils literal notranslate"><span class="pre">SimulationRun.passedCOPAssumptionThreshold()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim"><code class="docutils literal notranslate"><span class="pre">SimulationRun.plotStorageLoadSim()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.returnSimResult"><code class="docutils literal notranslate"><span class="pre">SimulationRun.returnSimResult()</span></code></a></li>
-<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.setMonthlyCityWaterT_F"><code class="docutils literal notranslate"><span class="pre">SimulationRun.setMonthlyCityWaterT_F()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.writeCSV"><code class="docutils literal notranslate"><span class="pre">SimulationRun.writeCSV()</span></code></a></li>
 </ul>
 </li>
@@ -1697,7 +1806,7 @@ AsKWh : Boolean</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.3.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.4.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>
