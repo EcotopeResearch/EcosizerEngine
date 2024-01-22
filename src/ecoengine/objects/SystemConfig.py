@@ -73,7 +73,7 @@ class SystemConfig:
         if not building is None and not building.getClimateZone() is None and not systemModel is None and not systemModel[-2:] == 'MP':
             # check that storage temp is acceptable for climate
             temp_combos_list = building.getLowestWaterAndAirTempCombos()
-            highest_possible_storage_temp = self.storageT_F
+            highest_possible_storage_temp = float('inf')
             for temp_combo in temp_combos_list:
                 highest_storage_temp = self.perfMap.getMaxStorageTempAtNearestOATandInlet(*temp_combo)
                 if highest_storage_temp < highest_possible_storage_temp:
