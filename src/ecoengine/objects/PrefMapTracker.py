@@ -181,7 +181,7 @@ class PrefMapTracker:
             input_kW, output_kW = self._getInputOutputKWThruPckl(condenserT_F, outT_F, externalT_F)
 
             if math.isnan(output_kW) or math.isnan(input_kW):
-                if externalT_F < self.oat_min: # if OAT is colder than coldest OAT in performance map
+                if externalT_F < self.getOatMin(): # if OAT is colder than coldest OAT in performance map
                     if sizingNumHP:
                         print(f"Warning: Design OAT of {externalT_F} is colder than coldest OAT in performance map for model. Using default capacity values to size.")
                         output_kW =self.default_output_low
@@ -281,6 +281,19 @@ class PrefMapTracker:
         if self.kBTUhr:
             return [output_kW * W_TO_BTUHR, input_kW * W_TO_BTUHR]
         return [output_kW, input_kW]
+    
+    def getOatMin(self):
+        """
+        returns the minimum OAT in the available performance map.
+        """
+        if not self.oat_min is None:
+            return self.oat_min
+        elif self.usePkl:
+            raise Exception("Internal Error: Performance map missing minimum OAT")
+        elif self.perfMap is None or len(self.perfMap) == 0:
+            return float('-inf')
+        else:
+            return self.perfMap[0]['T_F']
     
     def getMinStorageTempAtNearestOATandInlet(self, oat_F, inletT_F):
         if not self.usePkl:
