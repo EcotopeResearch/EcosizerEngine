@@ -56,6 +56,7 @@ class PrefMapTracker:
         self.perfMap = None
         self.kBTUhr = kBTUhr
         self.isMultiPass = isMultiPass
+        self.inlet_lower_threshold = 15.0
         self.twoInputPkl = False
         self.oat_max = None
         self.oat_min = None
@@ -195,9 +196,8 @@ class PrefMapTracker:
                     input_kW = self.default_input_high
 
                 else:
-                    try:
-                        input_kW, output_kW = self._forceClosestInputOutputKw(condenserT_F, outT_F, externalT_F)
-                    except:
+                    input_kW, output_kW = self._forceClosestInputOutputKw(condenserT_F, outT_F, externalT_F)
+                    if input_kW is None or output_kW is None:
                         # condenserT_F, outT_F, externalT_F were too far outside the perf map, so we return a COP of 1.5
                         self.timesAssumedCOP = self.timesAssumedCOP + 1
                         if fallbackCapacity is None:
@@ -335,7 +335,7 @@ class PrefMapTracker:
             if new_dif < dif:
                 dif = new_dif
                 closest_index = i
-        if not ignoreOutsideException and abs(self.inTs_and_outTs_by_oat[oat_idx][closest_index][0] - inlet_T) > 15.0: # TODO make this a variable
+        if not ignoreOutsideException and inlet_T - self.inTs_and_outTs_by_oat[oat_idx][closest_index][0] > self.inlet_lower_threshold:
             raise Exception(f"Inlet temperature of {inlet_T} too far outside performance map for model at a OAT of {self.unique_oats[oat_idx]}")
         return closest_index #, second_closest_index
     
@@ -343,12 +343,14 @@ class PrefMapTracker:
         """
         returns the next lowest outlet temp within the performance map at a particular oat and inlet temp
         """
+        if outlet_T > self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][-1] and not(self.isMultiPass):
+            raise Exception(f"{outlet_T} is above the maximum storage temperature for the model's performance map with an OAT of {self.unique_oats[oat_idx]}. storage temperature must be lowered to at least {self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][-1]}")
         i = len(self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1]) - 1
         while i > 0:
             if self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][i] <= outlet_T:
                 return self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][i]
             i = i - 1
-        return self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][0] # TODO figure out if this is correct
+        return self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][0]
     
     def _getInputOutputKWThruPckl(self, inletWaterT_F, outletWaterT_F, oat_F):
         if not self.usePkl:
@@ -362,7 +364,11 @@ class PrefMapTracker:
     
     def _forceClosestInputOutputKw(self, inletWaterT_F, outletWaterT_F, oat_F):
         closest_oat_index = self._getIdxOfNearestOATs(oat_F)
-        closest_inletWaterT_idx = self._getIdxOfNearestInlet(closest_oat_index, inletWaterT_F)
+        try:
+            closest_inletWaterT_idx = self._getIdxOfNearestInlet(closest_oat_index, inletWaterT_F)
+        except:
+            # inlet water was too far outside perf map
+            return None, None
         closest_outletWaterT_F = self._getNearestOutlet(closest_oat_index, closest_inletWaterT_idx, outletWaterT_F)
 
         # first try with new oat
@@ -379,7 +385,8 @@ class PrefMapTracker:
                 self.timeStorageTempNeedToBeLowered = self.timeStorageTempNeedToBeLowered + 1
             return input_kW, output_kW
         
-        raise Exception(f"Input climate values for [inletWaterT_F, outletWaterT_F, OAT_F], [{inletWaterT_F}, {outletWaterT_F}, {oat_F}], were too far outside the performance map of the model.")
+        print(f"Input climate values for [inletWaterT_F, outletWaterT_F, OAT_F], [{inletWaterT_F}, {outletWaterT_F}, {oat_F}], were too far outside the performance map of the model.")
+        return None, None
 
     def _autoSetNumHeatPumps(self, modelCapacity_kBTUhr):
         # print(f"made it here {modelCapacity_kBTUhr} {self.defaultCapacity_kBTUhr}")

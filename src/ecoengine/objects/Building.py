@@ -137,18 +137,17 @@ class Building:
             return lowest_t    
 
     def getLowestWaterAndAirTempCombos(self):
+        """
+        Returns a list of tuples, one for each month.
+        Each tuple contains the lowest OAT and inlet water temperature respectively for each month in the building's climate zone.
+        If the building has not been assigned a climate zone, an empty list is returned.
+        """
         if self.climateZone is None:
             return []
-        min_water_temp = min(self.monthlyCityWaterT_F)
-        min_water_temp_month = self.monthlyCityWaterT_F.index(min_water_temp)
-        min_oat = self.getLowestOAT()
-        low_oat_at_month = self.getLowestOAT(min_water_temp_month)
-        ret_list = [[low_oat_at_month, min_water_temp]]
-        if min_oat != low_oat_at_month:
-            for i in range(12):
-                oat_at_month = self.getLowestOAT(i)
-                if oat_at_month == min_oat:
-                    ret_list.append([oat_at_month, self.monthlyCityWaterT_F[i]])
+        ret_list = []
+        for i in range(12):
+            oat_at_month = self.getLowestOAT(i)
+            ret_list.append([oat_at_month, self.monthlyCityWaterT_F[i]])
         return ret_list
 
 
