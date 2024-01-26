@@ -17,8 +17,8 @@ class PrimaryWithRecirc(SystemConfig):
         
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         
-        incomingWater_T = simRun.getIncomingWaterT(i) + ((self.storageT_F - simRun.getIncomingWaterT(i)) * self.inletWaterAdjustment) 
-        self.preSystemStepSetUp(simRun, i, incomingWater_T, minuteIntervals, oat)
+        averageWater_T = simRun.getIncomingWaterT(i) + ((self.storageT_F - simRun.getIncomingWaterT(i)) * self.inletWaterAdjustment) 
+        self.preSystemStepSetUp(simRun, i, averageWater_T, minuteIntervals, oat)
         # Account for recirculation losses at storage temperature
         exitingWater = simRun.hwDemand[i] + simRun.generateRecircLoss(i)
         

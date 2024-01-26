@@ -188,7 +188,7 @@
         "SGIP_avail" : true
     },
     "MODELS_ColmacCxV_5_C_SP" : {
-        "name" : "Colmac CxA_5 external heat pump in Single Pass Mode",
+        "name" : "Colmac CxV_5 external heat pump in Single Pass Mode",
         "pkl_prefix": "Colmac_CxV5_Single_Pass",
         "perfmap": [
             {

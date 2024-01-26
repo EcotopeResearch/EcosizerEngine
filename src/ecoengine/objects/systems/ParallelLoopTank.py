@@ -13,7 +13,7 @@ class ParallelLoopTank(SystemConfig):
                  useHPWHsimPrefMap = False, TMVol_G = None, TMCap_kBTUhr = None, tmModel = None, tmNumHeatPumps = None):
 
         if TMonTemp_F == 0:
-            TMonTemp_F = building.incomingT_F + 2 # TODO deal with this
+            TMonTemp_F = building.getAvgIncomingWaterT() + 2
             
         self._checkParallelLoopInputs(safetyTM, offTime_hr, setpointTM_F, TMonTemp_F)
         self.setpointTM_F = setpointTM_F
