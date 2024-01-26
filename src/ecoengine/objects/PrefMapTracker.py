@@ -309,6 +309,21 @@ class PrefMapTracker:
         closest_inletWaterT_idx = self._getIdxOfNearestInlet(closest_oat_index, inletT_F, ignoreOutsideException = True)
         return self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][1][-1]
     
+    def getMaxStorageTempAtNearestOAT(self, oat_F):
+        """
+        Returns maximum storage temperature acheivable at OAT, regardless of inlet water temp. If there is no available linear interpolation 
+        perfomance map, infinity is returned.
+        """
+        if not self.usePkl:
+            return float('inf')
+        closest_oat_index = self._getIdxOfNearestOATs(oat_F)
+        max_out = self.inTs_and_outTs_by_oat[closest_oat_index][0][1][-1]
+        while closest_oat_index >= 0:
+            for i in range(1,len(self.inTs_and_outTs_by_oat[closest_oat_index])):
+                max_out = max(max_out, self.inTs_and_outTs_by_oat[closest_oat_index][i][1][-1])
+            closest_oat_index = closest_oat_index - 1
+        return max_out
+    
     def _getERReturnValues(self, fallbackCapacity):
         """
         Helper function for returning electric resistance input and output capacity
@@ -335,35 +350,35 @@ class PrefMapTracker:
                 dif = new_dif
                 closest_index = i
 
-        return closest_index #, second_closest_index
+        return closest_index
     
     def _getIdxOfNearestInlet(self, oat_idx, inlet_T, ignoreOutsideException = False):
         """
         returns the index of the closest inlet water temp in self.inTs_and_outTs_by_oat[oat_idx]
         """
-        dif = abs(self.inTs_and_outTs_by_oat[oat_idx][0][0] - inlet_T)
-        closest_index = 0
-        for i in range(1, len(self.inTs_and_outTs_by_oat[oat_idx])):
+        dif = abs(self.inTs_and_outTs_by_oat[oat_idx][-1][0] - inlet_T)
+        closest_index = -1
+        for i in range(len(self.inTs_and_outTs_by_oat[oat_idx])):
             new_dif = abs(self.inTs_and_outTs_by_oat[oat_idx][i][0] - inlet_T)
-            if new_dif < dif:
+            if new_dif < dif and self.inTs_and_outTs_by_oat[oat_idx][i][0] >= inlet_T:
                 dif = new_dif
                 closest_index = i
-        if not ignoreOutsideException and inlet_T - self.inTs_and_outTs_by_oat[oat_idx][closest_index][0] > self.inlet_lower_threshold:
-            raise Exception(f"Inlet temperature of {inlet_T} too far outside performance map for model at a OAT of {self.unique_oats[oat_idx]}")
-        return closest_index #, second_closest_index
+        return closest_index
     
     def _getNearestOutlet(self, oat_idx, inlet_idx, outlet_T):
         """
         returns the next lowest outlet temp within the performance map at a particular oat and inlet temp
         """
-        if outlet_T > self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][-1] and not(self.isMultiPass):
-            raise Exception(f"{outlet_T} is above the maximum storage temperature for the model's performance map with an OAT of {self.unique_oats[oat_idx]}. storage temperature must be lowered to at least {self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][-1]}")
-        i = len(self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1]) - 1
-        while i > 0:
-            if self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][i] <= outlet_T:
-                return self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][i]
-            i = i - 1
-        return self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][0]
+        # if outlet_T > self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][-1] and not(self.isMultiPass):
+        #     raise Exception(f"{outlet_T} is above the maximum storage temperature for the model's performance map with an OAT of {self.unique_oats[oat_idx]}. storage temperature must be lowered to at least {self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][-1]}")
+        dif = abs(self.unique_oats[0] - outlet_T)
+        closest_index = 0
+        for i in range(len(self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1])):
+            new_dif = abs(self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][i] - outlet_T)
+            if new_dif < dif:
+                dif = new_dif
+                closest_index = i
+        return self.inTs_and_outTs_by_oat[oat_idx][inlet_idx][1][closest_index]
     
     def _getInputOutputKWThruPckl(self, inletWaterT_F, outletWaterT_F, oat_F):
         if not self.usePkl:
@@ -382,20 +397,34 @@ class PrefMapTracker:
         except:
             # inlet water was too far outside perf map
             return None, None
-        closest_outletWaterT_F = self._getNearestOutlet(closest_oat_index, closest_inletWaterT_idx, outletWaterT_F)
-
-        # first try with new oat
-        input_kW, output_kW = self._getInputOutputKWThruPckl(self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][0], closest_outletWaterT_F, self.unique_oats[closest_oat_index])
-        if not (math.isnan(output_kW) or math.isnan(input_kW)):
-            
-            if not self.raisedInletTemp and self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][0] > inletWaterT_F:
+        
+        squishedIn_oat = self.unique_oats[closest_oat_index]
+        squishedIn_inletT_F = self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][0]
+        
+        input_kW, output_kW = self._getInputOutputKWThruPckl(squishedIn_inletT_F, outletWaterT_F, squishedIn_oat)
+        if not (math.isnan(output_kW) or math.isnan(input_kW)):     
+            if not self.raisedInletTemp and squishedIn_inletT_F > inletWaterT_F:
                 self.raisedInletTemp = True
-            elif not self.capedInlet and self.inTs_and_outTs_by_oat[closest_oat_index][closest_inletWaterT_idx][0] < inletWaterT_F:
+            elif not self.capedInlet and squishedIn_inletT_F < inletWaterT_F:
                 self.capedInlet = True
-            
             self.timesForcedCOP = self.timesForcedCOP + 1
-            if closest_outletWaterT_F < outletWaterT_F:
+            return input_kW, output_kW
+
+        # try with new outlet temp
+        squishedIn_outletWaterT_F = self._getNearestOutlet(closest_oat_index, closest_inletWaterT_idx, outletWaterT_F)
+        input_kW, output_kW = self._getInputOutputKWThruPckl(squishedIn_inletT_F, squishedIn_outletWaterT_F, squishedIn_oat)
+        if not (math.isnan(output_kW) or math.isnan(input_kW)):
+            if not self.raisedInletTemp and squishedIn_inletT_F > inletWaterT_F:
+                self.raisedInletTemp = True
+            elif not self.capedInlet and squishedIn_inletT_F < inletWaterT_F:
+                self.capedInlet = True
+            self.timesForcedCOP = self.timesForcedCOP + 1
+            if squishedIn_outletWaterT_F < outletWaterT_F:
                 self.timeStorageTempNeedToBeLowered = self.timeStorageTempNeedToBeLowered + 1
+                # modify Outlet and Inplut Capacity
+                capacity_adjustment = output_kW * (((outletWaterT_F-squishedIn_inletT_F)-(squishedIn_outletWaterT_F-squishedIn_inletT_F))/(outletWaterT_F-squishedIn_inletT_F))
+                output_kW = output_kW + capacity_adjustment
+                input_kW = input_kW + capacity_adjustment
             return input_kW, output_kW
         
         print(f"Input climate values for [inletWaterT_F, outletWaterT_F, OAT_F], [{inletWaterT_F}, {outletWaterT_F}, {oat_F}], were too far outside the performance map of the model.")

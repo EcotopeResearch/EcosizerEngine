@@ -21,7 +21,7 @@ class MultiPass(SystemConfig):
                 numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
         
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
-        averageWater_T = self.storageT_F - 15 #simRun.getIncomingWaterT(i) + ((self.storageT_F - simRun.getIncomingWaterT(i)) * self.inletWaterAdjustment)
+        averageWater_T = self.storageT_F - 15 #simRun.getIncomingWaterT(i) + ((self.storageT_F - simRun.getIncomingWaterT(i)) * self.inletWaterAdjustment) This is the way HPWHsim does it
         self.preSystemStepSetUp(simRun, i, averageWater_T, minuteIntervals, oat)
 
         # Get exiting and generating water volumes at storage temp

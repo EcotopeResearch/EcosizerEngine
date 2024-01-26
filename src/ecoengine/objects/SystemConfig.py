@@ -70,18 +70,14 @@ class SystemConfig:
             self.perfMap = PrefMapTracker(self.PCap_kBTUhr if default_PCap_kBTUhr is None else default_PCap_kBTUhr, 
                                           modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
                                           usePkl=True if not (systemModel is None or useHPWHsimPrefMap) else False)
-        if not building is None and not building.getClimateZone() is None and not systemModel is None and not systemModel[-2:] == 'MP':
-            # check that storage temp is acceptable for climate
-            temp_combos_list = building.getLowestWaterAndAirTempCombos()
-            highest_possible_storage_temp = float('inf')
-            for temp_combo in temp_combos_list:
-                highest_storage_temp = self.perfMap.getMaxStorageTempAtNearestOATandInlet(*temp_combo)
-                if highest_storage_temp < highest_possible_storage_temp:
-                    highest_possible_storage_temp = highest_storage_temp
+        
+        # check that storage and load up temps are possible
+        if not building is None and not systemModel is None and not systemModel[-2:] == 'MP':
+            highest_possible_storage_temp, fifth_percentile_oat = building.getHighestStorageTempAtFifthPercentileOAT(self.perfMap)
             if highest_possible_storage_temp < self.storageT_F:
-                raise Exception(f"The selected model can not produce a storage temperature of {self.storageT_F} degrees during the coldest months in the selected climate (zip code). Please lower the storage temperature to at least {highest_possible_storage_temp} or select a diferent model.")
+                raise Exception(f"The selected model can not produce a storage temperature of {self.storageT_F} degrees during the fifth percentile outdoor air temperature ({fifth_percentile_oat} F) in the selected climate (zip code). Please lower the storage temperature to at least {highest_possible_storage_temp} or select a diferent model.")
             elif hasattr(self, 'loadUpT_F') and not self.loadUpT_F is None and highest_possible_storage_temp < self.loadUpT_F:
-                raise Exception(f"The selected model can not produce a load up temperature of {self.loadUpT_F} degrees during the coldest months in the selected climate (zip code). Please lower the load up temperature to at least {highest_possible_storage_temp} or select a diferent model.")
+                raise Exception(f"The selected model can not produce a load up temperature of {self.loadUpT_F} degrees during the fifth percentile outdoor air temperature ({fifth_percentile_oat} F) in the selected climate (zip code). Please lower the load up temperature to at least {highest_possible_storage_temp} or select a diferent model.")
 
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):

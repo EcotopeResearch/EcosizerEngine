@@ -29,8 +29,7 @@ print("=============================================================")
 # print(f"pm.getCapacity({34},{74-10},{160-10}) {pm.getCapacity(34,74-10,160-10)}")
 # print(f"pm.getCapacity({34-10},{74-10},{160}) {pm.getCapacity(34-10,74-10,160)}")
 W_TO_BTUHR = 3.412142
-# for model in [["MODELS_SANCO2_C_SP", 145],["MODELS_ColmacCxV_5_C_SP", 140],["MODELS_Mitsubishi_QAHV_C_SP",150],["MODELS_NyleE360_HT_C_SP",140],
-#               ["MODELS_NyleE360_LT_C_SP",140]]:
+# for model in [["MODELS_Laars_eTherm_C_SP", 150]]:
 #     print("=============================================================")
 #     print(f"============{model}====================")
 #     print("=============================================================")
@@ -42,14 +41,14 @@ W_TO_BTUHR = 3.412142
 #                     storageT_F = model[1],
 #                     percentUseable = 0.95,
 #                     aquaFract = 0.40,
-#                     loadUpT_F = model[1] + 10,
+#                     loadUpT_F = model[1],
 #                     loadUpHours = 2,
 #                     schematic = 'swingtank',
 #                     buildingType  = 'multi_family',
 #                     nApt = 19,
 #                     Wapt = 60,
 #                     doLoadShift   = False,
-#                     zipCode= zip_code,
+#                     climateZone=12,
 #                     annual=True,
 #                     gpdpp=25,
 #                     systemModel=model[0],

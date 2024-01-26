@@ -3,6 +3,8 @@ import json
 import numpy as np
 import csv
 from ecoengine.constants.Constants import *
+from ecoengine.objects.PrefMapTracker import PrefMapTracker
+import math
 
 class Building:
     def __init__(self, magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc):
@@ -64,9 +66,25 @@ class Building:
     def getClimateZone(self):
         return self.climateZone
     
+    def getHighestStorageTempAtFifthPercentileOAT(self, perfMap : PrefMapTracker):
+        if self.climateZone is None:
+            return float("inf"), None
+        oat_list = []
+        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
+            oat_reader = csv.reader(oat_file)
+            next(oat_reader)# Skip the header row
+            for oat_row in oat_reader:
+                oat_value = float(oat_row[self.climateZone - 1])
+                oat_list.append(oat_value)
+        oat_list.sort()
+        fifth_percentile_oat = oat_list[math.ceil(len(oat_list)*0.05)]
+        # if fifth_percentile_oat is None:
+        #     return float("inf")
+        return perfMap.getMaxStorageTempAtNearestOAT(fifth_percentile_oat), fifth_percentile_oat
+    
     def getLowestOAT(self, month = None):
         if self.climateZone is None:
-            return None
+            return float("-inf")
         if month is None:
             with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
                 oat_reader = csv.reader(oat_file)
@@ -96,7 +114,7 @@ class Building:
         
     def getHighestOAT(self, month = None):
         if self.climateZone is None:
-            return None
+            return float("inf")
         if month is None:
             with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
                 oat_reader = csv.reader(oat_file)
