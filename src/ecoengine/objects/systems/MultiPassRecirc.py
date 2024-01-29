@@ -21,8 +21,8 @@ class MultiPassRecirc(PrimaryWithRecirc):
         
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         
-        averageWater_T = self.storageT_F - 15# simRun.getIncomingWaterT(i) + ((self.storageT_F - simRun.getIncomingWaterT(i)) * self.inletWaterAdjustment) This is the way HPWHsim does it 
-        self.preSystemStepSetUp(simRun, i, averageWater_T, minuteIntervals, oat)
+        averageInletWater_T = self.storageT_F - 15# Multi pass return to primary: CHPWH IWT is assumed 15°F cooler than storage temperature on average, based on lab test data.
+        self.preSystemStepSetUp(simRun, i, averageInletWater_T, minuteIntervals, oat)
         # Account for recirculation losses at storage temperature
         exitingWater = simRun.hwDemand[i] + simRun.generateRecircLoss(i)
         

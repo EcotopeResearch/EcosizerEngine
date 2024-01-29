@@ -96,12 +96,15 @@ class SystemConfig:
         if doLoadShift and (not (isinstance(loadShiftPercent, int) or isinstance(loadShiftPercent, float)) or loadShiftPercent > 1 or loadShiftPercent < 0):
             raise Exception("Invalid input given for loadShiftPercent, must be a number between 0 and 1.")
 
-    def setCapacity(self, PCap_kBTUhr = None, oat = None, incomingWater_T = None):
+    def setCapacity(self, PCap_kBTUhr = None, oat = None, incomingWater_T = None, useLoadUpTemp = False):
         if not PCap_kBTUhr is None:
             self.PCap_kBTUhr = PCap_kBTUhr
             self.PCap_input_kBTUhr = self.PCap_kBTUhr / 2.5 # Assume COP of 2.5
         elif not (oat is None or incomingWater_T is None or self.perfMap is None):
-            self.PCap_kBTUhr, self.PCap_input_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F, fallbackCapacity_kW = self.getOutputCapacity(kW = True))
+            if useLoadUpTemp and hasattr(self, 'loadUpT_F') and not self.loadUpT_F is None:
+                self.PCap_kBTUhr, self.PCap_input_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.loadUpT_F, fallbackCapacity_kW = self.getOutputCapacity(kW = True))
+            else:
+                self.PCap_kBTUhr, self.PCap_input_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.storageT_F, fallbackCapacity_kW = self.getOutputCapacity(kW = True))
         else:
            raise Exception("No capacity given or preformance map has not been set.")
         
@@ -291,7 +294,7 @@ class SystemConfig:
         if not (oat is None or self.perfMap is None):
             if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus be at the next OAT
                 # set primary system capacity based on outdoor air temp and incoming water temp 
-                self.setCapacity(oat = oat, incomingWater_T = incomingWater_T) # TODO do I need to be inputing load up temp during load up hours for capacity?
+                self.setCapacity(oat = oat, incomingWater_T = incomingWater_T, useLoadUpTemp= simRun.getLoadShiftMode(i) == 'L')
                 if simRun.passedCOPAssumptionThreshold(self.perfMap.timesAssumedCOP*(60/minuteIntervals)):
                     raise Exception("Could not run simulation because internal performance map for the primary model does not account for the climate zone of the input zip code. Please try with a different primary model or zip code.")
                 hw_gen_for_interval = (1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - simRun.getIncomingWaterT(i)) * self.defrostFactor)/(60/minuteIntervals)

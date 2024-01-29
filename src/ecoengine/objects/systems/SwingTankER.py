@@ -119,7 +119,7 @@ class SwingTankER(SwingTank):
 
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None, erCalc=False):
         incomingWater_T = simRun.getIncomingWaterT(i)
-        self.preSystemStepSetUp(simRun, i, incomingWater_T, minuteIntervals, oat)
+        self.preSystemStepSetUp(simRun, i, incomingWater_T + 15.0, minuteIntervals, oat) # CHPWH IWT is assumed 15°F (adjustable) warmer than DCW temperature on average, based on lab test data. 
 
         # aquire draw amount for time step
         last_temp = simRun.tmT_F[i-1]

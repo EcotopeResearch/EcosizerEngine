@@ -85,6 +85,22 @@ class ParallelLoopTank(SystemConfig):
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr, self.TMVol_G, self.TMCap_kBTUhr]
     
+    def preSystemStepSetUp(self, simRun : SimulationRun, i, incomingWater_T, minuteIntervals, oat):
+        """
+        helper function for runOneSystemStep
+        """
+        if i > 0 and simRun.getIncomingWaterT(i) != simRun.getIncomingWaterT(i-1):
+            self.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(i)) #adjust load up volume to reflect usefull energy
+        if not (oat is None or self.perfMap is None):
+            if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus be at the next OAT
+                # set primary system capacity based on outdoor air temp and incoming water temp 
+                self.setCapacity(oat = oat, incomingWater_T = incomingWater_T + 15.0, useLoadUpTemp= simRun.getLoadShiftMode(i) == 'L') # CHPWH IWT is assumed 15°F (adjustable) warmer than DCW temperature on average, based on lab test data.
+                if simRun.passedCOPAssumptionThreshold(self.perfMap.timesAssumedCOP*(60/minuteIntervals)):
+                    raise Exception("Could not run simulation because internal performance map for the primary model does not account for the climate zone of the input zip code. Please try with a different primary model or zip code.")
+                hw_gen_for_interval = (1000 * self.PCap_kBTUhr / rhoCp / (simRun.building.supplyT_F - simRun.getIncomingWaterT(i)) * self.defrostFactor)/(60/minuteIntervals)
+                for j in range(60//minuteIntervals):
+                    simRun.addHWGen(hw_gen_for_interval)
+    
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         super().runOneSystemStep(simRun, i, minuteIntervals, oat)
 
