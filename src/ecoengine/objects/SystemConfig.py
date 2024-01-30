@@ -64,7 +64,7 @@ class SystemConfig:
             # size number of heatpumps based on the coldest day
             self.perfMap = PrefMapTracker(self.PCap_kBTUhr if default_PCap_kBTUhr is None else default_PCap_kBTUhr, 
                                           modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
-                                          designOAT_F=building.getLowestOAT(), designIncomingT_F=building.getLowestIncomingT_F(),
+                                          designOAT_F=building.getLowestOAT(), designIncomingT_F=self.getDesignIncomingTemp(building),
                                           designOutT_F=self.storageT_F, usePkl=True if not (systemModel is None or useHPWHsimPrefMap) else False)
         else:
             self.perfMap = PrefMapTracker(self.PCap_kBTUhr if default_PCap_kBTUhr is None else default_PCap_kBTUhr, 
@@ -120,6 +120,9 @@ class SystemConfig:
 
     def resetPerfMap(self):
         self.perfMap.resetFlags()
+
+    def getDesignIncomingTemp(self, building: Building):
+        return building.getHighestIncomingT_F()
     
     def reliedOnEr(self):
         return self.perfMap.didRelyOnEr()

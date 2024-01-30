@@ -2,6 +2,7 @@ from ecoengine.objects.SystemConfig import SystemConfig
 from ecoengine.objects.SimulationRun import SimulationRun
 from ecoengine.constants.Constants import *
 from ecoengine.objects.systemConfigUtils import convertVolume
+from ecoengine.objects.Building import Building
 
 class PrimaryWithRecirc(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
@@ -14,6 +15,9 @@ class PrimaryWithRecirc(SystemConfig):
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, doLoadShift, 
                 loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, systemModel, 
                 numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
+        
+    def getDesignIncomingTemp(self, building: Building):
+        return building.getHighestIncomingT_F() + ((self.storageT_F - building.getHighestIncomingT_F()) * self.inletWaterAdjustment)
         
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         

@@ -48,6 +48,9 @@ class SwingTank(SystemConfig):
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr, self.TMVol_G, self.TMCap_kBTUhr, self.CA_TMVol_G]
     
+    def getDesignIncomingTemp(self, building: Building):
+        return building.getHighestIncomingT_F() + 15.0
+    
     def sizeSystem(self, building):
         """
         Resizes the system with a new building.

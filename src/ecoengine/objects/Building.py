@@ -152,7 +152,19 @@ class Building:
             for t_row in temp_reader:
                 t_value = float(t_row[self.climateZone - 1])
                 lowest_t = min(lowest_t, t_value)
-            return lowest_t    
+            return lowest_t
+        
+    def getHighestIncomingT_F(self):
+        if self.climateZone is None:
+            return self.incomingT_F
+        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as inlet_file:
+            temp_reader = csv.reader(inlet_file)
+            next(temp_reader)# Skip the header row
+            highest_t = float('-inf')
+            for t_row in temp_reader:
+                t_value = float(t_row[self.climateZone - 1])
+                highest_t = max(highest_t, t_value)
+            return highest_t   
 
     def getLowestWaterAndAirTempCombos(self):
         """

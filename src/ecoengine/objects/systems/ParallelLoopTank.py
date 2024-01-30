@@ -55,6 +55,9 @@ class ParallelLoopTank(SystemConfig):
             raise Exception('Invalid input given for TMonTemp_F, it must be between 32 and 212F.')
         if setpointTM_F <= TMonTemp_F:
             raise Exception("The temperature maintenance setpoint temperature must be greater than the turn on temperature")
+        
+    def getDesignIncomingTemp(self, building: Building):
+        return building.getHighestIncomingT_F() + 15.0
 
     def sizeSystem(self, building):
         """
