@@ -52,8 +52,8 @@ def test_perfMaps(hpwhModel, pretty_name):
 
 @pytest.mark.parametrize("hpwhModel, hxTempIncrease, expectedHXTempIncrease", 
                          [
-                            ("MODELS_LYNC_AEGIS_500_C_SP", 15, 15),
-                            ("MODELS_LYNC_AEGIS_500_C_SP", None, 10),
+                            ("MODELS_LYNC_AEGIS_500_TEST_C_SP", 15, 15),
+                            ("MODELS_LYNC_AEGIS_500_TEST_C_SP", None, 10),
                             ("MODELS_Mitsubishi_QAHV_C_SP", 5, 5),
                             ("MODELS_Mitsubishi_QAHV_C_SP", None, 10),
                             ("MODELS_Laars_eTherm_C_SP", 15, 15),
@@ -122,7 +122,7 @@ def test_getListOfModels():
     assert len(getListOfModels(multiPass = False,sgipModelsOnly=False)) > len(getListOfModels(multiPass = False,sgipModelsOnly=True))
     assert len(getListOfModels(multiPass = True,sgipModelsOnly=False)) > len(getListOfModels(multiPass = True,sgipModelsOnly=True))
     assert len(getListOfModels(multiPass = True,excludeModels=["MODELS_ColmacCxV_15_VFD_45_Hz_C_MP"])) == len(getListOfModels(multiPass = True))
-    assert len(getListOfModels(multiPass = False,excludeModels=["MODELS_LYNC_AEGIS_500_C_SP"])) < len(getListOfModels(multiPass = False))
+    assert len(getListOfModels(multiPass = False,excludeModels=["MODELS_LYNC_AEGIS_350_SIMULATED_C_SP"])) < len(getListOfModels(multiPass = False))
 
 @pytest.mark.parametrize("hpwhModel, expectedCap, expectedPower, oat, inlet, outlet, prefMapOnly, fallbackCap", 
                          [
