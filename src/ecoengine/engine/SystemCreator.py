@@ -10,7 +10,7 @@ def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRunti
                  aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, safetyTM = 1.75, 
                  setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, PVol_G_atStorageT = None, PCap_kBTUhr = None, TMVol_G = None, TMCap_kBTUhr = None,
                  systemModel = None, numHeatPumps = None, tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None, ignoreShortCycleEr = False,
-                 useHPWHsimPrefMap = False) -> SystemConfig:
+                 useHPWHsimPrefMap = False, sizeAdditionalER = True, additionalERSaftey = 1.0) -> SystemConfig:
     """
     Initializes and sizes the HPWH system. Both primary and tempurature maintenance (for parrallel loop and swing tank) are set up in this function.
 
@@ -76,7 +76,11 @@ def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRunti
     useHPWHsimPrefMap : boolean
         if available for the HPWH model in systemModel and/or tmModel, the system will use the preformance map from HPWHsim if useHPWHsimPrefMap is set to True. 
         Otherwise, it will use the most recent data model.
-
+    sizeAdditionalER : boolean
+        if set to True for a swingtank_er schematic, will size for additional ER element. False if there is no need to size additional ER for swingtank_er schematic
+    additionalERSaftey : float
+        applicable for ER trade off swing tank only. Saftey factor to apply to additional electric resistance sizing
+        
     Raises
     ----------
     Exception: Error if schematic is not in list of valid schematic names.
@@ -91,7 +95,8 @@ def createSystem(schematic, storageT_F, defrostFactor, percentUseable, compRunti
         case 'swingtank_er':
             return SwingTankER(safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,
-                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, TMVol_G, TMCap_kBTUhr)       
+                systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, TMVol_G, TMCap_kBTUhr, 
+                sizeAdditionalER, additionalERSaftey)       
         case 'paralleltank':
             return ParallelLoopTank(safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, 
                 building, doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F,

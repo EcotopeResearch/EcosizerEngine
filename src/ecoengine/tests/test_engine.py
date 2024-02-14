@@ -330,6 +330,166 @@ def test__annual_swing_simulationResults_size(annual_swing_sizer):
     simRun = annual_swing_sizer.getSimRun(initPV=0.4*944.972083230641, initST=135, minuteIntervals = 15, nDays = 365)
     assert len(simRun.getPrimaryVolume()) == len(simRun.getHWGeneration()) == len(simRun.getHWDemand()) == len(simRun.getPrimaryGeneration()) == 35040
 
+@pytest.mark.parametrize(
+        "zipC, nBR, storageT_F, aqFrac, aqFrac_lu, aqFrac_shed, luT_F, schematic, systemModel, numPumps, pVol, TMCap_kW, tmModel, TMVol_G, tmNumHeatPumps, loadshift_capacity, kGperkWh_saved, annual_kGCO2_saved", 
+        [
+            # (zipC, nBR, storageT_F, aqFrac, aqFrac_lu, aqFrac_shed, luT_F, schematic, systemModel, numPumps, pVol, TMCap_kW, tmModel, TMVol_G, tmNumHeatPumps, loadshift_capacity, kGperkWh_saved, annual_kGCO2_saved),
+            (90210, [0,100,50,0,0,0], 140, 0.4, 0.2, 0.8, 140, 'swingtank', "MODELS_NyleC125A_C_SP", 4, 1200, 18, None, 150, None, 134.06, 3.44, 460.61),
+            (90023, [5,120,70,9,4,1], 150, .45, .15, .85, 160, 'swingtank', "MODELS_LYNC_AEGIS_350_SIMULATED_C_SP", 3, 2000, 20, None, 150, None, 329.22, 5.59, 1839.4),
+            (90023, [5,120,70,9,4,1], 150, .45, .15, .85, 160, 'swingtank', "MODELS_LYNC_AEGIS_500_SIMULATED_C_SP", 2, 1700, 17, None, 150, None, 279.84, 5.38, 1505.03),
+            (91023, [50,6,50,20,4,1], 140, .45, .15, .85, 140, 'paralleltank', "MODELS_SANCO2_C_SP", 20, 1200, None, "MODELS_AOSmithHPTS50_R_MP", 150, 6, 169.11, 3.89, 658.26),
+            (91023, [50,6,50,20,4,1], 140, .45, .15, .85, 140, 'paralleltank', "MODELS_Mitsubishi_QAHV_C_SP", 3, 1800, None, "MODELS_AOSmithHPTS50_R_MP", 150, 6, 253.67, 6.06, 1536.16),
+            (91023, [50,0,0,0,0,0], 150, .40, .2, .8, 160, 'singlepass_rtp', "MODELS_Mitsubishi_QAHV_C_SP", 1, 500, None, None, None, None, 75.09, 9.61, 721.48),
+            (91023, [50,0,0,0,0,0], 150, .40, .2, .8, 160, 'singlepass_norecirc', "MODELS_Mitsubishi_QAHV_C_SP", 1, 500, None, None, None, None, 75.09, 7.07, 530.93),
+            (91023, [50,100,0,0,0,0], 150, .40, .2, .8, 160, 'multipass_norecirc', "MODELS_ColmacCxA_30_C_MP", 1, 1850, None, None, None, None, 69.45, 5.11, 354.67),
+            (91023, [50,100,0,0,0,0], 150, .40, .2, .8, 160, 'multipass_rtp', "MODELS_ColmacCxA_30_C_MP", 1, 2200, None, None, None, None, 82.59, 0.4, 33.05)
+
+        ]
+)
+def test_hard_SGIP_page_results(zipC, nBR, storageT_F, aqFrac, aqFrac_lu, aqFrac_shed, luT_F, schematic, systemModel, 
+                                numPumps, pVol, TMCap_kW, tmModel, TMVol_G, tmNumHeatPumps, loadshift_capacity, kGperkWh_saved, annual_kGCO2_saved):
+    nApt = int(sum( nBR ))
+    rBR = [1.37,1.74,2.57,3.11,4.23,3.77] 
+    npep = np.dot(nBR, rBR)
+    building = createBuilding(50, sum(nBR), 150, 'multi_family', loadshape = None, avgLoadshape = None,
+        returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = nBR, nApt = 0, Wapt = 0, standardGPD = 'ca')
+    gpdpp = building.magnitude/sum(nBR)
+    
+    hpwh = EcosizerEngine(
+            incomingT_F = 0,
+            magnitudeStat = npep,
+            supplyT_F = 120,
+            storageT_F = storageT_F,
+            percentUseable = 0.95,
+            aquaFract = aqFrac,
+            aquaFractLoadUp = aqFrac_lu,
+            aquaFractShed = aqFrac_shed,
+            loadUpT_F = luT_F,
+            loadUpHours = 2, # might need to change for future
+            schematic = schematic,
+            buildingType  = 'multi_family',
+            gpdpp = gpdpp,
+            compRuntime_hr = 16,
+            nApt = nApt,
+            Wapt = 60,
+            standardGPD = 'ca',
+            nBR = nBR,
+            loadShiftSchedule = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
+            doLoadShift   = True,
+            zipCode=zipC,
+            annual=True,
+            systemModel=systemModel,
+            numHeatPumps=numPumps,
+            PVol_G_atStorageT=pVol,
+            TMCap_kW=TMCap_kW,
+            tmModel=tmModel,
+            TMVol_G=TMVol_G,
+            tmNumHeatPumps = tmNumHeatPumps,                          
+    )
+    outlist = hpwh.getSimRunWithkWCalc(minuteIntervals = 15, nDays = 365)
+    assert round(outlist[2],2) == loadshift_capacity
+    assert round(outlist[3],2) == kGperkWh_saved
+    assert round(outlist[4],2) == annual_kGCO2_saved
+
+@pytest.mark.parametrize(
+        "aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, hpwhModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, usePkl", 
+        [
+            (0.21, 0.8, 140, 120, 'MODELS_VOLTEX80_R_MP', 'multipass_norecirc', 891, 48, None, None, True, 94503, False),
+            (0.21, 0.8, 150, 120, 'MODELS_ColmacCxA_10_C_MP', 'multipass_norecirc', 891, 48, None, None, True, 93901, True),
+            (0.21, 0.8, 145, 120, None, 'swingtank_er', 891, 20, 100, 19, True, 95603, False),
+            (0.21, 0.8, 145, 120, None, 'swingtank_er', 891, 20, 100, 19, True, None, False),
+        ]
+)
+def test_sizing_for_simRun(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, hpwhModel, 
+                              simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, usePkl):
+    hpwh = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = supplyT_F,
+            storageT_F      = storageT_F,
+            loadUpT_F       = storageT_F,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            aquaFractLoadUp = aquaFractLoadUp,
+            aquaFractShed   = aquaFractShed,
+            schematic       = simSchematic, 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 60,
+            loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
+            loadUpHours     = 3,
+            doLoadShift     = doLoadShift,
+            loadShiftPercent       = 0.8,
+            PVol_G_atStorageT = PVol_G_atStorageT, 
+            PCap_kW = PCap_kW,
+            TMVol_G = TMVol_G,
+            TMCap_kW = TMCap_kW,
+            annual = True,
+            zipCode = zipCode,
+            systemModel = hpwhModel
+        )
+    simRun = hpwh.getSimRun(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365)
+    assert len(simRun.getHWGeneration()) == 8760*4
+    assert hpwh.system.perfMap.usePkl == usePkl
+
+@pytest.mark.parametrize(
+        "aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, hpwhModel, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, annual, produce_error", 
+        [
+            (0.21, 0.8, 145, 120, None, 891, 20, 100, 19, True, 95603, True, True),
+            (0.21, 0.8, 145, 120, None, 891, 20, 100, 19, True, None, True, True),
+            (0.21, 0.8, 145, 120, None, 891, 20, 100, 29, True, None, True, False),
+            (0.21, 0.8, 145, 120, None, 891, 20, 100, 29, False, None, False, False),
+            # (0.21, 0.8, 145, 120, "MODELS_SANCO2_C_SP", 'swingtank_er', 891, 20, 100, 19, True, 95603)
+        ]
+)
+def test_er_undersized_error(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, hpwhModel, 
+                              PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, annual, produce_error):
+    hpwh = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = supplyT_F,
+            storageT_F      = storageT_F,
+            loadUpT_F       = storageT_F,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            aquaFractLoadUp = aquaFractLoadUp,
+            aquaFractShed   = aquaFractShed,
+            schematic       = 'swingtank_er', 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 60,
+            loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
+            loadUpHours     = 3,
+            doLoadShift     = doLoadShift,
+            loadShiftPercent       = 0.8,
+            PVol_G_atStorageT = PVol_G_atStorageT, 
+            PCap_kW = PCap_kW,
+            TMVol_G = TMVol_G,
+            TMCap_kW = TMCap_kW,
+            annual = annual,
+            zipCode = zipCode,
+            systemModel = hpwhModel,
+            sizeAdditionalER = False
+        )
+    if produce_error:
+        with pytest.raises(Exception, match="The swing tank dropped below the supply temperature! The system is undersized"):
+            hpwh.getSimRun(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365)
+    else:
+        simRun = hpwh.getSimRun(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365)
+        assert len(simRun.getHWGeneration()) == 8760*4
+
 @pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, climateZone", [
    (0.21, 0.8, 140, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_VOLTEX80_R_MP', None, 'multipass_norecirc', 891, 48, None, None, True, 94503,2),
    (0.21, 0.8, 150, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_ColmacCxA_10_C_MP', None, 'multipass_norecirc', 891, 48, None, None, True, 93901,3),

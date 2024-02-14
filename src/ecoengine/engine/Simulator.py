@@ -37,13 +37,6 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
     system.resetPerfMap()
     simRun = system.getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
 
-    # do preliminary work for annual simulation
-    if nDays == 365:
-        
-        # check for climateZone
-        if building.climateZone is None:
-            raise Exception("Cannot run annual simulation with out setting building climate zone to be a number between 1 and 16.")
-
     system.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(0)) # set initial load up volume and aquafraction adjusted for useful energy
 
     with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
@@ -57,7 +50,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
             # Run the simulation
             try:
                 for i in range(len(simRun.hwDemand)):
-                    if nDays == 365:
+                    if not building.climateZone is None:
                         if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus take the next OAT
                             oat_row = next(oat_reader)
                             oat_F = float(oat_row[building.climateZone - 1])

@@ -110,6 +110,12 @@ class EcosizerEngine:
     useHPWHsimPrefMap : boolean
         if available for the HPWH model in systemModel and/or tmModel, the system will use the preformance map from HPWHsim if useHPWHsimPrefMap is set to True. 
         Otherwise, it will use the most recent data model.
+    designOAT_F : float
+        The outdoor air temperature for sizing the number of heat pumps and/or ER capacity in an ER-Trade off system.
+    sizeAdditionalER : boolean
+        if set to True for a swingtank_er schematic, will size for additional ER element. False if there is no need to size additional ER for swingtank_er schematic
+    additionalERSaftey : float
+        applicable for ER trade off swing tank only. Saftey factor to apply to additional electric resistance sizing
     """
 
     def __init__(self, incomingT_F, supplyT_F, storageT_F, percentUseable, aquaFract,
@@ -122,7 +128,7 @@ class EcosizerEngine:
                             PVol_G_atStorageT = None, PCap_kW = None, TMVol_G = None, TMCap_kW = None,
                             annual = False, zipCode = None, climateZone = None, systemModel = None, numHeatPumps = None, 
                             tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None, ignoreShortCycleEr = False,
-                            useHPWHsimPrefMap = False):
+                            useHPWHsimPrefMap = False, designOAT_F = None, sizeAdditionalER = True, additionalERSaftey = 1.0):
         
         ignoreRecirc = False
         if schematic == 'singlepass_norecirc' or schematic == 'primary' or schematic == 'multipass_norecirc' or schematic == 'multipass':
@@ -154,7 +160,8 @@ class EcosizerEngine:
                                 annual          = annual,
                                 zipCode         = zipCode, 
                                 climateZone     = climateZone,
-                                ignoreRecirc    = ignoreRecirc
+                                ignoreRecirc    = ignoreRecirc,
+                                designOAT_F     = designOAT_F
         )
 
         self.system = createSystem(  
@@ -186,7 +193,9 @@ class EcosizerEngine:
                                 tmNumHeatPumps = tmNumHeatPumps,
                                 inletWaterAdjustment = inletWaterAdjustment,
                                 ignoreShortCycleEr = ignoreShortCycleEr,
-                                useHPWHsimPrefMap = useHPWHsimPrefMap
+                                useHPWHsimPrefMap = useHPWHsimPrefMap,
+                                sizeAdditionalER = sizeAdditionalER,
+                                additionalERSaftey = additionalERSaftey
         )
     
     def getSimResult(self, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, kWhCalc = False, kGDiff = False, optimizeNLS = False):
@@ -541,8 +550,10 @@ class EcosizerEngine:
         -------
         reliedOnER : boolean
             True if the system relied on electric resistance during it's last simulation. False otherwise.
+        tmReliedOnER : boolean
+            True if the temperature maintenance system relied on electric resistance during it's last simulation. False otherwise.
         """
-        return self.system.reliedOnEr()
+        return self.system.reliedOnEr(), self.system.tmReliedOnEr()
     
     def systemCapedInlet(self):
         """

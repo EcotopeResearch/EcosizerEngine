@@ -13,15 +13,15 @@ import math
 # print(f"pm.getCapacity({25},{40},{148}) {pm.getCapacity(25,40,148)}")
 # print(f"pm.getCapacity({25},{83},{134}) {pm.getCapacity(25,83,134)}")
 
-print("=============================================================")
+# print("=============================================================")
 
-pm = PrefMapTracker(None, 'MODELS_Mitsubishi_QAHV_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
-print("MODELS_Mitsubishi_QAHV_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
+# pm = PrefMapTracker(None, 'MODELS_Mitsubishi_QAHV_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
+# print("MODELS_Mitsubishi_QAHV_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
 
-print(f"pm.getCapacity({105.8},{89.51},{160-10}) {pm.getCapacity(105.8,89.51,160-10)}")
-# print(f"pm.getCapacity({-13-10},{67-10},{160}) {pm.getCapacity(-13-10,67-10,160)}")
+# print(f"pm.getCapacity({105.8},{89.51},{160-10}) {pm.getCapacity(105.8,89.51,160-10)}")
+# # print(f"pm.getCapacity({-13-10},{67-10},{160}) {pm.getCapacity(-13-10,67-10,160)}")
 
-print("=============================================================")
+# print("=============================================================")
 
 # pm = PrefMapTracker(None, 'MODELS_LYNC_AEGIS_500_C_SP', numHeatPumps=1, usePkl=True, prefMapOnly = True)
 # print("MODELS_LYNC_AEGIS_500_C_SP secondaryHeatExchanger", pm.secondaryHeatExchanger)
@@ -29,6 +29,74 @@ print("=============================================================")
 # print(f"pm.getCapacity({34},{74-10},{160-10}) {pm.getCapacity(34,74-10,160-10)}")
 # print(f"pm.getCapacity({34-10},{74-10},{160}) {pm.getCapacity(34-10,74-10,160)}")
 W_TO_BTUHR = 3.412142
+
+hpwh = EcosizerEngine(
+        incomingT_F     = 50,
+        magnitudeStat  = 100,
+        supplyT_F       = 120,
+        storageT_F      = 145,
+        loadUpT_F       = 145,
+        percentUseable  = 0.9, 
+        aquaFract       = 0.4, 
+        aquaFractLoadUp = 0.21,
+        aquaFractShed   = 0.8,
+        schematic       = 'swingtank_er', 
+        buildingType   = 'multi_family',
+        returnT_F       = 0, 
+        flowRate       = 0,
+        gpdpp           = 25,
+        safetyTM        = 1.75,
+        defrostFactor   = 1, 
+        compRuntime_hr  = 16, 
+        nApt            = 100, 
+        Wapt            = 60,
+        # loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
+        loadUpHours     = 3,
+        doLoadShift     = False,
+        loadShiftPercent       = 1.,
+        PVol_G_atStorageT = 891, 
+        PCap_kW = 20,
+        TMVol_G = 100,
+        TMCap_kW = 19,
+        annual = False,
+        sizeAdditionalER = True
+    )
+print(f"{hpwh.system.TMCap_kBTUhr} {hpwh.system.TMCap_kBTUhr / W_TO_BTUHR}")
+print("=================Annual=======================")
+hpwh = EcosizerEngine(
+        incomingT_F     = 50,
+        magnitudeStat  = 100,
+        supplyT_F       = 120,
+        storageT_F      = 145,
+        loadUpT_F       = 145,
+        percentUseable  = 0.9, 
+        aquaFract       = 0.4, 
+        aquaFractLoadUp = 0.21,
+        aquaFractShed   = 0.8,
+        schematic       = 'swingtank_er', 
+        buildingType   = 'multi_family',
+        returnT_F       = 0, 
+        flowRate       = 0,
+        gpdpp           = 25,
+        safetyTM        = 1.75,
+        defrostFactor   = 1, 
+        compRuntime_hr  = 16, 
+        nApt            = 100, 
+        Wapt            = 60,
+        loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
+        loadUpHours     = 3,
+        doLoadShift     = False,
+        loadShiftPercent       = 1.,
+        PVol_G_atStorageT = 891, 
+        PCap_kW = 20,
+        TMVol_G = 100,
+        TMCap_kW = 19,
+        annual = True,
+        sizeAdditionalER = True
+    )
+print(f"{hpwh.system.TMCap_kBTUhr} {hpwh.system.TMCap_kBTUhr / W_TO_BTUHR}")
+# hpwh.getSimRun(initPV=0.1, initST=135, minuteIntervals = 1, nDays = 365)
 # for model in [["MODELS_Laars_eTherm_C_SP", 150]]:
 #     print("=============================================================")
 #     print(f"============{model}====================")

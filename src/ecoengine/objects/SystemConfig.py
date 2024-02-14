@@ -54,17 +54,17 @@ class SystemConfig:
             self.sizeSystem(building)
         if isinstance(building, Building):
             # calculate load up triggers if we know the incoming water temp
-            self.setLoadUPVolumeAndTrigger(building.getLowestIncomingT_F())
+            self.setLoadUPVolumeAndTrigger(building.getDesignInlet())
 
         self.adjustedPVol_G_atStorageT = np.ceil(self.PVol_G_atStorageT * self.percentUseable)
         self.Vtrig_normal = self.PVol_G_atStorageT * (1 - self.aquaFract)
         if self.doLoadShift:
             self.Vtrig_shed = self.PVol_G_atStorageT * (1 - self.aquaFractShed)
-        if numHeatPumps is None and not systemModel is None and not building is None and not building.getClimateZone() is None:
+        if numHeatPumps is None and not systemModel is None and not building is None:
             # size number of heatpumps based on the coldest day
             self.perfMap = PrefMapTracker(self.PCap_kBTUhr if default_PCap_kBTUhr is None else default_PCap_kBTUhr, 
                                           modelName = systemModel, numHeatPumps = numHeatPumps, kBTUhr = True,
-                                          designOAT_F=building.getLowestOAT(), designIncomingT_F=self.getDesignIncomingTemp(building),
+                                          designOAT_F=building.getDesignOAT(), designIncomingT_F=self.getDesignIncomingTemp(building),
                                           designOutT_F=self.storageT_F, usePkl=True if not (systemModel is None or useHPWHsimPrefMap) else False)
         else:
             self.perfMap = PrefMapTracker(self.PCap_kBTUhr if default_PCap_kBTUhr is None else default_PCap_kBTUhr, 
@@ -126,6 +126,9 @@ class SystemConfig:
     
     def reliedOnEr(self):
         return self.perfMap.didRelyOnEr()
+    
+    def tmReliedOnEr(self):
+        return False
     
     def capedInlet(self):
         return self.perfMap.didCapInlet()
@@ -202,7 +205,7 @@ class SystemConfig:
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr]
     
-    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3) -> SimulationRun:
+    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, forcePeakyLoadshape = False) -> SimulationRun:
         """
         Returns initialized arrays needed for nDay simulation
 
@@ -218,6 +221,8 @@ class SystemConfig:
             the number of minutes per time interval for the simulation
         nDays : int
             the number of days that will be simulated 
+        forcePeakyLoadshape : boolean (default False)
+            if set to True, forces the most "peaky" load shape rather than average load shape
 
         Returns
         -------
@@ -225,7 +230,7 @@ class SystemConfig:
         """
         
         loadShapeN = building.loadshape
-        if self.doLoadShift and nDays < 365: #Only for non-annual simulations
+        if self.doLoadShift and len(loadShapeN) == 24 and not forcePeakyLoadshape:
             loadShapeN = building.avgLoadshape
         
         # Get the generation rate from the primary capacity
@@ -234,7 +239,7 @@ class SystemConfig:
             if building.climateZone is None:
                 raise Exception("Cannot run a simulation of this kind without either a climate zone or a default output capacity")
         else:
-            hwGenRate = 1000 * self.PCap_kBTUhr / rhoCp / (building.supplyT_F - building.incomingT_F) \
+            hwGenRate = 1000 * self.PCap_kBTUhr / rhoCp / (building.supplyT_F - building.getIncomingWaterT(0)) \
                 * self.defrostFactor
         loadshiftSched = np.tile(self.loadShiftSchedule, nDays) # TODO can we get rid of it?
         
@@ -242,12 +247,11 @@ class SystemConfig:
         hwDemand = building.magnitude * loadShapeN
         if (len(hwDemand) == 24):
             hwDemand = np.tile(hwDemand, nDays)
-        if nDays < 365:
             hwDemand = hwDemand * self.fract_total_vol
-        elif nDays == 365:
+        elif len(hwDemand) == 8760:
             hwDemand = hwDemand
         else:
-            raise Exception("Invalid input given for number of days. Must be <= 365.")
+            raise Exception("Invalid load shape. Must be length 24 (day) or length 8760 (year).")
 
         # Init the "simulation"
         V0_normal = self.adjustedPVol_G_atStorageT
@@ -285,14 +289,13 @@ class SystemConfig:
 
         if initPV:
             pV[-1] = initPV
-
         return SimulationRun(hwGenRate, hwDemand, V0_normal, pV, building, loadshiftSched, minuteIntervals, self.doLoadShift, LS_sched)
     
     def preSystemStepSetUp(self, simRun : SimulationRun, i, incomingWater_T, minuteIntervals, oat):
         """
         helper function for runOneSystemStep
         """
-        if i > 0 and simRun.getIncomingWaterT(i) != simRun.getIncomingWaterT(i-1):
+        if i == 0 or (i > 0 and simRun.getIncomingWaterT(i) != simRun.getIncomingWaterT(i-1)):
             self.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(i)) #adjust load up volume to reflect usefull energy
         if not (oat is None or self.perfMap is None):
             if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus be at the next OAT
@@ -476,7 +479,7 @@ class SystemConfig:
 
         # Running vol
         runningVol_G, effMixFract = self._calcRunningVol(heatHrs, np.ones(24), building.loadshape, building, effMixFract)
-        totalVolAtStorage = self._getTotalVolAtStorage(runningVol_G, building.incomingT_F, building.supplyT_F)
+        totalVolAtStorage = self._getTotalVolAtStorage(runningVol_G, building.getDesignInlet(), building.supplyT_F)
         totalVolAtStorage *=  thermalStorageSF
 
         if self.doLoadShift and not primaryCurve:
@@ -488,7 +491,7 @@ class SystemConfig:
                 effMixFract = LSeffMixFract
                 
                 #get the average tank volume
-                totalVolAtStorage_ls = convertVolume(runningVol_G, self.storageT_F, building.incomingT_F, building.supplyT_F) / (self.aquaFractShed - self.aquaFractLoadUp)
+                totalVolAtStorage_ls = convertVolume(runningVol_G, self.storageT_F, building.getDesignInlet(), building.supplyT_F) / (self.aquaFractShed - self.aquaFractLoadUp)
                 
                 #multiply computed storage by efficiency safety factor (currently set to 1)
                 totalVolAtStorage_ls *=  thermalStorageSF 

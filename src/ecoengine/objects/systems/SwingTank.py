@@ -153,8 +153,8 @@ class SwingTank(SystemConfig):
                 eff_HW_mix_fraction = temp_eff_HW_mix_fraction
     
         #convert to supply so that we can reuse functionality 
-        storMixedT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)
-        runV_G = convertVolume(runV_G, building.supplyT_F, building.incomingT_F, storMixedT_F)
+        storMixedT_F = self.mixStorageTemps(runV_G, building.getDesignInlet(), building.supplyT_F)
+        runV_G = convertVolume(runV_G, building.supplyT_F, building.getDesignInlet(), storMixedT_F)
         
         return runV_G, eff_HW_mix_fraction
     
@@ -221,10 +221,10 @@ class SwingTank(SystemConfig):
         runV_G += Vshift
        
         #get mixed storage temp
-        mixedStorT_F = self.mixStorageTemps(runV_G, building.incomingT_F, building.supplyT_F)
+        mixedStorT_F = self.mixStorageTemps(runV_G, building.getDesignInlet(), building.supplyT_F)
         
         #convert from storage to supply volume
-        runV_G = runV_G * (mixedStorT_F- building.incomingT_F) / (building.supplyT_F - building.incomingT_F) 
+        runV_G = runV_G * (mixedStorT_F- building.getDesignInlet()) / (building.supplyT_F - building.getLowestIncomingT_F()) 
         
         return runV_G, eff_HW_mix_fraction
 
@@ -302,7 +302,7 @@ class SwingTank(SystemConfig):
         
         return mixStorageT_F
 
-    def _simJustSwing(self, N, hw_out, building, initST = None):
+    def _simJustSwing(self, N, hw_out, building : Building, initST = None):
         """
         Parameters
         ----------
@@ -336,8 +336,8 @@ class SwingTank(SystemConfig):
         swingheating = False
 
         for i in range(1, N):
-            hw_outSwing[i] = convertVolume(hwDemand[i], swingT_F[i-1], building.incomingT_F, building.supplyT_F)
-            primaryStorageT_F = self.mixStorageTemps(hw_outSwing[i], building.incomingT_F, building.supplyT_F)
+            hw_outSwing[i] = convertVolume(hwDemand[i], swingT_F[i-1], building.getDesignInlet(), building.supplyT_F)
+            primaryStorageT_F = self.mixStorageTemps(hw_outSwing[i], building.getDesignInlet(), building.supplyT_F)
             swingheating, swingT_F[i], tmRun[i] = self._runOneSwingStep(building, swingheating, swingT_F[i-1], hw_outSwing[i], primaryStorageT_F)
         
         return [swingT_F, tmRun, hw_outSwing]
@@ -475,8 +475,8 @@ class SwingTank(SystemConfig):
             
         return heatCap, genRate
     
-    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3) -> SimulationRun:
-        simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
+    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, forcePeakyLoadshape = False) -> SimulationRun:
+        simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays, forcePeakyLoadshape)
         simRun.initializeTMValue(initST, self.storageT_F, self.TMCap_kBTUhr)
         return simRun
 

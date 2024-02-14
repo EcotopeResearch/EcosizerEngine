@@ -193,6 +193,24 @@ def test_zipCodes_to_climateZones(zipCode, climateZone, buildingType, magnitude)
     )
     assert building.climateZone == climateZone
 
+@pytest.mark.parametrize("zipCode, design_oat, buildingType, magnitude, expected_design_oat", [
+   (94565,1,"apartment", 100, 1),
+   (94565,None,["womens_dorm", "junior_high"], [100,50], 26.96),
+   (None,None,"multi_family", 100, None)
+])
+def test_design_oat(zipCode, design_oat, buildingType, magnitude, expected_design_oat):
+    building = createBuilding(
+            incomingT_F     = 50,
+            magnitudeStat  = magnitude,
+            supplyT_F       = 120,
+            buildingType   = buildingType,
+            flowRate       = 5,
+            returnT_F       = 100,
+            zipCode         = zipCode,
+            designOAT_F= design_oat
+    )
+    assert building.getDesignOAT() == expected_design_oat
+
 @pytest.mark.parametrize("climateZone, jan_in_T, sep_in_t, oct_in_T", [
    (1, 50.108, 54.734, 54.59),
    (6, 59.306, 65.876, 64.742),
@@ -260,6 +278,8 @@ def test_invalid_building_parameter_errors():
         createBuilding("not a number", 4, 120, "mens_dorm")
     with pytest.raises(Exception, match="Error: Flow rate must be a number."):
         createBuilding(35, 4, 120, "mens_dorm", flowRate = "problem")
+    with pytest.raises(Exception, match="Error: designOAT_F must be a number or None."):
+        createBuilding(35, 4, 120, "mens_dorm", designOAT_F = "problem")
     with pytest.raises(Exception, match="Missing values for multi-use building. Collected 2 building types but collected 1 magnitude varriables"):
         createBuilding(35, 4, 120, ["mens_dorm","yep"])
     with pytest.raises(Exception, match="Missing values for multi-use building. Collected 2 building types but collected 4 magnitude varriables"):

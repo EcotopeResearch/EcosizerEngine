@@ -33,7 +33,8 @@ class ParallelLoopTank(SystemConfig):
                 raise Exception('Invalid input given for Temperature Maintenance Output Capacity, it must be a number greater than zero.')
            self.TMVol_G = TMVol_G
            self.TMCap_kBTUhr = TMCap_kBTUhr
-
+        if self.TMCap_kBTUhr is None and isinstance(building, Building):
+            self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000
         # set performance map for tm tank
         if not tmModel is None and not tmModel[-2:] == 'MP':
             raise Exception("Parallel loop tank model must be a multipass system.")
@@ -92,7 +93,7 @@ class ParallelLoopTank(SystemConfig):
         """
         helper function for runOneSystemStep
         """
-        if i > 0 and simRun.getIncomingWaterT(i) != simRun.getIncomingWaterT(i-1):
+        if i == 0 or (i > 0 and simRun.getIncomingWaterT(i) != simRun.getIncomingWaterT(i-1)):
             self.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(i)) #adjust load up volume to reflect usefull energy
         if not (oat is None or self.perfMap is None):
             if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus be at the next OAT
@@ -140,14 +141,17 @@ class ParallelLoopTank(SystemConfig):
         simRun.tmRun[i] = time_running * minuteIntervals
         simRun.tmT_F[i] = Tnew
 
-    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3) -> SimulationRun:
-        simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
+    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, forcePeakyLoadshape = False) -> SimulationRun:
+        simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays, forcePeakyLoadshape)
         simRun.initializeTMValue(self.setpointTM_F, self.storageT_F, self.TMCap_kBTUhr, swingOut = False)
         return simRun
     
     def resetToDefaultCapacity(self):
         self.TMCap_kBTUhr = self.tmPerfMap.getDefaultCapacity()
         super().resetToDefaultCapacity()
+    
+    def tmReliedOnEr(self):
+        return self.tmPerfMap.didRelyOnEr()
     
     def setTMCapacity(self, TMCap_kBTUhr = None, oat = None, incomingWater_T = None):
         if not TMCap_kBTUhr is None:

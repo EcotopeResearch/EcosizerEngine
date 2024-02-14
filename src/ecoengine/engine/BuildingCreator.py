@@ -4,7 +4,7 @@ import csv
 
 def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshape = None, avgLoadshape = None,
                     returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, nApt = 0, Wapt = 0, standardGPD = None,
-                    annual = False, zipCode = None, climateZone = None, ignoreRecirc = False) -> Building:
+                    annual = False, zipCode = None, climateZone = None, ignoreRecirc = False, designOAT_F = None) -> Building:
     
     """
     Initializes the building in which the HPWH system will be sized for
@@ -47,6 +47,8 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
         the CA climate zone the building resides in
     ignoreRecirc : boolean
         Set to true if recirc_losses is irrelevent due to no temperature maintenance system
+    designOAT_F : float
+        The design outdoor air temperature for the building.
 
     Raises
     ----------
@@ -89,7 +91,7 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
             for i in range(len(buildingType)):
                 building_list.append(createBuilding(incomingT_F, magnitudeStat[i], supplyT_F, buildingType[i], loadshape[i], avgLoadshape[i],
                         returnT_F, flowRate, gpdpp, nBR, nApt, Wapt, standardGPD, annual, zipCode, climateZone))
-            return MultiUse(building_list, incomingT_F, supplyT_F, returnT_F, flowRate, getClimateZone(zipCode, climateZone), ignoreRecirc)
+            return MultiUse(building_list, incomingT_F, supplyT_F, returnT_F, flowRate, getClimateZone(zipCode, climateZone), ignoreRecirc, designOAT_F)
     
     #only one building type so there should only be one magnitude statistic 
     if isinstance(magnitudeStat, list):
@@ -140,31 +142,32 @@ def createBuilding(incomingT_F, magnitudeStat, supplyT_F, buildingType, loadshap
 
     match buildingType:
         case None:
-            return Building(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return Building(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'apartment':
-            return Apartment(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return Apartment(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'elementary_school':
-            return ElementarySchool(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return ElementarySchool(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'food_service_a':
-            return FoodServiceA(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return FoodServiceA(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'food_service_b':
-            return FoodServiceB(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return FoodServiceB(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'junior_high':
-            return JuniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return JuniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'mens_dorm':
-            return MensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return MensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'motel':
-            return Motel(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return Motel(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'nursing_home':
-            return NursingHome(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return NursingHome(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'office_building':
-            return OfficeBuilding(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return OfficeBuilding(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'senior_high':
-            return SeniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return SeniorHigh(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'womens_dorm':
-            return WomensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc)
+            return WomensDorm(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
         case 'multi_family':
-            return MultiFamily(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, gpdpp, nBR, nApt, Wapt, standardGPD)
+            return MultiFamily(magnitudeStat, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F, 
+                               gpdpp, nBR, nApt, Wapt, standardGPD)
         case _:
             raise Exception("Unrecognized building type.")
         

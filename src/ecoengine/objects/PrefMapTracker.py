@@ -134,6 +134,42 @@ class PrefMapTracker:
         self.timesForcedCOP = 0
         self.timeStorageTempNeedToBeLowered = 0
 
+    def getExtrapolationFlags(self):
+        """
+        The function will return an array of flag values for various circumstances in which the performance map may have extrapolated to return input and output
+        capacities for climate parameters. All values in the array will be integers, 0 if the performance map has not extrapolated in this way since it was last reset,
+        or a non-zero integer representing if the performance map has extrapolated or the number of times it has extrapolated in this way since it was last reset.
+
+        Returns
+        -------
+        reliedOnER
+            Indicates if the system at any point needed to rely on Electric Resistance during the simulation (0 or 1)
+        capedInlet
+            Indicates if the system at any point needed to shrink inlet water temperature if it was higher than maximum in performance map (0 or 1)
+        raisedInletTemp
+            Indicates if the system at any point needed to raise inlet water temperature if it was less than minimum in performance map (0 or 1)
+        assumedHighDefaultCap
+            Indicates if the system at any point needed to OAT if it was higher than maximum in performance map and needed to assume default 
+            high temp in and out capacity values (0 or 1)
+        timesAssumedCOP
+            The number of times a system has assumed a COP of 1.5 during a simulation due to performance map constraints
+        timesForcedCOP
+            The number of times a system had to alter the climate parameters to fit into the boundaries of the performance map to produce a
+            input and output capacity
+        timeStorageTempNeedToBeLowered
+            The number of times a system had to lower the storage temperature to fit into the boundaries of the performance map to produce a
+            input and output capacity
+        """
+        return [
+            1 if self.reliedOnER else 0,
+            1 if self.capedInlet else 0,
+            1 if self.raisedInletTemp else 0,
+            1 if self.assumedHighDefaultCap else 0,
+            self.timesAssumedCOP,
+            self.timesForcedCOP,
+            self.timeStorageTempNeedToBeLowered
+        ]
+
     def getCapacity(self, externalT_F, condenserT_F, outT_F, sizingNumHP = False, fallbackCapacity_kW = None):
         """
         Returns the current output capacity of of the HPWH model for the simulation given external and condesor temperatures.
