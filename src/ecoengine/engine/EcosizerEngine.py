@@ -3,6 +3,8 @@ from .SystemCreator import *
 from .Simulator import simulate
 from ecoengine.objects.SimulationRun import *
 from ecoengine.objects.systemConfigUtils import *
+from ecoengine.objects.UtilityCostTracker import *
+from ecoengine.objects.PrefMapTracker import PrefMapTracker
 import copy
 import json
 from plotly.graph_objs import Figure, Scatter
@@ -600,6 +602,36 @@ class EcosizerEngine:
         """
         return not self.system.perfMap.usePkl
     
+    def utilityCalculation(self, monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge, csv_path = None):
+        """
+        Parameters
+        ----------
+        monthly_base_charge : float
+            monthly base charge for having electricity connected ($/month)
+        pk_start_hour : int (in range 0-23)
+            start hour of the day which peak demand pricing applies
+        pk_end_hour : int (in range pk_start_hour-23)
+            end hour of the day which peak demand pricing applies
+        pk_demand_charge : float
+            peak demand pricing ($/kW)
+        pk_energy_charge : float
+            peak energy pricing ($/kWh)
+        off_pk_demand_charge : float
+            off-peak demand pricing ($/kW)
+        off_pk_energy_charge : float
+            off-peak energy pricing ($/kWh)
+
+        Returns
+        -------
+        simRun : SimulationRun
+            The object carrying details from the simulation of the system
+        ...
+        """
+        uc = UtilityCostTracker(monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge,csv_path)
+        simRun = self.getSimRun(minuteIntervals = 15, nDays = 365)
+        utility_cost = simRun.getAnnualUtilityCost(uc)
+        return simRun, utility_cost
+    
 ##############################################################
 # STATIC FUNCTIONS
 ##############################################################
@@ -636,6 +668,39 @@ def getListOfModels(multiPass = False, includeResidential = True, excludeModels 
                     elif not multiPass and model_name[-2:] != 'MP':
                         returnList.append([model_name,value["name"]])
     return returnList
+
+def getHPWHOutputCapacity(model, outdoorAirTemp_F, inletWaterTemp_F, outletWaterTemp_F, num_heatPumps = 1, return_as_kW = True):
+    """
+    Returns the output capacity of the model at the climate temperatures provided
+    
+    Parameters
+    ----------
+    model : String
+        string representing the model_code for the model (see getListOfModels() for information on how to aquire this)
+    outdoorAirTemp_F : float
+        The outdoor air temperature in degrees F
+    inletWaterTemp_F : float
+        the incoming city water (cold water) temperature in degrees F
+    outletWaterTemp_F : float
+        The outlet water (hot storage) temperature in degrees F
+    num_heatPumps : int
+        the number of HPWHs in the system
+    return_as_kW : boolean
+        Set to True (default) to return output capacity in kW. Set to False to instead return as kBTU/hr
+
+    Returns
+    -------
+    output_capacity : float
+        the output capacity of the HPWH system at the climate temperatures provided in either kW or kBTU/hr depending on the value of the return_as_kW parameter
+    """
+    perfMap = PrefMapTracker(defaultCapacity_kBTUhr = None, 
+                             modelName = model,
+                             kBTUhr = return_as_kW == False,
+                             numHeatPumps = num_heatPumps,
+                             usePkl = True)
+    output_cap, input_cap = perfMap.getCapacity(outdoorAirTemp_F,inletWaterTemp_F,outletWaterTemp_F)
+    return output_cap
+
 
 def getSizingCurvePlot(x, y, startind, loadshifting = False):
     """

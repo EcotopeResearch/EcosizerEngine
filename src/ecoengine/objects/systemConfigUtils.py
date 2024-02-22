@@ -199,3 +199,37 @@ def createSizingCurvePlot(x, y, startind, loadshifting = False):
                     showlegend=False)
 
     return fig
+
+def createERSizingCurvePlot(x, y, startind, x_axis_label, x_units):
+    """
+    Sub - Function to plot the the x and y curve and create a point (secretly creates all the points)
+    """
+    fig = Figure()
+    
+    hovertext = x_axis_label + ': %{x:.1f} ' + x_units + ' \nER Heating Capacity Increase: %{y:.1f}'
+
+    fig.add_trace(Scatter(x=x, y=y,
+                    visible=True,
+                    line=dict(color="#28a745", width=4),
+                    hovertemplate=hovertext,
+                    opacity=0.8,
+                    ))
+
+    # Add traces for the point, one for each slider step
+    for ii in range(len(x)):
+        fig.add_trace(Scatter(x=[x[ii]], y=[y[ii]], 
+                        visible=False,
+                        mode='markers', marker_symbol="diamond", 
+                        opacity=1, marker_color="#2EA3F2", marker_size=10,
+                        name="System Size",
+                        hoverlabel = dict(font=dict(color='white'), bordercolor="white")
+                        ))
+
+    # Make the 16 hour trace visible
+    fig.data[startind+1].visible = True
+    fig.update_layout(title="Additional Electric Resistance Sizing Curve",
+                    xaxis_title=x_axis_label,
+                    yaxis_title="ER Heating Capacity Increase (kW)",
+                    showlegend=False)
+
+    return fig

@@ -28,3 +28,4 @@ from .systems.MultiPassRecirc import *
 from .systems.PrimaryWithRecirc import *
 from .SimulationRun import *
 from .PrefMapTracker import *
+from .UtilityCostTracker import *

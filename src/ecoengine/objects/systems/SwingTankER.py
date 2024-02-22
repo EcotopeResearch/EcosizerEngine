@@ -18,6 +18,7 @@ class SwingTankER(SwingTank):
                  aquaFractShed, loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, 
                  ignoreShortCycleEr, useHPWHsimPrefMap, TMVol_G, TMCap_kBTUhr)
 
+        self.original_TMCap_kBTUhr = self.TMCap_kBTUhr
         if sizeAdditionalER:
             self.setLoadUPVolumeAndTrigger(building.getDesignInlet())
             self.sizeERElement(building, additionalERSaftey)
@@ -134,3 +135,9 @@ class SwingTankER(SwingTank):
                                                                                                 erCalc = True)
         if simRun.pV[i] < 0.:
             simRun.pV[i] = 0.
+
+    def getERCapacityDif(self, kW = True):
+        TMCap_kBTUhr_dif = self.TMCap_kBTUhr - self.original_TMCap_kBTUhr
+        if kW:
+            return TMCap_kBTUhr_dif / W_TO_BTUHR
+        return TMCap_kBTUhr_dif

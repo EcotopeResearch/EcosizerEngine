@@ -1,4 +1,5 @@
 from .Building import Building
+from .UtilityCostTracker import UtilityCostTracker
 import numpy as np
 from ecoengine.constants.Constants import *
 from .systemConfigUtils import hrToMinList, roundList, hrTo15MinList
@@ -642,7 +643,25 @@ class SimulationRun:
                 heatOutputTotal += (self.getCapOut(i)*self.getPrimaryRun(i)/60) + (self.getTMCapOut(i)*self.getTMRun(i)/60)
                 heatInputTotal += (self.getCapIn(i)*self.getPrimaryRun(i)/60) + (self.getTMCapIn(i)*self.getTMRun(i)/60)
         return heatOutputTotal/heatInputTotal
-
+    
+    def getAnnualUtilityCost(self, uc : UtilityCostTracker):
+        self.createUtilityCostColumns(uc)
+        max_period_kw = {}
+        for i in range(len(self.hwDemand)):
+            demand_period = uc.getDemandPricingPeriod(i, self.minuteIntervals)
+            kW_draw = self.getCapIn(i)*(self.pRun[i]/self.minuteIntervals)
+            if hasattr(self, 'tmRun'):
+                kW_draw += self.getTMCapIn(i)*(self.tmRun[i]/self.minuteIntervals)
+            if not demand_period in max_period_kw:
+                max_period_kw[demand_period] = kW_draw
+            elif kW_draw > max_period_kw[demand_period]:
+                max_period_kw[demand_period] = kW_draw
+        demand_total = 0
+        for key in uc.getAllDemandPeriodKeys():
+            if key in max_period_kw:
+                demand_total += uc.getDemandChargeForPeriod(key, max_period_kw[key])
+        total_utility = demand_total + uc.getYearlyBaseCharge() + sum(self.energyCost)
+        return total_utility
 
     def returnSimResult(self, kWhCalc = False):
         """
@@ -772,6 +791,23 @@ class SimulationRun:
             return plot_div
         return fig 
     
+    def createUtilityCostColumns(self, uc : UtilityCostTracker):
+        self.energyRate = [uc.getEnergyChargeAtInterval(i,self.minuteIntervals) for i in range(len(self.pRun))]
+        if self.minuteIntervals == 60:
+            self.demandPeriod = uc.demand_period_chart
+        elif self.minuteIntervals == 15:
+            self.demandPeriod = hrTo15MinList(uc.demand_period_chart)
+        else:
+            self.demandPeriod = hrToMinList(uc.demand_period_chart)
+        if hasattr(self, 'tmRun'):
+            print(f"{((self.getCapIn(0)*self.pRun[0]/60) + (self.getTMCapIn(0)*self.tmRun[0]/60))} * {self.energyRate[0]}")
+            print(f"{type(self.energyRate[0])}")
+            self.energyCost = [
+                ((self.getCapIn(i)*self.pRun[i]/60.) + (self.getTMCapIn(i)*self.tmRun[i]/60.)) * self.energyRate[i] for i in range(len(self.pRun))
+            ]
+        else:
+            self.energyCost = [(self.getCapIn(i)*self.pRun[i]/60) * self.energyRate[i] for i in range(len(self.pRun))]
+    
     def writeCSV(self, file_path):
         """
         writes all simulation data to a formated csv
@@ -816,6 +852,14 @@ class SimulationRun:
         
         column_names.append('C02 Emissions (kG)')
         columns.append(self.getkGCO2())
+
+        if hasattr(self, 'energyCost'):
+            column_names.append('Energy Rate ($/kWh)')
+            columns.append(self.energyRate)
+            column_names.append('Energy Cost ($)')
+            columns.append(self.energyCost)
+            column_names.append('Demand Period')
+            columns.append(self.demandPeriod)
 
         transposed_result = zip(*columns)
 

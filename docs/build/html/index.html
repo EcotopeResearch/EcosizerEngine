@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.5.0 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.5.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -217,6 +217,13 @@ Otherwise, it will use the most recent data model.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.usedHPWHsim" title="engine.EcosizerEngine.EcosizerEngine.usedHPWHsim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">usedHPWHsim</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.utilityCalculation" title="engine.EcosizerEngine.EcosizerEngine.utilityCalculation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utilityCalculation</span></code></a>(monthly_base_charge, ...)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </p></td>
@@ -607,6 +614,40 @@ fraction is too small for system and cuts the return arrays to match cutoff poin
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.utilityCalculation">
+<span class="sig-name descname"><span class="pre">utilityCalculation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monthly_base_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_start_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_end_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csv_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.utilityCalculation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>monthly_base_charge</strong><span class="classifier">float</span></dt><dd><p>monthly base charge for having electricity connected ($/month)</p>
+</dd>
+<dt><strong>pk_start_hour</strong><span class="classifier">int (in range 0-23)</span></dt><dd><p>start hour of the day which peak demand pricing applies</p>
+</dd>
+<dt><strong>pk_end_hour</strong><span class="classifier">int (in range pk_start_hour-23)</span></dt><dd><p>end hour of the day which peak demand pricing applies</p>
+</dd>
+<dt><strong>pk_demand_charge</strong><span class="classifier">float</span></dt><dd><p>peak demand pricing ($/kW)</p>
+</dd>
+<dt><strong>pk_energy_charge</strong><span class="classifier">float</span></dt><dd><p>peak energy pricing ($/kWh)</p>
+</dd>
+<dt><strong>off_pk_demand_charge</strong><span class="classifier">float</span></dt><dd><p>off-peak demand pricing ($/kW)</p>
+</dd>
+<dt><strong>off_pk_energy_charge</strong><span class="classifier">float</span></dt><dd><p>off-peak energy pricing ($/kWh)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>simRun</strong><span class="classifier">SimulationRun</span></dt><dd><p>The object carrying details from the simulation of the system</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>…</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py function">
@@ -627,6 +668,36 @@ fraction is too small for system and cuts the return arrays to match cutoff poin
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt><strong>plot</strong><span class="classifier">plotly.Figure OR div string</span></dt><dd><p>The annual simulation graph comparing average daily input capacity of the system with load shifting activated and the system with load shifting deactivated.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.getHPWHOutputCapacity">
+<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getHPWHOutputCapacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outdoorAirTemp_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inletWaterTemp_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outletWaterTemp_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_heatPumps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_as_kW</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getHPWHOutputCapacity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the output capacity of the model at the climate temperatures provided</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model</strong><span class="classifier">String</span></dt><dd><p>string representing the model_code for the model (see getListOfModels() for information on how to aquire this)</p>
+</dd>
+<dt><strong>outdoorAirTemp_F</strong><span class="classifier">float</span></dt><dd><p>The outdoor air temperature in degrees F</p>
+</dd>
+<dt><strong>inletWaterTemp_F</strong><span class="classifier">float</span></dt><dd><p>the incoming city water (cold water) temperature in degrees F</p>
+</dd>
+<dt><strong>outletWaterTemp_F</strong><span class="classifier">float</span></dt><dd><p>The outlet water (hot storage) temperature in degrees F</p>
+</dd>
+<dt><strong>num_heatPumps</strong><span class="classifier">int</span></dt><dd><p>the number of HPWHs in the system</p>
+</dd>
+<dt><strong>return_as_kW</strong><span class="classifier">boolean</span></dt><dd><p>Set to True (default) to return output capacity in kW. Set to False to instead return as kBTU/hr</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>output_capacity</strong><span class="classifier">float</span></dt><dd><p>the output capacity of the HPWH system at the climate temperatures provided in either kW or kBTU/hr depending on the value of the return_as_kW parameter</p>
 </dd>
 </dl>
 </dd>
@@ -951,6 +1022,16 @@ Otherwise, it will use the most recent data model.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.writeCSV" title="objects.SimulationRun.SimulationRun.writeCSV"><code class="xref py py-obj docutils literal notranslate"><span class="pre">writeCSV</span></code></a>(file_path)</p></td>
 <td><p>writes all simulation data to a formated csv</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>createUtilityCostColumns</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>getAnnualUtilityCost</strong></p></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -1787,9 +1868,11 @@ perfomance map, infinity is returned.</p>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemCapedInlet"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.systemCapedInlet()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.systemReliedOnEr()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.usedHPWHsim"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.usedHPWHsim()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.utilityCalculation"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.utilityCalculation()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getAnnualSimLSComparison"><code class="docutils literal notranslate"><span class="pre">getAnnualSimLSComparison()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.getHPWHOutputCapacity"><code class="docutils literal notranslate"><span class="pre">getHPWHOutputCapacity()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getListOfModels"><code class="docutils literal notranslate"><span class="pre">getListOfModels()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getSizingCurvePlot"><code class="docutils literal notranslate"><span class="pre">getSizingCurvePlot()</span></code></a></li>
 <li><a class="reference internal" href="#engine.BuildingCreator.createBuilding"><code class="docutils literal notranslate"><span class="pre">createBuilding()</span></code></a></li>
@@ -1876,7 +1959,7 @@ perfomance map, infinity is returned.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>

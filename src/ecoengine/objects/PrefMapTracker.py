@@ -240,11 +240,12 @@ class PrefMapTracker:
                             if self.prefMapOnly:
                                 return 1.5,1. # return 1.5, 1 for COP of 1.5 when just assessing preformance map only
                             else:
-                                raise Exception(f"Climate inputs of OAT: {externalT_F}, inlet temperature: {condenserT_F}, and outlet temperature: {outT_F} are outside of available preformance maps for this model. The model will need a default capacity to fall back on in order to simulate.")
+                                raise Exception(f"Climate inputs of OAT: {externalT_F}, inlet temperature: {condenserT_F}, and outlet temperature: {outT_F} are outside of available preformance maps for this model.")
                         return fallbackCapacity, fallbackCapacity / 1.5
 
 
         elif self.perfMap is None or len(self.perfMap) == 0:
+            # TODO add error if no fallback
             # if there is no performance map, it should have a default capacity
             if self.erBaseline:
                 return fallbackCapacity, fallbackCapacity # ER has COP of 1
@@ -371,7 +372,7 @@ class PrefMapTracker:
             if self.prefMapOnly:
                 return 1.,1. # return 1, 1 when just assessing preformance map only
             else:
-                raise Exception("Climate inputs are colder than available preformance maps for this model. The model will need a default electric resistance capacity to fall back on in order to simulate.")
+                raise Exception("Climate inputs are colder than available preformance maps for this model.")
         return fallbackCapacity, fallbackCapacity
 
     def _getIdxOfNearestOATs(self, oat_F):

@@ -663,19 +663,19 @@
         "hx_increase" : 10,
         "SGIP_avail" : true
     },
-    "MODELS_LYNC_AEGIS_500_TEST_C_SP" : {
-        "name" : "Lync Aegis 500 Single Pass (Lab Tested)",
-        "pkl_prefix": "Lync_Aegis_500_Single_Pass",
-        "secondary_heat_exchanger" : true,
-        "hx_increase" : 10,
-        "SGIP_avail" : false
-    },
     "MODELS_LYNC_AEGIS_500_SIMULATED_C_SP" : {
         "name" : "Lync Aegis 500 Single Pass",
         "pkl_prefix": "lync_a500_simulated",
         "secondary_heat_exchanger" : true,
         "hx_increase" : 10,
         "SGIP_avail" : true
+    },
+    "MODELS_LYNC_AEGIS_500_TEST_C_SP" : {
+        "name" : "Lync Aegis 500 Single Pass (Lab Tested)",
+        "pkl_prefix": "Lync_Aegis_500_Single_Pass",
+        "secondary_heat_exchanger" : true,
+        "hx_increase" : 10,
+        "SGIP_avail" : false
     },
     "MODELS_Mitsubishi_QAHV_C_SP" : {
         "name" : "Mitsubishi QAHV",
