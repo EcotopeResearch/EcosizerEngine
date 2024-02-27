@@ -200,13 +200,13 @@ def createSizingCurvePlot(x, y, startind, loadshifting = False):
 
     return fig
 
-def createERSizingCurvePlot(x, y, startind, x_axis_label, x_units):
+def createERSizingCurvePlot(x, y, startind):
     """
     Sub - Function to plot the the x and y curve and create a point (secretly creates all the points)
     """
     fig = Figure()
     
-    hovertext = x_axis_label + ': %{x:.1f} ' + x_units + ' \nER Heating Capacity Increase: %{y:.1f}'
+    hovertext = 'Percent Coverage : %{x:.1f} % \nER Electric Resistance Heating Capacity: %{y:.1f} kW'
 
     fig.add_trace(Scatter(x=x, y=y,
                     visible=True,
@@ -225,11 +225,11 @@ def createERSizingCurvePlot(x, y, startind, x_axis_label, x_units):
                         hoverlabel = dict(font=dict(color='white'), bordercolor="white")
                         ))
 
-    # Make the 16 hour trace visible
+    # Make the trace visible
     fig.data[startind+1].visible = True
-    fig.update_layout(title="Additional Electric Resistance Sizing Curve",
-                    xaxis_title=x_axis_label,
-                    yaxis_title="ER Heating Capacity Increase (kW)",
+    fig.update_layout(title="Electric Resistance Sizing Curve",
+                    xaxis_title='Percent Coverage (%)',
+                    yaxis_title="Electric Resistance Heating Capacity (kW)",
                     showlegend=False)
 
     return fig

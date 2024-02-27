@@ -2,7 +2,6 @@ from .systemConfigUtils import hrToMinList, roundList, hrTo15MinList
 from ecoengine.constants.Constants import *
 import math
 import csv
-import os
 
 class UtilityCostTracker:
     """

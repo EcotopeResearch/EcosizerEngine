@@ -523,6 +523,26 @@ class EcosizerEngine:
             The position the slider on the graph should start, reflecting the user defined load shift percent
         """
         return self.system.lsSizedPoints(self.building)
+    
+    def erSizedPointsPlot(self, returnAsDiv = True):
+        """
+        Returns a plot of sizing Electric Resistance Capacity by the percent of people covered in the appartment building.
+
+        Parameters
+        ----------
+        return_as_div : boolean
+            A logical on the output, as a div string (true) or as a figure (false)
+
+        Returns
+        -------
+        plot : plotly.Figure -OR- <div> string
+            The sizing curve graph with slider. Return type depends on value of return_as_div parameter.
+            It will plot Percent of Coverage vs. Swing Tank Capacity.
+        """
+        if not hasattr(self.system, "original_TMCap_kBTUhr"):
+            raise Exception("erSizedPoints() only applicable to systems with swing tank electric resistance trade-off capabilities.")
+        [er_cap_kW, fract_covered, startInd] = self.system.erSizedPoints(self.building)
+        return self.system.getERCurveAndSlider(fract_covered, er_cap_kW, startInd, returnAsDiv = returnAsDiv)
 
     def getHWMagnitude(self):
         """

@@ -67,43 +67,96 @@ def createERSizingCurvePlot(x, y, startind, x_axis_label, x_units):
 
 W_TO_BTUHR = 3.412142
 
-hpwh = EcosizerEngine(
-            incomingT_F     = 50,
-            magnitudeStat  = 100,
-            supplyT_F       = 120,
-            storageT_F      = 145,
-            loadUpT_F       = 145,
-            percentUseable  = 0.9, 
-            aquaFract       = 0.4, 
-            aquaFractLoadUp = 0.21,
-            aquaFractShed   = 0.8,
-            schematic       = 'swingtank_er', 
-            buildingType   = 'multi_family',
-            returnT_F       = 0, 
-            flowRate       = 0,
-            gpdpp           = 25,
-            safetyTM        = 1.75,
-            defrostFactor   = 1, 
-            compRuntime_hr  = 16, 
-            nApt            = 100, 
-            Wapt            = 60,
-            loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
-            loadUpHours     = 3,
-            doLoadShift     = False,
-            loadShiftPercent       = 1.,
-            PVol_G_atStorageT = 890, 
-            PCap_kW = 15,
-            TMVol_G = 100,
-            TMCap_kW = 19,
-            annual = True,
-            sizeAdditionalER = True,
-            zipCode=90210
-        )
-
+# hpwh = EcosizerEngine(
+#             incomingT_F     = 50,
+#             magnitudeStat  = 100,
+#             supplyT_F       = 120,
+#             storageT_F      = 145,
+#             loadUpT_F       = 145,
+#             percentUseable  = 0.9, 
+#             aquaFract       = 0.4, 
+#             aquaFractLoadUp = 0.21,
+#             aquaFractShed   = 0.8,
+#             schematic       = 'swingtank_er', 
+#             buildingType   = 'multi_family',
+#             returnT_F       = 0, 
+#             flowRate       = 0,
+#             gpdpp           = 25,
+#             safetyTM        = 1.75,
+#             defrostFactor   = 1, 
+#             compRuntime_hr  = 16, 
+#             nApt            = 100, 
+#             Wapt            = 60,
+#             loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
+#             loadUpHours     = 3,
+#             doLoadShift     = False,
+#             loadShiftPercent       = 1.,
+#             PVol_G_atStorageT = 890, 
+#             PCap_kW = 10,
+#             TMVol_G = 100,
+#             TMCap_kW = 19,
+#             annual = False,
+#             sizeAdditionalER = True,
+#             zipCode=90210
+#         )
+# hpwh2 = EcosizerEngine(
+#             incomingT_F     = 50,
+#             magnitudeStat  = 100,
+#             supplyT_F       = 120,
+#             storageT_F      = 145,
+#             loadUpT_F       = 145,
+#             percentUseable  = 0.9, 
+#             aquaFract       = 0.4, 
+#             aquaFractLoadUp = 0.21,
+#             aquaFractShed   = 0.8,
+#             schematic       = 'swingtank', 
+#             buildingType   = 'multi_family',
+#             returnT_F       = 0, 
+#             flowRate       = 0,
+#             gpdpp           = 25,
+#             safetyTM        = 1.75,
+#             defrostFactor   = 1, 
+#             compRuntime_hr  = 16, 
+#             nApt            = 100, 
+#             Wapt            = 60,
+#             loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
+#             loadUpHours     = 3,
+#             doLoadShift     = False,
+#             loadShiftPercent       = 1.,
+#             annual = False,
+#             sizeAdditionalER = True,
+#             zipCode=90210
+#         )
+# print(hpwh.system.TMCap_kBTUhr / W_TO_BTUHR)
 # simRun = hpwh.getSimRun(minuteIntervals=15, nDays=365)
 # simRun, utility_cost = hpwh.utilityCalculation(5.00, 16, 21, 38.75, 0.21585, 30.20, 0.14341, csv_path = os.path.join(os.path.dirname(__file__),'test.csv'))
 # simRun.writeCSV("csv_this.csv")
 # print(f"total utility cost is ${round(utility_cost,2)}")
+
+# if True:
+# # Generate the content for the HTML div
+#     content = hpwh.erSizedPointsPlot()
+#     # content = hpwh2.plotSizingCurve(returnAsDiv = True)
+#     print(hpwh2.getSizingResults())
+#     # Create the HTML content
+#     html_content = f"""<!DOCTYPE html>
+# <html>
+# <head>
+#     <title>My Webpage</title>
+#     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+# </head>
+# <body>
+# <div>
+# {content}
+# </div>
+# </body>
+# </html>
+# """
+
+#     # Write the HTML content to the file
+#     file_name = f'er_result_graph_non_an_15.html'
+#     with open(file_name, 'w') as file:
+#         file.write(html_content)
 
 # print(f"{hpwh.system.TMCap_kBTUhr} {hpwh.system.TMCap_kBTUhr / W_TO_BTUHR}")
 # print("=================Annual=======================")
@@ -481,30 +534,6 @@ hpwh = EcosizerEngine(
 # print('=========================================================')
 # print("LS to non-LS diff:", kGperkWh_nonLS - kGperkWh, "=", simResultArray[3])
 
-# # print(getListOfModels())
-# if False:
-# # Generate the content for the HTML div
-#     content = getAnnualSimLSComparison(simRun_ls, simRun_nls)
-
-#     # Create the HTML content
-#     html_content = f"""<!DOCTYPE html>
-# <html>
-# <head>
-#     <title>My Webpage</title>
-#     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-# </head>
-# <body>
-# <div>
-# {content}
-# </div>
-# </body>
-# </html>
-# """
-
-#     # Write the HTML content to the file
-#     file_name = f'{simSchematic}_simResult_{hpwhModel}.html'
-#     with open(file_name, 'w') as file:
-#         file.write(html_content)
 
 ##############################################################################################
 # # PVol_G_atStorageT = 400

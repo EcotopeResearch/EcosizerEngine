@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.5.1 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.5.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -163,65 +163,68 @@ Otherwise, it will use the most recent data model.</p>
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getClimateZone" title="engine.EcosizerEngine.EcosizerEngine.getClimateZone"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getClimateZone</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.erSizedPointsPlot" title="engine.EcosizerEngine.EcosizerEngine.erSizedPointsPlot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">erSizedPointsPlot</span></code></a>([returnAsDiv])</p></td>
+<td><p>Returns a plot of sizing Electric Resistance Capacity by the percent of people covered in the appartment building.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getClimateZone" title="engine.EcosizerEngine.EcosizerEngine.getClimateZone"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getClimateZone</span></code></a>()</p></td>
 <td><p>Returns climate zone of the simulation building as an int or None if it has not been set.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getHWMagnitude" title="engine.EcosizerEngine.EcosizerEngine.getHWMagnitude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWMagnitude</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getHWMagnitude" title="engine.EcosizerEngine.EcosizerEngine.getHWMagnitude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWMagnitude</span></code></a>()</p></td>
 <td><p>Returns the total daily DHW usage for the building the HPWH is being sized or simulated for.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimResult" title="engine.EcosizerEngine.EcosizerEngine.getSimResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSimResult</span></code></a>([initPV, initST, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimResult" title="engine.EcosizerEngine.EcosizerEngine.getSimResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSimResult</span></code></a>([initPV, initST, ...])</p></td>
 <td><p><strong>*LEGACY FUNCTION*</strong> to be depricated.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimRun" title="engine.EcosizerEngine.EcosizerEngine.getSimRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSimRun</span></code></a>([initPV, initST, minuteIntervals, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimRun" title="engine.EcosizerEngine.EcosizerEngine.getSimRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSimRun</span></code></a>([initPV, initST, minuteIntervals, ...])</p></td>
 <td><p>Returns a simulationRun object for a simulation of the Ecosizer's building and system object</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimRunWithkWCalc" title="engine.EcosizerEngine.EcosizerEngine.getSimRunWithkWCalc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSimRunWithkWCalc</span></code></a>([initPV, initST, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimRunWithkWCalc" title="engine.EcosizerEngine.EcosizerEngine.getSimRunWithkWCalc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSimRunWithkWCalc</span></code></a>([initPV, initST, ...])</p></td>
 <td><p>Returns a list that includes a simulationRun object for a simulation of the Ecosizer's building and system object with load shifting and without load shifting, also includes the loadshift_capacity and the kGperkWh_saved</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSizingResults" title="engine.EcosizerEngine.EcosizerEngine.getSizingResults"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSizingResults</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSizingResults" title="engine.EcosizerEngine.EcosizerEngine.getSizingResults"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSizingResults</span></code></a>()</p></td>
 <td><p>Returns the minimum primary volume and heating capacity sizing results</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.lsSizedPoints" title="engine.EcosizerEngine.EcosizerEngine.lsSizedPoints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lsSizedPoints</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.lsSizedPoints" title="engine.EcosizerEngine.EcosizerEngine.lsSizedPoints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lsSizedPoints</span></code></a>()</p></td>
 <td><p>Returns combinations of storage and percent of load shift days covered</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotSizingCurve" title="engine.EcosizerEngine.EcosizerEngine.plotSizingCurve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotSizingCurve</span></code></a>([returnAsDiv, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotSizingCurve" title="engine.EcosizerEngine.EcosizerEngine.plotSizingCurve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotSizingCurve</span></code></a>([returnAsDiv, ...])</p></td>
 <td><p>Returns a plot of the valid storage and capacity combinations.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim" title="engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotStorageLoadSim</span></code></a>([return_as_div, initPV, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim" title="engine.EcosizerEngine.EcosizerEngine.plotStorageLoadSim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotStorageLoadSim</span></code></a>([return_as_div, initPV, ...])</p></td>
 <td><p>Returns a plot of the of the simulation for the minimum sized primary system as a div or plotly figure.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.primaryCurve" title="engine.EcosizerEngine.EcosizerEngine.primaryCurve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">primaryCurve</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.primaryCurve" title="engine.EcosizerEngine.EcosizerEngine.primaryCurve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">primaryCurve</span></code></a>()</p></td>
 <td><p>Sizes the primary system curve.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.raisedInletTemp" title="engine.EcosizerEngine.EcosizerEngine.raisedInletTemp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">raisedInletTemp</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.raisedInletTemp" title="engine.EcosizerEngine.EcosizerEngine.raisedInletTemp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">raisedInletTemp</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemCapedInlet" title="engine.EcosizerEngine.EcosizerEngine.systemCapedInlet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemCapedInlet</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemCapedInlet" title="engine.EcosizerEngine.EcosizerEngine.systemCapedInlet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemCapedInlet</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr" title="engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemReliedOnEr</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr" title="engine.EcosizerEngine.EcosizerEngine.systemReliedOnEr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">systemReliedOnEr</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.usedHPWHsim" title="engine.EcosizerEngine.EcosizerEngine.usedHPWHsim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">usedHPWHsim</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.usedHPWHsim" title="engine.EcosizerEngine.EcosizerEngine.usedHPWHsim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">usedHPWHsim</span></code></a>()</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.utilityCalculation" title="engine.EcosizerEngine.EcosizerEngine.utilityCalculation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utilityCalculation</span></code></a>(monthly_base_charge, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.utilityCalculation" title="engine.EcosizerEngine.EcosizerEngine.utilityCalculation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utilityCalculation</span></code></a>(monthly_base_charge, ...)</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
@@ -250,6 +253,27 @@ Otherwise, it will use the most recent data model.</p>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>assumedHighIO</strong><span class="classifier">boolean</span></dt><dd><p>Returns True if the model had to assume default high OAT input and output capacity because the climate’s OAT was greater than the values in available performance map. False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.erSizedPointsPlot">
+<span class="sig-name descname"><span class="pre">erSizedPointsPlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">returnAsDiv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.erSizedPointsPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a plot of sizing Electric Resistance Capacity by the percent of people covered in the appartment building.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>return_as_div</strong><span class="classifier">boolean</span></dt><dd><p>A logical on the output, as a div string (true) or as a figure (false)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>plot</strong><span class="classifier">plotly.Figure -OR- &lt;div&gt; string</span></dt><dd><p>The sizing curve graph with slider. Return type depends on value of return_as_div parameter.
+It will plot Percent of Coverage vs. Swing Tank Capacity.</p>
 </dd>
 </dl>
 </dd>
@@ -1854,6 +1878,7 @@ perfomance map, infinity is returned.</p>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine</span></code></a><ul>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.assumedCOP"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.assumedCOP()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.assumedHighDefaultCap"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.assumedHighDefaultCap()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.erSizedPointsPlot"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.erSizedPointsPlot()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getClimateZone"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getClimateZone()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getHWMagnitude"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getHWMagnitude()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimResult"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getSimResult()</span></code></a></li>
@@ -1959,7 +1984,7 @@ perfomance map, infinity is returned.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>
