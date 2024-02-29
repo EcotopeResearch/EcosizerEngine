@@ -540,7 +540,7 @@ class EcosizerEngine:
             It will plot Percent of Coverage vs. Swing Tank Capacity.
         """
         if not hasattr(self.system, "original_TMCap_kBTUhr"):
-            raise Exception("erSizedPoints() only applicable to systems with swing tank electric resistance trade-off capabilities.")
+            raise Exception("erSizedPoints function is only applicable to systems with swing tank electric resistance trade-off capabilities.")
         [er_cap_kW, fract_covered, startInd] = self.system.erSizedPoints(self.building)
         return self.system.getERCurveAndSlider(fract_covered, er_cap_kW, startInd, returnAsDiv = returnAsDiv)
 

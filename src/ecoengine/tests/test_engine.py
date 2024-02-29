@@ -158,6 +158,34 @@ def swing_sizer_nls():
     return hpwh
 
 @pytest.fixture
+def swing_sizer_er_nls(): 
+    with QuietPrint():
+        hpwh = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            schematic       = 'swingtank_er', 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 100,
+            doLoadShift     = False,
+            PVol_G_atStorageT = 890, 
+            PCap_kW = 10,
+            TMVol_G = 100,
+            TMCap_kW = 19,
+        )
+    return hpwh
+
+@pytest.fixture
 def annual_swing_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
         hpwh = EcosizerEngine(
@@ -290,6 +318,20 @@ def test_figReturnTypes(parallel_sizer, swing_sizer, primary_sizer, return_as_di
     assert type(parallel_sizer.plotStorageLoadSim(return_as_div)) is expected
     assert type(swing_sizer.plotStorageLoadSim(return_as_div)) is expected
     assert type(primary_sizer.plotStorageLoadSim(return_as_div)) is expected
+
+@pytest.mark.parametrize("return_as_div, expected", [
+   (True, str),
+   (False, Figure)
+])
+def test_figReturnTypesER(parallel_sizer, swing_sizer, primary_sizer, swing_sizer_er_nls, return_as_div, expected):
+    # for system in [parallel_sizer, swing_sizer, primary_sizer]:
+    with pytest.raises(Exception, match="erSizedPoints function is only applicable to systems with swing tank electric resistance trade-off capabilities."):
+        parallel_sizer.erSizedPointsPlot(return_as_div)
+    with pytest.raises(Exception, match="erSizedPoints function is only applicable to systems with swing tank electric resistance trade-off capabilities."):
+        swing_sizer.erSizedPointsPlot(return_as_div)
+    with pytest.raises(Exception, match="erSizedPoints function is only applicable to systems with swing tank electric resistance trade-off capabilities."):
+        primary_sizer.erSizedPointsPlot(return_as_div)
+    assert type(swing_sizer_er_nls.erSizedPointsPlot(return_as_div)) is expected
 
 def test_primaryCurve(parallel_sizer):
     primaryCurveInfo = parallel_sizer.primaryCurve()
