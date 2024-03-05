@@ -20,8 +20,6 @@ class EcosizerEngine:
 
     Attributes
     ----------
-    incomingT_F : float 
-        The incoming city water temperature on the design day. [°F]
     magnitude_stat : int or list
         a number that will be used to assess the magnitude of the building based on the building type
     supplyT_F : float
@@ -34,6 +32,8 @@ class EcosizerEngine:
         The fraction of the total height of the primary hot water tanks at which the Aquastat is located.
     schematic : String
         Indicates schematic type. Valid values are 'swingtank', 'paralleltank', and 'primary'
+    incomingT_F : float 
+        The incoming city water temperature on the design day. [°F]
     building_type : string or list
         a string indicating the type of building we are sizing for (e.g. "multi_family", "office_building", etc.)
     loadShape : ndarray
