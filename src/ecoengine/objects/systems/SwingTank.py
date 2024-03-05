@@ -224,7 +224,7 @@ class SwingTank(SystemConfig):
         mixedStorT_F = self.mixStorageTemps(runV_G, building.getDesignInlet(), building.supplyT_F)
         
         #convert from storage to supply volume
-        runV_G = runV_G * (mixedStorT_F- building.getDesignInlet()) / (building.supplyT_F - building.getLowestIncomingT_F()) 
+        runV_G = runV_G * (mixedStorT_F- building.getDesignInlet()) / (building.supplyT_F - building.getDesignInlet()) 
         
         return runV_G, eff_HW_mix_fraction
 
@@ -334,10 +334,11 @@ class SwingTank(SystemConfig):
         hw_outSwing[0] = hwDemand[0]
         tmRun = [0] * N
         swingheating = False
+        incomingT_F = building.getDesignInlet()
 
         for i in range(1, N):
-            hw_outSwing[i] = convertVolume(hwDemand[i], swingT_F[i-1], building.getDesignInlet(), building.supplyT_F)
-            primaryStorageT_F = self.mixStorageTemps(hw_outSwing[i], building.getDesignInlet(), building.supplyT_F)
+            hw_outSwing[i] = convertVolume(hwDemand[i], swingT_F[i-1], incomingT_F, building.supplyT_F)
+            primaryStorageT_F = self.mixStorageTemps(hw_outSwing[i], incomingT_F, building.supplyT_F)
             swingheating, swingT_F[i], tmRun[i] = self._runOneSwingStep(building, swingheating, swingT_F[i-1], hw_outSwing[i], primaryStorageT_F)
         
         return [swingT_F, tmRun, hw_outSwing]

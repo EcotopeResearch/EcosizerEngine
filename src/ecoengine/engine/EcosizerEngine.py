@@ -120,8 +120,8 @@ class EcosizerEngine:
         applicable for ER trade off swing tank only. Saftey factor to apply to additional electric resistance sizing
     """
 
-    def __init__(self, incomingT_F, supplyT_F, storageT_F, percentUseable, aquaFract,
-                            schematic, magnitudeStat = None, buildingType = None, loadshape = None, 
+    def __init__(self, supplyT_F, storageT_F, percentUseable, aquaFract, schematic, incomingT_F = None,
+                            magnitudeStat = None, buildingType = None, loadshape = None, 
                             avgLoadshape = None, loadShiftSchedule = None, loadUpHours = None,
                             aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1,
                             returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,

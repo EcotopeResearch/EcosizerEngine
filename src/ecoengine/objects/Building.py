@@ -9,7 +9,7 @@ import math
 class Building:
     def __init__(self, magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F):
         
-        self._checkParams(magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc, loadshape, avgLoadshape, designOAT_F)
+        self._checkParams(magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc, loadshape, avgLoadshape, designOAT_F, noClimateZone = climate is None)
         
         # Does not check loadshape as that is checked in buildingCreator
         self.magnitude = magnitude
@@ -19,6 +19,10 @@ class Building:
         self.incomingT_F = incomingT_F
         self.supplyT_F = supplyT_F
         self.designOAT_F = designOAT_F
+
+        self.highestIncomingT_F = None
+        self.lowestIncomingT_F = None
+
         if ignoreRecirc:
             self.recirc_loss = 0
         else:
@@ -29,15 +33,18 @@ class Building:
         self.monthlyCityWaterT_F = []
         
         if not self.climateZone is None:
-            # add city water tempuratures to simRun
+            # add city water tempuratures
             with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as cw_file:
                 csv_reader = csv.reader(cw_file)
                 next(csv_reader) # get past header row
                 for i in range(12):
                     cw_row = next(csv_reader)
-                    self.monthlyCityWaterT_F.append(float(cw_row[self.climateZone - 1]))
+                    monthlyIncomingT_F = float(cw_row[self.climateZone - 1])
+                    self.monthlyCityWaterT_F.append(monthlyIncomingT_F)
+                self.lowestIncomingT_F = min(self.monthlyCityWaterT_F)
+                self.highestIncomingT_F = max(self.monthlyCityWaterT_F)
 
-    def _checkParams(self, magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc, loadshape, avgLoadshape, designOAT_F):
+    def _checkParams(self, magnitude, incomingT_F, supplyT_F, returnT_F, flowRate, ignoreRecirc, loadshape, avgLoadshape, designOAT_F, noClimateZone):
         if not (isinstance(supplyT_F, int) or isinstance(supplyT_F, float)):
             raise Exception("Error: Supply temp must be a number.")
         if not ignoreRecirc:
@@ -47,8 +54,9 @@ class Building:
                 raise Exception("Error: Supply temp must be higher than return temp.")
             if not (isinstance(flowRate, int) or isinstance(flowRate, float)):
                 raise Exception("Error: Flow rate must be a number.")
-        if not (isinstance(incomingT_F, int) or isinstance(incomingT_F, float)): # TODO make incoming water temp not a required variable if there is a climate zone
-            raise Exception("Error: City water temp must be a number.")
+        if not (isinstance(incomingT_F, int) or isinstance(incomingT_F, float)):
+            if noClimateZone or not incomingT_F is None:
+                raise Exception("Error: City water temp must be a number.")
         if not (isinstance(magnitude, int) or isinstance(magnitude, float)) or magnitude < 0:
             raise Exception("Magnitude must be a number larger than 0.")
         if max(loadshape) <= 1./16. or max(avgLoadshape) <= 1./16.:
@@ -94,8 +102,6 @@ class Building:
                 oat_list.append(oat_value)
         oat_list.sort()
         fifth_percentile_oat = oat_list[math.ceil(len(oat_list)*0.05)]
-        # if fifth_percentile_oat is None:
-        #     return float("inf")
         return perfMap.getMaxStorageTempAtNearestOAT(fifth_percentile_oat), fifth_percentile_oat
     
     def getLowestOAT(self, month = None):
@@ -161,26 +167,12 @@ class Building:
     def getLowestIncomingT_F(self):
         if self.climateZone is None:
             return self.incomingT_F
-        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as inlet_file:
-            temp_reader = csv.reader(inlet_file)
-            next(temp_reader)# Skip the header row
-            lowest_t = float('inf')
-            for t_row in temp_reader:
-                t_value = float(t_row[self.climateZone - 1])
-                lowest_t = min(lowest_t, t_value)
-            return lowest_t
+        return self.lowestIncomingT_F
         
     def getHighestIncomingT_F(self):
         if self.climateZone is None:
             return self.incomingT_F
-        with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/InletWaterTemperatures_ByClimateZone.csv'), 'r') as inlet_file:
-            temp_reader = csv.reader(inlet_file)
-            next(temp_reader)# Skip the header row
-            highest_t = float('-inf')
-            for t_row in temp_reader:
-                t_value = float(t_row[self.climateZone - 1])
-                highest_t = max(highest_t, t_value)
-            return highest_t   
+        return self.highestIncomingT_F 
 
     def getLowestWaterAndAirTempCombos(self):
         """

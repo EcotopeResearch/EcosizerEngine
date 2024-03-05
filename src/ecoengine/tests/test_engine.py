@@ -189,7 +189,7 @@ def swing_sizer_er_nls():
 def annual_swing_sizer(): # Returns the hpwh swing tank
     with QuietPrint():
         hpwh = EcosizerEngine(
-            incomingT_F     = 50,
+            incomingT_F     = None,
             magnitudeStat  = 100,
             supplyT_F       = 120,
             storageT_F      = 150,
@@ -407,7 +407,6 @@ def test_hard_SGIP_page_results(zipC, nBR, storageT_F, aqFrac, aqFrac_lu, aqFrac
     gpdpp = building.magnitude/sum(nBR)
     
     hpwh = EcosizerEngine(
-            incomingT_F = 0,
             magnitudeStat = npep,
             supplyT_F = 120,
             storageT_F = storageT_F,
@@ -560,7 +559,6 @@ def test_er_undersized_error(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT
 def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, 
                               simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, climateZone):
     hpwh_ls = EcosizerEngine(
-            incomingT_F     = 50,
             magnitudeStat  = 100,
             supplyT_F       = supplyT_F,
             storageT_F      = storageT_F,
@@ -645,7 +643,6 @@ def test_annual_simRun_values(aquaFractLoadUp, aquaFractShed, storageT_F, supply
 def test_annual_simRun_comparison_values(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, 
                                          tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, zipCode, climateZone):
     hpwh_ls = EcosizerEngine(
-            incomingT_F     = 50,
             magnitudeStat  = 100,
             supplyT_F       = supplyT_F,
             storageT_F      = storageT_F,
@@ -703,7 +700,6 @@ def test_invalid_getSimRunWithkWCalc(swing_sizer, primary_sizer_nls):
 ])
 def test_annual_QAVH_for_all_climates(climateZone):
     hpwh = EcosizerEngine(
-            incomingT_F     = 50,
             magnitudeStat  = 100,
             supplyT_F       = 120,
             storageT_F      = 150,

@@ -71,9 +71,9 @@ class ParallelLoopTank(SystemConfig):
             The building to size with
         """
         super().sizeSystem(building)
-        if self.setpointTM_F <= building.incomingT_F:
+        if self.setpointTM_F <= building.getHighestIncomingT_F():
             raise Exception("The temperature maintenance setpoint temperature must be greater than the city cold water temperature")
-        if self.TMonTemp_F <= building.incomingT_F:
+        if self.TMonTemp_F <= building.getHighestIncomingT_F():
             raise Exception("The temperature maintenance on temperature must be greater than the city cold water temperature")
         self.TMVol_G  =  (building.recirc_loss / rhoCp) * (self.offTime_hr / (self.setpointTM_F - self.TMonTemp_F))
         self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000
