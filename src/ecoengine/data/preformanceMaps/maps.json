@@ -650,61 +650,61 @@
         "SGIP_avail" : true
     },
     "MODELS_Lochinvar_AHP60_C_SP" : {
-        "name" : "Lochinvar AHP60",
+        "name" : "Lochinvar Veritus AHP60",
         "pkl_prefix": "lochinvar_AHP60_Single_Pass",
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
     },
     "MODELS_Lochinvar_AHP60_C_MP" : {
-        "name" : "Lochinvar AHP60",
+        "name" : "Lochinvar Veritus AHP60",
         "pkl_prefix": "lochinvar_AHP60_Multi_Pass",
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
     },
     "MODELS_Lochinvar_AHP140_C_SP" : {
-        "name" : "Lochinvar AHP140",
+        "name" : "Lochinvar Veritus AHP140",
         "pkl_prefix": "lochinvar_AHP140_Single_Pass",
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
     },
     "MODELS_Lochinvar_AHP140_C_MP" : {
-        "name" : "Lochinvar AHP140",
+        "name" : "Lochinvar Veritus AHP140",
         "pkl_prefix": "lochinvar_AHP140_Multi_Pass",
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
     },
     "MODELS_Lochinvar_AHP200_C_SP" : {
-        "name" : "Lochinvar AHP200",
+        "name" : "Lochinvar Veritus AHP200",
         "pkl_prefix": "lochinvar_AHP200_Single_Pass",
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
     },
     "MODELS_Lochinvar_AHP200_C_MP" : {
-        "name" : "Lochinvar AHP200",
+        "name" : "Lochinvar Veritus AHP200",
         "pkl_prefix": "lochinvar_AHP200_Multi_Pass",
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
     },
     "MODELS_Lochinvar_AHP280_C_SP" : {
-        "name" : "Lochinvar AHP280",
+        "name" : "Lochinvar Veritus AHP280",
         "pkl_prefix": "lochinvar_AHP280_Single_Pass",
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
     },
     "MODELS_Lochinvar_AHP280_C_MP" : {
-        "name" : "Lochinvar AHP280",
+        "name" : "Lochinvar Veritus AHP280",
         "pkl_prefix": "lochinvar_AHP280_Multi_Pass",
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
     },
     "MODELS_Lochinvar_AHP350_C_SP" : {
-        "name" : "Lochinvar AHP350",
+        "name" : "Lochinvar Veritus AHP350",
         "pkl_prefix": "lochinvar_AHP350_Single_Pass",
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
     },
     "MODELS_Lochinvar_AHP350_C_MP" : {
-        "name" : "Lochinvar AHP350",
+        "name" : "Lochinvar Veritus AHP350",
         "pkl_prefix": "lochinvar_AHP350_Multi_Pass",
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
