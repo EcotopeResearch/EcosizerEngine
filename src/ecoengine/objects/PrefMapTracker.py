@@ -473,7 +473,7 @@ class PrefMapTracker:
         self.numHeatPumps = max(heatPumps,1.0) + 0.0 # add 0.0 to ensure that it is a float
 
     def setPrefMap(self, modelName):
-        if modelName == "MODELS_SANCO2_C_SP" or modelName[-2:] == 'MP':
+        if modelName == "MODELS_SANCO2_C_SP" or modelName[-2:] == 'MP' or "Lochinvar" in modelName:
             self.twoInputPkl = True
         if modelName[-2:] == 'MP':
             self.isMultiPass = True

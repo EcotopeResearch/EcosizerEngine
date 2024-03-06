@@ -649,6 +649,66 @@
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : true
     },
+    "MODELS_Lochinvar_AHP60_C_SP" : {
+        "name" : "Lochinvar AHP60",
+        "pkl_prefix": "lochinvar_AHP60_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP60_C_MP" : {
+        "name" : "Lochinvar AHP60",
+        "pkl_prefix": "lochinvar_AHP60_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP140_C_SP" : {
+        "name" : "Lochinvar AHP140",
+        "pkl_prefix": "lochinvar_AHP140_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP140_C_MP" : {
+        "name" : "Lochinvar AHP140",
+        "pkl_prefix": "lochinvar_AHP140_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP200_C_SP" : {
+        "name" : "Lochinvar AHP200",
+        "pkl_prefix": "lochinvar_AHP200_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP200_C_MP" : {
+        "name" : "Lochinvar AHP200",
+        "pkl_prefix": "lochinvar_AHP200_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP280_C_SP" : {
+        "name" : "Lochinvar AHP280",
+        "pkl_prefix": "lochinvar_AHP280_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP280_C_MP" : {
+        "name" : "Lochinvar AHP280",
+        "pkl_prefix": "lochinvar_AHP280_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP350_C_SP" : {
+        "name" : "Lochinvar AHP350",
+        "pkl_prefix": "lochinvar_AHP350_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP350_C_MP" : {
+        "name" : "Lochinvar AHP350",
+        "pkl_prefix": "lochinvar_AHP350_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
     "MODELS_LYNC_AEGIS_250_SIMULATED_C_SP" : {
         "name" : "Lync Aegis 250 Single Pass",
         "pkl_prefix": "lync_a250_simulated",
