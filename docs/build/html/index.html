@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.5.3 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.5.7 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.7 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -700,7 +700,7 @@ fraction is too small for system and cuts the return arrays to match cutoff poin
 
 <dl class="py function">
 <dt class="sig sig-object py" id="engine.EcosizerEngine.getHPWHOutputCapacity">
-<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getHPWHOutputCapacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outdoorAirTemp_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inletWaterTemp_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outletWaterTemp_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_heatPumps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_as_kW</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getHPWHOutputCapacity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getHPWHOutputCapacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outdoorAirTemp_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inletWaterTemp_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outletWaterTemp_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_heatPumps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_as_kW</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defrost_derate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getHPWHOutputCapacity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the output capacity of the model at the climate temperatures provided</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -716,6 +716,8 @@ fraction is too small for system and cuts the return arrays to match cutoff poin
 <dt><strong>num_heatPumps</strong><span class="classifier">int</span></dt><dd><p>the number of HPWHs in the system</p>
 </dd>
 <dt><strong>return_as_kW</strong><span class="classifier">boolean</span></dt><dd><p>Set to True (default) to return output capacity in kW. Set to False to instead return as kBTU/hr</p>
+</dd>
+<dt><strong>defrost_derate</strong><span class="classifier">float</span></dt><dd><p>defrost derate at design outdoor air temperature for model. Should be a percent in decimal form between 0.0 and 1.0 (e.g. 40% defrost derate would be 0.40)</p>
 </dd>
 </dl>
 </dd>
@@ -1984,7 +1986,7 @@ perfomance map, infinity is returned.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.7 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>

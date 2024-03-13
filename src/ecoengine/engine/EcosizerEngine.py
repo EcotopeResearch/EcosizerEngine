@@ -689,7 +689,7 @@ def getListOfModels(multiPass = False, includeResidential = True, excludeModels 
                         returnList.append([model_name,value["name"]])
     return returnList
 
-def getHPWHOutputCapacity(model, outdoorAirTemp_F, inletWaterTemp_F, outletWaterTemp_F, num_heatPumps = 1, return_as_kW = True):
+def getHPWHOutputCapacity(model, outdoorAirTemp_F, inletWaterTemp_F, outletWaterTemp_F, num_heatPumps = 1, return_as_kW = True, defrost_derate = 0.0):
     """
     Returns the output capacity of the model at the climate temperatures provided
     
@@ -707,19 +707,26 @@ def getHPWHOutputCapacity(model, outdoorAirTemp_F, inletWaterTemp_F, outletWater
         the number of HPWHs in the system
     return_as_kW : boolean
         Set to True (default) to return output capacity in kW. Set to False to instead return as kBTU/hr
+    defrost_derate : float
+        defrost derate at design outdoor air temperature for model. Should be a percent in decimal form between 0.0 and 1.0 (e.g. 40% defrost derate would be 0.40)
 
     Returns
     -------
     output_capacity : float
         the output capacity of the HPWH system at the climate temperatures provided in either kW or kBTU/hr depending on the value of the return_as_kW parameter
     """
+    if not (isinstance(defrost_derate, int) or isinstance(defrost_derate, float)) or defrost_derate < 0.0 or defrost_derate > 1.0:
+        raise Exception("defrost_derate must be a number between 0.0 and 1.0")
+    if not isinstance(num_heatPumps, int) or num_heatPumps < 1:
+        raise Exception("num_heatPumps must be an integer equal to or larger than 1")
+    
     perfMap = PrefMapTracker(defaultCapacity_kBTUhr = None, 
                              modelName = model,
                              kBTUhr = return_as_kW == False,
                              numHeatPumps = num_heatPumps,
                              usePkl = True)
     output_cap, input_cap = perfMap.getCapacity(outdoorAirTemp_F,inletWaterTemp_F,outletWaterTemp_F)
-    return output_cap
+    return output_cap * (1.0 - defrost_derate)
 
 
 def getSizingCurvePlot(x, y, startind, loadshifting = False):

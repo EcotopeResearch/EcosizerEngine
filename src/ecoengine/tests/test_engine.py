@@ -265,14 +265,16 @@ def test_getPeakIndices( arr, expected):
 def test_convertVolume(convertToT_F, referenceT_F, convertFromT_F, expected):
     assert round(convertVolume(100, convertToT_F, referenceT_F, convertFromT_F), 3) == expected
 
-@pytest.mark.parametrize("hpwhModel, numHP, expectedCap, oat, inlet, outlet, return_as_kW", 
+@pytest.mark.parametrize("hpwhModel, numHP, expectedCap, oat, inlet, outlet, return_as_kW, defrost_derate", 
                          [
-                            ("MODELS_Mitsubishi_QAHV_C_SP", 3, 40.0 * 3, 61.0, 53.0, 139.0, True),
-                            ("MODELS_NyleC125A_C_SP", 5, 34.18 * 5, 60.0, 75.0, 140.0, True),
-                            ("MODELS_ColmacCxA_20_C_SP", 35, 53.3 * 35, 58.0, 40.0, 120.0, True),
+                            ("MODELS_Mitsubishi_QAHV_C_SP", 3, 40.0 * 3, 61.0, 53.0, 139.0, True, 0.0),
+                            ("MODELS_NyleC125A_C_SP", 5, 34.18 * 5, 60.0, 75.0, 140.0, True, 0.0),
+                            ("MODELS_ColmacCxA_20_C_SP", 35, 53.3 * 35, 58.0, 40.0, 120.0, True, 0.0),
+                            ("MODELS_Mitsubishi_QAHV_C_SP", 1, 30.0, 61.0, 53.0, 139.0, True, 0.25),
+                            ("MODELS_Mitsubishi_QAHV_C_SP", 1, 20.0 * W_TO_BTUHR, 61.0, 53.0, 139.0, False, 0.5),
                         ])
-def test_getHPWHOutputCapacity(hpwhModel, numHP, expectedCap, oat, inlet, outlet, return_as_kW):
-    assert getHPWHOutputCapacity(hpwhModel, oat, inlet, outlet, numHP, return_as_kW) == expectedCap
+def test_getHPWHOutputCapacity(hpwhModel, numHP, expectedCap, oat, inlet, outlet, return_as_kW, defrost_derate):
+    assert getHPWHOutputCapacity(hpwhModel, oat, inlet, outlet, numHP, return_as_kW, defrost_derate) == expectedCap
 
 @pytest.mark.parametrize("sizingResult, magnitude", [
    ([1579.8153948651493, 150.75919907543388, 100, 59.712485, 168], 2500)
