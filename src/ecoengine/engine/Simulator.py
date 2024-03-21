@@ -63,13 +63,14 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
                             # we are keeping track of temperature maintenance power as well
                             simRun.addTMCap(system.getTMOutputCapacity(kW=True), system.getTMInputCapacity(kW=True))
                             kGofCO2 += simRun.getTMCapIn(i)*(simRun.tmRun[i]/60)
-                        kGofCO2 *= float(kG_row[building.climateZone-1])
-                        simRun.addKGCO2(kGofCO2)   
+                        if building.isInCalifornia():
+                            kGofCO2 *= float(kG_row[building.climateZone-1])
+                            simRun.addKGCO2(kGofCO2)   
                     else:
                         system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
             
             except Exception as e:
-                if not exceptOnWaterShortage and str(e) == "Primary storage ran out of Volume!":
+                if not exceptOnWaterShortage and (str(e) == "Primary storage ran out of Volume!" or str(e) == "The swing tank dropped below the supply temperature! The system is undersized"):
                     print(f"{str(e)} Returning simulation result for analysis.")
                 else:
                     raise

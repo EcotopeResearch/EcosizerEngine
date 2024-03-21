@@ -1,4 +1,4 @@
-from ecoengine import EcosizerEngine, getListOfModels, SimulationRun, getAnnualSimLSComparison, PrefMapTracker
+from ecoengine import getWeatherStations, EcosizerEngine, getListOfModels, SimulationRun, getAnnualSimLSComparison, PrefMapTracker
 import time
 import math
 from plotly.offline import plot
@@ -31,56 +31,56 @@ import os
 
 # print(f"pm.getCapacity({34},{74-10},{160-10}) {pm.getCapacity(34,74-10,160-10)}")
 # print(f"pm.getCapacity({34-10},{74-10},{160}) {pm.getCapacity(34-10,74-10,160)}")
-def createERSizingCurvePlot(x, y, startind, x_axis_label, x_units):
-    """
-    Sub - Function to plot the the x and y curve and create a point (secretly creates all the points)
-    """
-    fig = Figure()
+
+print(getWeatherStations())
+
+# def createERSizingCurvePlot(x, y, startind, x_axis_label, x_units):
+#     """
+#     Sub - Function to plot the the x and y curve and create a point (secretly creates all the points)
+#     """
+#     fig = Figure()
     
-    hovertext = x_axis_label + ': %{x:.1f} ' + x_units + ' \nER Heating Capacity Increase: %{y:.1f}'
+#     hovertext = x_axis_label + ': %{x:.1f} ' + x_units + ' \nER Heating Capacity Increase: %{y:.1f}'
 
-    fig.add_trace(Scatter(x=x, y=y,
-                    visible=True,
-                    line=dict(color="#28a745", width=4),
-                    hovertemplate=hovertext,
-                    opacity=0.8,
-                    ))
+#     fig.add_trace(Scatter(x=x, y=y,
+#                     visible=True,
+#                     line=dict(color="#28a745", width=4),
+#                     hovertemplate=hovertext,
+#                     opacity=0.8,
+#                     ))
 
-    # Add traces for the point, one for each slider step
-    for ii in range(len(x)):
-        fig.add_trace(Scatter(x=[x[ii]], y=[y[ii]], 
-                        visible=False,
-                        mode='markers', marker_symbol="diamond", 
-                        opacity=1, marker_color="#2EA3F2", marker_size=10,
-                        name="System Size",
-                        hoverlabel = dict(font=dict(color='white'), bordercolor="white")
-                        ))
+#     # Add traces for the point, one for each slider step
+#     for ii in range(len(x)):
+#         fig.add_trace(Scatter(x=[x[ii]], y=[y[ii]], 
+#                         visible=False,
+#                         mode='markers', marker_symbol="diamond", 
+#                         opacity=1, marker_color="#2EA3F2", marker_size=10,
+#                         name="System Size",
+#                         hoverlabel = dict(font=dict(color='white'), bordercolor="white")
+#                         ))
 
-    # Make the 16 hour trace visible
-    # fig.data[startind+1].visible = True
-    fig.update_layout(title="Additional Electric Resistance Sizing Curve",
-                    xaxis_title=x_axis_label,
-                    yaxis_title="ER Heating Capacity Increase (kW)",
-                    showlegend=False)
+#     # Make the 16 hour trace visible
+#     # fig.data[startind+1].visible = True
+#     fig.update_layout(title="Additional Electric Resistance Sizing Curve",
+#                     xaxis_title=x_axis_label,
+#                     yaxis_title="ER Heating Capacity Increase (kW)",
+#                     showlegend=False)
 
-    return fig
+#     return fig
 
 W_TO_BTUHR = 3.412142
 
 # hpwh = EcosizerEngine(
-#             incomingT_F     = 50,
 #             magnitudeStat  = 100,
 #             supplyT_F       = 120,
-#             storageT_F      = 145,
-#             loadUpT_F       = 145,
+#             storageT_F      = 150,
+#             loadUpT_F       = 165,
 #             percentUseable  = 0.9, 
 #             aquaFract       = 0.4, 
 #             aquaFractLoadUp = 0.21,
 #             aquaFractShed   = 0.8,
 #             schematic       = 'swingtank_er', 
 #             buildingType   = 'multi_family',
-#             returnT_F       = 0, 
-#             flowRate       = 0,
 #             gpdpp           = 25,
 #             safetyTM        = 1.75,
 #             defrostFactor   = 1, 
@@ -90,15 +90,39 @@ W_TO_BTUHR = 3.412142
 #             loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
 #             loadUpHours     = 3,
 #             doLoadShift     = False,
-#             loadShiftPercent       = 1.,
-#             PVol_G_atStorageT = 890, 
-#             PCap_kW = 10,
-#             TMVol_G = 100,
-#             TMCap_kW = 19,
-#             annual = False,
-#             sizeAdditionalER = True,
-#             zipCode=90210
+#             systemModel="MODELS_Mitsubishi_QAHV_C_SP",
+#             PVol_G_atStorageT=1000,
+#             numHeatPumps=2,
+#             TMVol_G = 50,
+#             TMCap_kW = 10,
+#             annual = True,
+#             sizeAdditionalER = False,
+#             climateZone=32
 #         )
+hpwh = EcosizerEngine(
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 145,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4,
+            schematic       = 'swingtank_er',
+            buildingType   = 'multi_family',
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1,
+            nApt            = 100,
+            Wapt            = 60,
+            doLoadShift     = False,
+            # systemModel="MODELS_SANCO2_C_SP",
+            PCap_kW=5,
+            PVol_G_atStorageT=150,
+            numHeatPumps=1,
+            TMVol_G = 119,
+            TMCap_kW = 50,
+            annual = True,
+            sizeAdditionalER = True,
+            climateZone= 70
+        )
 # hpwh2 = EcosizerEngine(
 #             incomingT_F     = 50,
 #             magnitudeStat  = 100,
@@ -127,10 +151,10 @@ W_TO_BTUHR = 3.412142
 #             sizeAdditionalER = True,
 #             zipCode=90210
 #         )
-# print(hpwh.system.TMCap_kBTUhr / W_TO_BTUHR)
-# simRun = hpwh.getSimRun(minuteIntervals=15, nDays=365)
-# simRun, utility_cost = hpwh.utilityCalculation(5.00, 16, 21, 38.75, 0.21585, 30.20, 0.14341, csv_path = os.path.join(os.path.dirname(__file__),'test.csv'))
-# simRun.writeCSV("csv_this.csv")
+print("hpwh.system.TMCap_kBTUhr / W_TO_BTUHR",hpwh.system.TMCap_kBTUhr / W_TO_BTUHR)
+simRun = hpwh.getSimRun(minuteIntervals=15, nDays=365, exceptOnWaterShortage=False)
+# simRun, utility_cost = hpwh.utilityCalculation(5.00, [16,23], [21,24], [38.75,38.75], [0.21585,0.5], [30.20,35.0], [0.14341,0.07],[0,5],[5,12]) #csv_path = os.path.join(os.path.dirname(__file__),'test.csv')
+# simRun.writeCSV("13_gpdpp.csv")
 # print(f"total utility cost is ${round(utility_cost,2)}")
 
 # if True:

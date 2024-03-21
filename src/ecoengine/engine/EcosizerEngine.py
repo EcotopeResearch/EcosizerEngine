@@ -362,6 +362,8 @@ class EcosizerEngine:
             raise Exception('Cannot preform kgCO2/kWh calculation on non-loadshifting systems.')
         if nDays != 365 or len(self.building.loadshape) != 8760:
             raise Exception('kgCO2/kWh calculation is only available for annual simulations.')
+        if not self.building.isInCalifornia():
+            raise Exception('kgCO2/kWh calculation is only available for California climate zones.')
         
         simRun_ls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
         
@@ -622,24 +624,32 @@ class EcosizerEngine:
         """
         return not self.system.perfMap.usePkl
     
-    def utilityCalculation(self, monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge, csv_path = None):
+    def utilityCalculation(self, monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge, 
+                           start_month = 0, end_month = 12, csv_path = None):
         """
         Parameters
         ----------
         monthly_base_charge : float
             monthly base charge for having electricity connected ($/month)
-        pk_start_hour : int (in range 0-23)
+        pk_start_hour : int (in range 0-23) or list of int (in range 0-23)
             start hour of the day which peak demand pricing applies
-        pk_end_hour : int (in range pk_start_hour-23)
+        pk_end_hour : int (in range pk_start_hour-24) or list of int (in range pk_start_hour-24)
             end hour of the day which peak demand pricing applies
-        pk_demand_charge : float
+        pk_demand_charge : float or list of float
             peak demand pricing ($/kW)
-        pk_energy_charge : float
+        pk_energy_charge : float or list of float
             peak energy pricing ($/kWh)
-        off_pk_demand_charge : float
+        off_pk_demand_charge : float or list of float
             off-peak demand pricing ($/kW)
-        off_pk_energy_charge : float
+        off_pk_energy_charge : float or list of float
             off-peak energy pricing ($/kWh)
+        start_month : int (in range 0-11) or list of int (in range 0-11)
+            start month for period (defaults to 0)
+        end_month : int (in range start_month+1 - 12) or list of int (in range start_month[i]+1 - 12)
+            end month for period (defaults to 12)
+        csv_path : str
+            file path to custom pricing csv. Must have three columns titled "Energy Rate ($/kWh)", "Demand Rate ($/kW)", "Demand Period", and "Monthly Base Charge" 
+            with appropriate information in each column. Defaults to None
 
         Returns
         -------
@@ -647,7 +657,8 @@ class EcosizerEngine:
             The object carrying details from the simulation of the system
         ...
         """
-        uc = UtilityCostTracker(monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge,csv_path)
+        uc = UtilityCostTracker(monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge,
+                                start_month, end_month, csv_path)
         simRun = self.getSimRun(minuteIntervals = 15, nDays = 365)
         utility_cost = simRun.getAnnualUtilityCost(uc)
         return simRun, utility_cost
@@ -688,6 +699,30 @@ def getListOfModels(multiPass = False, includeResidential = True, excludeModels 
                     elif not multiPass and model_name[-2:] != 'MP':
                         returnList.append([model_name,value["name"]])
     return returnList
+
+def getWeatherStations():
+    """
+    Static Method to Return all weather stations as strings with corresponding climate zones as integers
+
+    Returns
+    -------
+    weather_stations : List[str]
+        a list of tuples containing a string and integer in the form [weather_station_name, climate_zone] where weather_station_name is the string 
+        representing the weather station name and climate_zone is the corresponding ecosizer climate zone.
+    """
+    data = []
+    with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/WeatherStation_ClimateZone_Lookup.csv'), 'r') as csvfile:
+        csv_reader = csv.reader(csvfile)
+        next(csv_reader) # skip header
+        for row in csv_reader:
+            # Assuming two columns: string and int
+            if len(row) == 2:
+                string_value, int_value = row
+                # Convert the integer value to int type
+                int_value = int(int_value)
+                data.append([string_value, int_value])
+
+    return data
 
 def getHPWHOutputCapacity(model, outdoorAirTemp_F, inletWaterTemp_F, outletWaterTemp_F, num_heatPumps = 1, return_as_kW = True, defrost_derate = 0.0):
     """

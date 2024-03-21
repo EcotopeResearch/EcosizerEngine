@@ -387,9 +387,9 @@ def test__annual_swing_simulationResults_size(annual_swing_sizer):
         "zipC, nBR, storageT_F, aqFrac, aqFrac_lu, aqFrac_shed, luT_F, schematic, systemModel, numPumps, pVol, TMCap_kW, tmModel, TMVol_G, tmNumHeatPumps, loadshift_capacity, kGperkWh_saved, annual_kGCO2_saved", 
         [
             # (zipC, nBR, storageT_F, aqFrac, aqFrac_lu, aqFrac_shed, luT_F, schematic, systemModel, numPumps, pVol, TMCap_kW, tmModel, TMVol_G, tmNumHeatPumps, loadshift_capacity, kGperkWh_saved, annual_kGCO2_saved),
-            (90210, [0,100,50,0,0,0], 140, 0.4, 0.2, 0.8, 140, 'swingtank', "MODELS_NyleC125A_C_SP", 4, 1200, 18, None, 150, None, 134.06, 3.44, 460.61),
-            (90023, [5,120,70,9,4,1], 150, .45, .15, .85, 160, 'swingtank', "MODELS_LYNC_AEGIS_350_SIMULATED_C_SP", 3, 2000, 20, None, 150, None, 329.22, 5.59, 1839.4),
-            (90023, [5,120,70,9,4,1], 150, .45, .15, .85, 160, 'swingtank', "MODELS_LYNC_AEGIS_500_SIMULATED_C_SP", 2, 1700, 17, None, 150, None, 279.84, 5.38, 1505.03),
+            (90210, [0,100,50,0,0,0], 140, 0.4, 0.2, 0.8, 140, 'swingtank', "MODELS_NyleC125A_C_SP", 4, 1200, 18, None, 150, None, 134.06, 3.58, 479.89),
+            (90023, [5,120,70,9,4,1], 150, .45, .15, .85, 160, 'swingtank', "MODELS_LYNC_AEGIS_350_SIMULATED_C_SP", 3, 2000, 20, None, 150, None, 329.22, 5.58, 1838.57),
+            (90023, [5,120,70,9,4,1], 150, .45, .15, .85, 160, 'swingtank', "MODELS_LYNC_AEGIS_500_SIMULATED_C_SP", 2, 1700, 17, None, 150, None, 279.84, 5.32, 1488.6),
             (91023, [50,6,50,20,4,1], 140, .45, .15, .85, 140, 'paralleltank', "MODELS_SANCO2_C_SP", 20, 1200, None, "MODELS_AOSmithHPTS50_R_MP", 150, 6, 169.11, 3.89, 658.26),
             (91023, [50,6,50,20,4,1], 140, .45, .15, .85, 140, 'paralleltank', "MODELS_Mitsubishi_QAHV_C_SP", 3, 1800, None, "MODELS_AOSmithHPTS50_R_MP", 150, 6, 253.67, 6.06, 1536.16),
             (91023, [50,0,0,0,0,0], 150, .40, .2, .8, 160, 'singlepass_rtp', "MODELS_Mitsubishi_QAHV_C_SP", 1, 500, None, None, None, None, 75.09, 9.61, 721.48),
@@ -497,7 +497,7 @@ def test_sizing_for_simRun(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F
             (0.21, 0.8, 145, 120, None, 891, 20, 100, 19, True, None, True, True),
             (0.21, 0.8, 145, 120, None, 891, 20, 100, 29, True, None, True, False),
             (0.21, 0.8, 145, 120, None, 891, 20, 100, 29, False, None, False, False),
-            # (0.21, 0.8, 145, 120, "MODELS_SANCO2_C_SP", 'swingtank_er', 891, 20, 100, 19, True, 95603)
+            (0.21, 0.8, 145, 120, "MODELS_SANCO2_C_SP", 891, None, 100, 67, False, 95603, True, False),
         ]
 )
 def test_er_undersized_error(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, hpwhModel, 
@@ -533,14 +533,50 @@ def test_er_undersized_error(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT
             annual = annual,
             zipCode = zipCode,
             systemModel = hpwhModel,
+            numHeatPumps = 1,
             sizeAdditionalER = False
         )
     if produce_error:
         with pytest.raises(Exception, match="The swing tank dropped below the supply temperature! The system is undersized"):
             hpwh.getSimRun(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365)
+        hpwh = EcosizerEngine(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = supplyT_F,
+            storageT_F      = storageT_F,
+            loadUpT_F       = storageT_F,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4, 
+            aquaFractLoadUp = aquaFractLoadUp,
+            aquaFractShed   = aquaFractShed,
+            schematic       = 'swingtank_er', 
+            buildingType   = 'multi_family',
+            returnT_F       = 0, 
+            flowRate       = 0,
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 60,
+            loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
+            loadUpHours     = 3,
+            doLoadShift     = doLoadShift,
+            loadShiftPercent       = 0.8,
+            PVol_G_atStorageT = PVol_G_atStorageT, 
+            PCap_kW = PCap_kW,
+            TMVol_G = TMVol_G,
+            TMCap_kW = TMCap_kW,
+            annual = annual,
+            zipCode = zipCode,
+            systemModel = hpwhModel,
+            sizeAdditionalER = True
+        )
+        assert hpwh.system.TMCap_kBTUhr > TMCap_kW * W_TO_BTUHR
     else:
         simRun = hpwh.getSimRun(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365)
         assert len(simRun.getHWGeneration()) == 8760*4
+        assert round(hpwh.system.TMCap_kBTUhr,2) == round(TMCap_kW * W_TO_BTUHR, 2) 
 
 @pytest.mark.parametrize("aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F, loadShiftSchedule, hpwhModel, tmModel, simSchematic, PVol_G_atStorageT, PCap_kW, TMVol_G, TMCap_kW, doLoadShift, zipCode, climateZone", [
    (0.21, 0.8, 140, 120, [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1], 'MODELS_VOLTEX80_R_MP', None, 'multipass_norecirc', 891, 48, None, None, True, 94503,2),

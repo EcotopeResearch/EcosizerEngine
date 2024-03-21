@@ -77,6 +77,10 @@ class Building:
         return False
     def getClimateZone(self):
         return self.climateZone
+    def isInCalifornia(self) -> bool:
+        if self.climateZone is None:
+            return False
+        return self.climateZone > 0 and self.climateZone < 17
     def getDesignOAT(self):
         if not self.designOAT_F is None:
             return self.designOAT_F

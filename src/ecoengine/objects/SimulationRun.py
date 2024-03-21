@@ -850,8 +850,9 @@ class SimulationRun:
                 column_names.append('Water Leaving SwingTank (Gallons at TM Temp)')
                 columns.append(self.gethwOutSwing())
         
-        column_names.append('C02 Emissions (kG)')
-        columns.append(self.getkGCO2())
+        if self.building.isInCalifornia():
+            column_names.append('C02 Emissions (kG)')
+            columns.append(self.getkGCO2())
 
         if hasattr(self, 'energyCost'):
             column_names.append('Energy Rate ($/kWh)')

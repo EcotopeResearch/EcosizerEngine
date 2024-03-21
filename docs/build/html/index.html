@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.5.7 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.5.8 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.8 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -640,23 +640,30 @@ fraction is too small for system and cuts the return arrays to match cutoff poin
 
 <dl class="py method">
 <dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.utilityCalculation">
-<span class="sig-name descname"><span class="pre">utilityCalculation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monthly_base_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_start_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_end_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csv_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.utilityCalculation" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">utilityCalculation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monthly_base_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_start_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_end_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csv_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.utilityCalculation" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>monthly_base_charge</strong><span class="classifier">float</span></dt><dd><p>monthly base charge for having electricity connected ($/month)</p>
 </dd>
-<dt><strong>pk_start_hour</strong><span class="classifier">int (in range 0-23)</span></dt><dd><p>start hour of the day which peak demand pricing applies</p>
+<dt><strong>pk_start_hour</strong><span class="classifier">int (in range 0-23) or list of int (in range 0-23)</span></dt><dd><p>start hour of the day which peak demand pricing applies</p>
 </dd>
-<dt><strong>pk_end_hour</strong><span class="classifier">int (in range pk_start_hour-23)</span></dt><dd><p>end hour of the day which peak demand pricing applies</p>
+<dt><strong>pk_end_hour</strong><span class="classifier">int (in range pk_start_hour-24) or list of int (in range pk_start_hour-24)</span></dt><dd><p>end hour of the day which peak demand pricing applies</p>
 </dd>
-<dt><strong>pk_demand_charge</strong><span class="classifier">float</span></dt><dd><p>peak demand pricing ($/kW)</p>
+<dt><strong>pk_demand_charge</strong><span class="classifier">float or list of float</span></dt><dd><p>peak demand pricing ($/kW)</p>
 </dd>
-<dt><strong>pk_energy_charge</strong><span class="classifier">float</span></dt><dd><p>peak energy pricing ($/kWh)</p>
+<dt><strong>pk_energy_charge</strong><span class="classifier">float or list of float</span></dt><dd><p>peak energy pricing ($/kWh)</p>
 </dd>
-<dt><strong>off_pk_demand_charge</strong><span class="classifier">float</span></dt><dd><p>off-peak demand pricing ($/kW)</p>
+<dt><strong>off_pk_demand_charge</strong><span class="classifier">float or list of float</span></dt><dd><p>off-peak demand pricing ($/kW)</p>
 </dd>
-<dt><strong>off_pk_energy_charge</strong><span class="classifier">float</span></dt><dd><p>off-peak energy pricing ($/kWh)</p>
+<dt><strong>off_pk_energy_charge</strong><span class="classifier">float or list of float</span></dt><dd><p>off-peak energy pricing ($/kWh)</p>
+</dd>
+<dt><strong>start_month</strong><span class="classifier">int (in range 0-11) or list of int (in range 0-11)</span></dt><dd><p>start month for period (defaults to 0)</p>
+</dd>
+<dt><strong>end_month</strong><span class="classifier">int (in range start_month+1 - 12) or list of int (in range start_month[i]+1 - 12)</span></dt><dd><p>end month for period (defaults to 12)</p>
+</dd>
+<dt><strong>csv_path</strong><span class="classifier">str</span></dt><dd><p>file path to custom pricing csv. Must have three columns titled “Energy Rate ($/kWh)”, “Demand Rate ($/kW)”, “Demand Period”, and “Monthly Base Charge”
+with appropriate information in each column. Defaults to None</p>
 </dd>
 </dl>
 </dd>
@@ -783,6 +790,21 @@ or non-load shifting system (plotting Storage Volume vs. Capacity)</p>
 <dd class="field-even"><dl class="simple">
 <dt><strong>plot</strong><span class="classifier">plotly.Figure</span></dt><dd><p>The sizing curve graph. If loadshifting parameter is set to True, the graph will label the plot as Percent of Load Shift Days Covered vs. Storage Volume.
 Otherwise, it will label the plot as Storage Volume vs. Capacity.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.getWeatherStations">
+<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getWeatherStations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getWeatherStations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Static Method to Return all weather stations as strings with corresponding climate zones as integers</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>weather_stations</strong><span class="classifier">List[str]</span></dt><dd><p>a list of tuples containing a string and integer in the form [weather_station_name, climate_zone] where weather_station_name is the string
+representing the weather station name and climate_zone is the corresponding ecosizer climate zone.</p>
 </dd>
 </dl>
 </dd>
@@ -1902,6 +1924,7 @@ perfomance map, infinity is returned.</p>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getHPWHOutputCapacity"><code class="docutils literal notranslate"><span class="pre">getHPWHOutputCapacity()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getListOfModels"><code class="docutils literal notranslate"><span class="pre">getListOfModels()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getSizingCurvePlot"><code class="docutils literal notranslate"><span class="pre">getSizingCurvePlot()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.getWeatherStations"><code class="docutils literal notranslate"><span class="pre">getWeatherStations()</span></code></a></li>
 <li><a class="reference internal" href="#engine.BuildingCreator.createBuilding"><code class="docutils literal notranslate"><span class="pre">createBuilding()</span></code></a></li>
 <li><a class="reference internal" href="#engine.SystemCreator.createSystem"><code class="docutils literal notranslate"><span class="pre">createSystem()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun"><code class="docutils literal notranslate"><span class="pre">SimulationRun</span></code></a><ul>
@@ -1986,7 +2009,7 @@ perfomance map, infinity is returned.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.5.8 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>

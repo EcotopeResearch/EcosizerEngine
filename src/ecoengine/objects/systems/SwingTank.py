@@ -23,7 +23,11 @@ class SwingTank(SystemConfig):
         self.safetyTM = safetyTM
         self.element_deadband_F = 8.0
         
-        # size if needed, else all sizing is taken care of in super().__init__
+        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
+                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
+                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
+        
+        # use user sized system, else all sizing is taken care of in super().__init__
         if not PVol_G_atStorageT is None: # indicates system is sized
            if not (isinstance(TMVol_G, int) or isinstance(TMVol_G, float)) or TMVol_G <= 0: 
                 raise Exception('Invalid input given for Temperature Maintenance Storage Volume, it must be a number greater than zero.')
@@ -32,10 +36,6 @@ class SwingTank(SystemConfig):
            self.TMVol_G = TMVol_G
            self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= TMVol_G]) if TMVol_G < 480 else 480
            self.TMCap_kBTUhr = TMCap_kBTUhr
-
-        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
-                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
-                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
         
     def getSizingResults(self):
         """

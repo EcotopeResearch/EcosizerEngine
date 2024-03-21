@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-__all__ = ['SimulationRun']
+__all__ = ['SimulationRun','PrefMapTracker']
 from .Building import *
 from .SystemConfig import *
 from .systemConfigUtils import *
