@@ -100,27 +100,26 @@ W_TO_BTUHR = 3.412142
 #             climateZone=32
 #         )
 hpwh = EcosizerEngine(
-            magnitudeStat  = 100,
+            magnitudeStat  = 28,
             supplyT_F       = 120,
             storageT_F      = 145,
             percentUseable  = 0.9, 
             aquaFract       = 0.4,
             schematic       = 'swingtank_er',
             buildingType   = 'multi_family',
-            gpdpp           = 25,
+            gpdpp           = 16,
             safetyTM        = 1.75,
             defrostFactor   = 1,
-            nApt            = 100,
-            Wapt            = 60,
+            nApt            = 6,
+            Wapt            = 15,
             doLoadShift     = False,
-            # systemModel="MODELS_SANCO2_C_SP",
-            PCap_kW=5,
+            systemModel="MODELS_SANCO2_C_SP",
             PVol_G_atStorageT=150,
             numHeatPumps=1,
             TMVol_G = 119,
-            TMCap_kW = 50,
+            TMCap_kW = 18,
             annual = True,
-            sizeAdditionalER = True,
+            sizeAdditionalER = False,
             climateZone= 70
         )
 # hpwh2 = EcosizerEngine(
@@ -154,7 +153,7 @@ hpwh = EcosizerEngine(
 print("hpwh.system.TMCap_kBTUhr / W_TO_BTUHR",hpwh.system.TMCap_kBTUhr / W_TO_BTUHR)
 simRun = hpwh.getSimRun(minuteIntervals=15, nDays=365, exceptOnWaterShortage=False)
 # simRun, utility_cost = hpwh.utilityCalculation(5.00, [16,23], [21,24], [38.75,38.75], [0.21585,0.5], [30.20,35.0], [0.14341,0.07],[0,5],[5,12]) #csv_path = os.path.join(os.path.dirname(__file__),'test.csv')
-# simRun.writeCSV("13_gpdpp.csv")
+# simRun.writeCSV("16_gpdpp_1_sancos.csv")
 # print(f"total utility cost is ${round(utility_cost,2)}")
 
 # if True:
