@@ -182,6 +182,7 @@ def swing_sizer_er_nls():
             PCap_kW = 10,
             TMVol_G = 100,
             TMCap_kW = 19,
+            sizeAdditionalER=True
         )
     return hpwh
 
@@ -484,7 +485,8 @@ def test_sizing_for_simRun(aquaFractLoadUp, aquaFractShed, storageT_F, supplyT_F
             TMCap_kW = TMCap_kW,
             annual = True,
             zipCode = zipCode,
-            systemModel = hpwhModel
+            systemModel = hpwhModel,
+            sizeAdditionalER= True if simSchematic == 'swingtank_er' else False
         )
     simRun = hpwh.getSimRun(initPV=0.4*PVol_G_atStorageT, initST=135, minuteIntervals = 15, nDays = 365)
     assert len(simRun.getHWGeneration()) == 8760*4

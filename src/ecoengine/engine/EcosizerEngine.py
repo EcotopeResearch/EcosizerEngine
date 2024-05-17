@@ -115,7 +115,7 @@ class EcosizerEngine:
     designOAT_F : float
         The outdoor air temperature for sizing the number of heat pumps and/or ER capacity in an ER-Trade off system.
     sizeAdditionalER : boolean
-        if set to True for a swingtank_er schematic, will size for additional ER element. False if there is no need to size additional ER for swingtank_er schematic
+        if set to True, swingtank_er will be assummed as schematic and will size for additional ER element. False if there is no need to size additional ER for swingtank_er schematic
     additionalERSaftey : float
         applicable for ER trade off swing tank only. Saftey factor to apply to additional electric resistance sizing
     """
@@ -130,7 +130,10 @@ class EcosizerEngine:
                             PVol_G_atStorageT = None, PCap_kW = None, TMVol_G = None, TMCap_kW = None,
                             annual = False, zipCode = None, climateZone = None, systemModel = None, numHeatPumps = None, 
                             tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None, ignoreShortCycleEr = False,
-                            useHPWHsimPrefMap = False, designOAT_F = None, sizeAdditionalER = True, additionalERSaftey = 1.0):
+                            useHPWHsimPrefMap = False, designOAT_F = None, sizeAdditionalER = False, additionalERSaftey = 1.0):
+        
+        if sizeAdditionalER:
+            schematic = "swingtank_er"
         
         ignoreRecirc = False
         if schematic == 'singlepass_norecirc' or schematic == 'primary' or schematic == 'multipass_norecirc' or schematic == 'multipass':
@@ -526,7 +529,7 @@ class EcosizerEngine:
         """
         return self.system.lsSizedPoints(self.building)
     
-    def erSizedPointsPlot(self, returnAsDiv = True):
+    def erSizedPointsPlot(self, returnAsDiv = True, returnWithXYPoints = False):
         """
         Returns a plot of sizing Electric Resistance Capacity by the percent of people covered in the appartment building.
 
@@ -534,16 +537,31 @@ class EcosizerEngine:
         ----------
         return_as_div : boolean
             A logical on the output, as a div string (true) or as a figure (false)
+        returnWithXYPoints : boolean
+            set to true to return the plot in addition to arrays of x and y coordinates for the sizing curve
 
         Returns
         -------
         plot : plotly.Figure -OR- <div> string
             The sizing curve graph with slider. Return type depends on value of return_as_div parameter.
             It will plot Percent of Coverage vs. Swing Tank Capacity.
+        x_values : List
+            List of x axis values of points on the sizing curve. Returned only if returnWithXYPoints set to True.
+        y_values : List
+            List of y axis values of points on the sizing curve. Returned only if returnWithXYPoints set to True.
+        startIndex : int
+            the index in x_values and y_values to start the slider on the sizing curve. Returned only if returnWithXYPoints set to True.
         """
         if not hasattr(self.system, "original_TMCap_kBTUhr"):
             raise Exception("erSizedPoints function is only applicable to systems with swing tank electric resistance trade-off capabilities.")
         [er_cap_kW, fract_covered, startInd] = self.system.erSizedPoints(self.building)
+        if returnWithXYPoints:
+            return [
+                self.system.getERCurveAndSlider(fract_covered, er_cap_kW, startInd, returnAsDiv = returnAsDiv),
+                fract_covered,
+                er_cap_kW,
+                startInd
+            ]
         return self.system.getERCurveAndSlider(fract_covered, er_cap_kW, startInd, returnAsDiv = returnAsDiv)
 
     def getHWMagnitude(self):
@@ -655,6 +673,8 @@ class EcosizerEngine:
         -------
         simRun : SimulationRun
             The object carrying details from the simulation of the system
+        utility_cost : float
+            The total annual utility cost for the simulation
         ...
         """
         uc = UtilityCostTracker(monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge,
