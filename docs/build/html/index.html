@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.6.1 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.6.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.6.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.6.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -780,7 +780,7 @@ display_name is the corresponding friendly display name for that model.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="engine.EcosizerEngine.getSizingCurvePlot">
-<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getSizingCurvePlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadshifting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getSizingCurvePlot" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getSizingCurvePlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loadshifting</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">er_sized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getSizingCurvePlot" title="Permalink to this definition">¶</a></dt>
 <dd><p>creates a plotly figure from a list of x and y points and starts the slider at the start index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -793,6 +793,8 @@ display_name is the corresponding friendly display name for that model.</p>
 </dd>
 <dt><strong>loadshifting</strong><span class="classifier">boolean</span></dt><dd><p>Indicates whether the resulting plot should be for a load shifting system (plotting Percent of Load Shift Days Covered vs. Storage Volume)
 or non-load shifting system (plotting Storage Volume vs. Capacity)</p>
+</dd>
+<dt><strong>er_sized</strong><span class="classifier">boolean</span></dt><dd><p>Indicates whether the resulting plot should be for Electric Resistance trade off sizing</p>
 </dd>
 </dl>
 </dd>
@@ -2019,7 +2021,7 @@ perfomance map, infinity is returned.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.6.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.6.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>

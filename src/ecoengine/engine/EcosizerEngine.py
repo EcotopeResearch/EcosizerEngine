@@ -784,7 +784,7 @@ def getHPWHOutputCapacity(model, outdoorAirTemp_F, inletWaterTemp_F, outletWater
     return output_cap * (1.0 - defrost_derate)
 
 
-def getSizingCurvePlot(x, y, startind, loadshifting = False):
+def getSizingCurvePlot(x, y, startind, loadshifting : bool = False, er_sized : bool = False):
     """
     creates a plotly figure from a list of x and y points and starts the slider at the start index.
 
@@ -799,6 +799,8 @@ def getSizingCurvePlot(x, y, startind, loadshifting = False):
     loadshifting : boolean
         Indicates whether the resulting plot should be for a load shifting system (plotting Percent of Load Shift Days Covered vs. Storage Volume)
         or non-load shifting system (plotting Storage Volume vs. Capacity)
+    er_sized : boolean
+        Indicates whether the resulting plot should be for Electric Resistance trade off sizing
 
     Returns
     -------
@@ -806,6 +808,8 @@ def getSizingCurvePlot(x, y, startind, loadshifting = False):
         The sizing curve graph. If loadshifting parameter is set to True, the graph will label the plot as Percent of Load Shift Days Covered vs. Storage Volume.
         Otherwise, it will label the plot as Storage Volume vs. Capacity.
     """
+    if er_sized:
+        return createERSizingCurvePlot(x, y, startind)
     return createSizingCurvePlot(x, y, startind, loadshifting)
 
 def getAnnualSimLSComparison(simRun_ls : SimulationRun, simRun_nls : SimulationRun, return_as_div=True):
