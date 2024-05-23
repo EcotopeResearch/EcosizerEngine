@@ -99,29 +99,36 @@ W_TO_BTUHR = 3.412142
 #             sizeAdditionalER = False,
 #             climateZone=32
 #         )
-hpwh = EcosizerEngine(
-            magnitudeStat  = 28,
-            supplyT_F       = 120,
-            storageT_F      = 145,
-            percentUseable  = 0.9, 
-            aquaFract       = 0.4,
-            schematic       = 'swingtank_er',
-            buildingType   = 'multi_family',
-            gpdpp           = 16,
-            safetyTM        = 1.75,
-            defrostFactor   = 1,
-            nApt            = 6,
-            Wapt            = 15,
-            doLoadShift     = False,
-            systemModel="MODELS_SANCO2_C_SP",
-            PVol_G_atStorageT=150,
-            numHeatPumps=1,
-            TMVol_G = 119,
-            TMCap_kW = 18,
-            annual = True,
-            sizeAdditionalER = False,
-            climateZone= 70
-        )
+for i in range(30,30):
+    print(i)
+    hpwh = EcosizerEngine(
+                magnitudeStat  = 80,
+                incomingT_F= 50,
+                supplyT_F       = 120,
+                storageT_F      = 150,
+                percentUseable  = 0.85, 
+                aquaFract       = 0.4,
+                schematic       = 'swingtank_er',
+                buildingType   = 'multi_family',
+                gpdpp           = 25,
+                safetyTM        = 1.75,
+                defrostFactor   = 1,
+                nApt            = 69,
+                Wapt            = 100,
+                doLoadShift     = False,
+                PVol_G_atStorageT=450,
+                numHeatPumps=1,
+                TMVol_G = 80,
+                TMCap_kW = 12,
+                PCap_kW=i,
+                annual = False,
+                sizeAdditionalER = True,
+            )
+    # [primaryCurveDiv, x_data, y_data, startIndex] = hpwh.erSizedPointsPlot(returnAsDiv = False, returnWithXYPoints = True)
+    # print(f"{x_data}, {y_data}, {startIndex}")
+
+simRun = hpwh.getSimRun(minuteIntervals = 1, nDays = 3, exceptOnWaterShortage=False)
+# simRun.writeCSV("this_test.csv")
 # hpwh2 = EcosizerEngine(
 #             incomingT_F     = 50,
 #             magnitudeStat  = 100,
@@ -150,8 +157,8 @@ hpwh = EcosizerEngine(
 #             sizeAdditionalER = True,
 #             zipCode=90210
 #         )
-print("hpwh.system.TMCap_kBTUhr / W_TO_BTUHR",hpwh.system.TMCap_kBTUhr / W_TO_BTUHR)
-simRun = hpwh.getSimRun(minuteIntervals=15, nDays=365, exceptOnWaterShortage=False)
+# print("hpwh.system.TMCap_kBTUhr / W_TO_BTUHR",hpwh.system.TMCap_kBTUhr / W_TO_BTUHR)
+# simRun = hpwh.getSimRun(minuteIntervals=15, nDays=365, exceptOnWaterShortage=False)
 # simRun, utility_cost = hpwh.utilityCalculation(5.00, [16,23], [21,24], [38.75,38.75], [0.21585,0.5], [30.20,35.0], [0.14341,0.07],[0,5],[5,12]) #csv_path = os.path.join(os.path.dirname(__file__),'test.csv')
 # simRun.writeCSV("16_gpdpp_1_sancos.csv")
 # print(f"total utility cost is ${round(utility_cost,2)}")

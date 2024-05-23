@@ -46,41 +46,22 @@ class SwingTankER(SwingTank):
         self.setLoadUPVolumeAndTrigger(building.getDesignInlet())
 
         # start the 72-hour sizing simulation to find HW deficit. Starting with the primary storage tank almost empty to ensure that water runs out if system is undersized.
-        simRun = self.getInitializedSimulation(building, initPV = 0.1, initST=building.supplyT_F, minuteIntervals = minuteIntervals, nDays = 3, forcePeakyLoadshape = True)
+        simRun_empty = self.getInitializedSimulation(building, initPV = 0, initST=building.supplyT_F, minuteIntervals = minuteIntervals, nDays = 2, forcePeakyLoadshape = True)
+        simRun_full = self.getInitializedSimulation(building, initPV = None, initST=building.supplyT_F, minuteIntervals = minuteIntervals, nDays = 2, forcePeakyLoadshape = True)
         i = 0
-        normalFunction = True
-        swingV = [0]*len(simRun.hwDemand)
-        waterDeficit = [0]*len(simRun.hwDemand)
-        while i < len(simRun.hwDemand):
-            if normalFunction:
-                i = self._findNextIndexOfHWDeficit(simRun, i)
-                if i < len(simRun.hwDemand):
-                    normalFunction = False
-            else:
-                # get available supply temperature volume in system to simulate as though water is completely stratified swing tank
-                swingV[i-1] = convertVolume(self.TMVol_G, building.supplyT_F, building.getDesignInlet(), simRun.tmT_F[i-1]) + \
-                    convertVolume(simRun.pV[i-1], building.supplyT_F, building.getDesignInlet(), self.storageT_F)
-                # get full hwGeneration rate of swing tank plus hw coming in from primary system
-                fullHWGenRate = (1000 * self.original_TMCap_kBTUhr / (60/minuteIntervals) /rhoCp / (building.supplyT_F - building.getDesignInlet()) * self.defrostFactor) + \
-                    simRun.hwGenRate
-                recircLossAtTime = (building.recirc_loss / (rhoCp * (building.supplyT_F - building.getDesignInlet()))) / (60/minuteIntervals)
-                while i < len(simRun.hwDemand) and not normalFunction:
-                    waterLeavingSystem = simRun.hwDemand[i] + recircLossAtTime
-                    if convertVolume(simRun.hwGenRate, self.storageT_F, building.getDesignInlet(), building.supplyT_F) >= simRun.hwDemand[i]:
-                        simRun.pV[i-1] = 0
-                        if swingV[i-1] <= self.TMVol_G:
-                            # Once appropriatly sized, water should never dip below supply temp so correct to supply temp once deficit is no longer an issue
-                            simRun.tmT_F[i-1] = building.supplyT_F
-                        else:
-                            simRun.tmT_F[i-1] =  ((swingV[i-1] * (building.supplyT_F - building.getDesignInlet()))/self.TMVol_G) + building.getDesignInlet()
-                        normalFunction = True
-                    else:
-                        swingV[i] = swingV[i-1] + fullHWGenRate - waterLeavingSystem
-                        waterDeficit[i] = max(waterLeavingSystem - fullHWGenRate, 0) # add water deficit if positive
-                        i += 1
-        # add additional ER to compensate for undersized CHPWH
-        self.TMCap_kBTUhr = self.original_TMCap_kBTUhr + (((max(waterDeficit) * (60/minuteIntervals) * rhoCp * (building.supplyT_F - building.getDesignInlet())) / 1000.) * saftey_factor)
+        tempDeficit = [0]*len(simRun_empty.hwDemand)
+        while i < len(simRun_empty.hwDemand):
+            self.runOneSystemStep(simRun_empty, i, minuteIntervals = minuteIntervals, oat = None, erCalc=True)
+            self.runOneSystemStep(simRun_full, i, minuteIntervals = minuteIntervals, oat = None, erCalc=True)
+            if simRun_empty.tmT_F[i] < building.supplyT_F:
+                tempDeficit[i] = simRun_empty.building.supplyT_F - simRun_empty.tmT_F[i]
+                simRun_empty.tmT_F[i] = building.supplyT_F
+            if simRun_full.tmT_F[i] < building.supplyT_F:
+                tempDeficit[i] = max(simRun_full.building.supplyT_F - simRun_full.tmT_F[i], tempDeficit[i])
+                simRun_full.tmT_F[i] = building.supplyT_F
+            i = i + 1
 
+        self.TMCap_kBTUhr = self.original_TMCap_kBTUhr + (((self.TMVol_G * (60/minuteIntervals) * rhoCp * (max(tempDeficit))) / 1000.) * saftey_factor)
         # set performance map back to its original form
         self.perfMap = perfMap_holder
         self.resetToDefaultCapacity()
@@ -122,10 +103,10 @@ class SwingTankER(SwingTank):
             hwVol_G = simRun.pV[i-1] + mixedGHW
             mixedT_F = getMixedTemp(incomingWater_T, self.storageT_F, simRun.hw_outSwing[i] - hwVol_G, hwVol_G)
             simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, 
-                simRun.tmheating, last_temp, simRun.hw_outSwing[i], mixedT_F, minuteIntervals = minuteIntervals)#, erCalc=True)
+                simRun.tmheating, last_temp, simRun.hw_outSwing[i], mixedT_F, minuteIntervals = minuteIntervals, erCalc=erCalc)
         else:
             simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, 
-                simRun.tmheating, last_temp, simRun.hw_outSwing[i], self.storageT_F, minuteIntervals = minuteIntervals)#, erCalc=True)
+                simRun.tmheating, last_temp, simRun.hw_outSwing[i], self.storageT_F, minuteIntervals = minuteIntervals, erCalc=erCalc)
 
         simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating,
                                                                                                 Vcurr = simRun.pV[i-1], 
@@ -177,12 +158,16 @@ class SwingTankER(SwingTank):
             else:
                 fract = i/100.
                 building.magnitude = original_magnitude * fract
-                er_cap_kBTUhr = self.sizeERElement(building, additionalERSaftey, 15)
+                er_cap_kBTUhr = self.sizeERElement(building, additionalERSaftey, 1)
             er_cap_kW.append(round(er_cap_kBTUhr/W_TO_BTUHR,0))
             fract_covered.append(i)
             i -= 10
 
-        # except Exception:
+        # reverse the lists because they are backwards:
+        # fract_covered.reverse()
+        # er_cap_kW.reverse()
+        # startind = (len(fract_covered)-1)-startind
+
         building.magnitude = original_magnitude
         self.TMCap_kBTUhr = original_erSize_kBTUhr
         return [er_cap_kW, fract_covered, startind] # TODO edge cases around start index

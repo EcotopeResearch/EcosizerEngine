@@ -478,7 +478,7 @@ class SwingTank(SystemConfig):
     
     def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, forcePeakyLoadshape = False) -> SimulationRun:
         simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays, forcePeakyLoadshape)
-        simRun.initializeTMValue(initST, self.storageT_F, self.TMCap_kBTUhr)
+        simRun.initializeTMValue(initST, building.supplyT_F, self.TMCap_kBTUhr)
         return simRun
 
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None, erCalc = False):

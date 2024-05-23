@@ -68,6 +68,9 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
                             simRun.addKGCO2(kGofCO2)   
                     else:
                         system.runOneSystemStep(simRun, i, minuteIntervals = minuteIntervals)
+                        simRun.addCap(system.getOutputCapacity(kW=True), system.getInputCapacity(kW=True))
+                        if(hasattr(simRun, 'tmRun')):
+                            simRun.addTMCap(system.getTMOutputCapacity(kW=True), system.getTMInputCapacity(kW=True))
             
             except Exception as e:
                 if not exceptOnWaterShortage and (str(e) == "Primary storage ran out of Volume!" or str(e) == "The swing tank dropped below the supply temperature! The system is undersized"):

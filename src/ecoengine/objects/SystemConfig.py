@@ -287,7 +287,7 @@ class SystemConfig:
 
         pV = [0] * (len(hwDemand) - 1) + [V0_normal]
 
-        if initPV:
+        if initPV is not None:
             pV[-1] = initPV
         return SimulationRun(hwGenRate, hwDemand, V0_normal, pV, building, loadshiftSched, minuteIntervals, self.doLoadShift, LS_sched)
     

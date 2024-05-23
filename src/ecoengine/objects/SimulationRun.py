@@ -62,7 +62,7 @@ class SimulationRun:
         """
         return times_COP_assumed > self.copAssumeThreshold
 
-    def initializeTMValue(self, initST, storageT_F, TMCap_kBTUhr, swingOut = True):
+    def initializeTMValue(self, initST, supplyT_F, TMCap_kBTUhr, swingOut = True):
         """
         Initializes temperature maintenance values
 
@@ -70,14 +70,14 @@ class SimulationRun:
         ----------
         initST : float
             temperature maintenance tank temperature at start of the simulation.
-        storageT_F : float
+        supplyT_F : float
             storage temperature setpoint for temperature maintenance system
         TMCap_kBTUhr : float
             temperature maintenance heating capacity in kBTUhr
         swingOut : boolean
             set to True for swing tank systems so that DHW leaving temperature maintenance system is recorded
         """
-        self.tmT_F = [0] * (len(self.hwDemand) - 1) + [storageT_F]
+        self.tmT_F = [0] * (len(self.hwDemand) - 1) + [supplyT_F]
         self.tmRun = [0] * (len(self.hwDemand))
         if swingOut:
             self.hw_outSwing = [0] * (len(self.hwDemand))
@@ -90,7 +90,7 @@ class SimulationRun:
         self.tm_cap_in = [] # input tm capacity at every time interval
 
         # next two items are for the resulting plotly plot
-        self.storageT_F = storageT_F
+        self.TM_setpoint = supplyT_F
         self.TMCap_kBTUhr = TMCap_kBTUhr
 
     def getLoadShiftMode(self, i):
@@ -722,7 +722,7 @@ class SimulationRun:
         fig = Figure()
 
         #swing tank
-        if hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'storageT_F'):
+        if hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'TM_setpoint'):
             fig = make_subplots(rows=2, cols=1,
                                 specs=[[{"secondary_y": False}],
                                         [{"secondary_y": True}]])
@@ -757,7 +757,7 @@ class SimulationRun:
                           height=700)
         
         # Swing tank
-        if hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'storageT_F') and hasattr(self, 'hw_outSwing'):
+        if hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'TM_setpoint') and hasattr(self, 'hw_outSwing'):
 
             # Do Swing Tank components:
             tmT_F = np.array(roundList(self.tmT_F,3)[-(60*hrind_fromback):])
@@ -779,7 +779,7 @@ class SimulationRun:
 
             fig.update_yaxes(title_text="Swing Tank\nTemperature (\N{DEGREE SIGN}F)",
                                 showgrid=False, row=2, col=1,
-                                secondary_y=False, range=[self.building.supplyT_F-5, self.storageT_F])
+                                secondary_y=False, range=[self.building.supplyT_F-5, self.TM_setpoint + 30])
 
             fig.update_yaxes(title_text="Resistance Element\nOutput (kW)",
                                 showgrid=False, row=2, col=1,
@@ -820,7 +820,7 @@ class SimulationRun:
         
         hours = [(i // (60/self.minuteIntervals)) + 1 for i in range(len(self.getPrimaryVolume()))]
         column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'Primary Generation (Gallons Storage Temp)', 'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)',
-                        'Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'OAT (F)', 'Input Capacity (kW)', 'Output Capacity (kW)', 'Primary COP']
+                        'Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'Input Capacity (kW)', 'Output Capacity (kW)', 'Primary COP']
         columns = [
             hours,
             self.getPrimaryVolume(),
@@ -829,11 +829,14 @@ class SimulationRun:
             self.getRecircLoss(),
             self.getHWGeneration(),
             self.getPrimaryRun(),
-            self.getOAT(),
             self.getCapIn(),
             self.getCapOut(),
             self.getPrimaryCOP()
         ]
+
+        if len(self.oat) > 0:
+            column_names.append('OAT (F)')
+            columns.append(self.getOAT(),)
 
         if hasattr(self, 'tmRun'):
             column_names.append('TM Temp (F)')

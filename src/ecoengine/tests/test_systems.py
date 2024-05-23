@@ -223,7 +223,7 @@ def test_initialize_sim_swing(swingTank, minuteIntervals, nDays, outputArrayLeng
     assert len(initSim.tmT_F) == outputArrayLength
     assert len(initSim.tmRun) == outputArrayLength
     assert len(initSim.hw_outSwing) == outputArrayLength
-    assert initSim.storageT_F == swingTank.storageT_F
+    assert initSim.TM_setpoint == default_building.supplyT_F
     assert initSim.TMCap_kBTUhr == swingTank.TMCap_kBTUhr
 
 # Check for system initialization errors
