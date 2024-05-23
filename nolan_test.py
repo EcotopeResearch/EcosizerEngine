@@ -99,7 +99,7 @@ W_TO_BTUHR = 3.412142
 #             sizeAdditionalER = False,
 #             climateZone=32
 #         )
-for i in range(30,30):
+for i in range(29,30):
     print(i)
     hpwh = EcosizerEngine(
                 magnitudeStat  = 80,
