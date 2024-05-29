@@ -67,29 +67,6 @@ class SwingTankER(SwingTank):
         self.resetToDefaultCapacity()
         return self.TMCap_kBTUhr
 
-    def _findNextIndexOfHWDeficit(self, simRun : SimulationRun, i):
-        incomingWater_T = simRun.building.getDesignInlet()
-        while i < len(simRun.hwDemand):
-            if simRun.pV[i-1] >= 0:
-                # The following is esentially the normal swing tank runOneSystemStep() execpt uses design IWT instead of the climate-informed one
-                # there is already no preSystemStepSetUp() because simulation is very basic
-                simRun.hw_outSwing[i] = convertVolume(simRun.hwDemand[i], simRun.tmT_F[i-1], incomingWater_T, simRun.building.supplyT_F)    
-                simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, 
-                    simRun.tmheating, simRun.tmT_F[i-1], simRun.hw_outSwing[i], self.storageT_F, minuteIntervals = simRun.minuteIntervals, erCalc = True)
-                mixedGHW = convertVolume(simRun.hwGenRate, self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
-                simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating,
-                                                                                                        Vcurr = simRun.pV[i-1], 
-                                                                                                        hw_out = simRun.hw_outSwing[i], 
-                                                                                                        hw_in = mixedGHW, 
-                                                                                                        mode = simRun.getLoadShiftMode(i),
-                                                                                                        modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
-                                                                                                        minuteIntervals = simRun.minuteIntervals,
-                                                                                                        erCalc = True)
-            else:
-                return i-1
-            i += 1
-        return i
-
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None, erCalc=False):
         incomingWater_T = simRun.getIncomingWaterT(i)
         self.preSystemStepSetUp(simRun, i, incomingWater_T + 15.0, minuteIntervals, oat) # CHPWH IWT is assumed 15°F (adjustable) warmer than DCW temperature on average, based on lab test data. 
@@ -164,9 +141,9 @@ class SwingTankER(SwingTank):
             i -= 10
 
         # reverse the lists because they are backwards:
-        # fract_covered.reverse()
-        # er_cap_kW.reverse()
-        # startind = (len(fract_covered)-1)-startind
+        fract_covered.reverse()
+        er_cap_kW.reverse()
+        startind = (len(fract_covered)-1)-startind
 
         building.magnitude = original_magnitude
         self.TMCap_kBTUhr = original_erSize_kBTUhr
@@ -201,8 +178,8 @@ class SwingTankER(SwingTank):
         steps = []
         for i in range(1,len(fig.data)):
         
-            labelText = "Percent Coverage: <b id='point_x'>" + str(float(x[len(fig.data)-i-1])) + "</b> %, Electric Resistance Heating Capacity: <b id='point_y'>" + \
-                str(round(y[len(fig.data)-i-1],1)) + "</b> kW" 
+            labelText = "Percent Coverage: <b id='point_x'>" + str(float(x[i-1])) + "</b> %, Electric Resistance Heating Capacity: <b id='point_y'>" + \
+                str(round(y[i-1],1)) + "</b> kW" 
         
             step = dict(
                 # this value must match the values in x = loads(form['x_data']) #json loads
@@ -212,12 +189,12 @@ class SwingTankER(SwingTank):
                     ],  # layout attribute
             )
             step["args"][0]["visible"][0] = True  # Make sure first trace is visible since its the line
-            step["args"][0]["visible"][len(fig.data)-i] = True  # Toggle i'th trace to "visible"
+            step["args"][0]["visible"][i] = True  # Toggle i'th trace to "visible"
             steps.append(step)
 
         sliders = [dict(    
             steps=steps,
-            active=len(x)-startind-1,
+            active=startind,
             currentvalue=dict({
                 'font': {'size': 16},
                 'prefix': '<b>Electric Resistance Size</b> ',
