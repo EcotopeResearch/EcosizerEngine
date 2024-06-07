@@ -25,6 +25,9 @@ EcosizerEngine Documentation
 .. automodule:: objects.PrefMapTracker
     :members:
 
+.. automodule:: objects.UtilityCostTracker
+    :members:
+
 Indices and tables
 ==================
 

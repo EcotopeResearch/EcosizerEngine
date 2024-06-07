@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.6.3 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.7.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.6.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -649,7 +649,7 @@ fraction is too small for system and cuts the return arrays to match cutoff poin
 <dl class="py method">
 <dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.utilityCalculation">
 <span class="sig-name descname"><span class="pre">utilityCalculation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monthly_base_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_start_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_end_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csv_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.utilityCalculation" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list">
+<dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>monthly_base_charge</strong><span class="classifier">float</span></dt><dd><p>monthly base charge for having electricity connected ($/month)</p>
@@ -681,9 +681,12 @@ with appropriate information in each column. Defaults to None</p>
 </dd>
 <dt><strong>utility_cost</strong><span class="classifier">float</span></dt><dd><p>The total annual utility cost for the simulation</p>
 </dd>
-</dl>
-<dl class="simple">
-<dt>…</dt><dd></dd>
+<dt><strong>simRun_instant</strong><span class="classifier">SimulationRun</span></dt><dd><p>The object carrying details from a simulation of the system if it was compossed of instantaneous water heaters for comparison</p>
+</dd>
+<dt><strong>utility_cost_instant</strong><span class="classifier">float</span></dt><dd><p>The total annual utility cost for the simulation of the system if it was compossed of instantaneous water heaters for comparison</p>
+</dd>
+<dt><strong>uc</strong><span class="classifier">UtilityCostTracker</span></dt><dd><p>the UtilityCostTracker from the simulation made from user params</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -709,6 +712,32 @@ with appropriate information in each column. Defaults to None</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt><strong>plot</strong><span class="classifier">plotly.Figure OR div string</span></dt><dd><p>The annual simulation graph comparing average daily input capacity of the system with load shifting activated and the system with load shifting deactivated.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.getAnnualUtilityComparisonGraph">
+<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getAnnualUtilityComparisonGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simRun_hp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SimulationRun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simRun_iwh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SimulationRun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UtilityCostTracker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_as_div</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getAnnualUtilityComparisonGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns comparison graph of the input power by hour for an annual load shifting and non loadshifting HPWH simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>simRun_hp</strong><span class="classifier">SimulationRun</span></dt><dd><p>The object carrying details from the simulation of the system with a heat pump</p>
+</dd>
+<dt><strong>simRun_iwh</strong><span class="classifier">SimulationRun</span></dt><dd><p>The object carrying details from the simulation of the system with instantaneous water heaters</p>
+</dd>
+<dt><strong>uc</strong><span class="classifier">UtilityCostTracker</span></dt><dd><p>The UtilityCostTracker object carrying details for the annual utility cost plan</p>
+</dd>
+<dt><strong>return_as_div</strong><span class="classifier">boolean</span></dt><dd><p>A logical on the output, as a div string (true) or as a figure (false)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>plot</strong><span class="classifier">plotly.Figure OR div string</span></dt><dd><p>The annual simulation graph comparing monthly utility costs divided into base costs, demand charges, energy charges.</p>
 </dd>
 </dl>
 </dd>
@@ -1014,73 +1043,80 @@ Otherwise, it will use the most recent data model.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapOut" title="objects.SimulationRun.SimulationRun.getCapOut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCapOut</span></code></a>([i])</p></td>
 <td><p>Returns a list of the output capacity in kW for the primary system at every timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWDemand" title="objects.SimulationRun.SimulationRun.getHWDemand"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWDemand</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getDemandChargeMaps" title="objects.SimulationRun.SimulationRun.getDemandChargeMaps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDemandChargeMaps</span></code></a>(uc)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWDemand" title="objects.SimulationRun.SimulationRun.getHWDemand"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWDemand</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the hot water demand by timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWGeneration" title="objects.SimulationRun.SimulationRun.getHWGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWGeneration</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWGeneration" title="objects.SimulationRun.SimulationRun.getHWGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWGeneration</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the theoretical hot water generation of the primary tank at supply temperature by timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getIncomingWaterT" title="objects.SimulationRun.SimulationRun.getIncomingWaterT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getIncomingWaterT</span></code></a>(i)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getIncomingWaterT" title="objects.SimulationRun.SimulationRun.getIncomingWaterT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getIncomingWaterT</span></code></a>(i)</p></td>
 <td><p>returns incoming water temperature (F) at interval i of the simulation</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getLoadShiftMode" title="objects.SimulationRun.SimulationRun.getLoadShiftMode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getLoadShiftMode</span></code></a>(i)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getLoadShiftMode" title="objects.SimulationRun.SimulationRun.getLoadShiftMode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getLoadShiftMode</span></code></a>(i)</p></td>
 <td><p>returns the load shifting setting at interval i of the simulation</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getOAT" title="objects.SimulationRun.SimulationRun.getOAT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getOAT</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getOAT" title="objects.SimulationRun.SimulationRun.getOAT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getOAT</span></code></a>()</p></td>
 <td><p>Returns a list from the simulation of the Outdoor Air Temperature in (F) by timestep</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryCOP" title="objects.SimulationRun.SimulationRun.getPrimaryCOP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryCOP</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryCOP" title="objects.SimulationRun.SimulationRun.getPrimaryCOP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryCOP</span></code></a>([i])</p></td>
 <td><p>Returns a list of COP values for the primary system at every timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryGeneration" title="objects.SimulationRun.SimulationRun.getPrimaryGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryGeneration</span></code></a>([i])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryGeneration" title="objects.SimulationRun.SimulationRun.getPrimaryGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryGeneration</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the actual hot water generation of the primary tank by timestep</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryRun" title="objects.SimulationRun.SimulationRun.getPrimaryRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryRun</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryRun" title="objects.SimulationRun.SimulationRun.getPrimaryRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryRun</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the amount of time the primary tank is running in minutes per timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryVolume" title="objects.SimulationRun.SimulationRun.getPrimaryVolume"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryVolume</span></code></a>([i])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getPrimaryVolume" title="objects.SimulationRun.SimulationRun.getPrimaryVolume"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getPrimaryVolume</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the volume of the primary tank by timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getRecircLoss" title="objects.SimulationRun.SimulationRun.getRecircLoss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getRecircLoss</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getRecircLoss" title="objects.SimulationRun.SimulationRun.getRecircLoss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getRecircLoss</span></code></a>([i])</p></td>
 <td><p>Returns list of recirculation loss from primary system at supply temp in gallons at every interval in simulation</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCOP" title="objects.SimulationRun.SimulationRun.getTMCOP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCOP</span></code></a>([i])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCOP" title="objects.SimulationRun.SimulationRun.getTMCOP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCOP</span></code></a>([i])</p></td>
 <td><p>Returns a list of COP values for the temperature maintenance system at every timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapIn" title="objects.SimulationRun.SimulationRun.getTMCapIn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCapIn</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapIn" title="objects.SimulationRun.SimulationRun.getTMCapIn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCapIn</span></code></a>([i])</p></td>
 <td><p>Returns a list of the input capacity in kW for the temperature maintenance system at every timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapOut" title="objects.SimulationRun.SimulationRun.getTMCapOut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCapOut</span></code></a>([i])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMCapOut" title="objects.SimulationRun.SimulationRun.getTMCapOut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMCapOut</span></code></a>([i])</p></td>
 <td><p>Returns a list of the output capacity in kW for the temperature maintenance system at every timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMRun" title="objects.SimulationRun.SimulationRun.getTMRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMRun</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMRun" title="objects.SimulationRun.SimulationRun.getTMRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMRun</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the amount of time the temperature maintenance tank is running in minutes per timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMTemp" title="objects.SimulationRun.SimulationRun.getTMTemp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMTemp</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getTMTemp" title="objects.SimulationRun.SimulationRun.getTMTemp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getTMTemp</span></code></a>()</p></td>
 <td><p>Returns a list from the simulation of the temperature maintenance tank temperature in (F) by timestep</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.gethwOutSwing" title="objects.SimulationRun.SimulationRun.gethwOutSwing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gethwOutSwing</span></code></a>([i])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.gethwOutSwing" title="objects.SimulationRun.SimulationRun.gethwOutSwing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gethwOutSwing</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the amount of water coming out of the swing tank at tempurature in gallons by timestep or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2" title="objects.SimulationRun.SimulationRun.getkGCO2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getkGCO2</span></code></a>([i])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2" title="objects.SimulationRun.SimulationRun.getkGCO2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getkGCO2</span></code></a>([i])</p></td>
 <td><p>Returns a list from the simulation of the get output of CO2 by timestep in kilograms or, if i is defined, returns index i of that list</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2Sum" title="objects.SimulationRun.SimulationRun.getkGCO2Sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getkGCO2Sum</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getkGCO2Sum" title="objects.SimulationRun.SimulationRun.getkGCO2Sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getkGCO2Sum</span></code></a>()</p></td>
 <td><p>Returns the sum from the simulation of the output of CO2 in kilograms</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.initializeTMValue" title="objects.SimulationRun.SimulationRun.initializeTMValue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initializeTMValue</span></code></a>(initST, supplyT_F, ...[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.initializeTMValue" title="objects.SimulationRun.SimulationRun.initializeTMValue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initializeTMValue</span></code></a>(initST, supplyT_F, ...[, ...])</p></td>
 <td><p>Initializes temperature maintenance values</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.passedCOPAssumptionThreshold" title="objects.SimulationRun.SimulationRun.passedCOPAssumptionThreshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">passedCOPAssumptionThreshold</span></code></a>(times_COP_assumed)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.passedCOPAssumptionThreshold" title="objects.SimulationRun.SimulationRun.passedCOPAssumptionThreshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">passedCOPAssumptionThreshold</span></code></a>(times_COP_assumed)</p></td>
 <td><p>returns True if COP has been assumed more times than the threshold.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim" title="objects.SimulationRun.SimulationRun.plotStorageLoadSim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotStorageLoadSim</span></code></a>([return_as_div, numDays])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.plotStorageLoadSim" title="objects.SimulationRun.SimulationRun.plotStorageLoadSim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotStorageLoadSim</span></code></a>([return_as_div, numDays])</p></td>
 <td><p>Returns a plot of the of the simulation for the minimum sized primary system as a div or plotly figure.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.returnSimResult" title="objects.SimulationRun.SimulationRun.returnSimResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">returnSimResult</span></code></a>([kWhCalc])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.returnSimResult" title="objects.SimulationRun.SimulationRun.returnSimResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">returnSimResult</span></code></a>([kWhCalc])</p></td>
 <td><p><strong>*LEGACY FUNCTION*</strong> to be depricated.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.writeCSV" title="objects.SimulationRun.SimulationRun.writeCSV"><code class="xref py py-obj docutils literal notranslate"><span class="pre">writeCSV</span></code></a>(file_path)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.SimulationRun.SimulationRun.writeCSV" title="objects.SimulationRun.SimulationRun.writeCSV"><code class="xref py py-obj docutils literal notranslate"><span class="pre">writeCSV</span></code></a>(file_path)</p></td>
 <td><p>writes all simulation data to a formated csv</p></td>
 </tr>
 </tbody>
@@ -1275,6 +1311,25 @@ or, if i is defined, returns index i of that list</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt><strong>capacityOut_kW</strong><span class="classifier">float</span></dt><dd><p>the output capacity in kW for the primary system at interval i in gallons or the entire list of output capacity in kW at every interval if i is undefined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.SimulationRun.SimulationRun.getDemandChargeMaps">
+<span class="sig-name descname"><span class="pre">getDemandChargeMaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker" title="objects.UtilityCostTracker.UtilityCostTracker"><span class="pre">UtilityCostTracker</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.SimulationRun.SimulationRun.getDemandChargeMaps" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>uc</strong><span class="classifier">UtilityCostTracker</span></dt><dd><p>The UtilityCostTracker object carrying details for the annual utility cost plan</p>
+</dd>
+<dt><strong>Returns</strong></dt><dd></dd>
+<dt><strong>——-</strong></dt><dd></dd>
+<dt><strong>period_max_kw</strong><span class="classifier">map</span></dt><dd><p>a mapping from each demand period to the max average kW draw in that demand period</p>
+</dd>
+<dt><strong>period_last_hour</strong><span class="classifier">map</span></dt><dd><p>a mapping from each demand period to the last hour in that demand period</p>
 </dd>
 </dl>
 </dd>
@@ -1890,6 +1945,149 @@ perfomance map, infinity is returned.</p>
 
 </dd></dl>
 
+<span class="target" id="module-objects.UtilityCostTracker"></span><dl class="py class">
+<dt class="sig sig-object py" id="objects.UtilityCostTracker.UtilityCostTracker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">objects.UtilityCostTracker.</span></span><span class="sig-name descname"><span class="pre">UtilityCostTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monthly_base_charge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_start_hour</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_end_hour</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_demand_charge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_energy_charge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_demand_charge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_energy_charge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csv_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.UtilityCostTracker.UtilityCostTracker" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>monthly_base_charge</strong><span class="classifier">float</span></dt><dd><p>monthly base charge for having electricity connected ($/month)</p>
+</dd>
+<dt><strong>pk_start_hour</strong><span class="classifier">int (in range 0-23) or list of int (in range 0-23)</span></dt><dd><p>start hour of the day which peak demand pricing applies</p>
+</dd>
+<dt><strong>pk_end_hour</strong><span class="classifier">int (in range pk_start_hour-24) or list of int (in range pk_start_hour-24)</span></dt><dd><p>end hour of the day which peak demand pricing applies</p>
+</dd>
+<dt><strong>pk_demand_charge</strong><span class="classifier">float or list of float</span></dt><dd><p>peak demand pricing ($/kW)</p>
+</dd>
+<dt><strong>pk_energy_charge</strong><span class="classifier">float or list of float</span></dt><dd><p>peak energy pricing ($/kWh)</p>
+</dd>
+<dt><strong>off_pk_demand_charge</strong><span class="classifier">float or list of float</span></dt><dd><p>off-peak demand pricing ($/kW)</p>
+</dd>
+<dt><strong>off_pk_energy_charge</strong><span class="classifier">float or list of float</span></dt><dd><p>off-peak energy pricing ($/kWh)</p>
+</dd>
+<dt><strong>start_month</strong><span class="classifier">int (in range 0-11) or list of int (in range 0-11)</span></dt><dd><p>start month for period (defaults to 0)</p>
+</dd>
+<dt><strong>end_month</strong><span class="classifier">int (in range start_month+1 - 12) or list of int (in range start_month[i]+1 - 12)</span></dt><dd><p>end month for period (defaults to 12)</p>
+</dd>
+<dt><strong>csv_path</strong><span class="classifier">str</span></dt><dd><p>file path to custom pricing csv. Must have three columns titled “Energy Rate ($/kWh)”, “Demand Rate ($/kW)”, “Demand Period”, and “Monthly Base Charge”
+with appropriate information in each column. Defaults to None</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.createChargeMaps" title="objects.UtilityCostTracker.UtilityCostTracker.createChargeMaps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">createChargeMaps</span></code></a>(off_pk_demand_charge, ...)</p></td>
+<td><p>Adds to self.demand_charge_map, self.energy_charge_map, and self.demand_period_chart</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod" title="objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDemandChargeForPeriod</span></code></a>(period_key, max_avg_kW)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod" title="objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDemandPricingPeriod</span></code></a>(i, minuteIntervals)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval" title="objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getEnergyChargeAtInterval</span></code></a>(i, minuteIntervals)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>getAllDemandPeriodKeys</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>getYearlyBaseCharge</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>isIntervalInPeakPeriod</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.UtilityCostTracker.UtilityCostTracker.createChargeMaps">
+<span class="sig-name descname"><span class="pre">createChargeMaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">off_pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_start_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_end_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_month</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_month</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.UtilityCostTracker.UtilityCostTracker.createChargeMaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds to self.demand_charge_map, self.energy_charge_map, and self.demand_period_chart</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod">
+<span class="sig-name descname"><span class="pre">getDemandChargeForPeriod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">period_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_avg_kW</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>period_key</strong><span class="classifier">int</span></dt><dd><p>The key for the demand period in the UtilityCostTracker</p>
+</dd>
+<dt><strong>max_avg_kW</strong><span class="classifier">float</span></dt><dd><p>the maximum average kW draw durring the demand period</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>cost</strong><span class="classifier">float</span></dt><dd><p>The total dollar amount that will be charged for the demand period</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod">
+<span class="sig-name descname"><span class="pre">getDemandPricingPeriod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minuteIntervals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>The interval number from a simulation</p>
+</dd>
+<dt><strong>minuteIntervals</strong><span class="classifier">int</span></dt><dd><p>the minutes per time interval for the simulation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>demand_period_key</strong><span class="classifier">int</span></dt><dd><p>The demand period key for the interval. Use this key in the getDemandChargeForPeriod() function to get demand period cost.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval">
+<span class="sig-name descname"><span class="pre">getEnergyChargeAtInterval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minuteIntervals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>The interval number from a simulation</p>
+</dd>
+<dt><strong>minuteIntervals</strong><span class="classifier">int</span></dt><dd><p>the minutes per time interval for the simulation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>energy_charge</strong><span class="classifier">float</span></dt><dd><p>The energy charge rate for the interval in dollars per kWh</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
@@ -1933,6 +2131,7 @@ perfomance map, infinity is returned.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getAnnualSimLSComparison"><code class="docutils literal notranslate"><span class="pre">getAnnualSimLSComparison()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.getAnnualUtilityComparisonGraph"><code class="docutils literal notranslate"><span class="pre">getAnnualUtilityComparisonGraph()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getHPWHOutputCapacity"><code class="docutils literal notranslate"><span class="pre">getHPWHOutputCapacity()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getListOfModels"><code class="docutils literal notranslate"><span class="pre">getListOfModels()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.getSizingCurvePlot"><code class="docutils literal notranslate"><span class="pre">getSizingCurvePlot()</span></code></a></li>
@@ -1949,6 +2148,7 @@ perfomance map, infinity is returned.</p>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getAnnualCOP"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getAnnualCOP()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapIn"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getCapIn()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getCapOut"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getCapOut()</span></code></a></li>
+<li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getDemandChargeMaps"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getDemandChargeMaps()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWDemand"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getHWDemand()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getHWGeneration"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getHWGeneration()</span></code></a></li>
 <li><a class="reference internal" href="#objects.SimulationRun.SimulationRun.getIncomingWaterT"><code class="docutils literal notranslate"><span class="pre">SimulationRun.getIncomingWaterT()</span></code></a></li>
@@ -1983,6 +2183,13 @@ perfomance map, infinity is returned.</p>
 <li><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.getMaxStorageTempAtNearestOAT"><code class="docutils literal notranslate"><span class="pre">PrefMapTracker.getMaxStorageTempAtNearestOAT()</span></code></a></li>
 <li><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.getOatMin"><code class="docutils literal notranslate"><span class="pre">PrefMapTracker.getOatMin()</span></code></a></li>
 <li><a class="reference internal" href="#objects.PrefMapTracker.PrefMapTracker.resetFlags"><code class="docutils literal notranslate"><span class="pre">PrefMapTracker.resetFlags()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker</span></code></a><ul>
+<li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.createChargeMaps"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.createChargeMaps()</span></code></a></li>
+<li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.getDemandChargeForPeriod()</span></code></a></li>
+<li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.getDemandPricingPeriod()</span></code></a></li>
+<li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.getEnergyChargeAtInterval()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -2021,7 +2228,7 @@ perfomance map, infinity is returned.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.6.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>

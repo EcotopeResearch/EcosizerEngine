@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; EcosizerEngine 1.6.3 documentation</title>
+    <title>Index &#8212; EcosizerEngine 1.7.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -23,7 +23,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">EcosizerEngine 1.6.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EcosizerEngine 1.7.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Index</a></li> 
       </ul>
     </div>  
@@ -82,6 +82,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#objects.UtilityCostTracker.UtilityCostTracker.createChargeMaps">createChargeMaps() (objects.UtilityCostTracker.UtilityCostTracker method)</a>
+</li>
       <li><a href="index.html#engine.SystemCreator.createSystem">createSystem() (in module engine.SystemCreator)</a>
 </li>
   </ul></td>
@@ -141,6 +143,8 @@
 </li>
       <li><a href="index.html#engine.EcosizerEngine.getAnnualSimLSComparison">getAnnualSimLSComparison() (in module engine.EcosizerEngine)</a>
 </li>
+      <li><a href="index.html#engine.EcosizerEngine.getAnnualUtilityComparisonGraph">getAnnualUtilityComparisonGraph() (in module engine.EcosizerEngine)</a>
+</li>
       <li><a href="index.html#objects.PrefMapTracker.PrefMapTracker.getCapacity">getCapacity() (objects.PrefMapTracker.PrefMapTracker method)</a>
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getCapIn">getCapIn() (objects.SimulationRun.SimulationRun method)</a>
@@ -150,6 +154,14 @@
       <li><a href="index.html#engine.EcosizerEngine.EcosizerEngine.getClimateZone">getClimateZone() (engine.EcosizerEngine.EcosizerEngine method)</a>
 </li>
       <li><a href="index.html#objects.PrefMapTracker.PrefMapTracker.getDefaultCapacity">getDefaultCapacity() (objects.PrefMapTracker.PrefMapTracker method)</a>
+</li>
+      <li><a href="index.html#objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod">getDemandChargeForPeriod() (objects.UtilityCostTracker.UtilityCostTracker method)</a>
+</li>
+      <li><a href="index.html#objects.SimulationRun.SimulationRun.getDemandChargeMaps">getDemandChargeMaps() (objects.SimulationRun.SimulationRun method)</a>
+</li>
+      <li><a href="index.html#objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod">getDemandPricingPeriod() (objects.UtilityCostTracker.UtilityCostTracker method)</a>
+</li>
+      <li><a href="index.html#objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval">getEnergyChargeAtInterval() (objects.UtilityCostTracker.UtilityCostTracker method)</a>
 </li>
       <li><a href="index.html#objects.PrefMapTracker.PrefMapTracker.getExtrapolationFlags">getExtrapolationFlags() (objects.PrefMapTracker.PrefMapTracker method)</a>
 </li>
@@ -167,14 +179,14 @@
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getkGCO2">getkGCO2() (objects.SimulationRun.SimulationRun method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getkGCO2Sum">getkGCO2Sum() (objects.SimulationRun.SimulationRun method)</a>
 </li>
       <li><a href="index.html#engine.EcosizerEngine.getListOfModels">getListOfModels() (in module engine.EcosizerEngine)</a>
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getLoadShiftMode">getLoadShiftMode() (objects.SimulationRun.SimulationRun method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#objects.PrefMapTracker.PrefMapTracker.getMaxStorageTempAtNearestOAT">getMaxStorageTempAtNearestOAT() (objects.PrefMapTracker.PrefMapTracker method)</a>
 </li>
       <li><a href="index.html#objects.SimulationRun.SimulationRun.getOAT">getOAT() (objects.SimulationRun.SimulationRun method)</a>
@@ -249,6 +261,8 @@
 </li>
         <li><a href="index.html#module-objects.SimulationRun">objects.SimulationRun</a>
 </li>
+        <li><a href="index.html#module-objects.UtilityCostTracker">objects.UtilityCostTracker</a>
+</li>
       </ul></li>
   </ul></td>
 </tr></table>
@@ -263,13 +277,20 @@
         <li><a href="index.html#module-objects.PrefMapTracker">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     objects.SimulationRun
 
       <ul>
         <li><a href="index.html#module-objects.SimulationRun">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    objects.UtilityCostTracker
+
+      <ul>
+        <li><a href="index.html#module-objects.UtilityCostTracker">module</a>
 </li>
       </ul></li>
   </ul></td>
@@ -334,6 +355,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#engine.EcosizerEngine.EcosizerEngine.utilityCalculation">utilityCalculation() (engine.EcosizerEngine.EcosizerEngine method)</a>
 </li>
+      <li><a href="index.html#objects.UtilityCostTracker.UtilityCostTracker">UtilityCostTracker (class in objects.UtilityCostTracker)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -376,7 +399,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">EcosizerEngine 1.6.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">EcosizerEngine 1.7.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Index</a></li> 
       </ul>
     </div>
