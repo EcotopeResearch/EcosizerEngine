@@ -47,3 +47,5 @@ max_hour_to_month = {
     8016: 10,     # November
     8760: 11      # December
 }
+
+month_names = ["January","February","March","April","May","June","July","August","September","October","November","December"]

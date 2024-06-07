@@ -5,9 +5,10 @@ from ecoengine.objects.SimulationRun import *
 from ecoengine.objects.systemConfigUtils import *
 from ecoengine.objects.UtilityCostTracker import *
 from ecoengine.objects.PrefMapTracker import PrefMapTracker
+from ecoengine.constants.Constants import month_to_hour,month_names
 import copy
 import json
-from plotly.graph_objs import Figure, Scatter
+from plotly.graph_objs import Figure, Scatter, Bar
 from plotly.offline import plot
 from numpy import around, flipud
 
@@ -675,17 +676,124 @@ class EcosizerEngine:
             The object carrying details from the simulation of the system
         utility_cost : float
             The total annual utility cost for the simulation
-        ...
+        simRun_instant : SimulationRun
+            The object carrying details from a simulation of the system if it was compossed of instantaneous water heaters for comparison
+        utility_cost_instant : float
+            The total annual utility cost for the simulation of the system if it was compossed of instantaneous water heaters for comparison
+        uc : UtilityCostTracker
+            the UtilityCostTracker from the simulation made from user params
         """
         uc = UtilityCostTracker(monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge,
                                 start_month, end_month, csv_path)
         simRun = self.getSimRun(minuteIntervals = 15, nDays = 365)
         utility_cost = simRun.getAnnualUtilityCost(uc)
-        return simRun, utility_cost
+        instant_wh_system = createSystem(  
+                                "instant_wh", 
+                                self.system.storageT_F, 
+                                self.system.defrostFactor, 
+                                self.system.percentUseable, 
+                                self.system.compRuntime_hr, 
+                                self.system.aquaFract,
+                                building = self.building
+        )
+        instant_wh_simRun = simulate(instant_wh_system, self.building, minuteIntervals = 15, nDays = 365)
+
+        return simRun, utility_cost, instant_wh_simRun, instant_wh_simRun.getAnnualUtilityCost(uc), uc
     
 ##############################################################
 # STATIC FUNCTIONS
 ##############################################################
+
+def getAnnualUtilityComparisonGraph(simRun_hp : SimulationRun, simRun_iwh : SimulationRun, uc : UtilityCostTracker, return_as_div : bool =True):
+    """
+    Returns comparison graph of the input power by hour for an annual load shifting and non loadshifting HPWH simulation
+
+    Parameters
+    ----------
+    simRun_hp : SimulationRun
+        The object carrying details from the simulation of the system with a heat pump
+    simRun_iwh : SimulationRun
+        The object carrying details from the simulation of the system with instantaneous water heaters
+    uc : UtilityCostTracker
+        The UtilityCostTracker object carrying details for the annual utility cost plan
+    return_as_div : boolean
+        A logical on the output, as a div string (true) or as a figure (false)
+
+    Returns
+    -------
+    plot : plotly.Figure OR div string
+        The annual simulation graph comparing monthly utility costs divided into base costs, demand charges, energy charges.
+    """
+
+    if simRun_hp.minuteIntervals != 15 or simRun_iwh.minuteIntervals != 15 or len(simRun_hp.oat) != 8760 or len(simRun_iwh.oat) != 8760:
+        raise Exception("Both simulation runs needs to be annual with 15 minute intervals to generate comparison graph.")
+        # TODO make useful for non-15 min intervals
+    
+    simRun_hp.createUtilityCostColumns(uc)
+    simRun_iwh.createUtilityCostColumns(uc)
+    
+    base_charge_per_month_hp = [uc.monthly_base_charge,0] * 12
+    base_charge_per_month_iwh = [0,uc.monthly_base_charge] * 12
+    categories = ['Base Charges', 'Demand Charges', 'Energy Charges']
+    hp_monthly_charges = [base_charge_per_month_hp,[0.]*24,[0.]*24]
+    iwh_monthly_charges = [base_charge_per_month_iwh,[0.]*24,[0.]*24]
+    hp_demand_kW_map, hp_demand_last_hour_map = simRun_hp.getDemandChargeMaps(uc)
+    iwh_demand_kW_map, iwh_demand_last_hour_map = simRun_iwh.getDemandChargeMaps(uc)
+
+    for month in range(12):
+        for hour in month_to_hour[month]:
+            demand_period = uc.getDemandPricingPeriod(hour, 60)
+            if hp_demand_last_hour_map[demand_period] == hour:
+                # should be the end of the demand period for both hp and iwh because they are using the same utility cost tracker
+                hp_monthly_charges[1][month*2] = hp_monthly_charges[1][month*2] + uc.getDemandChargeForPeriod(demand_period, hp_demand_kW_map[demand_period])
+                iwh_monthly_charges[1][(month*2)+1] = iwh_monthly_charges[1][(month*2)+1] + uc.getDemandChargeForPeriod(demand_period, iwh_demand_kW_map[demand_period])
+        hp_monthly_charges[2][(month*2)] = sum(simRun_hp.energyCost[month_to_hour[month].start*(60//simRun_hp.minuteIntervals): month_to_hour[month].stop*(60//simRun_hp.minuteIntervals)])
+        iwh_monthly_charges[2][(month*2)+1] = sum(simRun_iwh.energyCost[month_to_hour[month].start*(60//simRun_iwh.minuteIntervals): month_to_hour[month].stop*(60//simRun_iwh.minuteIntervals)])
+
+    fig = Figure()
+
+    offset_month_names = []
+    for month_name in month_names:
+        offset_month_names.append(f"{month_name}")
+        offset_month_names.append(f"{month_name} ")
+
+    for i in range(3):
+        fig.add_trace(Bar(
+            x=offset_month_names, 
+            y=hp_monthly_charges[i], 
+            name=f"{categories[i]} for Heat Pump System",
+            hovertemplate="<br>".join([
+                "Month=%{x}",
+                f"Charge Type={categories[i]} (Heat Pump)",
+                "Cost=$%{y}",
+            ])
+        ))
+        fig.add_trace(Bar(
+            x=offset_month_names,
+            y=iwh_monthly_charges[i],
+            name=f"{categories[i]} for Instantaneous Water Heater System",
+            hovertemplate="<br>".join([
+                "Month=%{x}",
+                f"Charge Type={categories[i]} (Instantaneous Water Heater)",
+                "Cost=$%{y}",
+            ])
+        ))
+    
+    # fig.update_xaxes(title_text='Month',)
+    fig.update_yaxes(title_text='Cost ($)')
+    fig.update_layout(barmode='stack', title='Utility Cost Comparison',
+                        xaxis=dict(
+                            tickvals=month_names,  # Position of the ticks
+                            ticktext=month_names,  # Custom tick text
+                            title='Month',
+                        )
+    )
+    
+    if return_as_div:
+        plot_div = plot(fig, output_type='div', show_link=False, link_text="",
+                    include_plotlyjs = False)
+        return plot_div
+    return fig 
     
 def getListOfModels(multiPass = False, includeResidential = True, excludeModels = [], sgipModelsOnly = True):
     """

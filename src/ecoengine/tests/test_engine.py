@@ -793,4 +793,36 @@ def test_short_cycle_override():
     )
     assert 598.0958941412142 == hpwh.getSizingResults()[0] 
     assert 722.2618842984205 == hpwh.getSizingResults()[1] 
+
+@pytest.mark.parametrize("monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge, start_month, end_month, annual_cost", 
+                        [
+                            (5.00, [16,23], [21,24], [38.75,38.77], [0.21585,0.5], [30.20,35.0], [0.14341,0.07],[0,5],[5,12], 20223.61),
+                            # (5.00, [16,23,13], [21,24,14], [38.75,38.77,39], [0.21585,0.5,0.4], [30.20,35.0,40], [0.14341,0.07,0.8],[0,5,7],[5,7,12]),
+                            # (5.00, [16], [21], [38.75], [0.21585], [30.20], [0.1434],[0],[12])
+                        ])
+def test_annual_utility_calc(monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge, start_month, end_month, annual_cost):
+    hpwh = EcosizerEngine(
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            percentUseable  = 0.9, 
+            aquaFract       = 0.4,
+            schematic       = "singlepass_norecirc", 
+            buildingType   = 'multi_family',
+            gpdpp           = 25,
+            defrostFactor   = 1, 
+            compRuntime_hr  = 16, 
+            nApt            = 100, 
+            Wapt            = 60,
+            doLoadShift     = False,
+            PVol_G_atStorageT = 891,
+            numHeatPumps=1,
+            annual = True,
+            climateZone = 36,
+            systemModel = "MODELS_Mitsubishi_QAHV_C_SP"
+        )
+    simRun, utility_cost, instant_wh_simRun, instant_wh_cost, uc = hpwh.utilityCalculation(monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge, start_month, end_month)
+
+    assert round(utility_cost,2) == annual_cost
+    assert utility_cost < instant_wh_cost
     

@@ -646,22 +646,42 @@ class SimulationRun:
     
     def getAnnualUtilityCost(self, uc : UtilityCostTracker):
         self.createUtilityCostColumns(uc)
-        max_period_kw = {}
-        for i in range(len(self.hwDemand)):
-            demand_period = uc.getDemandPricingPeriod(i, self.minuteIntervals)
-            kW_draw = self.getCapIn(i)*(self.pRun[i]/self.minuteIntervals)
-            if hasattr(self, 'tmRun'):
-                kW_draw += self.getTMCapIn(i)*(self.tmRun[i]/self.minuteIntervals)
-            if not demand_period in max_period_kw:
-                max_period_kw[demand_period] = kW_draw
-            elif kW_draw > max_period_kw[demand_period]:
-                max_period_kw[demand_period] = kW_draw
+        max_period_kw, not_used = self.getDemandChargeMaps(uc)
         demand_total = 0
         for key in uc.getAllDemandPeriodKeys():
             if key in max_period_kw:
                 demand_total += uc.getDemandChargeForPeriod(key, max_period_kw[key])
         total_utility = demand_total + uc.getYearlyBaseCharge() + sum(self.energyCost)
         return total_utility
+    
+    def getDemandChargeMaps(self, uc : UtilityCostTracker):
+        """
+        Parameters
+        ----------
+        uc : UtilityCostTracker
+            The UtilityCostTracker object carrying details for the annual utility cost plan
+        Returns
+        -------
+        period_max_kw : map
+            a mapping from each demand period to the max average kW draw in that demand period
+        period_last_hour : map
+            a mapping from each demand period to the last hour in that demand period
+        """
+        period_max_kw = {}
+        period_last_hour = {}
+        for i in range(len(self.hwDemand)):
+            hour_of_sim = math.floor(i / (60/self.minuteIntervals))
+            demand_period = uc.getDemandPricingPeriod(i, self.minuteIntervals)
+            kW_draw = self.getCapIn(i)*(self.pRun[i]/self.minuteIntervals)
+            if hasattr(self, 'tmRun'):
+                kW_draw += self.getTMCapIn(i)*(self.tmRun[i]/self.minuteIntervals)
+            if not demand_period in period_max_kw:
+                period_max_kw[demand_period] = kW_draw
+            elif kW_draw > period_max_kw[demand_period]:
+                period_max_kw[demand_period] = kW_draw
+            # set the last hour of the period to most recent hour
+            period_last_hour[demand_period] = hour_of_sim
+        return period_max_kw, period_last_hour
 
     def returnSimResult(self, kWhCalc = False):
         """

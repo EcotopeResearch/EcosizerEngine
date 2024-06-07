@@ -152,6 +152,19 @@ class UtilityCostTracker:
         return False
     
     def getEnergyChargeAtInterval(self, i, minuteIntervals):
+        """
+        Parameters
+        ----------
+        i : int
+            The interval number from a simulation
+        minuteIntervals : int
+            the minutes per time interval for the simulation.
+
+        Returns
+        -------
+        energy_charge : float
+            The energy charge rate for the interval in dollars per kWh
+        """
         hour_of_year = math.floor(i / (60/minuteIntervals))
         if len(self.energy_charge_by_hour) == 8760:
             # we have a custom energy charge array
@@ -160,6 +173,19 @@ class UtilityCostTracker:
         return self.energy_charge_map[demand_period]
     
     def getDemandPricingPeriod(self, i, minuteIntervals):
+        """
+        Parameters
+        ----------
+        i : int
+            The interval number from a simulation
+        minuteIntervals : int
+            the minutes per time interval for the simulation.
+
+        Returns
+        -------
+        demand_period_key : int
+            The demand period key for the interval. Use this key in the getDemandChargeForPeriod() function to get demand period cost.
+        """
         hour_of_year = math.floor(i / (60/minuteIntervals))
         return self.demand_period_chart[hour_of_year]
     
@@ -167,6 +193,19 @@ class UtilityCostTracker:
         return list(self.demand_charge_map.keys())
     
     def getDemandChargeForPeriod(self, period_key, max_avg_kW):
+        """
+        Parameters
+        ----------
+        period_key : int
+            The key for the demand period in the UtilityCostTracker
+        max_avg_kW : float
+            the maximum average kW draw durring the demand period
+
+        Returns
+        -------
+        cost : float
+            The total dollar amount that will be charged for the demand period
+        """
         if period_key in self.demand_charge_map:
             return self.demand_charge_map[period_key] * max_avg_kW
         else:

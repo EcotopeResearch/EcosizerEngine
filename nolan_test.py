@@ -99,35 +99,29 @@ W_TO_BTUHR = 3.412142
 #             sizeAdditionalER = False,
 #             climateZone=32
 #         )
-for i in range(29,30):
-    print(i)
-    hpwh = EcosizerEngine(
-                magnitudeStat  = 80,
-                incomingT_F= 50,
-                supplyT_F       = 120,
-                storageT_F      = 150,
-                percentUseable  = 0.85, 
-                aquaFract       = 0.4,
-                schematic       = 'swingtank_er',
-                buildingType   = 'multi_family',
-                gpdpp           = 25,
-                safetyTM        = 1.75,
-                defrostFactor   = 1,
-                nApt            = 69,
-                Wapt            = 100,
-                doLoadShift     = False,
-                PVol_G_atStorageT=450,
-                numHeatPumps=1,
-                TMVol_G = 80,
-                TMCap_kW = 12,
-                PCap_kW=i,
-                annual = False,
-                sizeAdditionalER = True,
-            )
+# for i in range(29,30):
+#     print(i)
+hpwh = EcosizerEngine(
+            magnitudeStat  = 80,
+            incomingT_F= 50,
+            supplyT_F       = 120,
+            storageT_F      = 150,
+            percentUseable  = 0.85, 
+            aquaFract       = 0.4,
+            schematic       = 'instant_wh',
+            buildingType   = 'multi_family',
+            gpdpp           = 25,
+            safetyTM        = 1.75,
+            defrostFactor   = 1,
+            nApt            = 69,
+            Wapt            = 100,
+            doLoadShift     = False,
+            climateZone=22,
+        )
     # [primaryCurveDiv, x_data, y_data, startIndex] = hpwh.erSizedPointsPlot(returnAsDiv = False, returnWithXYPoints = True)
     # print(f"{x_data}, {y_data}, {startIndex}")
 
-simRun = hpwh.getSimRun(minuteIntervals = 1, nDays = 3, exceptOnWaterShortage=False)
+# simRun = hpwh.getSimRun(minuteIntervals = 1, nDays = 3, exceptOnWaterShortage=False)
 # simRun.writeCSV("this_test.csv")
 # hpwh2 = EcosizerEngine(
 #             incomingT_F     = 50,

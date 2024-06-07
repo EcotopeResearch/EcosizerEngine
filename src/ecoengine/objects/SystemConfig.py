@@ -96,10 +96,10 @@ class SystemConfig:
         if doLoadShift and (not (isinstance(loadShiftPercent, int) or isinstance(loadShiftPercent, float)) or loadShiftPercent > 1 or loadShiftPercent < 0):
             raise Exception("Invalid input given for loadShiftPercent, must be a number between 0 and 1.")
 
-    def setCapacity(self, PCap_kBTUhr = None, oat = None, incomingWater_T = None, useLoadUpTemp = False):
+    def setCapacity(self, PCap_kBTUhr = None, oat = None, incomingWater_T = None, useLoadUpTemp = False, cop = 2.5):
         if not PCap_kBTUhr is None:
             self.PCap_kBTUhr = PCap_kBTUhr
-            self.PCap_input_kBTUhr = self.PCap_kBTUhr / 2.5 # Assume COP of 2.5
+            self.PCap_input_kBTUhr = self.PCap_kBTUhr / cop
         elif not (oat is None or incomingWater_T is None or self.perfMap is None):
             if useLoadUpTemp and hasattr(self, 'loadUpT_F') and not self.loadUpT_F is None:
                 self.PCap_kBTUhr, self.PCap_input_kBTUhr = self.perfMap.getCapacity(oat, incomingWater_T, self.loadUpT_F, fallbackCapacity_kW = self.getOutputCapacity(kW = True))
