@@ -734,21 +734,31 @@ def getAnnualUtilityComparisonGraph(simRun_hp : SimulationRun, simRun_iwh : Simu
     
     base_charge_per_month_hp = [uc.monthly_base_charge,0] * 12
     base_charge_per_month_iwh = [0,uc.monthly_base_charge] * 12
-    categories = ['Base Charges', 'Demand Charges', 'Energy Charges']
-    hp_monthly_charges = [base_charge_per_month_hp,[0.]*24,[0.]*24]
-    iwh_monthly_charges = [base_charge_per_month_iwh,[0.]*24,[0.]*24]
+    categories = ['Base Charges', 'Peak Demand Charges', 'Off-Peak Demand Charges', 'Peak Energy Charges', 'Off-Peak Energy Charges']
+    hp_monthly_charges = [base_charge_per_month_hp,[0.]*24,[0.]*24,[0.]*24,[0.]*24]
+    iwh_monthly_charges = [base_charge_per_month_iwh,[0.]*24,[0.]*24,[0.]*24,[0.]*24]
     hp_demand_kW_map, hp_demand_last_hour_map = simRun_hp.getDemandChargeMaps(uc)
     iwh_demand_kW_map, iwh_demand_last_hour_map = simRun_iwh.getDemandChargeMaps(uc)
 
     for month in range(12):
         for hour in month_to_hour[month]:
             demand_period = uc.getDemandPricingPeriod(hour, 60)
+            sim_interval_start = hour*(60//simRun_hp.minuteIntervals)
+            sim_interval_end = (hour+1)*(60//simRun_hp.minuteIntervals)
             if hp_demand_last_hour_map[demand_period] == hour:
                 # should be the end of the demand period for both hp and iwh because they are using the same utility cost tracker
-                hp_monthly_charges[1][month*2] = hp_monthly_charges[1][month*2] + uc.getDemandChargeForPeriod(demand_period, hp_demand_kW_map[demand_period])
-                iwh_monthly_charges[1][(month*2)+1] = iwh_monthly_charges[1][(month*2)+1] + uc.getDemandChargeForPeriod(demand_period, iwh_demand_kW_map[demand_period])
-        hp_monthly_charges[2][(month*2)] = sum(simRun_hp.energyCost[month_to_hour[month].start*(60//simRun_hp.minuteIntervals): month_to_hour[month].stop*(60//simRun_hp.minuteIntervals)])
-        iwh_monthly_charges[2][(month*2)+1] = sum(simRun_iwh.energyCost[month_to_hour[month].start*(60//simRun_iwh.minuteIntervals): month_to_hour[month].stop*(60//simRun_iwh.minuteIntervals)])
+                if uc.is_peak_map[demand_period]:
+                    hp_monthly_charges[1][month*2] = hp_monthly_charges[1][month*2] + uc.getDemandChargeForPeriod(demand_period, hp_demand_kW_map[demand_period])
+                    iwh_monthly_charges[1][(month*2)+1] = iwh_monthly_charges[1][(month*2)+1] + uc.getDemandChargeForPeriod(demand_period, iwh_demand_kW_map[demand_period])
+                else:
+                    hp_monthly_charges[2][month*2] = hp_monthly_charges[2][month*2] + uc.getDemandChargeForPeriod(demand_period, hp_demand_kW_map[demand_period])
+                    iwh_monthly_charges[2][(month*2)+1] = iwh_monthly_charges[2][(month*2)+1] + uc.getDemandChargeForPeriod(demand_period, iwh_demand_kW_map[demand_period])
+            if uc.is_peak_map[demand_period]:
+                hp_monthly_charges[3][(month*2)] += sum(simRun_hp.energyCost[sim_interval_start:sim_interval_end])
+                iwh_monthly_charges[3][(month*2)+1] += sum(simRun_iwh.energyCost[sim_interval_start:sim_interval_end])
+            else:
+                hp_monthly_charges[4][(month*2)] += sum(simRun_hp.energyCost[sim_interval_start:sim_interval_end])
+                iwh_monthly_charges[4][(month*2)+1] += sum(simRun_iwh.energyCost[sim_interval_start:sim_interval_end])
 
     fig = Figure()
 
@@ -757,31 +767,31 @@ def getAnnualUtilityComparisonGraph(simRun_hp : SimulationRun, simRun_iwh : Simu
         offset_month_names.append(f"{month_name}")
         offset_month_names.append(f"{month_name} ")
 
-    for i in range(3):
+    for i in range(5):
         fig.add_trace(Bar(
             x=offset_month_names, 
             y=hp_monthly_charges[i], 
-            name=f"{categories[i]} for Heat Pump System",
+            name=f"{categories[i]} for HP",
             hovertemplate="<br>".join([
-                "Month=%{x}",
-                f"Charge Type={categories[i]} (Heat Pump)",
-                "Cost=$%{y}",
+                f"{categories[i]} (HP)",
+                "%{x}",
+                "$%{y}",
             ])
         ))
         fig.add_trace(Bar(
             x=offset_month_names,
             y=iwh_monthly_charges[i],
-            name=f"{categories[i]} for Instantaneous Water Heater System",
+            name=f"{categories[i]} for UER",
             hovertemplate="<br>".join([
-                "Month=%{x}",
-                f"Charge Type={categories[i]} (Instantaneous Water Heater)",
-                "Cost=$%{y}",
+                f"{categories[i]} (UER)",
+                "%{x}",
+                "$%{y}",
             ])
         ))
     
     # fig.update_xaxes(title_text='Month',)
     fig.update_yaxes(title_text='Cost ($)')
-    fig.update_layout(barmode='stack', title='Utility Cost Comparison',
+    fig.update_layout(barmode='stack', title='Utility Cost Comparison: Heat Pump (HP) vs. Unitary Electric Resistance (UER)',
                         xaxis=dict(
                             tickvals=month_names,  # Position of the ticks
                             ticktext=month_names,  # Custom tick text

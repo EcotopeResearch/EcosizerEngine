@@ -33,6 +33,7 @@ class UtilityCostTracker:
                  off_pk_demand_charge = None, off_pk_energy_charge = None, start_month = 0, end_month = 12, csv_path = None):
         self.demand_charge_map = {}
         self.energy_charge_map = {}
+        self.is_peak_map = {}
         self.demand_period_chart = [0]*8760
         self.energy_charge_by_hour = []
         if csv_path is None:
@@ -131,9 +132,11 @@ class UtilityCostTracker:
             if i % 2 == 0:
                 self.demand_charge_map[i] = off_pk_demand_charge
                 self.energy_charge_map[i] = off_pk_energy_charge
+                self.is_peak_map[i] = False
             else:
                 self.demand_charge_map[i] = pk_demand_charge
                 self.energy_charge_map[i] = pk_energy_charge
+                self.is_peak_map[i] = True
         for i in range(start_month, end_month):
             self.demand_period_chart = [(i*2)+1 if self.isIntervalInPeakPeriod(j, 60, pk_start_hour, pk_end_hour) and j in month_to_hour[i] 
                                         else i*2 if j in month_to_hour[i]
