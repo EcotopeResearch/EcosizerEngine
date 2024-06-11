@@ -59,7 +59,7 @@ class EcosizerEngine:
         The pump flow rate of the recirculation loop. (GPM)
     gpdpp : float
         The volume of water in gallons at 120F each person uses per dat.[°F]
-    nBR : array_like
+    nBR : list
         A list of the number of units by size in the order 0 bedroom units,
         1 bedroom units, 2 bedroom units, 3 bedroom units, 4 bedroom units,
         5 bedroom units.

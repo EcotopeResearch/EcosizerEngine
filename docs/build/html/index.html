@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.7.0 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.7.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -83,7 +83,7 @@
 </dd>
 <dt><strong>gpdpp</strong><span class="classifier">float</span></dt><dd><p>The volume of water in gallons at 120F each person uses per dat.[°F]</p>
 </dd>
-<dt><strong>nBR</strong><span class="classifier">array_like</span></dt><dd><p>A list of the number of units by size in the order 0 bedroom units,
+<dt><strong>nBR</strong><span class="classifier">list</span></dt><dd><p>A list of the number of units by size in the order 0 bedroom units,
 1 bedroom units, 2 bedroom units, 3 bedroom units, 4 bedroom units,
 5 bedroom units.</p>
 </dd>
@@ -1981,21 +1981,28 @@ with appropriate information in each column. Defaults to None</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.createChargeMaps" title="objects.UtilityCostTracker.UtilityCostTracker.createChargeMaps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">createChargeMaps</span></code></a>(off_pk_demand_charge, ...)</p></td>
 <td><p>Adds to self.demand_charge_map, self.energy_charge_map, and self.demand_period_chart</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod" title="objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDemandChargeForPeriod</span></code></a>(period_key, max_avg_kW)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.exportAnnualCSV" title="objects.UtilityCostTracker.UtilityCostTracker.exportAnnualCSV"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exportAnnualCSV</span></code></a>(csv_path[, return_as_array])</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod" title="objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDemandPricingPeriod</span></code></a>(i, minuteIntervals)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod" title="objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDemandChargeForPeriod</span></code></a>(period_key, max_avg_kW)</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval" title="objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getEnergyChargeAtInterval</span></code></a>(i, minuteIntervals)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod" title="objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getDemandPricingPeriod</span></code></a>(i, minuteIntervals)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval" title="objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getEnergyChargeAtInterval</span></code></a>(i, minuteIntervals)</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
@@ -2021,6 +2028,32 @@ with appropriate information in each column. Defaults to None</p>
 <dt class="sig sig-object py" id="objects.UtilityCostTracker.UtilityCostTracker.createChargeMaps">
 <span class="sig-name descname"><span class="pre">createChargeMaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">off_pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_start_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_end_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_month</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_month</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.UtilityCostTracker.UtilityCostTracker.createChargeMaps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds to self.demand_charge_map, self.energy_charge_map, and self.demand_period_chart</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.UtilityCostTracker.UtilityCostTracker.exportAnnualCSV">
+<span class="sig-name descname"><span class="pre">exportAnnualCSV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_as_array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects.UtilityCostTracker.UtilityCostTracker.exportAnnualCSV" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>csv_path</strong><span class="classifier">str</span></dt><dd><p>the file path for the output csv file</p>
+</dd>
+<dt><strong>return_as_array</strong><span class="classifier">bool</span></dt><dd><p>returns as an array representation of the Utility Cost Tracker instead of outputting a csv</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>output_array</strong><span class="classifier">list</span></dt><dd><p>a list of lists length 8760x5 where for every hour i in range(0,8760)…
+output_array[i+1][0] is a string representation of the date,
+output_array[i+1][1] is the demand period,
+output_array[i+1][2] is the Energy Rate ($/kWh) of the demand period if i is the first hour in the demand period,
+output_array[i+1][3] is the Demand Rate ($/kW) of the demand period if i is the first hour in the demand period,
+output_array[1][4] is the monthly base charge applicable to the entire year</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -2187,6 +2220,7 @@ with appropriate information in each column. Defaults to None</p>
 </li>
 <li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker</span></code></a><ul>
 <li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.createChargeMaps"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.createChargeMaps()</span></code></a></li>
+<li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.exportAnnualCSV"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.exportAnnualCSV()</span></code></a></li>
 <li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.getDemandChargeForPeriod()</span></code></a></li>
 <li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.getDemandPricingPeriod()</span></code></a></li>
 <li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.getEnergyChargeAtInterval()</span></code></a></li>
@@ -2228,7 +2262,7 @@ with appropriate information in each column. Defaults to None</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>

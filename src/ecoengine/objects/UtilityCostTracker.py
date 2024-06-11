@@ -116,10 +116,16 @@ class UtilityCostTracker:
         demand_period_index = header.index("Demand Period")
         for i, row in enumerate(csv_array):
             try:
-                self.energy_charge_by_hour.append(float(row[energy_charge_index]))
                 self.demand_period_chart[i] = int(row[demand_period_index])
+                if row[energy_charge_index] is None or row[energy_charge_index] == "":
+                    if not self.demand_period_chart[i] in self.demand_charge_map:
+                        raise Exception(f"Missing 'Energy Rate ($/kWh)' in row {i} of csv.")
+                    self.energy_charge_by_hour.append(self.energy_charge_map[self.demand_period_chart[i]])
+                else:
+                    self.energy_charge_by_hour.append(float(row[energy_charge_index]))
                 if not self.demand_period_chart[i] in self.demand_charge_map:
                     self.demand_charge_map[self.demand_period_chart[i]] = float(row[demand_charge_index])
+                    self.energy_charge_map[self.demand_period_chart[i]] = float(row[energy_charge_index])
             except ValueError:
                 raise Exception(f"Unable to read value in row {i} of csv. Please check values for Energy Rate ($/kWh), Demand Rate ($/kW), and Demand Period in this row.")
 
@@ -214,9 +220,52 @@ class UtilityCostTracker:
         else:
             raise Exception(f"{period_key} is not a defined demand period for the utility calculation.")
         
-    # def exportAnnualCSV(self, csv_path : str, as_array = False):
+    def exportAnnualCSV(self, csv_path : str, return_as_array : bool = False):
+        """
+        Parameters
+        ----------
+        csv_path : str
+            the file path for the output csv file
+        return_as_array : bool
+            returns as an array representation of the Utility Cost Tracker instead of outputting a csv
 
-
-
-
-   
+        Returns
+        -------
+        output_array : list
+            a list of lists length 8760x5 where for every hour i in range(0,8760)...
+            output_array[i+1][0] is a string representation of the date,
+            output_array[i+1][1] is the demand period,
+            output_array[i+1][2] is the Energy Rate ($/kWh) of the demand period if i is the first hour in the demand period,
+            output_array[i+1][3] is the Demand Rate ($/kW) of the demand period if i is the first hour in the demand period,
+            output_array[1][4] is the monthly base charge applicable to the entire year
+        """
+        header = [["Date","Demand Period","Energy Rate ($/kWh)","Demand Rate ($/kW)","Monthly Base Charge"]]
+        body = [[None,None,None,None,self.monthly_base_charge]]
+        for i in range(8759):
+            body.append([None,None,None,None,None])
+        seen_demand_periods = []
+        month = 0
+        day_of_month = 1
+        for i in range(8760):
+            if i == month_to_hour[month].stop:
+                month += 1
+                day_of_month = 1
+            elif i != 0 and i % 24 == 0:
+                day_of_month += 1
+            body[i][0] = f"{month_names[month]} {day_of_month}, {i % 24}:00"
+            demand_period_at_hour = self.getDemandPricingPeriod(i, 60)
+            body[i][1] = demand_period_at_hour
+            if not demand_period_at_hour in seen_demand_periods:
+                body[i][2] = self.energy_charge_map[demand_period_at_hour]
+                body[i][3] = self.demand_charge_map[demand_period_at_hour]
+                seen_demand_periods.append(demand_period_at_hour)
+        full_csv_array = header + body
+        if return_as_array:
+            return full_csv_array
+        
+        # Write the transposed_result to a CSV file
+        with open(csv_path, 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)  
+            for row in full_csv_array:
+                csvwriter.writerow(row)
+            print("successfully exported to csv")

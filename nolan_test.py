@@ -1,4 +1,4 @@
-from ecoengine import getWeatherStations, EcosizerEngine, getListOfModels, SimulationRun, getAnnualSimLSComparison, PrefMapTracker
+from ecoengine import getWeatherStations, EcosizerEngine, getListOfModels, SimulationRun, getAnnualSimLSComparison, PrefMapTracker, UtilityCostTracker
 import time
 import math
 from plotly.offline import plot
@@ -154,6 +154,11 @@ hpwh = EcosizerEngine(
 # print("hpwh.system.TMCap_kBTUhr / W_TO_BTUHR",hpwh.system.TMCap_kBTUhr / W_TO_BTUHR)
 # simRun = hpwh.getSimRun(minuteIntervals=15, nDays=365, exceptOnWaterShortage=False)
 # simRun, utility_cost = hpwh.utilityCalculation(5.00, [16,23], [21,24], [38.75,38.75], [0.21585,0.5], [30.20,35.0], [0.14341,0.07],[0,5],[5,12]) #csv_path = os.path.join(os.path.dirname(__file__),'test.csv')
+# uc = UtilityCostTracker(5.00, [16,23], [21,24], [38.75,38.75], [0.21585,0.5], [30.20,35.0], [0.14341,0.07],[0,5],[5,12])
+# uc.exportAnnualCSV('test.csv')
+# uc2 = UtilityCostTracker(csv_path='test.csv')
+# uc2.exportAnnualCSV('test2.csv')
+
 # simRun.writeCSV("16_gpdpp_1_sancos.csv")
 # print(f"total utility cost is ${round(utility_cost,2)}")
 
