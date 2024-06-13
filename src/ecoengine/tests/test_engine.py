@@ -797,8 +797,6 @@ def test_short_cycle_override():
 @pytest.mark.parametrize("monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge, start_month, end_month, annual_cost", 
                         [
                             (5.00, [16,23], [21,24], [38.75,38.77], [0.21585,0.5], [30.20,35.0], [0.14341,0.07],[0,5],[5,12], 20223.61),
-                            # (5.00, [16,23,13], [21,24,14], [38.75,38.77,39], [0.21585,0.5,0.4], [30.20,35.0,40], [0.14341,0.07,0.8],[0,5,7],[5,7,12]),
-                            # (5.00, [16], [21], [38.75], [0.21585], [30.20], [0.1434],[0],[12])
                         ])
 def test_annual_utility_calc(monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge, start_month, end_month, annual_cost):
     hpwh = EcosizerEngine(
@@ -825,4 +823,11 @@ def test_annual_utility_calc(monthly_base_charge, pk_start_hour, pk_end_hour, pk
 
     assert round(utility_cost,2) == annual_cost
     assert utility_cost < instant_wh_cost
+
+    hp_monthly_charges, iwh_monthly_charges = getAnnualUtilityComparisonGraph(simRun, instant_wh_simRun, uc, return_as_array=True)
+    hp_total = sum(hp_monthly_charges[0]) + sum(hp_monthly_charges[1]) + sum(hp_monthly_charges[2]) + sum(hp_monthly_charges[3]) + sum(hp_monthly_charges[4])
+    iwh_total = sum(iwh_monthly_charges[0]) + sum(iwh_monthly_charges[1]) + sum(iwh_monthly_charges[2]) + sum(iwh_monthly_charges[3]) + sum(iwh_monthly_charges[4])
+
+    assert round(hp_total, 2) == round(utility_cost, 2)
+    assert round(iwh_total, 2) == round(instant_wh_cost, 2)
     

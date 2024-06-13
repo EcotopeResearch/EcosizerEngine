@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.7.2 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.7.3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -720,7 +720,7 @@ with appropriate information in each column. Defaults to None</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="engine.EcosizerEngine.getAnnualUtilityComparisonGraph">
-<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getAnnualUtilityComparisonGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simRun_hp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SimulationRun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simRun_iwh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SimulationRun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UtilityCostTracker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_as_div</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getAnnualUtilityComparisonGraph" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">engine.EcosizerEngine.</span></span><span class="sig-name descname"><span class="pre">getAnnualUtilityComparisonGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simRun_hp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SimulationRun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simRun_iwh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SimulationRun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UtilityCostTracker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_as_div</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_as_array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.getAnnualUtilityComparisonGraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns comparison graph of the input power by hour for an annual load shifting and non loadshifting HPWH simulation</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -732,6 +732,8 @@ with appropriate information in each column. Defaults to None</p>
 <dt><strong>uc</strong><span class="classifier">UtilityCostTracker</span></dt><dd><p>The UtilityCostTracker object carrying details for the annual utility cost plan</p>
 </dd>
 <dt><strong>return_as_div</strong><span class="classifier">boolean</span></dt><dd><p>A logical on the output, as a div string (true) or as a figure (false)</p>
+</dd>
+<dt><strong>return_as_array</strong><span class="classifier">boolean</span></dt><dd><p>A logical on the output, as a set of comparison arrays (true) or as a figure (false)</p>
 </dd>
 </dl>
 </dd>
@@ -1970,7 +1972,8 @@ perfomance map, infinity is returned.</p>
 <dt><strong>end_month</strong><span class="classifier">int (in range start_month+1 - 12) or list of int (in range start_month[i]+1 - 12)</span></dt><dd><p>end month for period (defaults to 12)</p>
 </dd>
 <dt><strong>csv_path</strong><span class="classifier">str</span></dt><dd><p>file path to custom pricing csv. Must have three columns titled “Energy Rate ($/kWh)”, “Demand Rate ($/kW)”, “Demand Period”, and “Monthly Base Charge”
-with appropriate information in each column. Defaults to None</p>
+with appropriate information in each column. Defaults to None. Note that Demand Periods with odd numbered labels will be assumed to be peak periods while
+even-numbered periods will be assumed as off-peak</p>
 </dd>
 </dl>
 </dd>
@@ -2009,6 +2012,13 @@ with appropriate information in each column. Defaults to None</p>
 </dl>
 </p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getYearlyBaseCharge" title="objects.UtilityCostTracker.UtilityCostTracker.getYearlyBaseCharge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getYearlyBaseCharge</span></code></a>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
 </tbody>
 </table>
 <table class="docutils align-default">
@@ -2016,10 +2026,7 @@ with appropriate information in each column. Defaults to None</p>
 <tr class="row-odd"><td><p><strong>getAllDemandPeriodKeys</strong></p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p><strong>getYearlyBaseCharge</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>isIntervalInPeakPeriod</strong></p></td>
+<tr class="row-even"><td><p><strong>isIntervalInPeakPeriod</strong></p></td>
 <td></td>
 </tr>
 </tbody>
@@ -2044,7 +2051,8 @@ with appropriate information in each column. Defaults to None</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>output_array</strong><span class="classifier">list</span></dt><dd><p>a list of lists length 8760x5 where for every hour i in range(0,8760)…
+<dt><strong>output_array</strong><span class="classifier">list</span></dt><dd><p>a csv list form of the annual CSV if return_as_array is set to True.
+This is a list of lists length 8760x5 where for every hour i in range(0,8760)…
 output_array[i+1][0] is a string representation of the date,
 output_array[i+1][1] is the demand period,
 output_array[i+1][2] is the Energy Rate ($/kWh) of the demand period if i is the first hour in the demand period,
@@ -2113,6 +2121,19 @@ output_array[1][4] is the monthly base charge applicable to the entire year</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt><strong>energy_charge</strong><span class="classifier">float</span></dt><dd><p>The energy charge rate for the interval in dollars per kWh</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="objects.UtilityCostTracker.UtilityCostTracker.getYearlyBaseCharge">
+<span class="sig-name descname"><span class="pre">getYearlyBaseCharge</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#objects.UtilityCostTracker.UtilityCostTracker.getYearlyBaseCharge" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>charge</strong><span class="classifier">float</span></dt><dd><p>The anual base energy charge in dollars</p>
 </dd>
 </dl>
 </dd>
@@ -2224,6 +2245,7 @@ output_array[1][4] is the monthly base charge applicable to the entire year</p>
 <li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandChargeForPeriod"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.getDemandChargeForPeriod()</span></code></a></li>
 <li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getDemandPricingPeriod"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.getDemandPricingPeriod()</span></code></a></li>
 <li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getEnergyChargeAtInterval"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.getEnergyChargeAtInterval()</span></code></a></li>
+<li><a class="reference internal" href="#objects.UtilityCostTracker.UtilityCostTracker.getYearlyBaseCharge"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.getYearlyBaseCharge()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -2262,7 +2284,7 @@ output_array[1][4] is the monthly base charge applicable to the entire year</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>

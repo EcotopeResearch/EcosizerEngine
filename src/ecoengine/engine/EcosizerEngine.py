@@ -704,7 +704,8 @@ class EcosizerEngine:
 # STATIC FUNCTIONS
 ##############################################################
 
-def getAnnualUtilityComparisonGraph(simRun_hp : SimulationRun, simRun_iwh : SimulationRun, uc : UtilityCostTracker, return_as_div : bool =True):
+def getAnnualUtilityComparisonGraph(simRun_hp : SimulationRun, simRun_iwh : SimulationRun, uc : UtilityCostTracker, return_as_div : bool =True,
+                                    return_as_array : bool = False):
     """
     Returns comparison graph of the input power by hour for an annual load shifting and non loadshifting HPWH simulation
 
@@ -718,6 +719,8 @@ def getAnnualUtilityComparisonGraph(simRun_hp : SimulationRun, simRun_iwh : Simu
         The UtilityCostTracker object carrying details for the annual utility cost plan
     return_as_div : boolean
         A logical on the output, as a div string (true) or as a figure (false)
+    return_as_array : boolean
+        A logical on the output, as a set of comparison arrays (true) or as a figure (false)
 
     Returns
     -------
@@ -759,6 +762,15 @@ def getAnnualUtilityComparisonGraph(simRun_hp : SimulationRun, simRun_iwh : Simu
             else:
                 hp_monthly_charges[4][(month*2)] += sum(simRun_hp.energyCost[sim_interval_start:sim_interval_end])
                 iwh_monthly_charges[4][(month*2)+1] += sum(simRun_iwh.energyCost[sim_interval_start:sim_interval_end])
+
+    if return_as_array:
+        for i in range(5):
+            for j in range(12):
+                hp_monthly_charges[i][j] = hp_monthly_charges[i][j*2]
+                iwh_monthly_charges[i][j] = iwh_monthly_charges[i][(j*2)+1]
+            hp_monthly_charges[i] = hp_monthly_charges[i][0:12]
+            iwh_monthly_charges[i] = iwh_monthly_charges[i][0:12]
+        return hp_monthly_charges, iwh_monthly_charges
 
     fig = Figure()
 

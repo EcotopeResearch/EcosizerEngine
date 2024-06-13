@@ -27,7 +27,8 @@ class UtilityCostTracker:
         end month for period (defaults to 12)
     csv_path : str
         file path to custom pricing csv. Must have three columns titled "Energy Rate ($/kWh)", "Demand Rate ($/kW)", "Demand Period", and "Monthly Base Charge" 
-        with appropriate information in each column. Defaults to None
+        with appropriate information in each column. Defaults to None. Note that Demand Periods with odd numbered labels will be assumed to be peak periods while
+        even-numbered periods will be assumed as off-peak
     """
     def __init__(self, monthly_base_charge = None, pk_start_hour = None, pk_end_hour = None, pk_demand_charge = None, pk_energy_charge = None, 
                  off_pk_demand_charge = None, off_pk_energy_charge = None, start_month = 0, end_month = 12, csv_path = None):
@@ -126,6 +127,7 @@ class UtilityCostTracker:
                 if not self.demand_period_chart[i] in self.demand_charge_map:
                     self.demand_charge_map[self.demand_period_chart[i]] = float(row[demand_charge_index])
                     self.energy_charge_map[self.demand_period_chart[i]] = float(row[energy_charge_index])
+                    self.is_peak_map[self.demand_period_chart[i]] = True if self.demand_period_chart[i] % 2 == 1 else False
             except ValueError:
                 raise Exception(f"Unable to read value in row {i} of csv. Please check values for Energy Rate ($/kWh), Demand Rate ($/kW), and Demand Period in this row.")
 
@@ -149,6 +151,12 @@ class UtilityCostTracker:
                                         else self.demand_period_chart[j]
                                         for j in range(len(self.demand_period_chart))]
     def getYearlyBaseCharge(self):
+        """
+        Returns
+        -------
+        charge : float
+            The anual base energy charge in dollars
+        """
         return self.monthly_base_charge * 12.0
     
     def isIntervalInPeakPeriod(self, i, minuteIntervals, pk_start_hour, pk_end_hour):
@@ -232,7 +240,8 @@ class UtilityCostTracker:
         Returns
         -------
         output_array : list
-            a list of lists length 8760x5 where for every hour i in range(0,8760)...
+            a csv list form of the annual CSV if return_as_array is set to True.
+            This is a list of lists length 8760x5 where for every hour i in range(0,8760)...
             output_array[i+1][0] is a string representation of the date,
             output_array[i+1][1] is the demand period,
             output_array[i+1][2] is the Energy Rate ($/kWh) of the demand period if i is the first hour in the demand period,
@@ -266,6 +275,7 @@ class UtilityCostTracker:
         # Write the transposed_result to a CSV file
         with open(csv_path, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)  
+            csvwriter.writerow(["Note: Demand Periods with odd-numbered labels will be assumed to be peak periods while even-numbered periods will be assumed as off-peak. Delete this line before importing CSV to Ecosizer Utiliy Calculation"])
             for row in full_csv_array:
                 csvwriter.writerow(row)
             print("successfully exported to csv")
