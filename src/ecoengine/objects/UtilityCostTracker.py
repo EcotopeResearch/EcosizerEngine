@@ -58,7 +58,7 @@ class UtilityCostTracker:
                               off_pk_demand_charge, off_pk_energy_charge, start_month, end_month)
             self.monthly_base_charge= monthly_base_charge
             for i in range(len(pk_start_hour)):
-                self.createChargeMaps(off_pk_demand_charge[i], pk_demand_charge[i], off_pk_energy_charge[i], pk_energy_charge[i], 
+                self._createChargeMaps(off_pk_demand_charge[i], pk_demand_charge[i], off_pk_energy_charge[i], pk_energy_charge[i], 
                                       pk_start_hour[i], pk_end_hour[i], start_month[i], end_month[i])
         else:
             csv_array = []
@@ -132,7 +132,7 @@ class UtilityCostTracker:
                 raise Exception(f"Unable to read value in row {i} of csv. Please check values for Energy Rate ($/kWh), Demand Rate ($/kW), and Demand Period in this row.")
 
 
-    def createChargeMaps(self, off_pk_demand_charge, pk_demand_charge, off_pk_energy_charge, pk_energy_charge, pk_start_hour, pk_end_hour, start_month, end_month):
+    def _createChargeMaps(self, off_pk_demand_charge, pk_demand_charge, off_pk_energy_charge, pk_energy_charge, pk_start_hour, pk_end_hour, start_month, end_month):
         """
         Adds to self.demand_charge_map, self.energy_charge_map, and self.demand_period_chart
         """
