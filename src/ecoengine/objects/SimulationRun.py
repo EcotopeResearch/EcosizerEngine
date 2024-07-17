@@ -811,7 +811,17 @@ class SimulationRun:
             return plot_div
         return fig 
     
-    def createUtilityCostColumns(self, uc : UtilityCostTracker):
+    def createUtilityCostColumns(self, uc : UtilityCostTracker, monthly_tier_threshold = 0.0, tier_cost_increase = 0.0):
+        """
+        Parameters
+        ----------
+        uc : UtilityCostTracker
+            The UtilityCostTracker object carrying details for the annual utility cost plan
+        monthly_tier_threshold : float
+            The number of kWh a building must surpass in a month to go to tier 2 billing.
+        tier_cost_increase : float
+            The increase in Energy Rate from tier 1 to tier 2 in dollars
+        """
         self.energyRate = [uc.getEnergyChargeAtInterval(i,self.minuteIntervals) for i in range(len(self.pRun))]
         if self.minuteIntervals == 60:
             self.demandPeriod = uc.demand_period_chart
@@ -819,14 +829,26 @@ class SimulationRun:
             self.demandPeriod = hrTo15MinList(uc.demand_period_chart)
         else:
             self.demandPeriod = hrToMinList(uc.demand_period_chart)
-        if hasattr(self, 'tmRun'):
-            print(f"{((self.getCapIn(0)*self.pRun[0]/60) + (self.getTMCapIn(0)*self.tmRun[0]/60))} * {self.energyRate[0]}")
-            print(f"{type(self.energyRate[0])}")
-            self.energyCost = [
-                ((self.getCapIn(i)*self.pRun[i]/60.) + (self.getTMCapIn(i)*self.tmRun[i]/60.)) * self.energyRate[i] for i in range(len(self.pRun))
-            ]
-        else:
-            self.energyCost = [(self.getCapIn(i)*self.pRun[i]/60) * self.energyRate[i] for i in range(len(self.pRun))]
+
+        self.energyCost = [0.0]*len(self.pRun)
+        monthly_kWh = 0.0
+        month = 0
+        
+        for i in range(len(self.pRun)):
+            hour_of_year = math.floor(i / (60/self.minuteIntervals))
+            if hour_of_year == month_to_hour[month].stop:
+                month += 1
+                monthly_kWh = 0.0
+
+            interval_kWh = self.getCapIn(i)*self.pRun[i]/60
+            if hasattr(self, 'tmRun'):
+                interval_kWh = interval_kWh + (self.getTMCapIn(i)*self.tmRun[i]/60.)
+
+            monthly_kWh += interval_kWh
+            if monthly_kWh > monthly_tier_threshold:
+                self.energyRate[i] = self.energyRate[i] + tier_cost_increase
+
+            self.energyCost[i] = self.energyRate[i] * interval_kWh
     
     def writeCSV(self, file_path):
         """

@@ -644,7 +644,8 @@ class EcosizerEngine:
         return not self.system.perfMap.usePkl
     
     def utilityCalculation(self, monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge, 
-                           start_month = 0, end_month = 12, csv_path = None):
+                           start_month = 0, end_month = 12, csv_path = None, include_dscnt_period = False, dscnt_start_hour = None, dscnt_end_hour = None, 
+                           discnt_demand_charge = None, discnt_energy_charge = None):
         """
         Parameters
         ----------
@@ -669,6 +670,16 @@ class EcosizerEngine:
         csv_path : str
             file path to custom pricing csv. Must have three columns titled "Energy Rate ($/kWh)", "Demand Rate ($/kW)", "Demand Period", and "Monthly Base Charge" 
             with appropriate information in each column. Defaults to None
+        include_dscnt_period : bool
+            indicates whether or not the utility billing schedule includes a discounted rate period (such as overnight electrical use in British Columbia)
+        dscnt_start_hour : int (in range 0-23) or list of int (in range 0-23)
+            start hour of the day which discount pricing applies
+        dscnt_end_hour : int (in range pk_start_hour-24) or list of int (in range pk_start_hour-24)
+            end hour of the day which discount pricing applies
+        discnt_demand_charge : float or list of float
+            discount pricing ($/kW)
+        discnt_energy_charge : float or list of float
+            discount pricing ($/kWh)
 
         Returns
         -------
@@ -684,7 +695,7 @@ class EcosizerEngine:
             the UtilityCostTracker from the simulation made from user params
         """
         uc = UtilityCostTracker(monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge,
-                                start_month, end_month, csv_path)
+                                start_month, end_month, csv_path, include_dscnt_period, dscnt_start_hour, dscnt_end_hour, discnt_demand_charge, discnt_energy_charge)
         simRun = self.getSimRun(minuteIntervals = 15, nDays = 365)
         utility_cost = simRun.getAnnualUtilityCost(uc)
         instant_wh_system = createSystem(  
@@ -779,7 +790,7 @@ def getAnnualUtilityComparisonGraph(simRun_hp : SimulationRun, simRun_iwh : Simu
         offset_month_names.append(f"{month_name}")
         offset_month_names.append(f"{month_name} ")
 
-    for i in range(5):
+    for i in range(len(categories)):
         fig.add_trace(Bar(
             x=offset_month_names, 
             y=hp_monthly_charges[i], 
@@ -816,6 +827,120 @@ def getAnnualUtilityComparisonGraph(simRun_hp : SimulationRun, simRun_iwh : Simu
                     include_plotlyjs = False)
         return plot_div
     return fig 
+
+def getAnnualUtilityComparisonGraph_Canada(simRun_hp : SimulationRun, simRun_iwh : SimulationRun, uc : UtilityCostTracker, return_as_div : bool =True,
+                                    return_as_array : bool = False, monthly_tier_threshold : float = 675.0, tier_cost_increase : float = .0311):
+    """
+    Custom comparison graph for canadian utility billing structure.
+
+    Parameters
+    ----------
+    simRun_hp : SimulationRun
+        The object carrying details from the simulation of the system with a heat pump
+    simRun_iwh : SimulationRun
+        The object carrying details from the simulation of the system with instantaneous water heaters
+    uc : UtilityCostTracker
+        The UtilityCostTracker object carrying details for the annual utility cost plan
+    return_as_div : boolean
+        A logical on the output, as a div string (true) or as a figure (false)
+    return_as_array : boolean
+        A logical on the output, as a set of comparison arrays (true) or as a figure (false)
+    monthly_tier_threshold : float
+        The number of kWh a building must surpass in a month to go to tier 2 billing.
+    tier_cost_increase : float
+        The increase in Energy Rate from tier 1 to tier 2 in dollars
+
+    Returns
+    -------
+    plot : plotly.Figure OR div string
+        The annual simulation graph comparing monthly utility costs divided into base costs, demand charges, energy charges.
+    """
+
+    if simRun_hp.minuteIntervals != 15 or simRun_iwh.minuteIntervals != 15 or len(simRun_hp.oat) != 8760 or len(simRun_iwh.oat) != 8760:
+        raise Exception("Both simulation runs needs to be annual with 15 minute intervals to generate comparison graph.")
+        # TODO make useful for non-15 min intervals
+    
+    simRun_hp.createUtilityCostColumns(uc, 675.0, .0311)
+    simRun_iwh.createUtilityCostColumns(uc, 675.0, .0311)
+    base_charge_per_month_hp = []
+    base_charge_per_month_iwh = []
+    for month in range(12):
+        base_charge_per_month_hp.append(0.2253*month_to_number_days[month])
+        base_charge_per_month_hp.append(0)
+        base_charge_per_month_iwh.append(0)
+        base_charge_per_month_iwh.append(0.2253*month_to_number_days[month])
+    categories = ['Base Charges', 'Peak Energy Charges', 'Off-Peak Energy Charges', 'Overnight Energy Charges']
+    hp_monthly_charges = [base_charge_per_month_hp,[0.]*24,[0.]*24,[0.]*24]
+    iwh_monthly_charges = [base_charge_per_month_iwh,[0.]*24,[0.]*24,[0.]*24]
+
+    for month in range(12):
+        for hour in month_to_hour[month]:
+            demand_period = uc.getDemandPricingPeriod(hour, 60)
+            sim_interval_start = hour*(60//simRun_hp.minuteIntervals)
+            sim_interval_end = (hour+1)*(60//simRun_hp.minuteIntervals)
+            if uc.is_peak_map[demand_period]:
+                hp_monthly_charges[1][(month*2)] += sum(simRun_hp.energyCost[sim_interval_start:sim_interval_end])
+                iwh_monthly_charges[1][(month*2)+1] += sum(simRun_iwh.energyCost[sim_interval_start:sim_interval_end])
+            elif uc.is_discount_map[demand_period]:
+                hp_monthly_charges[3][(month*2)] += sum(simRun_hp.energyCost[sim_interval_start:sim_interval_end])
+                iwh_monthly_charges[3][(month*2)+1] += sum(simRun_iwh.energyCost[sim_interval_start:sim_interval_end])
+            else:
+                hp_monthly_charges[2][(month*2)] += sum(simRun_hp.energyCost[sim_interval_start:sim_interval_end])
+                iwh_monthly_charges[2][(month*2)+1] += sum(simRun_iwh.energyCost[sim_interval_start:sim_interval_end])
+
+    if return_as_array:
+        for i in range(5):
+            for j in range(12):
+                hp_monthly_charges[i][j] = hp_monthly_charges[i][j*2]
+                iwh_monthly_charges[i][j] = iwh_monthly_charges[i][(j*2)+1]
+            hp_monthly_charges[i] = hp_monthly_charges[i][0:12]
+            iwh_monthly_charges[i] = iwh_monthly_charges[i][0:12]
+        return hp_monthly_charges, iwh_monthly_charges
+
+    fig = Figure()
+
+    offset_month_names = []
+    for month_name in month_names:
+        offset_month_names.append(f"{month_name}")
+        offset_month_names.append(f"{month_name} ")
+
+    for i in range(len(categories)):
+        fig.add_trace(Bar(
+            x=offset_month_names, 
+            y=hp_monthly_charges[i], 
+            name=f"{categories[i]} for HP",
+            hovertemplate="<br>".join([
+                f"{categories[i]} (HP)",
+                "%{x}",
+                "$%{y}",
+            ])
+        ))
+        fig.add_trace(Bar(
+            x=offset_month_names,
+            y=iwh_monthly_charges[i],
+            name=f"{categories[i]} for UER",
+            hovertemplate="<br>".join([
+                f"{categories[i]} (UER)",
+                "%{x}",
+                "$%{y}",
+            ])
+        ))
+    
+    # fig.update_xaxes(title_text='Month',)
+    fig.update_yaxes(title_text='Cost ($)')
+    fig.update_layout(barmode='stack', title='Utility Cost Comparison: Heat Pump (HP) vs. Unitary Electric Resistance (UER)',
+                        xaxis=dict(
+                            tickvals=month_names,  # Position of the ticks
+                            ticktext=month_names,  # Custom tick text
+                            title='Month',
+                        )
+    )
+    
+    if return_as_div:
+        plot_div = plot(fig, output_type='div', show_link=False, link_text="",
+                    include_plotlyjs = False)
+        return plot_div
+    return fig
     
 def getListOfModels(multiPass = False, includeResidential = True, excludeModels = [], sgipModelsOnly = True):
     """
@@ -850,9 +975,14 @@ def getListOfModels(multiPass = False, includeResidential = True, excludeModels 
                         returnList.append([model_name,value["name"]])
     return returnList
 
-def getWeatherStations():
+def getWeatherStations(exclude_stations = [96]):
     """
     Static Method to Return all weather stations as strings with corresponding climate zones as integers
+
+    Parameters
+    ----------
+    exclude_stations : List[int]
+        A list of models you wish to not include in the model list. Defaults to empty list.
 
     Returns
     -------
@@ -870,7 +1000,8 @@ def getWeatherStations():
                 string_value, int_value = row
                 # Convert the integer value to int type
                 int_value = int(int_value)
-                data.append([string_value, int_value])
+                if not int_value in exclude_stations:
+                    data.append([string_value, int_value])
 
     return data
 

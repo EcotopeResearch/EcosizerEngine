@@ -29,14 +29,27 @@ class UtilityCostTracker:
         file path to custom pricing csv. Must have three columns titled "Energy Rate ($/kWh)", "Demand Rate ($/kW)", "Demand Period", and "Monthly Base Charge" 
         with appropriate information in each column. Defaults to None. Note that Demand Periods with odd numbered labels will be assumed to be peak periods while
         even-numbered periods will be assumed as off-peak
+    include_dscnt_period : bool
+        indicates whether or not the utility billing schedule includes a discounted rate period (such as overnight electrical use in British Columbia)
+    dscnt_start_hour : int (in range 0-23) or list of int (in range 0-23)
+        start hour of the day which discount pricing applies
+    dscnt_end_hour : int (in range pk_start_hour-24) or list of int (in range pk_start_hour-24)
+        end hour of the day which discount pricing applies
+    discnt_demand_charge : float or list of float
+        discount pricing ($/kW)
+    discnt_energy_charge : float or list of float
+        discount pricing ($/kWh)
     """
     def __init__(self, monthly_base_charge = None, pk_start_hour = None, pk_end_hour = None, pk_demand_charge = None, pk_energy_charge = None, 
-                 off_pk_demand_charge = None, off_pk_energy_charge = None, start_month = 0, end_month = 12, csv_path = None):
+                 off_pk_demand_charge = None, off_pk_energy_charge = None, start_month = 0, end_month = 12, csv_path = None, include_dscnt_period = False,
+                 dscnt_start_hour = None, dscnt_end_hour = None, discnt_demand_charge = None, discnt_energy_charge = None):
         self.demand_charge_map = {}
         self.energy_charge_map = {}
         self.is_peak_map = {}
+        self.is_discount_map = {}
         self.demand_period_chart = [0]*8760
         self.energy_charge_by_hour = []
+        self.include_dscnt_period = include_dscnt_period
         if csv_path is None:
             if not isinstance(pk_start_hour, list):
                 pk_start_hour = [pk_start_hour]
@@ -54,12 +67,21 @@ class UtilityCostTracker:
                 start_month = [start_month]
             if not isinstance(end_month, list):
                 end_month = [end_month]
+            if discnt_energy_charge is None or not isinstance(discnt_energy_charge, list):
+                discnt_energy_charge = [discnt_energy_charge] * len(pk_start_hour)
+            if discnt_demand_charge is None or not isinstance(discnt_demand_charge, list):
+                discnt_demand_charge = [discnt_demand_charge] * len(pk_start_hour)
+            if dscnt_start_hour is None or not isinstance(dscnt_start_hour, list):
+                dscnt_start_hour = [dscnt_start_hour] * len(pk_start_hour)
+            if dscnt_end_hour is None or not isinstance(dscnt_end_hour, list):
+                dscnt_end_hour = [dscnt_end_hour] * len(pk_start_hour)
             self._checkParams(monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, 
                               off_pk_demand_charge, off_pk_energy_charge, start_month, end_month)
             self.monthly_base_charge= monthly_base_charge
             for i in range(len(pk_start_hour)):
                 self._createChargeMaps(off_pk_demand_charge[i], pk_demand_charge[i], off_pk_energy_charge[i], pk_energy_charge[i], 
-                                      pk_start_hour[i], pk_end_hour[i], start_month[i], end_month[i])
+                                      pk_start_hour[i], pk_end_hour[i], start_month[i], end_month[i],
+                                      discnt_energy_charge[i], discnt_demand_charge[i], dscnt_start_hour[i], dscnt_end_hour[i])
         else:
             csv_array = []
             header = []
@@ -67,7 +89,7 @@ class UtilityCostTracker:
                 utility_reader = csv.reader(utility_file)
                 header = next(utility_reader)
                 csv_array = [row for row in utility_reader]
-            self._processCSV(csv_array, header)
+            self._processCSV(csv_array, header) # TODO make process CSV work with discount periods
                 
 
     def _checkParams(self, monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge,
@@ -128,28 +150,43 @@ class UtilityCostTracker:
                     self.demand_charge_map[self.demand_period_chart[i]] = float(row[demand_charge_index])
                     self.energy_charge_map[self.demand_period_chart[i]] = float(row[energy_charge_index])
                     self.is_peak_map[self.demand_period_chart[i]] = True if self.demand_period_chart[i] % 2 == 1 else False
+                    self.is_discount_map[self.demand_period_chart[i]] = False
             except ValueError:
                 raise Exception(f"Unable to read value in row {i} of csv. Please check values for Energy Rate ($/kWh), Demand Rate ($/kW), and Demand Period in this row.")
 
 
-    def _createChargeMaps(self, off_pk_demand_charge, pk_demand_charge, off_pk_energy_charge, pk_energy_charge, pk_start_hour, pk_end_hour, start_month, end_month):
+    def _createChargeMaps(self, off_pk_demand_charge, pk_demand_charge, off_pk_energy_charge, pk_energy_charge, pk_start_hour, pk_end_hour, start_month, end_month,
+                          discnt_energy_charge, discnt_demand_charge, dscnt_start_hour, dscnt_end_hour):
         """
         Adds to self.demand_charge_map, self.energy_charge_map, and self.demand_period_chart
         """
-        for i in range(start_month * 2, end_month * 2):
-            if i % 2 == 0:
+        num_periods_per_day = 3 if self.include_dscnt_period else 2
+        for i in range(start_month * num_periods_per_day, end_month * num_periods_per_day):
+            if i % num_periods_per_day == 0:
+                # Off-Peak Charges
                 self.demand_charge_map[i] = off_pk_demand_charge
                 self.energy_charge_map[i] = off_pk_energy_charge
                 self.is_peak_map[i] = False
+                self.is_discount_map[i] = False
+            elif self.include_dscnt_period and i % num_periods_per_day == 2:
+                # Discount Charges
+                self.demand_charge_map[i] = discnt_demand_charge
+                self.energy_charge_map[i] = discnt_energy_charge
+                self.is_peak_map[i] = False
+                self.is_discount_map[i] = True
             else:
+                # Peak Charges
                 self.demand_charge_map[i] = pk_demand_charge
                 self.energy_charge_map[i] = pk_energy_charge
                 self.is_peak_map[i] = True
+                self.is_discount_map[i] = False
         for i in range(start_month, end_month):
-            self.demand_period_chart = [(i*2)+1 if self.isIntervalInPeakPeriod(j, 60, pk_start_hour, pk_end_hour) and j in month_to_hour[i] 
-                                        else i*2 if j in month_to_hour[i]
+            self.demand_period_chart = [(i*num_periods_per_day)+1 if self.isIntervalInPeriod(j, 60, pk_start_hour, pk_end_hour) and j in month_to_hour[i] 
+                                        else (i*num_periods_per_day)+2 if self.isIntervalInPeriod(j, 60, dscnt_start_hour, dscnt_end_hour) and j in month_to_hour[i]
+                                        else i*num_periods_per_day if j in month_to_hour[i]
                                         else self.demand_period_chart[j]
                                         for j in range(len(self.demand_period_chart))]
+            
     def getYearlyBaseCharge(self):
         """
         Returns
@@ -159,10 +196,16 @@ class UtilityCostTracker:
         """
         return self.monthly_base_charge * 12.0
     
-    def isIntervalInPeakPeriod(self, i, minuteIntervals, pk_start_hour, pk_end_hour):
+    def isIntervalInPeriod(self, i, minuteIntervals, start_hour, end_hour):
+        if start_hour is None or end_hour is None:
+            return False 
         hour_of_year = math.floor(i / (60/minuteIntervals))
         hour_of_day = hour_of_year % 24
-        if hour_of_day >= pk_start_hour and hour_of_day < pk_end_hour:
+        if end_hour < start_hour:
+            # period is split between days
+            if hour_of_day >= start_hour or hour_of_day < end_hour:
+                return True
+        elif hour_of_day >= start_hour and hour_of_day < end_hour:
             # peak pricing
             return True
         # off-peak

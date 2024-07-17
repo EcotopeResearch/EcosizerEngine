@@ -1,4 +1,4 @@
-from ecoengine import getWeatherStations, EcosizerEngine, getListOfModels, SimulationRun, getAnnualSimLSComparison, PrefMapTracker, UtilityCostTracker
+from ecoengine import getWeatherStations, EcosizerEngine, getListOfModels, SimulationRun, getAnnualSimLSComparison, PrefMapTracker, UtilityCostTracker, getAnnualUtilityComparisonGraph_Canada
 import time
 import math
 from plotly.offline import plot
@@ -71,102 +71,44 @@ print(getWeatherStations())
 W_TO_BTUHR = 3.412142
 
 # hpwh = EcosizerEngine(
-#             magnitudeStat  = 100,
-#             supplyT_F       = 120,
-#             storageT_F      = 150,
-#             loadUpT_F       = 165,
-#             percentUseable  = 0.9, 
-#             aquaFract       = 0.4, 
-#             aquaFractLoadUp = 0.21,
-#             aquaFractShed   = 0.8,
-#             schematic       = 'swingtank_er', 
-#             buildingType   = 'multi_family',
-#             gpdpp           = 25,
-#             safetyTM        = 1.75,
-#             defrostFactor   = 1, 
-#             compRuntime_hr  = 16, 
-#             nApt            = 100, 
-#             Wapt            = 60,
-#             loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
-#             loadUpHours     = 3,
-#             doLoadShift     = False,
-#             systemModel="MODELS_Mitsubishi_QAHV_C_SP",
-#             PVol_G_atStorageT=1000,
-#             numHeatPumps=2,
-#             TMVol_G = 50,
-#             TMCap_kW = 10,
-#             annual = True,
-#             sizeAdditionalER = False,
-#             climateZone=32
-#         )
-# for i in range(29,30):
-#     print(i)
-hpwh = EcosizerEngine(
-            magnitudeStat  = 80,
-            incomingT_F= 50,
-            supplyT_F       = 120,
-            storageT_F      = 150,
-            percentUseable  = 0.85, 
-            aquaFract       = 0.4,
-            schematic       = 'instant_wh',
-            buildingType   = 'multi_family',
-            gpdpp           = 25,
-            safetyTM        = 1.75,
-            defrostFactor   = 1,
-            nApt            = 69,
-            Wapt            = 100,
-            doLoadShift     = False,
-            climateZone=22,
-        )
-    # [primaryCurveDiv, x_data, y_data, startIndex] = hpwh.erSizedPointsPlot(returnAsDiv = False, returnWithXYPoints = True)
-    # print(f"{x_data}, {y_data}, {startIndex}")
-
-# simRun = hpwh.getSimRun(minuteIntervals = 1, nDays = 3, exceptOnWaterShortage=False)
-# simRun.writeCSV("this_test.csv")
-# hpwh2 = EcosizerEngine(
-#             incomingT_F     = 50,
-#             magnitudeStat  = 100,
+#             magnitudeStat  = 90,
+#             incomingT_F= 50,
 #             supplyT_F       = 120,
 #             storageT_F      = 145,
-#             loadUpT_F       = 145,
-#             percentUseable  = 0.9, 
-#             aquaFract       = 0.4, 
-#             aquaFractLoadUp = 0.21,
-#             aquaFractShed   = 0.8,
-#             schematic       = 'swingtank', 
+#             loadUpT_F=145,
+#             percentUseable  = 0.85, 
+#             aquaFract       = 0.4,
+#             loadUpHours=2,
+#             schematic       = 'swingtank',
 #             buildingType   = 'multi_family',
-#             returnT_F       = 0, 
-#             flowRate       = 0,
 #             gpdpp           = 25,
 #             safetyTM        = 1.75,
-#             defrostFactor   = 1, 
-#             compRuntime_hr  = 16, 
-#             nApt            = 100, 
-#             Wapt            = 60,
-#             loadShiftSchedule  = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
-#             loadUpHours     = 3,
-#             doLoadShift     = False,
-#             loadShiftPercent       = 1.,
-#             annual = False,
-#             sizeAdditionalER = True,
-#             zipCode=90210
+#             defrostFactor   = 1,
+#             nApt            = 43,
+#             Wapt            = 100,
+#             doLoadShift     = True,
+#             loadShiftSchedule=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1],
+#             aquaFractLoadUp=0.2,
+#             aquaFractShed=0.8,
+#             climateZone=96,
+#             annual=True,
+#             PVol_G_atStorageT= 676, #450
+#             systemModel="MODELS_SANCO2_C_SP",
+#             numHeatPumps=6, #7
+#             TMCap_kW=8,
+#             TMVol_G=50
 #         )
-# print("hpwh.system.TMCap_kBTUhr / W_TO_BTUHR",hpwh.system.TMCap_kBTUhr / W_TO_BTUHR)
-# simRun = hpwh.getSimRun(minuteIntervals=15, nDays=365, exceptOnWaterShortage=False)
-# simRun, utility_cost = hpwh.utilityCalculation(5.00, [16,23], [21,24], [38.75,38.75], [0.21585,0.5], [30.20,35.0], [0.14341,0.07],[0,5],[5,12]) #csv_path = os.path.join(os.path.dirname(__file__),'test.csv')
-# uc = UtilityCostTracker(5.00, [0,23], [3,24], [38.75,38.75], [0.21585,0.5], [30.20,35.0], [0.14341,0.07],[0,5],[5,12])
-# uc.exportAnnualCSV('test.csv')
-# uc2 = UtilityCostTracker(csv_path='test.csv')
-# uc2.exportAnnualCSV('test2.csv')
+# print("sizing",hpwh.getSizingResults())
 
-# simRun.writeCSV("16_gpdpp_1_sancos.csv")
-# print(f"total utility cost is ${round(utility_cost,2)}")
+# simRun, utility_cost, instant_wh_simRun, instant_wh_utility_cost, uc = hpwh.utilityCalculation(6.852875, 16, 21, 0, 0.1597, 0, 0.1097, 0, 12, None, True, 23, 7, 0, 0.0597)
+
+# simRun.writeCSV("7_sancos_annual_simulation.csv")
+# instant_wh_simRun.writeCSV("in_unit_wh_simulation.csv")
 
 # if True:
 # # Generate the content for the HTML div
-#     content = hpwh.erSizedPointsPlot()
+#     content = getAnnualUtilityComparisonGraph_Canada(simRun, instant_wh_simRun, uc)
 #     # content = hpwh2.plotSizingCurve(returnAsDiv = True)
-#     print(hpwh2.getSizingResults())
 #     # Create the HTML content
 #     html_content = f"""<!DOCTYPE html>
 # <html>
@@ -183,9 +125,11 @@ hpwh = EcosizerEngine(
 # """
 
 #     # Write the HTML content to the file
-#     file_name = f'er_result_graph_non_an_15.html'
+#     file_name = f'result_graph_2.html'
 #     with open(file_name, 'w') as file:
 #         file.write(html_content)
+
+# print(f"HP utility cost = ${utility_cost}, in-unit WH utility cost = ${instant_wh_utility_cost}, total saved = ${instant_wh_utility_cost - utility_cost}")
 
 # print(f"{hpwh.system.TMCap_kBTUhr} {hpwh.system.TMCap_kBTUhr / W_TO_BTUHR}")
 # print("=================Annual=======================")

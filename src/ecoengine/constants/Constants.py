@@ -33,6 +33,21 @@ month_to_hour = {
     11: range(8016, 8760)      # December
 }
 
+month_to_number_days = {
+    0: 31,         # January
+    1: 28,       # February
+    2: 31,      # March
+    3: 30,      # April
+    4: 31,      # May
+    5: 30,      # June
+    6: 31,      # July
+    7: 31,      # August
+    8: 30,      # September
+    9: 31,      # October
+    10: 30,     # November
+    11: 31      # December
+}
+
 max_hour_to_month = {
     744: 0,         # January
     1416: 1,       # February
