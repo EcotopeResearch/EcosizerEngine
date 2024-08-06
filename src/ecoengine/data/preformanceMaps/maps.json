@@ -574,6 +574,12 @@
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : false
     },
+    "MODELS_Galletti_460_C_MP" : {
+        "name" : "Galletti HTH-30-460-HS",
+        "pkl_prefix": "Galletti_460_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
     "MODELS_Galletti_778_C_MP" : {
         "name" : "Galletti HTH-54-778-HS",
         "pkl_prefix": "Galletti_778_Multi_Pass",
