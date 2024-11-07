@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.7.5 documentation</title>
+    <title>EcosizerEngine Documentation &#8212; EcosizerEngine 1.7.7 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -24,7 +24,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.7 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>  
@@ -172,6 +172,20 @@ Otherwise, it will use the most recent data model.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getHWMagnitude" title="engine.EcosizerEngine.EcosizerEngine.getHWMagnitude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHWMagnitude</span></code></a>()</p></td>
 <td><p>Returns the total daily DHW usage for the building the HPWH is being sized or simulated for.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getLoadShiftCapacity" title="engine.EcosizerEngine.EcosizerEngine.getLoadShiftCapacity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getLoadShiftCapacity</span></code></a>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getNumShedHours" title="engine.EcosizerEngine.EcosizerEngine.getNumShedHours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getNumShedHours</span></code></a>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimResult" title="engine.EcosizerEngine.EcosizerEngine.getSimResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSimResult</span></code></a>([initPV, initST, ...])</p></td>
 <td><p><strong>*LEGACY FUNCTION*</strong> to be depricated.</p></td>
 </tr>
@@ -310,6 +324,32 @@ It will plot Percent of Coverage vs. Swing Tank Capacity.</p>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>magnitude</strong><span class="classifier">Float</span></dt><dd><p>The total daily DHW usage for the building in gallons.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.getLoadShiftCapacity">
+<span class="sig-name descname"><span class="pre">getLoadShiftCapacity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.getLoadShiftCapacity" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>loadshift_capacity</strong><span class="classifier">float</span></dt><dd><p>Thermal storage capacity of the tank volume between the load up and shed aquastat in kWh</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="engine.EcosizerEngine.EcosizerEngine.getNumShedHours">
+<span class="sig-name descname"><span class="pre">getNumShedHours</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#engine.EcosizerEngine.EcosizerEngine.getNumShedHours" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>shed_hours</strong><span class="classifier">float</span></dt><dd><p>Number of hours the system should be able to shed for during the 4 PM - 9 PM peak</p>
 </dd>
 </dl>
 </dd>
@@ -2239,6 +2279,8 @@ output_array[1][4] is the monthly base charge applicable to the entire year</p>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.erSizedPointsPlot"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.erSizedPointsPlot()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getClimateZone"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getClimateZone()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getHWMagnitude"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getHWMagnitude()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getLoadShiftCapacity"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getLoadShiftCapacity()</span></code></a></li>
+<li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getNumShedHours"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getNumShedHours()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimResult"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getSimResult()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimRun"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getSimRun()</span></code></a></li>
 <li><a class="reference internal" href="#engine.EcosizerEngine.EcosizerEngine.getSimRunWithkWCalc"><code class="docutils literal notranslate"><span class="pre">EcosizerEngine.getSimRunWithkWCalc()</span></code></a></li>
@@ -2355,7 +2397,7 @@ output_array[1][4] is the monthly base charge applicable to the entire year</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">EcosizerEngine 1.7.7 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">EcosizerEngine Documentation</a></li> 
       </ul>
     </div>
