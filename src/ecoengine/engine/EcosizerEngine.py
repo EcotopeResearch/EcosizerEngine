@@ -327,6 +327,32 @@ class EcosizerEngine:
         """
         return simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays, exceptOnWaterShortage = exceptOnWaterShortage)
     
+    def getNumShedHours(self):
+        """
+        Returns
+        -------
+        shed_hours : float
+            Number of hours the system should be able to shed for during the 4 PM - 9 PM peak
+        """
+        thermal_cap_remaining = self.getLoadShiftCapacity()
+        hour = 16 # 4:00 PM
+        hours_met = 0.0
+        while thermal_cap_remaining > 0:
+            thermal_load = (rhoCp*self.building.getLoadAtHour(hour)*(self.building.supplyT_F-self.building.getAvgIncomingWaterT()))/KWH_TO_BTU # kWh
+            hours_met += min(thermal_cap_remaining/thermal_load,1.0)
+            thermal_cap_remaining -= thermal_load
+            hour += 1
+        return hours_met
+
+    def getLoadShiftCapacity(self):
+        """
+        Returns
+        -------
+        loadshift_capacity : float
+            Thermal storage capacity of the tank volume between the load up and shed aquastat in kWh
+        """
+        return (rhoCp*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.loadUpT_F-self.building.getAvgIncomingWaterT()))/KWH_TO_BTU # stored energy, not input energy
+
     def getSimRunWithkWCalc(self, initPV=None, initST=None, minuteIntervals = 15, nDays = 365, optimizeNLS = False):
         """
         Returns a list that includes a simulationRun object for a simulation of the Ecosizer's building and system object with load shifting and without load shifting,

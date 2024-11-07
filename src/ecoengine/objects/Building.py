@@ -81,6 +81,25 @@ class Building:
         if self.climateZone is None:
             return False
         return self.climateZone > 0 and self.climateZone < 17
+    
+    def getLoadAtHour(self, hour : int):
+        """
+        returns gallons of hot water load at hour
+
+        Parameters
+        ----------
+        hour : int
+            The hour of the simulation to get hw load for
+
+        Returns
+        -------
+        load_g : float
+            gallons of hw that is needed to supply the building at hour 
+        """
+        if hour >= len(self.loadshape):
+            return self.magnitude * self.loadshape[hour % self.loadshape]
+        return self.magnitude * self.loadshape[hour]
+
     def getDesignOAT(self):
         if not self.designOAT_F is None:
             return self.designOAT_F

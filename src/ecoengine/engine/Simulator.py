@@ -9,7 +9,7 @@ from ecoengine.constants.Constants import KWH_TO_BTU, W_TO_BTUHR
 import csv
 
     
-def simulate(system : SystemConfig, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, exceptOnWaterShortage = True):
+def simulate(system : SystemConfig, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, exceptOnWaterShortage = True) -> SimulationRun:
     """
     Implimented seperatly for Swink Tank systems 
     Inputs

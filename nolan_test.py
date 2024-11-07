@@ -203,14 +203,14 @@ W_TO_BTUHR = 3.412142
 
 # hpwh = EcosizerEngine(
 #             incomingT_F = 0,
-#             magnitudeStat = 110,
+#             magnitudeStat = 438,
 #             supplyT_F = 120,
-#             storageT_F = 150,
+#             storageT_F = 120,
 #             percentUseable = 0.95,
 #             aquaFract = 0.4,
-#             aquaFractLoadUp = 0.2,
-#             aquaFractShed = 0.8,
-#             loadUpT_F = 160,
+#             aquaFractLoadUp = 0.1,
+#             aquaFractShed = 0.94,
+#             loadUpT_F = 120,
 #             loadUpHours = 2, # might need to change for future
 #             schematic = "swingtank",
 #             buildingType  = "multi_family",
@@ -221,10 +221,10 @@ W_TO_BTUHR = 3.412142
 #             # The 3 params below have to do with loadshift, the logic from here will have to be translated to get the right values https://github.com/EcotopeResearch/Ecosizer/blob/ee7cc4dee9014b40963c3a4323d878acb30b0501/HPWHulator/sizer/views.py#L309-L322
 #             loadShiftSchedule = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
 #             doLoadShift   = True,
-#             zipCode=91708, # CZ10
-#             annual=True,
+#             climateZone=61,
+#             annual=False,
 #             systemModel='MODELS_Mitsubishi_QAHV_C_SP',
-#             PVol_G_atStorageT=1000,
+#             PVol_G_atStorageT=3000,
 #             # PCap_kW=262/W_TO_BTUHR,
 #             numHeatPumps=1,
 #             TMCap_kW=30,
@@ -234,7 +234,8 @@ W_TO_BTUHR = 3.412142
 # outlist = hpwh.getSimRunWithkWCalc(minuteIntervals = 15, nDays = 365)
 # simRun_ls = outlist[0]
 
-# print(f"loadshift_capacity {round(outlist[2],2)}")
+# print(f"loadshift_capacity {round(hpwh.getLoadShiftCapacity(),2)}")
+# print(f"shed_hours {round(hpwh.getNumShedHours(),2)}")
 # print(f"kGperkWh_saved {round(outlist[3],2)}")
 # print(f"annual_kGCO2_saved {round(outlist[4],2)}")
 # print(f"climate_zone CZ{hpwh.getClimateZone()}")
