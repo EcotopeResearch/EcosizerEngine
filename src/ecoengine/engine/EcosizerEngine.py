@@ -1070,6 +1070,39 @@ def getHPWHOutputCapacity(model, outdoorAirTemp_F, inletWaterTemp_F, outletWater
     output_cap, input_cap = perfMap.getCapacity(outdoorAirTemp_F,inletWaterTemp_F,outletWaterTemp_F)
     return output_cap * (1.0 - defrost_derate)
 
+def get_oat_buckets(zipCode : int, cz : int = None) -> dict:
+    """
+    returns a dictionary that contains the number of days in which the average OAT falls in each OAT bucket for the given zipCode 
+
+    Parameters
+    ----------
+    zipCode : int
+        the zipcode the building resides in
+    cz : int
+        the climate zone the building resides in
+
+    Returns
+    -------
+    oat_buckets : dict
+        dict mapping each OAT bucket to the number of days in a year that have an average OAT in that bucket
+    """
+    return_dict = {}
+    cz = getClimateZone(zipCode, cz)
+    with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
+        oat_reader = csv.reader(oat_file)
+        for i in range(365):
+            daily_average_oat = 0
+            for j in range(24):
+                oat_row = next(oat_reader)
+                daily_average_oat += float(oat_row[cz - 1])
+            daily_average_oat = daily_average_oat/24
+            bucket = (daily_average_oat // 5) * 5
+            if bucket in return_dict:
+                return_dict[bucket] = return_dict[bucket] + 1
+            else:
+                return_dict[bucket] = 1
+    return return_dict
+
 
 def getSizingCurvePlot(x, y, startind, loadshifting : bool = False, er_sized : bool = False):
     """

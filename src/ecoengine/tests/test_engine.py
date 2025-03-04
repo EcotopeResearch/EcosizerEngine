@@ -277,6 +277,10 @@ def test_convertVolume(convertToT_F, referenceT_F, convertFromT_F, expected):
 def test_getHPWHOutputCapacity(hpwhModel, numHP, expectedCap, oat, inlet, outlet, return_as_kW, defrost_derate):
     assert getHPWHOutputCapacity(hpwhModel, oat, inlet, outlet, numHP, return_as_kW, defrost_derate) == expectedCap
 
+def test_get_oat_buckets():
+    assert get_oat_buckets(None, 19)[65.0] == 25
+    assert get_oat_buckets(90210) == {50.0: 46, 55.0: 83, 60.0: 71, 65.0: 51, 45.0: 13, 70.0: 52, 75.0: 29, 80.0: 17, 85.0: 3}
+
 @pytest.mark.parametrize("sizingResult, magnitude", [
    ([1579.8153948651493, 150.75919907543388, 100, 59.712485, 168], 2500)
 ])
