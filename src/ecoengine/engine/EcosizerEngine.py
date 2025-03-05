@@ -1015,6 +1015,7 @@ def getWeatherStations(exclude_stations = [96]):
     weather_stations : List[str]
         a list of tuples containing a string and integer in the form [weather_station_name, climate_zone] where weather_station_name is the string 
         representing the weather station name and climate_zone is the corresponding ecosizer climate zone.
+        Weather data from https://energyplus.net/weather
     """
     data = []
     with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/WeatherStation_ClimateZone_Lookup.csv'), 'r') as csvfile:
