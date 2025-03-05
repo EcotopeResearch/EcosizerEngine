@@ -299,7 +299,7 @@ def test_invalid_building_parameter_errors():
     with pytest.raises(Exception, match="18 is not a California zip code."):
         createBuilding(35, 4, 120, "mens_dorm", zipCode = 18)
     with pytest.raises(Exception, match="98028 is not a California zip code."):
-        createBuilding(35, 4, 120, "mens_dorm", zipCode = 98122)
+        createBuilding(35, 4, 120, "mens_dorm", zipCode = 98028)
     with pytest.raises(Exception, match="the surf spot is not a California zip code."):
         createBuilding(35, 4, 120, "mens_dorm", zipCode = 'the surf spot')
     with pytest.raises(Exception, match="Annual simulation for non-multifamily buildings is not yet available."):
