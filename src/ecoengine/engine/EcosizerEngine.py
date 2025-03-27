@@ -11,6 +11,7 @@ import json
 from plotly.graph_objs import Figure, Scatter, Bar
 from plotly.offline import plot
 from numpy import around, flipud
+from io import TextIOWrapper
 
 print("EcosizerEngine Copyright (C) 2023  Ecotope Inc.")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")
@@ -671,7 +672,7 @@ class EcosizerEngine:
     
     def utilityCalculation(self, monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge, 
                            start_month = 0, end_month = 12, csv_path = None, include_dscnt_period = False, dscnt_start_hour = None, dscnt_end_hour = None, 
-                           discnt_demand_charge = None, discnt_energy_charge = None):
+                           discnt_demand_charge = None, discnt_energy_charge = None, csv_file : TextIOWrapper = None):
         """
         Parameters
         ----------
@@ -706,6 +707,8 @@ class EcosizerEngine:
             discount pricing ($/kW)
         discnt_energy_charge : float or list of float
             discount pricing ($/kWh)
+        csv_file : TextIOWrapper
+            an opened csv file (in place of csv_path) to be read
 
         Returns
         -------
@@ -721,7 +724,8 @@ class EcosizerEngine:
             the UtilityCostTracker from the simulation made from user params
         """
         uc = UtilityCostTracker(monthly_base_charge, pk_start_hour, pk_end_hour, pk_demand_charge, pk_energy_charge, off_pk_demand_charge, off_pk_energy_charge,
-                                start_month, end_month, csv_path, include_dscnt_period, dscnt_start_hour, dscnt_end_hour, discnt_demand_charge, discnt_energy_charge)
+                                start_month, end_month, csv_path, include_dscnt_period, dscnt_start_hour, dscnt_end_hour, discnt_demand_charge, discnt_energy_charge,
+                                csv_file = csv_file)
         simRun = self.getSimRun(minuteIntervals = 15, nDays = 365)
         utility_cost = simRun.getAnnualUtilityCost(uc)
         instant_wh_system = createSystem(  

@@ -2,6 +2,7 @@ from .systemConfigUtils import hrToMinList, roundList, hrTo15MinList
 from ecoengine.constants.Constants import *
 import math
 import csv
+from io import TextIOWrapper
 
 class UtilityCostTracker:
     """
@@ -39,10 +40,12 @@ class UtilityCostTracker:
         discount pricing ($/kW)
     discnt_energy_charge : float or list of float
         discount pricing ($/kWh)
+    csv_file : TextIOWrapper
+        an opened csv file (in place of csv_path) to be read
     """
     def __init__(self, monthly_base_charge = None, pk_start_hour = None, pk_end_hour = None, pk_demand_charge = None, pk_energy_charge = None, 
                  off_pk_demand_charge = None, off_pk_energy_charge = None, start_month = 0, end_month = 12, csv_path = None, include_dscnt_period = False,
-                 dscnt_start_hour = None, dscnt_end_hour = None, discnt_demand_charge = None, discnt_energy_charge = None):
+                 dscnt_start_hour = None, dscnt_end_hour = None, discnt_demand_charge = None, discnt_energy_charge = None, csv_file : TextIOWrapper = None):
         self.demand_charge_map = {}
         self.energy_charge_map = {}
         self.is_peak_map = {}
@@ -50,7 +53,7 @@ class UtilityCostTracker:
         self.demand_period_chart = [0]*8760
         self.energy_charge_by_hour = []
         self.include_dscnt_period = include_dscnt_period
-        if csv_path is None:
+        if csv_path is None and csv_file is None:
             if not isinstance(pk_start_hour, list):
                 pk_start_hour = [pk_start_hour]
             if not isinstance(pk_end_hour, list):
@@ -85,10 +88,11 @@ class UtilityCostTracker:
         else:
             csv_array = []
             header = []
-            with open(csv_path, 'r') as utility_file:
-                utility_reader = csv.reader(utility_file)
-                header = next(utility_reader)
-                csv_array = [row for row in utility_reader]
+            if csv_file is None:
+                csv_file = open(csv_path, 'r')
+            utility_reader = csv.reader(csv_file)
+            header = next(utility_reader)
+            csv_array = [row for row in utility_reader]
             self._processCSV(csv_array, header) # TODO make process CSV work with discount periods
                 
 
