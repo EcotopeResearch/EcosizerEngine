@@ -106,7 +106,7 @@ class UtilityCostTracker:
             if pk_start_hour[i] is None or not (isinstance(pk_start_hour[i], int) or isinstance(pk_start_hour[i], float)) or pk_start_hour[i] < 0 or pk_start_hour[i] > 23:
                 raise Exception("Error: peak start hour must be a number between 0 and 23.")
             if pk_end_hour[i] is None or not (isinstance(pk_end_hour[i], int) or isinstance(pk_end_hour[i], float)) or pk_end_hour[i] < pk_start_hour[i] or pk_end_hour[i] > 24:
-                raise Exception("Error: peak end hour must be a number between peak start hour and 23.")
+                raise Exception("Error: peak end hour must be a number between peak start hour and 24.")
             if pk_demand_charge[i] is None or not (isinstance(pk_demand_charge[i], int) or isinstance(pk_demand_charge[i], float)):
                 raise Exception("Error: peak demand charge must be a number.")
             if off_pk_demand_charge[i] is None or not (isinstance(off_pk_demand_charge[i], int) or isinstance(off_pk_demand_charge[i], float)):
