@@ -75,9 +75,9 @@ class SystemConfig:
         if not building is None and not systemModel is None and not systemModel[-2:] == 'MP':
             highest_possible_storage_temp, fifth_percentile_oat = building.getHighestStorageTempAtFifthPercentileOAT(self.perfMap)
             if highest_possible_storage_temp < self.storageT_F:
-                raise Exception(f"The selected model can not produce a storage temperature of {self.storageT_F} degrees during the fifth percentile outdoor air temperature ({fifth_percentile_oat} F) in the selected climate (zip code). Please lower the storage temperature to at least {highest_possible_storage_temp} or select a diferent model.")
+                raise Exception(f"The selected model can not produce a storage temperature of {self.storageT_F} degrees during the fifth percentile outdoor air temperature ({fifth_percentile_oat} F) in the selected climate (zip code). Please lower the storage temperature to at least {highest_possible_storage_temp} or select a different model.")
             elif hasattr(self, 'loadUpT_F') and not self.loadUpT_F is None and highest_possible_storage_temp < self.loadUpT_F:
-                raise Exception(f"The selected model can not produce a load up temperature of {self.loadUpT_F} degrees during the fifth percentile outdoor air temperature ({fifth_percentile_oat} F) in the selected climate (zip code). Please lower the load up temperature to at least {highest_possible_storage_temp} or select a diferent model.")
+                raise Exception(f"The selected model can not produce a load up temperature of {self.loadUpT_F} degrees during the fifth percentile outdoor air temperature ({fifth_percentile_oat} F) in the selected climate (zip code). Please lower the load up temperature to at least {highest_possible_storage_temp} or select a different model.")
 
 
     def _checkInputs(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, doLoadShift, loadShiftPercent):
