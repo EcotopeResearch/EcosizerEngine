@@ -574,6 +574,18 @@
         "secondary_heat_exchanger" : false,
         "SGIP_avail" : false
     },
+    "MODELS_COLMAC_R454B_C_SP" : {
+        "name" : "Colmac R454B",
+        "pkl_prefix": "COLMAC_R454B_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_Droplet_C_SP" : {
+        "name" : "Droplet",
+        "pkl_prefix": "Droplet_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
     "MODELS_Galletti_460_C_MP" : {
         "name" : "Galletti HTH-30-460-HS",
         "pkl_prefix": "Galletti_460_Multi_Pass",
