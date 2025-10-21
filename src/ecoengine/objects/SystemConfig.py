@@ -481,7 +481,7 @@ class SystemConfig:
         runningVol_G, effMixFract = self._calcRunningVol(heatHrs, np.ones(24), building.loadshape, building, effMixFract)
         totalVolAtStorage = self._getTotalVolAtStorage(runningVol_G, building.getDesignInlet(), building.supplyT_F)
         totalVolAtStorage *=  thermalStorageSF
-
+        minRunVol_G = self._calcMinCyclingVol(building, heatHrs)
         if self.doLoadShift and not primaryCurve:
             LSrunningVol_G, LSeffMixFract = self._calcRunningVolLS(loadUpHours, building.avgLoadshape, building, effMixFract, lsFractTotalVol = lsFractTotalVol)
 
@@ -501,7 +501,7 @@ class SystemConfig:
 
             # Check the Cycling Volume 
             LUcyclingVol_G = totalVolAtStorage * (self.aquaFractLoadUp - (1 - self.percentUseable))
-            minRunVol_G = pCompMinimumRunTime * (building.magnitude / heatHrs) # (generation rate - no usage) #REMOVED EFFMIXFRACT
+            # minRunVol_G = self._calcMinCyclingVol(building, heatHrs) # (generation rate - no usage) #REMOVED EFFMIXFRACT
             
             if minRunVol_G > LUcyclingVol_G:
                 min_AF = minRunVol_G / totalVolAtStorage + (1 - self.percentUseable)
@@ -511,7 +511,7 @@ class SystemConfig:
 
 
         cyclingVol_G = totalVolAtStorage * (self.aquaFract - (1 - self.percentUseable))
-        minRunVol_G = pCompMinimumRunTime * (building.magnitude / heatHrs) # (generation rate - no usage)  #REMOVED EFFMIXFRACT
+        # minRunVol_G = self._calcMinCyclingVol(building, heatHrs) # (generation rate - no usage)  #REMOVED EFFMIXFRACT
 
         if minRunVol_G > cyclingVol_G:
             min_AF = minRunVol_G / totalVolAtStorage + (1 - self.percentUseable)
@@ -524,6 +524,9 @@ class SystemConfig:
         # Return the temperature adjusted total volume ########################
         
         return totalVolAtStorage, effMixFract
+    
+    def _calcMinCyclingVol(self, building : Building, heatHrs):
+        return pCompMinimumRunTime * (building.magnitude / heatHrs)
     
     def _calcRunningVol(self, heatHrs, onOffArr, loadshape, building : Building, effMixFract = 0):
         """

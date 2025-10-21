@@ -19,6 +19,7 @@ class Building:
         self.incomingT_F = incomingT_F
         self.supplyT_F = supplyT_F
         self.designOAT_F = designOAT_F
+        self.returnT_F = returnT_F
 
         self.highestIncomingT_F = None
         self.lowestIncomingT_F = None
@@ -68,6 +69,9 @@ class Building:
         if not designOAT_F is None:
             if not (isinstance(designOAT_F, int) or isinstance(designOAT_F, float)):
                 raise Exception("Error: designOAT_F must be a number or None.")
+            
+    def getHourlyLoadIncrease(self):
+        return (self.recirc_loss / rhoCp) / (self.supplyT_F - self.incomingT_F)
         
     def setToAnnualLS(self):
         raise Exception("Annual loadshape not available for this building type. This feature is only available for multi-family buildings.")
@@ -112,6 +116,12 @@ class Building:
         elif not self.climateZone is None:
             return self.getLowestIncomingT_F()
         return None
+    def getDesignReturnTemp(self):
+        if not self.returnT_F is None:
+            return self.returnT_F
+        else:
+            #TODO figure out how to get return temp from Wapt
+            raise Exception("No available return temperature")
     
     def getHighestStorageTempAtFifthPercentileOAT(self, perfMap : PrefMapTracker):
         if self.climateZone is None:

@@ -370,3 +370,42 @@ def test_too_small_lu_aq_sizing():
             doLoadShift = True,
             loadUpHours = 2
         )
+
+def test_sp_rtp_sizing():
+    check_building = createBuilding(
+            incomingT_F     = 50,
+            magnitudeStat  = 100,
+            supplyT_F       = 120,
+            buildingType   = 'multi_family',
+            nApt            = 100, 
+            returnT_F       = 105,
+            flowRate        = 6,
+            gpdpp           = 25
+        )
+    nortp_system = createSystem(
+        schematic   = 'singlepass_norecirc', 
+        building    = check_building, 
+        storageT_F  = 150, 
+        defrostFactor   = 1, 
+        percentUseable  = .8, 
+        compRuntime_hr  = 16, 
+        aquaFract   = 0.4,
+    )
+    rtp_system = createSystem(
+        schematic   = 'sprtp', 
+        building    = check_building, 
+        storageT_F  = 150, 
+        defrostFactor   = 1, 
+        percentUseable  = .8, 
+        compRuntime_hr  = 16, 
+        aquaFract   = 0.4,
+    )
+    
+    # assert rtp_system.PVol_G_atStorageT > nortp_system.PVol_G_atStorageT
+    assert rtp_system.PCap_kBTUhr > nortp_system.PCap_kBTUhr
+    rtp_size_results = rtp_system.getSizingResults()
+    assert len(rtp_size_results) == 3
+    assert rtp_size_results[1] > rtp_size_results[2]
+    for i in range(24):
+        assert check_building.loadshape[i] == default_building.loadshape[i]
+    assert check_building.magnitude == default_building.magnitude
