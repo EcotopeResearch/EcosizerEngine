@@ -93,6 +93,25 @@ class SimulationRun:
         self.TM_setpoint = supplyT_F
         self.TMCap_kBTUhr = TMCap_kBTUhr
 
+    def initializeMPRTPValue(self, cyclingV, init_mixT_F, i = 0):
+        """
+        Initializes MPRTP values
+
+        Parameters
+        ----------
+        cyclingV : float
+            the cycling volume of the HPWH system's storage tank in gallons
+        init_mixT_F : float
+            the average temperature of the cycling volume at the begining of the simulation
+        """
+        self.slugSim = True
+        if i == 0:
+            self.mixV = [0] * (len(self.hwDemand))
+            self.mixT_F = [0] * (len(self.hwDemand))
+
+        self.mixV[i] = cyclingV
+        self.mixT_F[i] = init_mixT_F
+
     def getLoadShiftMode(self, i):
         """
         returns the load shifting setting at interval i of the simulation

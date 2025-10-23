@@ -45,8 +45,9 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
         building.magnitude = dhw_usage_magnitude + (self.tm_hourly_load * 24)
         building.loadshape = [x/building.magnitude for x in day_load]
 
+        self.ignoreShortCycleEr = True
         super().sizeSystem(building)
-
+        self.ignoreShortCycleEr = False
         building.magnitude = dhw_usage_magnitude
         building.loadshape = dhw_loadshape
 
@@ -144,7 +145,7 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr, self.Recirc_Cap_kBTUhr]
     
-    def getTemperatureAtTankVol(self, tank_volume : float, building : Building, ls_mode : str = 'N') -> float:
+    def getTemperatureAtTankVol(self, tank_volume : float, incomingT_F : float, ls_mode : str = 'N') -> float:
         """
         Returns the temperature given a tank volume
 
@@ -153,6 +154,8 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
         tank_volume : float
             The tank height in question, given as a number of gallons. 0 gallons indicates the bottom of the tank. 
             self.PVol_G_atStorageT indicates the top of the tank
+        incomingT_F : float
+            Temperature of incoming city water
 
         Returns
         -------
@@ -162,8 +165,8 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
         if tank_volume > self.PVol_G_atStorageT:
             raise Exception(f"Tank volume of {tank_volume} is larger than max volume of {self.PVol_G_atStorageT}.")
         temp = self.strat_slope * (tank_volume + self.delta_energy) + self.strat_inter
-        if temp < building.incomingT_F:
-            return building.incomingT_F
+        if temp < incomingT_F:
+            return incomingT_F
         elif temp > self.getOffTriggerTemp(ls_mode): #TODO make sure this is right (Ask Scott)
             return self.getOffTriggerTemp(ls_mode)
         return temp
@@ -216,8 +219,7 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
 
             off_triggerV = self.getOffTriggerVolume(ls_mode)
             off_triggerT = self.getOffTriggerTemp(ls_mode)
-            if self.getTemperatureAtTankVol(off_triggerV, simRun.building, ls_mode) >= off_triggerT:
-                print(f"{i}: turning off at {self.getTemperatureAtTankVol(off_triggerV, simRun.building, ls_mode)} degrees")
+            if self.getTemperatureAtTankVol(off_triggerV, incomingWater_T, ls_mode) >= off_triggerT:
                 simRun.pheating = False
                 lowest_vol = self.getTankVolAtTemp(off_triggerT)
                 if lowest_vol < off_triggerV:
@@ -230,8 +232,7 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
             simRun.pRun[i] = 0.0
             on_triggerV = self.getOnTriggerVolume(ls_mode)
             on_triggerT = simRun.building.supplyT_F # TODO switch out for on trigger method
-            if self.getTemperatureAtTankVol(on_triggerV, simRun.building, ls_mode) <= on_triggerT:
-                print(f"{i}: turning on at {self.getTemperatureAtTankVol(on_triggerV, simRun.building, ls_mode)} degrees. {delta_draw_recirc}")
+            if self.getTemperatureAtTankVol(on_triggerV, incomingWater_T, ls_mode) <= on_triggerT:
                 simRun.pheating = True
                 highest_vol = self.getTankVolAtTemp(on_triggerT)
                 if highest_vol > on_triggerV:
@@ -252,189 +253,104 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
             # self.PConvertedLoadUPV_G_atStorageT = convertVolume(self.PVol_G_atStorageT, self.storageT_F, incomingWater_T, self.loadUpT_F)
             # self.Vtrig_loadUp = self.PConvertedLoadUPV_G_atStorageT * (1 - self.aquaFractLoadUp)
             # self.adjustedPConvertedLoadUPV_G_atStorageT = np.ceil(self.PConvertedLoadUPV_G_atStorageT * self.percentUseable)
+
+    def primaryCurve(self, building : Building):
+        """
+        Sizes the primary system curve. Will catch the point at which the aquatstat
+        fraction is too small for system and cuts the return arrays to match cutoff point.
+
+        Parameters
+        ----------
+        building : Building
+            the building this primary system curve is being sized for
+
+        Returns
+        -------
+        volN : array
+            Array of volume in the tank at each hour.
+
+        primaryHeatHrs2kBTUHR : array
+            Array of heating capacity in kBTU/hr
             
-    # def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, forcePeakyLoadshape = False) -> SimulationRun:
-    #     """
-    #     Returns initialized arrays needed for nDay simulation
+        heatHours : array
+            Array of running hours per day corresponding to primaryHeatHrs2kBTUHR
+            
+        recIndex : int
+            The index of the recommended heating rate. 
+        """
+        dhw_usage_magnitude = building.magnitude
+        dhw_loadshape = building.loadshape
+        # tm_hourly_load = building.getHourlyLoadIncrease()
+        day_load = [(x * dhw_usage_magnitude) + self.tm_hourly_load for x in dhw_loadshape]
 
-    #     Parameters
-    #     ----------
-    #     building : Building
-    #         The building for the simulation
-    #     initPV : float
-    #         the initial primary tank volume at the start of the simulation
-    #     initST : float
-    #         Not used in this instance of the function
-    #     minuteIntervals : int
-    #         the number of minutes per time interval for the simulation
-    #     nDays : int
-    #         the number of days that will be simulated 
-    #     forcePeakyLoadshape : boolean (default False)
-    #         if set to True, forces the most "peaky" load shape rather than average load shape
+        building.magnitude = dhw_usage_magnitude + (self.tm_hourly_load * 24)
+        building.loadshape = [x/building.magnitude for x in day_load]
 
-    #     Returns
-    #     -------
-    #     a SimulationRun object with all necessary components for running the simulation
-    #     """
+
+        [volN, primaryHeatHrs2kBTUHR, heatHours, recIndex] = super().primaryCurve(building)
+
+        building.magnitude = dhw_usage_magnitude
+        building.loadshape = dhw_loadshape
         
-    #     loadShapeN = building.loadshape
-    #     if self.doLoadShift and len(loadShapeN) == 24 and not forcePeakyLoadshape:
-    #         loadShapeN = building.avgLoadshape
+        return [volN, primaryHeatHrs2kBTUHR, heatHours, recIndex]
+
+    def lsSizedPoints(self, building : Building):
+        """
+        Creates points for sizing curve plot based on number of hours in first load up period. If "regular" sizing 
+        drives algorithmn, regular sizing will be used. This prevents user from oversizing system by putting 
+        ill-informed number of load up hours.
+
+        Parameters
+        ----------
+        building : Building
+            The building the system being sized for
+
+        Returns
+        lsSizingCombos : array
+            Array of volume and capacity combinations sized based on the number of load up hours.
+        """
+        dhw_usage_magnitude = building.magnitude
+        dhw_loadshape = building.loadshape
+        day_load = [(x * dhw_usage_magnitude) + self.tm_hourly_load for x in dhw_loadshape]
+
+        building.magnitude = dhw_usage_magnitude + (self.tm_hourly_load * 24)
+        building.loadshape = [x/building.magnitude for x in day_load]
+
+
+        [volN, primaryHeatHrs2kBTUHR, heatHours, recIndex] = super().lsSizedPoints(building)
+
+        building.magnitude = dhw_usage_magnitude
+        building.loadshape = dhw_loadshape
         
-    #     # Get the generation rate from the primary capacity
-    #     hwGenRate = None
-    #     if self.PCap_kBTUhr is None:
-    #         if building.climateZone is None:
-    #             raise Exception("Cannot run a simulation of this kind without either a climate zone or a default output capacity")
-    #     else:
-    #         hwGenRate = 1000 * self.PCap_kBTUhr / rhoCp / (building.supplyT_F - building.getIncomingWaterT(0)) \
-    #             * self.defrostFactor
-    #     loadshiftSched = np.tile(self.loadShiftSchedule, nDays) # TODO can we get rid of it?
-        
-    #     # Define the use of DHW with the normalized load shape
-    #     hwDemand = building.magnitude * loadShapeN
-    #     if (len(hwDemand) == 24):
-    #         hwDemand = np.tile(hwDemand, nDays)
-    #         hwDemand = hwDemand * self.fract_total_vol
-    #     elif len(hwDemand) == 8760:
-    #         hwDemand = hwDemand
-    #     else:
-    #         raise Exception("Invalid load shape. Must be length 24 (day) or length 8760 (year).")
+        return [volN, primaryHeatHrs2kBTUHR, heatHours, recIndex]
+            
+    def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, forcePeakyLoadshape = False) -> SimulationRun:
+        """
+        Returns initialized arrays needed for nDay simulation
 
-    #     # Init the "simulation"
-    #     V0_normal = self.adjustedPVol_G_atStorageT
-        
-    #     # set load shift schedule for the simulation
-    #     LS_sched = ['N'] * 24
-    #     if self.doLoadShift:
-    #         LS_sched = ['S' if x == 0 else 'N' for x in self.loadShiftSchedule]
-    #         #set load up hours pre-shed 1
-    #         shedHours = [i for i in range(len(self.loadShiftSchedule)) if self.loadShiftSchedule[i] == 0] 
-    #         LS_sched = ['L' if shedHours[0] - self.loadUpHours <= i <= shedHours[0] - 1 else LS_sched[i] for i, x in enumerate(LS_sched)]
-    #         #check if there are two sheds, if so set all hours inbetween to load up
-    #         try:
-    #             secondShed = [[shedHours[i-1], shedHours[i]] for i in range(1, len(shedHours)) if shedHours[i] - shedHours[i-1] > 1][0]
-    #             LS_sched = ['L' if secondShed[0] < i <= secondShed[1] - 1 else LS_sched[i] for i, x in enumerate(LS_sched)]
-    #         except IndexError:
-    #             pass
+        Parameters
+        ----------
+        building : Building
+            The building for the simulation
+        initPV : float
+            the initial primary tank volume at the start of the simulation
+        initST : float
+            Not used in this instance of the function
+        minuteIntervals : int
+            the number of minutes per time interval for the simulation
+        nDays : int
+            the number of days that will be simulated 
+        forcePeakyLoadshape : boolean (default False)
+            if set to True, forces the most "peaky" load shape rather than average load shape
 
-    #     if minuteIntervals == 1:
-    #         # To per minute from per hour
-    #         if not hwGenRate is None:
-    #             hwGenRate = hwGenRate / 60
-    #         hwDemand = np.array(hrToMinList(hwDemand)) / 60
-    #         loadshiftSched = np.array(hrToMinList(loadshiftSched))
-    #     elif minuteIntervals == 15:
-    #         # To per 15 minute from per hour
-    #         if not hwGenRate is None:
-    #             hwGenRate = hwGenRate / 4
-    #         hwDemand = np.array(hrTo15MinList(hwDemand)) / 4
-    #         loadshiftSched = np.array(hrTo15MinList(loadshiftSched))
-    #     elif minuteIntervals != 60:
-    #         raise Exception("Invalid input given for granularity. Must be 1, 15, or 60.")
-
-    #     pV = [0] * (len(hwDemand) - 1) + [V0_normal]
-
-    #     if initPV is not None:
-    #         pV[-1] = initPV
-    #     return SimulationRun(hwGenRate, hwDemand, V0_normal, pV, building, loadshiftSched, minuteIntervals, self.doLoadShift, LS_sched)
-
-        # on_trigger = 
-        # pheating = False
-        # if self.getTemperatureAtTankVol(self.aquaFract * self.PVol_G_atStorageT) <= self.supplyT_F:
-
-
-        # simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating,
-        #                                                                                     Vcurr = simRun.pV[i-1], 
-        #                                                                                     hw_out = mixedDHW, 
-        #                                                                                     hw_in = mixedGHW, 
-        #                                                                                     mode = simRun.getLoadShiftMode(i),
-        #                                                                                     modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
-        #                                                                                     minuteIntervals = minuteIntervals) 
+        Returns
+        -------
+        a SimulationRun object with all necessary components for running the simulation
+        """
+        self.delta_energy = 0.0
+        simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays, forcePeakyLoadshape)
+        return simRun
     
-
-    # def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, forcePeakyLoadshape = False) -> SimulationRun:
-    #     """
-    #     Returns initialized arrays needed for nDay simulation
-
-    #     Parameters
-    #     ----------
-    #     building : Building
-    #         The building for the simulation
-    #     initPV : float
-    #         the initial primary tank volume at the start of the simulation
-    #     initST : float
-    #         Not used in this instance of the function
-    #     minuteIntervals : int
-    #         the number of minutes per time interval for the simulation
-    #     nDays : int
-    #         the number of days that will be simulated 
-    #     forcePeakyLoadshape : boolean (default False)
-    #         if set to True, forces the most "peaky" load shape rather than average load shape
-
-    #     Returns
-    #     -------
-    #     a SimulationRun object with all necessary components for running the simulation
-    #     """
-        
-    #     loadShapeN = building.loadshape
-    #     if self.doLoadShift and len(loadShapeN) == 24 and not forcePeakyLoadshape:
-    #         loadShapeN = building.avgLoadshape
-        
-    #     # Get the generation rate from the primary capacity
-    #     hwGenRate = None
-    #     if self.PCap_kBTUhr is None:
-    #         if building.climateZone is None:
-    #             raise Exception("Cannot run a simulation of this kind without either a climate zone or a default output capacity")
-    #     else:
-    #         hwGenRate = 1000 * self.PCap_kBTUhr / rhoCp / (building.supplyT_F - building.getIncomingWaterT(0)) \
-    #             * self.defrostFactor
-    #     loadshiftSched = np.tile(self.loadShiftSchedule, nDays) # TODO can we get rid of it?
-        
-    #     # Define the use of DHW with the normalized load shape
-    #     hwDemand = building.magnitude * loadShapeN
-    #     if (len(hwDemand) == 24):
-    #         hwDemand = np.tile(hwDemand, nDays)
-    #         hwDemand = hwDemand * self.fract_total_vol
-    #     elif len(hwDemand) == 8760:
-    #         hwDemand = hwDemand
-    #     else:
-    #         raise Exception("Invalid load shape. Must be length 24 (day) or length 8760 (year).")
-
-    #     # Init the "simulation"
-    #     V0_normal = self.adjustedPVol_G_atStorageT
-        
-    #     # set load shift schedule for the simulation
-    #     LS_sched = ['N'] * 24
-    #     if self.doLoadShift:
-    #         LS_sched = ['S' if x == 0 else 'N' for x in self.loadShiftSchedule]
-    #         #set load up hours pre-shed 1
-    #         shedHours = [i for i in range(len(self.loadShiftSchedule)) if self.loadShiftSchedule[i] == 0] 
-    #         LS_sched = ['L' if shedHours[0] - self.loadUpHours <= i <= shedHours[0] - 1 else LS_sched[i] for i, x in enumerate(LS_sched)]
-    #         #check if there are two sheds, if so set all hours inbetween to load up
-    #         try:
-    #             secondShed = [[shedHours[i-1], shedHours[i]] for i in range(1, len(shedHours)) if shedHours[i] - shedHours[i-1] > 1][0]
-    #             LS_sched = ['L' if secondShed[0] < i <= secondShed[1] - 1 else LS_sched[i] for i, x in enumerate(LS_sched)]
-    #         except IndexError:
-    #             pass
-
-    #     if minuteIntervals == 1:
-    #         # To per minute from per hour
-    #         if not hwGenRate is None:
-    #             hwGenRate = hwGenRate / 60
-    #         hwDemand = np.array(hrToMinList(hwDemand)) / 60
-    #         loadshiftSched = np.array(hrToMinList(loadshiftSched))
-    #     elif minuteIntervals == 15:
-    #         # To per 15 minute from per hour
-    #         if not hwGenRate is None:
-    #             hwGenRate = hwGenRate / 4
-    #         hwDemand = np.array(hrTo15MinList(hwDemand)) / 4
-    #         loadshiftSched = np.array(hrTo15MinList(loadshiftSched))
-    #     elif minuteIntervals != 60:
-    #         raise Exception("Invalid input given for granularity. Must be 1, 15, or 60.")
-
-    #     pV = [0] * (len(hwDemand) - 1) + [V0_normal]
-
-    #     if initPV is not None:
-    #         pV[-1] = initPV
-    #     return SimulationRun(hwGenRate, hwDemand, V0_normal, pV, building, loadshiftSched, minuteIntervals, self.doLoadShift, LS_sched)
+    def resetToDefaultCapacity(self):
+        self.delta_energy = 0.0 # TODO may be a better spott for this as a sim reset
+        return super().resetToDefaultCapacity()

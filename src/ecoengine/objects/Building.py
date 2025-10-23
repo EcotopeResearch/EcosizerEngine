@@ -20,6 +20,7 @@ class Building:
         self.supplyT_F = supplyT_F
         self.designOAT_F = designOAT_F
         self.returnT_F = returnT_F
+        self.recircFlow = flowRate
 
         self.highestIncomingT_F = None
         self.lowestIncomingT_F = None
@@ -119,9 +120,21 @@ class Building:
     def getDesignReturnTemp(self):
         if not self.returnT_F is None:
             return self.returnT_F
+        elif not self.recircFlow is None:
+            self.returnT_F = self.supplyT_F - (self.recirc_loss / (self.recircFlow * rhoCp * 60))
+            return self.returnT_F
         else:
             #TODO figure out how to get return temp from Wapt
             raise Exception("No available return temperature")
+    def getDesignReturnFlow(self):
+        if not self.recircFlow is None:
+            return self.recircFlow
+        elif not self.returnT_F is None:
+            self.recircFlow = self.recirc_loss / ((self.supplyT_F - self.returnT_F) * rhoCp * 60.)
+            return self.recircFlow
+        else:
+            #TODO figure out how to get return temp from Wapt
+            raise Exception("No available return flow")
     
     def getHighestStorageTempAtFifthPercentileOAT(self, perfMap : PrefMapTracker):
         if self.climateZone is None:

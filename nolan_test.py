@@ -7,21 +7,22 @@ import os
 from ecoengine.engine.SystemCreator import createSystem
 from ecoengine.engine.BuildingCreator import createBuilding
 from ecoengine.engine.Simulator import simulate
+from numpy import around, flipud
 
 check_building = createBuilding(
-            incomingT_F     = 50,
+            incomingT_F     = 55,
             magnitudeStat  = 200,
-            supplyT_F       = 120,
+            supplyT_F       = 125,
             buildingType   = 'multi_family',
             nApt            = 150, 
             returnT_F       = 115,
-            flowRate        = 6,
+            flowRate        = 3,
             gpdpp           = 25
         )
 
 print("==========creating nrtp==========")
 nortp_system = createSystem(
-    schematic   = 'singlepass_norecirc', 
+    schematic   = 'primary', 
     building    = check_building, 
     storageT_F  = 150, 
     defrostFactor   = 1, 
@@ -29,7 +30,7 @@ nortp_system = createSystem(
     compRuntime_hr  = 16, 
     aquaFract   = 0.4,
 )
-print("==========creating rtp===========")
+print("==========creating sprtp===========")
 rtp_system = createSystem(
     schematic   = 'sprtp', 
     building    = check_building, 
@@ -39,33 +40,90 @@ rtp_system = createSystem(
     compRuntime_hr  = 16, 
     aquaFract   = 0.4,
 )
-print("==========created rtp===========")
+print("==========created sprtp===========")
+print("==========creating mprtp===========")
+mprtp_system = createSystem(
+    schematic   = 'mprtp', 
+    building    = check_building, 
+    storageT_F  = 150, 
+    defrostFactor   = 1, 
+    percentUseable  = .8, 
+    compRuntime_hr  = 16, 
+    aquaFract   = 0.25,
+)
+print("==========created mprtp===========")
 print(f"rtp_system.PCap_kBTUhr > nortp_system.PCap_kBTUhr : {rtp_system.PCap_kBTUhr} > {nortp_system.PCap_kBTUhr}")
 print(f"rtp_system.getSizingResults() : {rtp_system.getSizingResults()}")
 print(f"nortp_system.getSizingResults() : {nortp_system.getSizingResults()}")
+print(f"mprtp_system.getSizingResults() : {mprtp_system.getSizingResults()}")
 
-simRun = simulate(rtp_system, check_building, minuteIntervals = 1, nDays = 3)
-load_sim = simRun.plotStorageLoadSim(True)
+# simRun = simulate(rtp_system, check_building, minuteIntervals = 1, nDays = 3)
+# load_sim = simRun.plotStorageLoadSim(True)
 
 
 
-title = "My Page"
+# title = "SPRTP"
 
-html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-</head>
-<body>
-    {load_sim}
-</body>
-</html>"""
-with open("output.html", "w", encoding="utf-8") as f:
-      f.write(html_content)
-print(rtp_system.primaryCurve(check_building))
+# html_content = f"""<!DOCTYPE html>
+# <html>
+# <head>
+#     <meta charset="UTF-8">
+#     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+#     <title>{title}</title>
+#     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+# </head>
+# <body>
+#     {load_sim}
+# </body>
+# </html>"""
+# with open("sp_output.html", "w", encoding="utf-8") as f:
+#       f.write(html_content)
+
+def make_oupput_file(system, building, file_name):
+
+    print(f"+++++++++++{file_name}+++++++++++")
+    simRun = simulate(system, building, minuteIntervals = 1, nDays = 3)
+    load_sim = simRun.plotStorageLoadSim(True)
+
+    [storage_data, capacity_data, hours, startIndex] = system.primaryCurve(building)
+    # print("storage_data",storage_data)
+    # print("capacity_data",capacity_data)
+    # print("hours",hours)
+    # print("startIndex",startIndex)
+    storage_data = around(flipud(storage_data),2)
+    capacity_data = around(flipud(capacity_data),2)
+    hours = around(flipud(hours),2)
+    startIndex = len(storage_data)-startIndex-1
+    curve = system.getPrimaryCurveAndSlider(storage_data, capacity_data, startIndex, hours, returnAsDiv = True)
+
+
+    title = "sims"
+
+    html_content = f"""<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{title}</title>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    </head>
+    <body>
+        {load_sim}
+        <br><br><br>
+        {curve}
+    </body>
+    </html>"""
+    with open(f"{file_name}_output.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+# make_oupput_file(nortp_system, check_building, "swing")
+# make_oupput_file(rtp_system, check_building, "sprtp")
+# make_oupput_file(mprtp_system, check_building, "mprtp")
+
+
+
+
+
 # hpwh = EcosizerEngine(
 #             incomingT_F = 0, #not needed, weather weather file inlet temp is used
 #             magnitudeStat = 438,
