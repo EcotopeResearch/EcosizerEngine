@@ -62,9 +62,12 @@ class SimulationRun:
         self.pTAtOn = [0] * len(hwDemand) # The actual temperature at on setpoint volume at end of interval(F)
         self.pTAtOff = [0] * len(hwDemand) # The actual temperature at off setpoint volume at end of interval(F)
 
-        self.tempAt50 = [0] * len(hwDemand)
+        self.tempAt100 = [0] * len(hwDemand)
         self.tempAt75 = [0] * len(hwDemand)
+        self.tempAt50 = [0] * len(hwDemand)
         self.tempAt25 = [0] * len(hwDemand)
+        self.tempAt0 = [0] * len(hwDemand)
+
         self.setpointPercentOn = [0] * len(hwDemand)
         self.setpointPercentOff = [0] * len(hwDemand)
         self.hwDamandAtStorage = [0] * len(hwDemand)
@@ -902,7 +905,8 @@ class SimulationRun:
                         'Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'Input Capacity (kW)', 'Output Capacity (kW)', 'Primary COP', 
                         'ON Setpoint Tank Volume (%)', 'ON Setpoint Temperature (F)', 'Actual Temperature at ON Setpoint (F)',
                         'OFF Setpoint Tank Volume (%)','OFF Setpoint Temperature (F)','Actual Temperature at OFF Setpoint (F)',
-                        'Temperature at 75% Tank Volume (F)', 'Temperature at 50% Tank Volume (F)', 'Temperature at 25% Tank Volume (F)',]
+                        'Temperature at 100% Tank Volume (F)', 'Temperature at 75% Tank Volume (F)', 'Temperature at 50% Tank Volume (F)', 
+                        'Temperature at 25% Tank Volume (F)','Temperature at 0% Tank Volume (F)']
         columns = [
             hours,
             self.getPrimaryVolume(),
@@ -917,7 +921,8 @@ class SimulationRun:
             self.getPrimaryCOP(),
             self.setpointPercentOn,self.pOnT,self.pTAtOn,
             self.setpointPercentOff,self.pOffT,self.pTAtOff,
-            self.tempAt75,self.tempAt50,self.tempAt25
+            self.tempAt100,self.tempAt75,self.tempAt50,
+            self.tempAt25,self.tempAt0
         ]
 
         if len(self.oat) > 0:

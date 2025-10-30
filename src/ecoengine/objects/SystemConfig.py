@@ -445,9 +445,11 @@ class SystemConfig:
         simRun.pTAtOn[i] = self.getTemperatureAtTankVol(simRun.pOnV[i], entering_waterT, ls_mode, simRun.delta_energy)
         simRun.pTAtOff[i] = self.getTemperatureAtTankVol(simRun.pOffV[i], entering_waterT, ls_mode, simRun.delta_energy)
 
-        simRun.tempAt50[i] = self.getTemperatureAtTankVol(self.PVol_G_atStorageT * 0.5, entering_waterT, ls_mode, simRun.delta_energy)
+        simRun.tempAt100[i] = self.getTemperatureAtTankVol(self.PVol_G_atStorageT, entering_waterT, ls_mode, simRun.delta_energy)
         simRun.tempAt75[i] = self.getTemperatureAtTankVol(self.PVol_G_atStorageT * 0.75, entering_waterT, ls_mode, simRun.delta_energy)
+        simRun.tempAt50[i] = self.getTemperatureAtTankVol(self.PVol_G_atStorageT * 0.5, entering_waterT, ls_mode, simRun.delta_energy)
         simRun.tempAt25[i] = self.getTemperatureAtTankVol(self.PVol_G_atStorageT * 0.25, entering_waterT, ls_mode, simRun.delta_energy)
+        simRun.tempAt0[i] = self.getTemperatureAtTankVol(0, entering_waterT, ls_mode, simRun.delta_energy)
         simRun.setpointPercentOn[i] = simRun.pOnV[i]/self.PVol_G_atStorageT
         simRun.setpointPercentOff[i] = simRun.pOffV[i]/self.PVol_G_atStorageT
 
