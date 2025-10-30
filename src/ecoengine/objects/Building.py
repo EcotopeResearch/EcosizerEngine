@@ -124,7 +124,6 @@ class Building:
             self.returnT_F = self.supplyT_F - (self.recirc_loss / (self.recircFlow * rhoCp * 60))
             return self.returnT_F
         else:
-            #TODO figure out how to get return temp from Wapt
             raise Exception("No available return temperature")
     def getDesignReturnFlow(self):
         if not self.recircFlow is None:
@@ -133,7 +132,6 @@ class Building:
             self.recircFlow = self.recirc_loss / ((self.supplyT_F - self.returnT_F) * rhoCp * 60.)
             return self.recircFlow
         else:
-            #TODO figure out how to get return temp from Wapt
             raise Exception("No available return flow")
     
     def getHighestStorageTempAtFifthPercentileOAT(self, perfMap : PrefMapTracker):

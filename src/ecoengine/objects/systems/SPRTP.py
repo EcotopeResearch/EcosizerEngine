@@ -7,25 +7,25 @@ import numpy as np
 from ecoengine.objects.systemConfigUtils import convertVolume, getPeakIndices, hrTo15MinList
 
 class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
-    def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
-                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
+    def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building = None,
+                 onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, onFractShed = None, offFractShed = None, onShedT = None, offShedT = None,
+                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
                  PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, stratFactor = 1):
-        
+
         if stratFactor > 1 or stratFactor <= 0: 
             raise Exception('Stratificationfactor must be greater than zero and less than or equal to 1.')
         
         self.strat_factor = stratFactor
-        self.delta_energy = 0.0
         self.Recirc_Cap_kBTUhr = None
         self.tm_hourly_load = building.getHourlyLoadIncrease()
         
-        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, doLoadShift, 
-                loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, systemModel, 
-                numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
+        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
+                 onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
+                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
+                 PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
         
         self.strat_slope = 1.7 / (self.PVol_G_atStorageT/100)
-        self.strat_inter = building.supplyT_F - (1.7 * self.aquaFract * 100) #TODO replace with on temp?
+        self.strat_inter = self.onT - (1.7 * self.onFract * 100) 
         
     def sizeSystem(self, building : Building):
         """
@@ -144,115 +144,16 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
             self.PVol_G_atStorageT, self.PCap_kBTUhr, self.Recirc_Cap_kBTUhr
         """
         return [self.PVol_G_atStorageT, self.PCap_kBTUhr, self.Recirc_Cap_kBTUhr]
-    
-    def getTemperatureAtTankVol(self, tank_volume : float, incomingT_F : float, ls_mode : str = 'N') -> float:
-        """
-        Returns the temperature given a tank volume
-
-        Parameters
-        ----------
-        tank_volume : float
-            The tank height in question, given as a number of gallons. 0 gallons indicates the bottom of the tank. 
-            self.PVol_G_atStorageT indicates the top of the tank
-        incomingT_F : float
-            Temperature of incoming city water
-
-        Returns
-        -------
-        temp : float
-            the temperature (F) at the specified tank volume
-        """
-        if tank_volume > self.PVol_G_atStorageT:
-            raise Exception(f"Tank volume of {tank_volume} is larger than max volume of {self.PVol_G_atStorageT}.")
-        temp = self.strat_slope * (tank_volume + self.delta_energy) + self.strat_inter
-        if temp < incomingT_F:
-            return incomingT_F
-        elif temp > self.getOffTriggerTemp(ls_mode): #TODO make sure this is right (Ask Scott)
-            return self.getOffTriggerTemp(ls_mode)
-        return temp
-    
-    def getTankVolAtTemp(self, temp) -> float:
-        """
-        Returns
-        -------
-        tank_vol : float
-            the lowest volume on the tank where the water is storage temperature
-        """
-        tank_vol = ((temp - self.strat_inter) / self.strat_slope) - self.delta_energy
-        return tank_vol
-    
-    def getOffTriggerVolume(self, ls_mode):
-        if ls_mode == 'S':
-            return self.aquaFractShed * self.PVol_G_atStorageT
-        elif ls_mode == 'L':
-            return self.aquaFractLoadUp * self.PVol_G_atStorageT
-        return self.aquaFract * self.PVol_G_atStorageT
-    
-    def getOffTriggerTemp(self, ls_mode):
-        if ls_mode == 'S':
-            return self.storageT_F
-        elif ls_mode == 'L':
-            return self.loadUpT_F
-        return self.storageT_F
-    
-    def getOnTriggerVolume(self, ls_mode):
-        if ls_mode == 'S':
-            return self.aquaFractShed * self.PVol_G_atStorageT
-        elif ls_mode == 'L':
-            return self.aquaFractLoadUp * self.PVol_G_atStorageT
-        return self.aquaFract * self.PVol_G_atStorageT
         
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         incomingWater_T = simRun.getIncomingWaterT(i)
+        ls_mode = simRun.getLoadShiftMode(i)
         self.preSystemStepSetUp(simRun, i, incomingWater_T, minuteIntervals, oat)
         interval_tm_load = self.tm_hourly_load / (60//simRun.minuteIntervals)
-        delta_draw_recirc = convertVolume(simRun.hwDemand[i] + interval_tm_load, self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
-        self.delta_energy = self.delta_energy - delta_draw_recirc
-        ls_mode = simRun.getLoadShiftMode(i)
-        # print(f"{i} The tank height of supply T is: {self.getTankVolAtTemp(simRun.building.supplyT_F)} / {self.PVol_G_atStorageT}")
-        # print(f"delta_draw_recirc {simRun.hwDemand[i]} + {interval_tm_load} = {delta_draw_recirc}")
-        if simRun.pheating:
-            # add heat
-            simRun.pRun[i] = 1.0
-            delta_heat = convertVolume(simRun.hwGenRate, self.storageT_F, incomingWater_T, simRun.building.supplyT_F) #TODO convert to off trigger vol?
-            self.delta_energy = self.delta_energy + delta_heat
-
-            off_triggerV = self.getOffTriggerVolume(ls_mode)
-            off_triggerT = self.getOffTriggerTemp(ls_mode)
-            if self.getTemperatureAtTankVol(off_triggerV, incomingWater_T, ls_mode) >= off_triggerT:
-                simRun.pheating = False
-                lowest_vol = self.getTankVolAtTemp(off_triggerT)
-                if lowest_vol < off_triggerV:
-                    extra_generation = off_triggerV - lowest_vol
-                    extra_gen_percent = extra_generation/delta_heat
-                    simRun.pRun[i] = 1.0 - extra_gen_percent
-                    self.delta_energy = self.delta_energy - extra_generation
-            simRun.pGen[i] = simRun.pRun[i] * delta_heat
-        else:
-            simRun.pRun[i] = 0.0
-            on_triggerV = self.getOnTriggerVolume(ls_mode)
-            on_triggerT = simRun.building.supplyT_F # TODO switch out for on trigger method
-            if self.getTemperatureAtTankVol(on_triggerV, incomingWater_T, ls_mode) <= on_triggerT:
-                simRun.pheating = True
-                highest_vol = self.getTankVolAtTemp(on_triggerT)
-                if highest_vol > on_triggerV:
-                    extra_loss = highest_vol - on_triggerV
-                    gen_percent = extra_loss/delta_draw_recirc
-                    simRun.pRun[i] = gen_percent
-                    delta_heat = convertVolume(simRun.hwGenRate * gen_percent, self.storageT_F, incomingWater_T, simRun.building.supplyT_F) #TODO convert to off trigger vol?
-                    simRun.pGen[i] = delta_heat
-                    self.delta_energy = self.delta_energy + delta_heat
-        simRun.pRun[i] = simRun.pRun[i] * minuteIntervals
-        simRun.pV[i] = (self.PVol_G_atStorageT - self.getTankVolAtTemp(simRun.building.supplyT_F)) / self.strat_factor
-
-    def setLoadUPVolumeAndTrigger(self, incomingWater_T):
-        # if not doing load shift, this is not applicable
-        if self.doLoadShift:
-            # need to figure out how this affects strat function
-            return
-            # self.PConvertedLoadUPV_G_atStorageT = convertVolume(self.PVol_G_atStorageT, self.storageT_F, incomingWater_T, self.loadUpT_F)
-            # self.Vtrig_loadUp = self.PConvertedLoadUPV_G_atStorageT * (1 - self.aquaFractLoadUp)
-            # self.adjustedPConvertedLoadUPV_G_atStorageT = np.ceil(self.PConvertedLoadUPV_G_atStorageT * self.percentUseable)
+        storage_outlet_temp = self.getStorageOutletTemp(ls_mode) # TODO possible redistribution of stratification?
+        hw_load_at_storageT = convertVolume(simRun.hwDemand[i] + interval_tm_load, storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F) #TODO see if this needs to be adjusted
+        
+        self.runOnePrimaryStep(simRun, i, hw_load_at_storageT, incomingWater_T)
 
     def primaryCurve(self, building : Building):
         """
@@ -347,10 +248,5 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
         -------
         a SimulationRun object with all necessary components for running the simulation
         """
-        self.delta_energy = 0.0
         simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays, forcePeakyLoadshape)
         return simRun
-    
-    def resetToDefaultCapacity(self):
-        self.delta_energy = 0.0 # TODO may be a better spott for this as a sim reset
-        return super().resetToDefaultCapacity()

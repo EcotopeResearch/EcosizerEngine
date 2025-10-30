@@ -4,20 +4,22 @@ from ecoengine.constants.Constants import *
 from ecoengine.objects.systemConfigUtils import convertVolume
 
 class MultiPassRecirc(PrimaryWithRecirc):
-    def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
-                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
-                 PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, inletWaterAdjustment = 0.5):
+    def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
+                 onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT,
+                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, 
+                 numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, inletWaterAdjustment = 0.5):
         # set static aquastat fractions, ignore inputs
-        aquaFract = 0.15
-        aquaFractLoadUp = 0.15
-        aquaFractShed = 0.3
+        
+        onFract = 0.15
+        onFractLoadUp = 0.15
+        onFractShed = 0.3
         if not systemModel is None and not systemModel[-2:] == 'MP':
             raise Exception("Multipass (with recirc) tank model must be a multipass system.")
         
-        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building, doLoadShift, 
-                loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, loadUpT_F, systemModel, 
-                numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, inletWaterAdjustment)
+        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
+                 onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
+                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
+                 PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, inletWaterAdjustment)
         
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         
@@ -28,12 +30,4 @@ class MultiPassRecirc(PrimaryWithRecirc):
         
         # get both water leaving system and rate of hw generatipon in storage temp
         mixedDHW = convertVolume(exitingWater, self.storageT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F) 
-        mixedGHW = convertVolume(simRun.hwGenRate, self.storageT_F, simRun.getIncomingWaterT(i), simRun.building.supplyT_F)
-
-        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep( pheating = simRun.pheating,
-                                                                                                Vcurr = simRun.pV[i-1], 
-                                                                                                hw_out = mixedDHW, 
-                                                                                                hw_in = mixedGHW, 
-                                                                                                mode = simRun.getLoadShiftMode(i),
-                                                                                                modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
-                                                                                                minuteIntervals = minuteIntervals)
+        self.runOnePrimaryStep(simRun, i, mixedDHW, simRun.getIncomingWaterT(i))

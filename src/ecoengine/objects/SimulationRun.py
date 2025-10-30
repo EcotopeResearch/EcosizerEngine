@@ -17,8 +17,6 @@ class SimulationRun:
         The generation of HW with time at the supply temperature
     hwDemand : list
         The hot water demand with time at the supply temperature
-    V0 : float
-        The storage volume of the primary system at the storage temperature
     pV : list 
         Volume of HW in the tank with time at the storage temperature. Initialized to array of 0s with pV[0] set to V0
     building : Building 
@@ -30,14 +28,15 @@ class SimulationRun:
     LS_sched : list
         list length 24 corresponding to hours of the day filled with 'N' for normal, 'L' for load up, and 'S' for shed
     """
-    def __init__(self, hwGenRate, hwDemand, V0, pV, building : Building, loadShiftSchedule, minuteIntervals = 1, doLoadshift = False, LS_sched = []):
+    def __init__(self, hwGenRate, hwDemand, pV, building : Building, loadShiftSchedule, minuteIntervals = 1, doLoadshift = False, LS_sched = [],
+                 delta_energy_0 : float = 0.):
         if minuteIntervals != 1 and minuteIntervals != 15 and minuteIntervals != 60:
             raise Exception("Simulations can only take place over 1, 15, or 60 minute intervals")
 
-        self.V0 = V0 
+        # self.V0 = V0 
         self.hwGenRate = hwGenRate # Can be initialized to None if hwGen is found dynamically
         self.hwDemand = hwDemand
-        self.pV = pV
+        self.pV = pV # Volume of water at or above supply temperature in the storage tank
         self.pheating = False # set to false. Simulation starts with primary heating off
         self.pGen = [0] * len(hwDemand) # The generation of HW with time at the storage temperature
         self.pRun = [0] * len(hwDemand) # amount of time in interval primary tank is heating
@@ -55,6 +54,22 @@ class SimulationRun:
         self.hwGean_at_storage_t = []
         self.recircLoss = []
         self.LS_sched = LS_sched
+
+        self.pOnV = [0] * len(hwDemand) # The on setpoint volume (gallons)
+        self.pOffV = [0] * len(hwDemand) # The off setpoint volume (gallons)
+        self.pOnT = [0] * len(hwDemand) # The on setpoint temperature (F)
+        self.pOffT = [0] * len(hwDemand) # The off setpoint temperature (F)
+        self.pTAtOn = [0] * len(hwDemand) # The actual temperature at on setpoint volume at end of interval(F)
+        self.pTAtOff = [0] * len(hwDemand) # The actual temperature at off setpoint volume at end of interval(F)
+
+        self.tempAt50 = [0] * len(hwDemand)
+        self.tempAt75 = [0] * len(hwDemand)
+        self.tempAt25 = [0] * len(hwDemand)
+        self.setpointPercentOn = [0] * len(hwDemand)
+        self.setpointPercentOff = [0] * len(hwDemand)
+        self.hwDamandAtStorage = [0] * len(hwDemand)
+
+        self.delta_energy = delta_energy_0
 
     def passedCOPAssumptionThreshold(self, times_COP_assumed : int):
         """
@@ -869,7 +884,7 @@ class SimulationRun:
 
             self.energyCost[i] = self.energyRate[i] * interval_kWh
     
-    def writeCSV(self, file_path):
+    def writeCSV(self, file_path, exclude_columns : list = []):
         """
         writes all simulation data to a formated csv
 
@@ -877,22 +892,32 @@ class SimulationRun:
         ----------
         file_path : string
             the file path for the output csv file
+        exclude_columns : list [str]
+            list of columns to exclude from csv output
         """
         
         hours = [(i // (60/self.minuteIntervals)) + 1 for i in range(len(self.getPrimaryVolume()))]
-        column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'Primary Generation (Gallons Storage Temp)', 'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)',
-                        'Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'Input Capacity (kW)', 'Output Capacity (kW)', 'Primary COP']
+        column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'Primary Generation (Gallons Storage Temp)', 'HW Demand (Gallons Storage Temp)',
+                        'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)',
+                        'Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'Input Capacity (kW)', 'Output Capacity (kW)', 'Primary COP', 
+                        'ON Setpoint Tank Volume (%)', 'ON Setpoint Temperature (F)', 'Actual Temperature at ON Setpoint (F)',
+                        'OFF Setpoint Tank Volume (%)','OFF Setpoint Temperature (F)','Actual Temperature at OFF Setpoint (F)',
+                        'Temperature at 75% Tank Volume (F)', 'Temperature at 50% Tank Volume (F)', 'Temperature at 25% Tank Volume (F)',]
         columns = [
             hours,
             self.getPrimaryVolume(),
             self.getPrimaryGeneration(),
+            self.hwDamandAtStorage,
             self.getHWDemand(),
             self.getRecircLoss(),
             self.getHWGeneration(),
             self.getPrimaryRun(),
             self.getCapIn(),
             self.getCapOut(),
-            self.getPrimaryCOP()
+            self.getPrimaryCOP(),
+            self.setpointPercentOn,self.pOnT,self.pTAtOn,
+            self.setpointPercentOff,self.pOffT,self.pTAtOff,
+            self.tempAt75,self.tempAt50,self.tempAt25
         ]
 
         if len(self.oat) > 0:
@@ -925,6 +950,16 @@ class SimulationRun:
             columns.append(self.energyCost)
             column_names.append('Demand Period')
             columns.append(self.demandPeriod)
+
+        if len(exclude_columns) > 0:
+            new_column_names = []
+            new_columns = []
+            for i in range(len(column_names)):
+                if not column_names[i] in exclude_columns:
+                    new_column_names.append(column_names[i])
+                    new_columns.append(columns[i])
+            column_names = new_column_names
+            columns = columns
 
         transposed_result = zip(*columns)
 

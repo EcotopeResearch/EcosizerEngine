@@ -23,7 +23,7 @@ def roundList(a_list, n=3):
 
 def checkLiqudWater(var_F):
     """
-    Checks if the variable has a temperuter with in the range of liquid water at atm pressure
+    Checks if the variable has a temperature with in the range of liquid water at atm pressure
 
     Args:
         var_F (float): Temperature of water.
