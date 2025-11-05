@@ -52,6 +52,8 @@ class EcosizerEngine:
         List or array of 0's, 1's used for load shifting, 0 indicates system is off. 
     loadUpHours : float
         Number of hours spent loading up for first shed.
+    outletLoadUpT : float 
+        The hot water outlet temperature during load up mode. [°F]
     onFractLoadUp : float
         The fraction of the total height of the primary hot water tanks at which the ON temperature sensor is located during load up periods. (defaults to onFract if not specified)
     offFractLoadUp : float
@@ -139,7 +141,7 @@ class EcosizerEngine:
     """
 
     def __init__(self, supplyT_F, storageT_F, percentUseable, schematic, onFract, offFract = None, onT = None, offT = None, incomingT_F = None,
-                            magnitudeStat = None, buildingType = None, loadshape = None, avgLoadshape = None, loadShiftSchedule = None, loadUpHours = None,
+                            magnitudeStat = None, buildingType = None, loadshape = None, avgLoadshape = None, loadShiftSchedule = None, loadUpHours = None, outletLoadUpT = None,
                             onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, 
                             onFractShed = None, offFractShed = None, onShedT = None, offShedT = None, 
                             loadShiftPercent = 1, returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
@@ -198,6 +200,7 @@ class EcosizerEngine:
                                 offFract = offFract, 
                                 onT = onT, 
                                 offT = offT, 
+                                outletLoadUpT = outletLoadUpT,
                                 onFractLoadUp = onFractLoadUp, 
                                 offFractLoadUp = offFractLoadUp, 
                                 onLoadUpT = onLoadUpT, 

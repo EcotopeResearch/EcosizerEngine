@@ -1,7 +1,6 @@
 from ecoengine.objects.systems.SPRTP import SPRTP
 from ecoengine.objects.SimulationRun import SimulationRun
 from ecoengine.constants.Constants import *
-from ecoengine.objects.systemConfigUtils import convertVolume
 from ecoengine.objects.Building import Building
 import numpy as np
 from ecoengine.objects.systemConfigUtils import convertVolume, getPeakIndices, hrTo15MinList
@@ -9,17 +8,28 @@ import csv
 
 class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building = None,
-                 onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, onFractShed = None, offFractShed = None, onShedT = None, offShedT = None,
+                 outletLoadUpT = None, onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, onFractShed = None, offFractShed = None, onShedT = None, offShedT = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
                  PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, stratFactor = 1):
-        
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
-                 onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
+                 outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
                  PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, stratFactor)
         
-        self.strat_slope = 0.8 / (self.PVol_G_atStorageT/100)
-        self.strat_inter = self.onT - (0.8 * self.onFract * 100) #TODO replace with on temp?
+        # self.strat_slope = 0.8 / (self.PVol_G_atStorageT/100)
+        # self.strat_inter = self.onT - (0.8 * self.onFract * 100) #TODO replace with on temp?
+        print("I have made it to the end of sizing and my vol is ", self.PVol_G_atStorageT)
+
+    def setStratificationPercentageSlope(self):
+        self.stratPercentageSlope = 0.8 # degrees F per percentage point of volume on tank  
+
+    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building : Building, primaryCurve = False, effSwingVolFract=1, lsFractTotalVol = 1):
+        #work around because I've run into a little issue with sizing multipass 
+        # RTP for loadshifting. Current loadshifting sizing calculations use the difference in 
+        # aquastat fraction heights to determine capacity needed for load up generation... however, 
+        # in the recomended MP RTP schematic, all MTP aquastat fractions, regardless of LS mode, are the same height 
+        # just triggered on different temperatures. So Loadup sizing fails.
+        return super()._primaryHeatHrs2kBTUHR(heathours, loadUpHours, building, True, effSwingVolFract, lsFractTotalVol)
 
     def primaryCurve(self, building : Building):
         """
@@ -66,6 +76,7 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         og_strat_slope = self.strat_slope
         for i in range(0,len(heatHours)):
             try:
+                print(f"heatHours {heatHours[i]}")
                 building.magnitude = dhw_usage_magnitude + (self.tm_hourly_load * 24)
                 building.loadshape = [x/building.magnitude for x in day_load]
                 self.ignoreShortCycleEr = True
@@ -102,6 +113,11 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
                     recIndex = recIndex - 1 
             except ValueError:
                 break
+            except Exception as ex:
+                if ex.args[0] == 'ERROR ID 03':
+                    break
+                else:
+                    raise ex
 
         self.PVol_G_atStorageT = og_vol
         self.PCap_kBTUhr = og_cap
@@ -132,26 +148,30 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         self.preSystemStepSetUp(simRun, i, incomingWater_T, minuteIntervals, oat) # TODO may be mix temp
         interval_tm_load = self.tm_hourly_load / (60//simRun.minuteIntervals)
         storage_outlet_temp = self.getStorageOutletTemp(ls_mode) # TODO possible redistribution of stratification?
-        hw_load_at_storageT = convertVolume(simRun.hwDemand[i] + interval_tm_load, storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F) #TODO see if this needs to be adjusted
+        water_draw = self.getWaterDraw(simRun.hwDemand[i] + interval_tm_load, storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, ls_mode)
+        # hw_load_at_storageT = convertVolume(simRun.hwDemand[i] + interval_tm_load, storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F) #TODO see if this needs to be adjusted
         
         if simRun.slugSim:
             self._oneMixedSlugStep(simRun, incomingWater_T, storage_outlet_temp, i)
 
-        not_pheating = ls_mode != simRun.getLoadShiftMode(i-1) or not simRun.pheating    
-        self.runOnePrimaryStep(simRun, i, hw_load_at_storageT, incomingWater_T)
+        not_pheating = ls_mode != simRun.getLoadShiftMode(i-1) or not simRun.pheating   
+        self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
+        # if i < 10:
+        #     print(f"{i} {simRun.pV[i]}") 
         started_pheating = simRun.pheating and not_pheating
         if started_pheating:
             mixV_high = self.getTankVolAtTemp(simRun.building.supplyT_F)
             mixV = mixV_high - (self.PVol_G_atStorageT * (1 - self.percentUseable)) 
             simRun.initializeMPRTPValue(mixV, 
-                                        self._getAvgTempBetweenTwoVols((1 - self.percentUseable) * self.PVol_G_atStorageT, mixV_high, incomingWater_T, simRun.delta_energy), 
+                                        self._getAvgTempBetweenTwoVols((1 - self.percentUseable) * self.PVol_G_atStorageT, mixV_high, incomingWater_T, simRun.delta_energy, storage_outlet_temp), 
                                         i)
     
 
     def _oneMixedSlugStep(self, simRun : SimulationRun, incomingWater_T, storage_outlet_temp, i):
         if simRun.slugSim == False or i == 0:
             return
-        prV = convertVolume(simRun.hwDemand[i], storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F)
+        prV = self.getWaterDraw(simRun.hwDemand[i], storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, simRun.getLoadShiftMode(i))
+        # prV = convertVolume(simRun.hwDemand[i], storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F)
         rcV = simRun.building.getDesignReturnFlow()
         simRun.mixV[i] = simRun.mixV[i-1] + prV + rcV
 
@@ -165,7 +185,7 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         elif simRun.mixT_F[i] >= simRun.building.supplyT_F:
             simRun.slugSim = False
 
-    def _getAvgTempBetweenTwoVols(self, low_vol, high_vol, incomingT_F, delta_energy : float):
+    def _getAvgTempBetweenTwoVols(self, low_vol, high_vol, incomingT_F, delta_energy : float, storage_temp : float):
         if low_vol > high_vol:
             raise Exception(f"low_vol of {low_vol} is higher than high_vol of {high_vol}")
         elif low_vol == high_vol:
@@ -178,9 +198,9 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
             top_of_cold = self.getTankVolAtTemp(incomingT_F, delta_energy=delta_energy)
             temp_sum = temp_sum + (incomingT_F * (top_of_cold - low_vol))
             low_vol = top_of_cold
-        if high_temp >= self.storageT_F:
-            bottom_of_hot = self.getTankVolAtTemp(self.storageT_F, delta_energy=delta_energy)
-            temp_sum = temp_sum + (self.storageT_F * (high_vol - bottom_of_hot))
+        if high_temp >= storage_temp:
+            bottom_of_hot = self.getTankVolAtTemp(storage_temp, delta_energy=delta_energy)
+            temp_sum = temp_sum + (storage_temp * (high_vol - bottom_of_hot))
             high_vol = bottom_of_hot
         mid_temp = low_temp + ((high_temp-low_temp)/2) # average because it is linear
         temp_sum = temp_sum + (mid_temp * (high_vol - low_vol))
@@ -211,7 +231,7 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         """
         simRun = super().getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays, forcePeakyLoadshape)
         cyclingV = self.PVol_G_atStorageT * (self.onFract - (1 - self.percentUseable))
-        mixT_F = self._getAvgTempBetweenTwoVols((1 - self.percentUseable) * self.PVol_G_atStorageT, self.onFract * self.PVol_G_atStorageT, simRun.getIncomingWaterT(0), simRun.delta_energy)
+        mixT_F = self._getAvgTempBetweenTwoVols((1 - self.percentUseable) * self.PVol_G_atStorageT, self.onFract * self.PVol_G_atStorageT, simRun.getIncomingWaterT(0), simRun.delta_energy, self.getStorageOutletTemp(simRun.getLoadShiftMode(0)))
 
         simRun.initializeMPRTPValue(cyclingV, mixT_F)
         return simRun

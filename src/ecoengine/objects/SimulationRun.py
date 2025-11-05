@@ -270,7 +270,7 @@ class SimulationRun:
             raise Exception(str(out_tm_cap_value) + " is an invalid system capacity.")
         if not (isinstance(in_tm_cap_value, float) or isinstance(in_tm_cap_value, int)):
             raise Exception(str(in_tm_cap_value) + " is an invalid system capacity.")
-        
+         
         self.tm_cap_out.append(out_tm_cap_value)
         self.tm_cap_in.append(in_tm_cap_value)
 
@@ -353,6 +353,8 @@ class SimulationRun:
             if i is None:
                 ret_list = []
                 for j in range(len(self.tm_cap_in)):
+                    # if self.tm_cap_in[j] <= 0:
+                    #     print(f"uhhhhhhh {j} {self.tm_cap_out[j]}/{self.tm_cap_in[j]}")
                     ret_list.append(self.tm_cap_out[j]/self.tm_cap_in[j])
                 return ret_list
             return self.tm_cap_out[i]/self.tm_cap_in[i]
