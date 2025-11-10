@@ -15,9 +15,7 @@ class SwingTank(SystemConfig):
     def __init__(self, safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building = None, outletLoadUpT = None,
                  onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, onFractShed = None, offFractShed = None, onShedT = None, offShedT = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
-                 PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, TMVol_G = None, TMCap_kBTUhr = None):
-
-        print("hi", TMCap_kBTUhr)   
+                 PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, TMVol_G = None, TMCap_kBTUhr = None): 
 
         # check Saftey factor
         if not (isinstance(safetyTM, float) or isinstance(safetyTM, int)) or safetyTM <= 1.:
@@ -75,7 +73,6 @@ class SwingTank(SystemConfig):
         self.CA_TMVol_G = min([x for x in self.sizingTable_CA if x >= (building.recirc_loss / (watt_per_gal_recirc_factor * W_TO_BTUHR))]) if self.TMVol_G < 480 else 480
         
         self.TMCap_kBTUhr = self.safetyTM * building.recirc_loss / 1000.
-        # print(f"{self.TMCap_kBTUhr} = {self.safetyTM} * {building.recirc_loss} / 1000.")
         super().sizeSystem(building)
 
     def _calcRunningVol(self, heatHrs, onOffArr, loadshape, building, effMixFract = 0.):

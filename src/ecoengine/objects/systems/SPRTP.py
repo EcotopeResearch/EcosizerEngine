@@ -39,7 +39,6 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
         building : Building
             The building to size with
         """
-        # print("i am here in sizing 1")
         dhw_usage_magnitude = building.magnitude
         dhw_loadshape = building.loadshape
         # tm_hourly_load = building.getHourlyLoadIncrease()
@@ -72,71 +71,6 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
 
         self.Recirc_Cap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, recirc_only_model, 
             effSwingVolFract = self.effSwingFract, primaryCurve = False, lsFractTotalVol = self.fract_total_vol)[0]
-        
-    # def _calcRunningVol(self, heatHrs, onOffArr, loadshape, building : Building, effMixFract = 0):
-    #     """
-    #     Function to find the running volume for the hot water storage tank, which
-    #     is needed for calculating the total volume for primary sizing and in the event of load shift sizing
-    #     represents the entire volume.
-
-    #     Implimented seperatly for Swing Tank systems
-
-    #     Parameters
-    #     ----------
-    #     heatHrs : float
-    #         The number of hours primary heating equipment can run in a day.
-    #     onOffArr : ndarray
-    #         array of 1/0's where 1's allow heat pump to run and 0's dissallow. of length 24.
-    #     loadshape : ndarray
-    #         normalized array of length 24 representing the daily loadshape for this calculation.
-    #     building : Building
-    #         The building the system is being sized for
-    #     effMixFract: Int
-    #         unused value in this instance of the function. Used in Swing Tank implimentation
-
-    #     Raises
-    #     ------
-    #     Exception: Error if oversizing system.
-
-    #     Returns
-    #     -------
-    #     runV_G : float
-    #         The running volume in gallons at supply temp.
-    #     effMixFract: int
-    #         Needed for swing tank implementation.
-    #     """         
-    #     runV_G, effMixFract = super()._calcRunningVol(heatHrs, onOffArr, loadshape, building, effMixFract)
-    #     return runV_G/self.strat_factor, effMixFract
-    
-    # def _calcRunningVolLS(self, loadUpHours, loadshape, building : Building, effMixFract = 1, lsFractTotalVol = 1):
-    #     """
-    #     Function to calculate the running volume if load shifting. Using the max generation rate between normal sizing
-    #     and preliminary volume, the deficit between generation and hot water use is then added to the preliminary volume.
-
-    #     Implemented separately for swing tank system.
-
-    #     Parameters
-    #     ------   
-    #     loadUpHours : float
-    #         Number of hours of scheduled load up before first shed. If sizing, this is set by user. If creating sizing
-    #         plot, number may vary.  
-    #     loadshape : ndarray
-    #         normalized array of length 24 representing the daily loadshape for this calculation.
-    #     building : Building
-    #         The building the system is being sized for
-    #     effMixFract : float
-    #         Only used in swing tank implementation.
-
-    #     Returns
-    #     ------
-    #     LSrunV_G : float
-    #         Volume needed between primary shed aquastat and load up aquastat at supply temp.
-    #     effMixFract : float
-    #         Used for swing tank implementation.
-    #     """
-    #     LSrunV_G, effMixFract = super()._calcRunningVolLS(loadUpHours, loadshape, building, effMixFract, lsFractTotalVol)
-    #     print(f"alright, I am here and LSrunV_G is {LSrunV_G}/{self.strat_factor}")
-    #     return LSrunV_G/self.strat_factor, effMixFract
 
     def _calcMinCyclingVol(self, building : Building, heatHrs):
         return pCompMinimumRunTime * (building.magnitude / heatHrs) * ((building.supplyT_F - building.getDesignInlet())/(self.getOffTriggerTemp('N') - building.getDesignReturnTemp()))

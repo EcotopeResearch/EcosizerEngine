@@ -752,7 +752,7 @@ class SimulationRun:
             retList.append(self.building.getAvgIncomingWaterT())               
         return retList
     
-    def plotStorageLoadSim(self, return_as_div=True, numDays = 1):
+    def plotStorageLoadSim(self, return_as_div : bool =True, numDays : int = 1, include_tank_temps : bool = False):
         """
         Returns a plot of the of the simulation for the minimum sized primary
         system as a div or plotly figure. Can plot the minute level simulation
@@ -761,6 +761,11 @@ class SimulationRun:
         ----------
         return_as_div : boolean
             A logical on the output, as a div (true) or as a figure (false)
+        numDays : int
+            number of days plotted in the simulation from the end of the simulation
+        include_tank_temps : bool
+            set to True to add tank temperatures to the y2 axis on the plot
+         
 
         Returns
         -------
@@ -778,43 +783,105 @@ class SimulationRun:
         if any(i < 0 for i in V):
             raise Exception("Primary storage ran out of Volume!")
 
-        fig = Figure()
+        # Determine if we need subplots and secondary y-axis
+        has_swing_tank = hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'TM_setpoint')
 
-        #swing tank
-        if hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'TM_setpoint'):
+        if has_swing_tank:
             fig = make_subplots(rows=2, cols=1,
-                                specs=[[{"secondary_y": False}],
+                                specs=[[{"secondary_y": include_tank_temps}],
                                         [{"secondary_y": True}]])
+        elif include_tank_temps:
+            fig = make_subplots(specs=[[{"secondary_y": True}]])
+        else:
+            fig = Figure()
 
 
         # Do primary components
         x_data = list(range(len(V)))
         # x_data = [x/(60/self.minuteIntervals) for x in x_data]
 
+        # Determine trace addition parameters based on figure type
+        trace_kwargs = {}
+        if has_swing_tank or include_tank_temps:
+            trace_kwargs = {'row': 1, 'col': 1, 'secondary_y': False}
+
         if self.doLoadShift:
             ls_off = [int(not x)* max(V)*2 for x in loadShiftSchedule]
             fig.add_trace(Scatter(x=x_data, y=ls_off, name='Load Shift Shed Period',
                                   mode='lines', line_shape='hv',
                                   opacity=0.5, marker_color='grey',
-                                  fill='tonexty'))
+                                  fill='tonexty'), **trace_kwargs)
 
         fig.add_trace(Scatter(x=x_data, y=V, name='Useful Storage Volume at Storage Temperature',
                               mode='lines', line_shape='hv',
-                              opacity=0.8, marker_color='green'))
+                              opacity=0.8, marker_color='green'), **trace_kwargs)
         fig.add_trace(Scatter(x=x_data, y=run, name = "Hot Water Generation at Storage Temperature",
                               mode='lines', line_shape='hv',
-                              opacity=0.8, marker_color='red'))
+                              opacity=0.8, marker_color='red'), **trace_kwargs)
         fig.add_trace(Scatter(x=x_data, y=hwDemand, name='Hot Water Demand at Supply Temperature',
                               mode='lines', line_shape='hv',
-                              opacity=0.8, marker_color='blue'))
-        fig.update_yaxes(range=[0, np.ceil(max(np.append(V,hwDemand))/100)*100])
+                              opacity=0.8, marker_color='blue'), **trace_kwargs)
+
+        # Add tank temperature traces if requested
+        if include_tank_temps:
+            tempAt100 = np.array(roundList(self.tempAt100, 3)[-(60*hrind_fromback):])
+            tempAt75 = np.array(roundList(self.tempAt75, 3)[-(60*hrind_fromback):])
+            tempAt50 = np.array(roundList(self.tempAt50, 3)[-(60*hrind_fromback):])
+            tempAt25 = np.array(roundList(self.tempAt25, 3)[-(60*hrind_fromback):])
+            tempAt0 = np.array(roundList(self.tempAt0, 3)[-(60*hrind_fromback):])
+
+            fig.add_trace(Scatter(x=x_data, y=tempAt100, name='Temp at 100% Tank',
+                                  mode='lines', line_shape='hv',
+                                  opacity=0.7, marker_color='darkred'),
+                          row=1, col=1, secondary_y=True)
+            fig.add_trace(Scatter(x=x_data, y=tempAt75, name='Temp at 75% Tank',
+                                  mode='lines', line_shape='hv',
+                                  opacity=0.7, marker_color='orange'),
+                          row=1, col=1, secondary_y=True)
+            fig.add_trace(Scatter(x=x_data, y=tempAt50, name='Temp at 50% Tank',
+                                  mode='lines', line_shape='hv',
+                                  opacity=0.7, marker_color='yellow'),
+                          row=1, col=1, secondary_y=True)
+            fig.add_trace(Scatter(x=x_data, y=tempAt25, name='Temp at 25% Tank',
+                                  mode='lines', line_shape='hv',
+                                  opacity=0.7, marker_color='lightblue'),
+                          row=1, col=1, secondary_y=True)
+            fig.add_trace(Scatter(x=x_data, y=tempAt0, name='Temp at 0% Tank',
+                                  mode='lines', line_shape='hv',
+                                  opacity=0.7, marker_color='darkblue'),
+                          row=1, col=1, secondary_y=True)
+
+        # Update primary y-axis
+        if has_swing_tank or include_tank_temps:
+            fig.update_yaxes(range=[0, np.ceil(max(np.append(V,hwDemand))/100)*100], row=1, col=1, secondary_y=False)
+        else:
+            fig.update_yaxes(range=[0, np.ceil(max(np.append(V,hwDemand))/100)*100])
         
         fig.update_layout(title="Hot Water Simulation",
                           xaxis_title= "Minute of Day",
                           yaxis_title="Gallons or\nGallons per Hour",
                           width=900,
                           height=700)
-        
+
+        # Configure secondary y-axis for tank temperatures if requested
+        if include_tank_temps:
+            all_temps = []
+            if hasattr(self, 'tempAt100'):
+                all_temps.extend([np.array(roundList(self.tempAt100, 3)[-(60*hrind_fromback):]),
+                                  np.array(roundList(self.tempAt75, 3)[-(60*hrind_fromback):]),
+                                  np.array(roundList(self.tempAt50, 3)[-(60*hrind_fromback):]),
+                                  np.array(roundList(self.tempAt25, 3)[-(60*hrind_fromback):]),
+                                  np.array(roundList(self.tempAt0, 3)[-(60*hrind_fromback):])])
+                min_temp = np.floor(min([np.min(t) for t in all_temps]) / 10) * 10
+                max_temp = np.ceil(max([np.max(t) for t in all_temps]) / 10) * 10
+            else:
+                min_temp = 40
+                max_temp = 200
+
+            fig.update_yaxes(title_text="Tank Temperature\n(\N{DEGREE SIGN}F)",
+                            showgrid=False, row=1, col=1,
+                            secondary_y=True, range=[min_temp, max_temp])
+
         # Swing tank
         if hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'TM_setpoint') and hasattr(self, 'hw_outSwing'):
 

@@ -15,21 +15,9 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
                  outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
                  PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, stratFactor)
-        
-        # self.strat_slope = 0.8 / (self.PVol_G_atStorageT/100)
-        # self.strat_inter = self.onT - (0.8 * self.onFract * 100) #TODO replace with on temp?
-        print("I have made it to the end of sizing and my vol is ", self.PVol_G_atStorageT)
 
     def setStratificationPercentageSlope(self):
         self.stratPercentageSlope = 0.8 # degrees F per percentage point of volume on tank  
-
-    def _primaryHeatHrs2kBTUHR(self, heathours, loadUpHours, building : Building, primaryCurve = False, effSwingVolFract=1, lsFractTotalVol = 1):
-        #work around because I've run into a little issue with sizing multipass 
-        # RTP for loadshifting. Current loadshifting sizing calculations use the difference in 
-        # aquastat fraction heights to determine capacity needed for load up generation... however, 
-        # in the recomended MP RTP schematic, all MTP aquastat fractions, regardless of LS mode, are the same height 
-        # just triggered on different temperatures. So Loadup sizing fails.
-        return super()._primaryHeatHrs2kBTUHR(heathours, loadUpHours, building, True, effSwingVolFract, lsFractTotalVol)
 
     def primaryCurve(self, building : Building):
         """
@@ -60,8 +48,6 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         # tm_hourly_load = building.getHourlyLoadIncrease()
         day_load = [(x * dhw_usage_magnitude) + self.tm_hourly_load for x in dhw_loadshape]
 
-
-
         # Define the heating hours we'll check
         delta = -0.25
         maxHeatHours = 1/(max(building.loadshape))*1.001   
@@ -80,7 +66,6 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
                 building.magnitude = dhw_usage_magnitude + (self.tm_hourly_load * 24)
                 building.loadshape = [x/building.magnitude for x in day_load]
                 self.ignoreShortCycleEr = True
-
 
                 volN, effMixFract = self.sizePrimaryTankVolume(heatHours[i], self.loadUpHours, building, primaryCurve = True, lsFractTotalVol = self.fract_total_vol)
                 capN = self._primaryHeatHrs2kBTUHR(heatHours[i], self.loadUpHours, building, effSwingVolFract = effMixFract, primaryCurve = True, lsFractTotalVol = self.fract_total_vol)[0]
@@ -149,15 +134,12 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         interval_tm_load = self.tm_hourly_load / (60//simRun.minuteIntervals)
         storage_outlet_temp = self.getStorageOutletTemp(ls_mode) # TODO possible redistribution of stratification?
         water_draw = self.getWaterDraw(simRun.hwDemand[i] + interval_tm_load, storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, ls_mode)
-        # hw_load_at_storageT = convertVolume(simRun.hwDemand[i] + interval_tm_load, storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F) #TODO see if this needs to be adjusted
         
         if simRun.slugSim:
             self._oneMixedSlugStep(simRun, incomingWater_T, storage_outlet_temp, i)
 
         not_pheating = ls_mode != simRun.getLoadShiftMode(i-1) or not simRun.pheating   
         self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
-        # if i < 10:
-        #     print(f"{i} {simRun.pV[i]}") 
         started_pheating = simRun.pheating and not_pheating
         if started_pheating:
             mixV_high = self.getTankVolAtTemp(simRun.building.supplyT_F)

@@ -187,7 +187,6 @@ class SystemConfig:
         building : Building
             The building to size with
         """
-        print("i am here in sizing")
         if not isinstance(building, Building):
             raise Exception("Error: Building is not valid.")
         
@@ -370,10 +369,9 @@ class SystemConfig:
             return hw_load_at_storageT
         else:
             supplyT_demand_covered = max(0, convertVolume(storage_temp_vol, supply_temp, incoming_water_temp, storage_temp)) # max of 0 in case storage_temp_vol is negative
-            # print(f"====I am here {supplyT_demand_covered}/{demand_at_supply}====")
+            
             remaining_demand = demand_at_supply - supplyT_demand_covered
             gallons_removed_from_storage = max(0, storage_temp_vol)
-            # print(f"remaining_demand {remaining_demand}, gallons_removed_from_storage {gallons_removed_from_storage}, which accounts for {convertVolume(storage_temp_vol, supply_temp, incoming_water_temp, storage_temp)}")
             gallons_added = 0
             while remaining_demand > 0:
                 gallons_added = gallons_added + 1
@@ -390,14 +388,8 @@ class SystemConfig:
                 if remaining_demand < 0:
                     gallons_added = gallons_added + (remaining_demand/galsAtSupply) # account for overdraw
                     remaining_demand = 0
-            # print(f"{gallons_removed_from_storage + gallons_added}/{demand_at_supply} or {hw_load_at_storageT}")
             return gallons_removed_from_storage + gallons_added
 
-
-
-        
-
-        
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         incomingWater_T = simRun.getIncomingWaterT(i)
         ls_mode = simRun.getLoadShiftMode(i)
@@ -486,8 +478,6 @@ class SystemConfig:
         
         simRun.pRun[i] = simRun.pRun[i] * simRun.minuteIntervals
         simRun.pV[i] = (self.PVol_G_atStorageT - self.getTankVolAtTemp(simRun.building.supplyT_F, simRun.delta_energy)) / self.strat_factor
-        # if i < 2:
-        #     print(f"{simRun.pV[i]} = ({self.PVol_G_atStorageT} - {self.getTankVolAtTemp(simRun.building.supplyT_F, simRun.delta_energy)}) /{ self.strat_factor}")
         simRun.pTAtOn[i] = self.getTemperatureAtTankVol(simRun.pOnV[i], entering_waterT, ls_mode, simRun.delta_energy)
         simRun.pTAtOff[i] = self.getTemperatureAtTankVol(simRun.pOffV[i], entering_waterT, ls_mode, simRun.delta_energy)
 
@@ -692,12 +682,15 @@ class SystemConfig:
         """
         checkHeatHours(heathours)
         genRate = building.magnitude * effSwingVolFract / heathours
-        # print(f"1: {genRate} = {building.magnitude} * {effSwingVolFract} / {heathours}")
         
         if self.doLoadShift and not primaryCurve:
             Vshift, VconsumedLU = self._calcPrelimVol(loadUpHours, building.avgLoadshape, building, lsFractTotalVol)
-            Vload = Vshift * (self.onFract - self.onFractLoadUp) / (self.onFractShed - self.onFractLoadUp) #volume in 'load up' portion of tank
-            # print(f"{Vload} = {Vshift} * ({self.onFract} - {self.onFractLoadUp}) / ({self.onFractShed} - {self.onFractLoadUp})")
+            strat_percent_of_tank = self.getStratificationFactor(self.onFract, self.onT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True)
+            lu_on_percent_of_tank = self.getStratificationFactor(self.onFractLoadUp, self.onLoadUpT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True)
+            shd_on_percent_of_tank = self.getStratificationFactor(self.onFractShed, self.onShedT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True)
+            # Vload = Vshift * (self.onFract - self.onFractLoadUp) / (self.onFractShed - self.onFractLoadUp) #volume in 'load up' portion of tank
+            Vload = Vshift * (lu_on_percent_of_tank - strat_percent_of_tank) / (lu_on_percent_of_tank - shd_on_percent_of_tank) #volume in 'load up' portion of tank
+            
             LUgenRate = (Vload + VconsumedLU) / loadUpHours #rate needed to load up tank and offset use during load up period
             #compare with original genRate
             genRate = max(LUgenRate, genRate)
@@ -743,113 +736,13 @@ class SystemConfig:
         tank_height_of_storage = aquaPercent + ((storageTemp - tempSetpoint) / self.stratPercentageSlope)
         if tank_height_of_storage > 100: tank_height_of_storage = 100
         vol_storage_temp = (100 - tank_height_of_storage) * (storageTemp - supplyTemp)
-        # print(f"vol_storage_temp: {vol_storage_temp} = (100 - {tank_height_of_storage}) * ({storageTemp} - {supplyTemp})")
         vol_above_supply = vol_storage_temp + (((tank_height_of_storage - tank_height_of_supply) * (storageTemp - supplyTemp))/2)
-        # print(f"{vol_above_supply}/((100 - {aquaPercent}) * ({storageTemp} - {supplyTemp}))")
         stratification_factor = vol_above_supply/((100 - aquaPercent) * (storageTemp - supplyTemp))
         if as_percent_of_tank:
-            # print(f"stratification_factor is {stratification_factor}, aquafraction is {aquafraction}")
             return stratification_factor * (1 - aquafraction)
         return stratification_factor
-        
-
-    # def sizePrimaryTankVolume_old(self, heatHrs, loadUpHours, building : Building, primaryCurve = False, lsFractTotalVol = 1.):
-    #     """
-    #     Calculates the primary storage using the Ecotope sizing methodology. Function is also used
-    #     to generate primary sizing curve, which creates a curve with no load shifting and points
-    #     with varying numbers of load up hours.
-
-    #     Parameters
-    #     ----------
-    #     heatHrs : float
-    #         The number of hours primary heating equipment can run in a day.
-    #     loadUpHours : float
-    #         Number of hours spent loading up for first shed.
-    #     building : Building
-    #         the building object the primary tank is being sized for.
-    #     primaryCurve : Bool
-    #         Indicates that function is being called to generate the priamry
-    #         sizing curve. This overrides LS sizing and sizes with "normal"
-    #         sizing (default = False)
-        
-    #     Raises
-    #     ------
-    #     ValueError: aquastat fraction is too low.
-    #     ValueError: The minimum aquastat fraction is greater than 1.
-
-    #     Returns
-    #     -------
-    #     totalVolMax : float
-    #         The total storage volume in gallons adjusted to the storage tempreature
-    #     effMixFract : float
-    #         The fractional adjustment to the total hot water load for the
-    #         primary system. Only used in a swing tank system.
-        
-    #     """
-       
-
-    #     if heatHrs <= 0 or heatHrs > 24:
-    #         raise Exception("Heat hours is not within 1 - 24 hours")
-    #     # Fraction used for adjusting swing tank volume.
-    #     effMixFract = 1.
-
-    #     # Running vol
-    #     runningVol_G, effMixFract = self._calcRunningVol(heatHrs, np.ones(24), building.loadshape, building, effMixFract)
-    #     # print("runningVol_G", runningVol_G)
-    #     totalVolAtStorage = self._getTotalVolAtStorage(runningVol_G, building.getDesignInlet(), building.supplyT_F)
-        
-    #     totalVolAtStorage *=  thermalStorageSF
-    #     minRunVol_G = self._calcMinCyclingVol(building, heatHrs)
-    #     if self.doLoadShift and not primaryCurve:
-    #         LSrunningVol_G, LSeffMixFract = self._calcRunningVolLS(loadUpHours, building.avgLoadshape, building, effMixFract, lsFractTotalVol = lsFractTotalVol)
-    #         # print("LSrunningVol_G", LSrunningVol_G)
-    #         # Get total volume from max of primary method or load shift method
-    #         if LSrunningVol_G > runningVol_G:
-    #             runningVol_G = LSrunningVol_G
-    #             effMixFract = LSeffMixFract
-                
-    #             #get the average tank volume
-    #             totalVolAtStorage_ls = convertVolume(runningVol_G, self.storageT_F, building.getDesignInlet(), building.supplyT_F) / (self.onFractShed - self.onFractLoadUp)
-    #             print(f"yoo: {totalVolAtStorage_ls} = {convertVolume(runningVol_G, self.storageT_F, building.getDesignInlet(), building.supplyT_F)} / ({self.onFractShed} - {self.onFractLoadUp})")
-    #             #multiply computed storage by efficiency safety factor (currently set to 1)
-    #             totalVolAtStorage_ls *=  thermalStorageSF 
-
-    #             if totalVolAtStorage_ls > totalVolAtStorage:
-    #                 totalVolAtStorage = totalVolAtStorage_ls
-
-    #         # Check the Cycling Volume 
-    #         LUcyclingVol_G = totalVolAtStorage * (self.onFractLoadUp - (1 - self.percentUseable))
-    #         # minRunVol_G = self._calcMinCyclingVol(building, heatHrs) # (generation rate - no usage) #REMOVED EFFMIXFRACT
-            
-    #         if minRunVol_G > LUcyclingVol_G:
-    #             min_AF = minRunVol_G / totalVolAtStorage + (1 - self.percentUseable)
-    #             if min_AF >= 1:
-    #                 raise Exception("The minimum load up aquastat fraction is greater than 1. This is due to the storage efficency (Drawdown) and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )                
-    #             # raise Exception("The load up aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: " + str(round(min_AF,3)) + " or increase your drawdown factor.")
-
-
-    #     cyclingVol_G = totalVolAtStorage * (self.onFract - (1 - self.percentUseable))
-    #     # print("cyclingVol_G = totalVolAtStorage * (self.onFract - (1 - self.percentUseable))")
-    #     # print(f"{cyclingVol_G} = {totalVolAtStorage} * ({self.onFract} - (1 - {self.percentUseable}))")
-    #     # minRunVol_G = self._calcMinCyclingVol(building, heatHrs) # (generation rate - no usage)  #REMOVED EFFMIXFRACT
-
-    #     if minRunVol_G > cyclingVol_G:
-    #         min_AF = minRunVol_G / totalVolAtStorage + (1 - self.percentUseable)
-    #         if min_AF < 1 and not self.ignoreShortCycleEr:
-    #             raise ValueError("01", "The aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: ", round(min_AF,3))
-    #         elif min_AF >= 1:
-    #             raise ValueError("02", "The minimum aquastat fraction is greater than 1. This is due to the storage efficency and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )
-
-        
-    #     # Return the temperature adjusted total volume ########################
-    #     stratification_factor = self.getStratificationFactor(self.offFract, self.offT, building.supplyT_F, self.storageT_F) # TODO I believe this should be offT to represent a full tank
-    #     print(f"total vol is {totalVolAtStorage}, strat factor is {stratification_factor}")
-    #     return totalVolAtStorage/stratification_factor, effMixFract
 
     def sizeStagedCapacity(self, building : Building, totalVolAtStorage : float, offFraction : float, offTemperature : float):
-        # off_strat_percent_of_tank = self.getStratificationFactor(self.offFract, self.offT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True)
-        # on_strat_percent_of_tank = self.getStratificationFactor(self.onFract, self.onT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True)
-
         cyclingVol_G = totalVolAtStorage * (offFraction - (1 - self.percentUseable))
         genRate = cyclingVol_G / pCompMinimumRunTime
         maxCyclingCapacity_kBTUhr = genRate * rhoCp * \
@@ -898,60 +791,25 @@ class SystemConfig:
 
         # Running vol
         runningVol_G, effMixFract = self._calcRunningVol(heatHrs, np.ones(24), building.loadshape, building, effMixFract)
-        # print("runningVol_G", runningVol_G)
-        # totalVolAtStorage = self._getTotalVolAtStorage(runningVol_G, building.getDesignInlet(), building.supplyT_F)
         totalVolAtStorage = convertVolume(runningVol_G, self.storageT_F, building.getDesignInlet(), building.supplyT_F)
         strat_percent_of_tank = self.getStratificationFactor(self.onFract, self.onT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True) # TODO I believe this should be offT to represent a full tank
         totalVolAtStorage *=  thermalStorageSF
-        # print(f"totalVolAtStorage is {totalVolAtStorage}, strat_percent_of_tank is {strat_percent_of_tank}")
         totalVolAtStorage = totalVolAtStorage/strat_percent_of_tank # Volume needed without loadshifting
-        # print(f"final totalVolAtStorage is {totalVolAtStorage}")
 
         if self.doLoadShift and not primaryCurve:
             LSrunningVol_G, LSeffMixFract = self._calcRunningVolLS(loadUpHours, building.avgLoadshape, building, effMixFract, lsFractTotalVol = lsFractTotalVol)
-            lu_on_percent_of_tank = self.getStratificationFactor(self.onFractLoadUp, self.onLoadUpT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True) # TODO I believe this should be offT to represent a full tank
-            shd_on_percent_of_tank = self.getStratificationFactor(self.onFractShed, self.onShedT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True) # TODO I believe this should be onT to represent when shed is to turn on
+            lu_on_percent_of_tank = self.getStratificationFactor(self.onFractLoadUp, self.onLoadUpT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True)
+            shd_on_percent_of_tank = self.getStratificationFactor(self.onFractShed, self.onShedT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True)
             ls_strat_percent_of_tank = lu_on_percent_of_tank - shd_on_percent_of_tank
-            # print(f"LSrunningVol_G is {LSrunningVol_G}, runningVol_G is {runningVol_G}")
-            # print(f"shd_on_percent_of_tank is {shd_on_percent_of_tank}, lu_on_percent_of_tank is {lu_on_percent_of_tank}")
             totalVolAtStorage_ls = convertVolume(LSrunningVol_G, self.storageT_F, building.getDesignInlet(), building.supplyT_F)
-            # print(f"totalVolAtStorage_ls is {totalVolAtStorage_ls}, ls_strat_percent_of_tank is {ls_strat_percent_of_tank}")
             totalVolAtStorage_ls *=  thermalStorageSF 
             totalVolAtStorage_ls = totalVolAtStorage_ls/ls_strat_percent_of_tank # Volume needed for loadshifting
             
-            # print("LSrunningVol_G", LSrunningVol_G)
             # Get total volume from max of primary method or load shift method
             if totalVolAtStorage_ls > totalVolAtStorage:
-                # print(f"yoo: {totalVolAtStorage_ls} is bigger than {totalVolAtStorage}")
                 totalVolAtStorage = totalVolAtStorage_ls
                 effMixFract = LSeffMixFract
 
-            # Check the Cycling Volume 
-            # lu_off_percent_of_tank = self.getStratificationFactor(self.offFractLoadUp, self.offLoadUpT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True)
-            # LUcyclingVol_G = totalVolAtStorage * (lu_off_percent_of_tank - lu_on_percent_of_tank)
-            # minCycVol_G = self._calcMinCyclingVol(building, heatHrs) # (generation rate - no usage) #REMOVED EFFMIXFRACT
-            
-            # if minCycVol_G > LUcyclingVol_G:
-            #     print(f"minCycVol_G is {minCycVol_G}, LUcyclingVol_G is {LUcyclingVol_G}")
-            #     min_AF = minCycVol_G / totalVolAtStorage + (1 - self.percentUseable)
-            #     if min_AF >= 1:
-            #         raise Exception("The minimum load up aquastat fraction is greater than 1. This is due to the storage efficency (Drawdown) and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )                
-            #     # raise Exception("The load up aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: " + str(round(min_AF,3)) + " or increase your drawdown factor.")
-
-        # off_strat_percent_of_tank = self.getStratificationFactor(self.offFract, self.offT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True)
-        # cyclingVol_G = totalVolAtStorage * (off_strat_percent_of_tank - strat_percent_of_tank)
-        # # TODO check this logic here...
-        # if minCycVol_G > cyclingVol_G:
-        #     print(f"minCycVol_G is {minCycVol_G}, cyclingVol_G is {cyclingVol_G}")
-        #     min_AF = minCycVol_G / totalVolAtStorage + (1 - self.percentUseable)
-        #     if min_AF < 1 and not self.ignoreShortCycleEr:
-        #         raise ValueError("01", "The aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: ", round(min_AF,3))
-        #     elif min_AF >= 1:
-        #         raise ValueError("02", "The minimum aquastat fraction is greater than 1. This is due to the storage efficency and/or the maximum run hours in the day may be too low. Try increasing these values, we reccomend 0.8 and 16 hours for these variables respectively." )
-
-        
-        # Return the temperature adjusted total volume ########################
-        # print(f"total vol is {totalVolAtStorage}, strat factor is {stratification_factor}")
         return totalVolAtStorage, effMixFract
     
     def _calcMinCyclingVol(self, building : Building, heatHrs):
@@ -1106,7 +964,6 @@ class SystemConfig:
         effMixFract = np.ones(len(heatHours))
         for i in range(0,len(heatHours)):
             try:
-                print(f"sizing for {heatHours[i]} hours ==========================================")
                 volN[i], effMixFract[i] = self.sizePrimaryTankVolume(heatHours[i], self.loadUpHours, building, primaryCurve = True, lsFractTotalVol = self.fract_total_vol)
                 
             except ValueError:
@@ -1186,7 +1043,6 @@ class SystemConfig:
         
         
         """
-        print(f"x {x}, y {y}, startind {startind}")
         fig = createSizingCurvePlot(x, y, startind, loadshifting = self.doLoadShift)
     
         # Create and add sliderbar steps
