@@ -62,7 +62,6 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         og_strat_slope = self.strat_slope
         for i in range(0,len(heatHours)):
             try:
-                print(f"heatHours {heatHours[i]}")
                 building.magnitude = dhw_usage_magnitude + (self.tm_hourly_load * 24)
                 building.loadshape = [x/building.magnitude for x in day_load]
                 self.ignoreShortCycleEr = True
