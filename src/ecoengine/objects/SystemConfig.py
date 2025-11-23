@@ -200,6 +200,7 @@ class SystemConfig:
         self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr, self.loadUpHours, building, lsFractTotalVol = self.fract_total_vol)
         self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, building, 
             effSwingVolFract = self.effSwingFract, primaryCurve = False, lsFractTotalVol = self.fract_total_vol)[0]
+        print(f"and ...... {self.PCap_kBTUhr}")
         self.maxCyclingCapacity_kBTUhr = self.sizeStagedCapacity(building, self.PVol_G_atStorageT, self.offFract, self.offT)
         if buildingWasAnnual:
             # set building load shape back to annual
@@ -397,6 +398,9 @@ class SystemConfig:
         storage_outlet_temp = self.getStorageOutletTemp(ls_mode) # TODO possible redistribution of stratification?
         water_draw = self.getWaterDraw(simRun.hwDemand[i], storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, ls_mode)
         # hw_load_at_storageT = convertVolume(simRun.hwDemand[i], storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F) #TODO see if this needs to be adjusted
+        if i < 10:
+            print(f"....uh {water_draw}, {simRun.hwDemand[i]},...... {convertVolume(simRun.hwDemand[i], storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F)}")
+        
         self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
 
     def runOnePrimaryStep(self, simRun : SimulationRun, i : int, hw_load_at_storageT : float, entering_waterT : float, erCalc : bool = False):
@@ -674,7 +678,7 @@ class SystemConfig:
         Returns
         -------
         heatCap
-            The heating capacity in [btu/hr].
+            The heating capacity in [kbtu/hr].
         genRate
             The generation rate in [gal/hr] when the heat pump is on. 
             If loadshifting this is the maximum between normal calculation
@@ -783,18 +787,28 @@ class SystemConfig:
         
         """
         # minCycVol_G = self._calcMinCyclingVol(building, heatHrs)
-
         if heatHrs <= 0 or heatHrs > 24:
             raise Exception("Heat hours is not within 1 - 24 hours")
         # Fraction used for adjusting swing tank volume.
         effMixFract = 1.
+        minRunVol_G = pCompMinimumRunTime * (building.magnitude / heatHrs) # (generation rate - no usage) #REMOVED EFFMIXFRACT
+
+        # runningVol_G, effMixFract = self._calcRunningVol(heatHrs, np.ones(24), building.loadshape, building, effMixFract)
+        # totalVolAtStorage = self._getTotalVolAtStorage(runningVol_G, building.getDesignInlet(), building.supplyT_F)
+        # print(f'ayyyyyye {totalVolAtStorage}, totalVolAtStorage = {totalVolAtStorage * (1 - self.onFract)}, runningVol_G is {runningVol_G}')
+        # totalVolAtStorage *=  thermalStorageSF
 
         # Running vol
         runningVol_G, effMixFract = self._calcRunningVol(heatHrs, np.ones(24), building.loadshape, building, effMixFract)
         totalVolAtStorage = convertVolume(runningVol_G, self.storageT_F, building.getDesignInlet(), building.supplyT_F)
-        strat_percent_of_tank = self.getStratificationFactor(self.onFract, self.onT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True) # TODO I believe this should be offT to represent a full tank
+        strat_percent_of_tank = self.getStratificationFactor(self.onFract, self.onT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True) 
         totalVolAtStorage *=  thermalStorageSF
         totalVolAtStorage = totalVolAtStorage/strat_percent_of_tank # Volume needed without loadshifting
+        print(f"yooooo, strat_percent_of_tank is {strat_percent_of_tank}, totalVolAtStorage is {totalVolAtStorage}, runningVol_G is {runningVol_G}")
+        
+        strat_percent_of_tank_off = self.getStratificationFactor(self.offFract, self.offT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True) 
+        cyclingVol_G = totalVolAtStorage * (strat_percent_of_tank_off - strat_percent_of_tank)
+        
 
         if self.doLoadShift and not primaryCurve:
             LSrunningVol_G, LSeffMixFract = self._calcRunningVolLS(loadUpHours, building.avgLoadshape, building, effMixFract, lsFractTotalVol = lsFractTotalVol)
@@ -809,6 +823,17 @@ class SystemConfig:
             if totalVolAtStorage_ls > totalVolAtStorage:
                 totalVolAtStorage = totalVolAtStorage_ls
                 effMixFract = LSeffMixFract
+
+            lu_off_percent_of_tank = self.getStratificationFactor(self.offFractLoadUp, self.offLoadUpT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True)
+            LUcyclingVol_G = totalVolAtStorage * (lu_off_percent_of_tank - lu_on_percent_of_tank)
+            
+            if cyclingVol_G > LUcyclingVol_G:
+                cyclingVol_G = LUcyclingVol_G
+
+        if minRunVol_G > cyclingVol_G:
+            self.cycle_percent = cyclingVol_G/minRunVol_G
+            print(f"short cycled percent = {self.cycle_percent}")
+            
 
         return totalVolAtStorage, effMixFract
     
@@ -1127,12 +1152,12 @@ class SystemConfig:
         return Vshift, VconsumedLU
     
 class Primary(SystemConfig):
-    def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
+    def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building, outletLoadUpT,
                  onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, 
                  numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False):
         
-        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
+        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building, outletLoadUpT,
                  onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
                  PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)

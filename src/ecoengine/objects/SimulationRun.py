@@ -126,6 +126,8 @@ class SimulationRun:
         if i == 0:
             self.mixV = [0] * (len(self.hwDemand))
             self.mixT_F = [0] * (len(self.hwDemand))
+            self.cWV = [0] * (len(self.hwDemand))
+            self.rWV = [0] * (len(self.hwDemand))
 
         self.mixV[i] = cyclingV
         self.mixT_F[i] = init_mixT_F
@@ -1024,6 +1026,16 @@ class SimulationRun:
             columns.append(self.energyCost)
             column_names.append('Demand Period')
             columns.append(self.demandPeriod)
+
+        if hasattr(self, 'mixV'):
+            column_names.append('Mixed Slug Volume (G)')
+            columns.append(self.mixV)
+            column_names.append('Mixed Slug Temp (F)')
+            columns.append(self.mixT_F)
+            column_names.append('Entering City Water (G)')
+            columns.append(self.cWV)
+            column_names.append('Entering Recirc Water (G)')
+            columns.append(self.rWV)
 
         if len(exclude_columns) > 0:
             new_column_names = []

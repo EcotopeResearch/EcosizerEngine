@@ -74,7 +74,8 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
             
             except Exception as e:
                 if not exceptOnWaterShortage and (str(e) == "Primary storage ran out of Volume!" or str(e) == "The swing tank dropped below the supply temperature! The system is undersized"
-                                                  or str(e) == "DHW storage dropped below supply temperature. The system is undersized."):
+                                                  or str(e) == "DHW storage dropped below supply temperature. The system is undersized." or
+                                                  'MPRTP was not able to heat water fast enough' in str(e)):
                     print(f"{str(e)} Returning simulation result for analysis.")
                 else:
                     raise

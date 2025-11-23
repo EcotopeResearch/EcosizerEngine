@@ -136,35 +136,58 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         
         if simRun.slugSim:
             self._oneMixedSlugStep(simRun, incomingWater_T, storage_outlet_temp, i)
-
-        not_pheating = ls_mode != simRun.getLoadShiftMode(i-1) or not simRun.pheating   
-        self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
-        started_pheating = simRun.pheating and not_pheating
-        if started_pheating:
-            mixV_high = self.getTankVolAtTemp(simRun.building.supplyT_F)
+            self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
+        elif simRun.pheating and not simRun.slugSim:
+            self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
+            mixV_high = self.getTankVolAtTemp(simRun.building.supplyT_F, simRun.delta_energy)
             mixV = mixV_high - (self.PVol_G_atStorageT * (1 - self.percentUseable)) 
-            simRun.initializeMPRTPValue(mixV, 
+            if mixV > 0:
+                simRun.initializeMPRTPValue(mixV, 
                                         self._getAvgTempBetweenTwoVols((1 - self.percentUseable) * self.PVol_G_atStorageT, mixV_high, incomingWater_T, simRun.delta_energy, storage_outlet_temp), 
                                         i)
+            # print(f"initializing..... {i} {simRun.mixV[i]} {simRun.mixT_F[i]}")
+        else:
+            self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
+        # not_pheating = ls_mode != simRun.getLoadShiftMode(i-1) or not simRun.pheating   
+        # started_pheating = simRun.pheating and not_pheating
+        # if started_pheating:
     
 
     def _oneMixedSlugStep(self, simRun : SimulationRun, incomingWater_T, storage_outlet_temp, i):
         if simRun.slugSim == False or i == 0:
             return
-        prV = self.getWaterDraw(simRun.hwDemand[i], storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, simRun.getLoadShiftMode(i))
+        simRun.cWV[i] = self.getWaterDraw(simRun.hwDemand[i], storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, simRun.getLoadShiftMode(i))
         # prV = convertVolume(simRun.hwDemand[i], storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F)
-        rcV = simRun.building.getDesignReturnFlow()
-        simRun.mixV[i] = simRun.mixV[i-1] + prV + rcV
+        # flow = TM loss / 500 / (T_Storage - T_HWR)
+        temp_at_top = self.getTemperatureAtTankVol(self.PVol_G_atStorageT, incomingWater_T, simRun.getLoadShiftMode(i), simRun.delta_energy)
+        simRun.rWV[i] = simRun.building.recirc_loss / (rhoCp * (60//simRun.minuteIntervals)) / (temp_at_top - simRun.building.getDesignReturnTemp())
+        simRun.mixV[i] = simRun.mixV[i-1] + simRun.cWV[i] + simRun.rWV[i]
+        
+        energy_input = 0
+        if simRun.pheating:
+            energy_input = ((1000 * self.PCap_kBTUhr * self.defrostFactor) / (rhoCp * (60//simRun.minuteIntervals))) / simRun.mixV[i]
 
-        energy_input = (1000 * self.PCap_kBTUhr * self.defrostFactor) / (rhoCp * 60) 
+        temp_calc_total = (incomingWater_T * simRun.cWV[i]) + (simRun.building.getDesignReturnTemp() * simRun.rWV[i]) + (simRun.mixT_F[i-1] * simRun.mixV[i-1])
 
-        temp_calc_total = energy_input + (incomingWater_T * prV) + (simRun.building.getDesignReturnTemp() * rcV) + (simRun.mixT_F[i-1] * simRun.mixV[i-1])
-
-        simRun.mixT_F[i] = temp_calc_total / simRun.mixV[i]
+        simRun.mixT_F[i] = energy_input + (temp_calc_total / simRun.mixV[i])
         if simRun.mixV[i] >= self.PVol_G_atStorageT * self.percentUseable and simRun.mixT_F[i] < simRun.building.supplyT_F:
             raise Exception (f"MPRTP was not able to heat water fast enough. DHW outage occurred at time step {i}. Water temp at {simRun.mixT_F[i]} at {simRun.mixV[i]} of {self.PVol_G_atStorageT * self.percentUseable} g")
         elif simRun.mixT_F[i] >= simRun.building.supplyT_F:
             simRun.slugSim = False
+            # print(f"simRun.mixT_F[i] = {simRun.mixT_F[i]}")
+
+    def _oneSizingSlugStep(self, simRun : SimulationRun, incomingWater_T, i, sysCap_kBTUhr):
+        simRun.cWV[i] = convertVolume(simRun.hwDemand[i], self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
+        simRun.rWV[i] = simRun.building.recirc_loss / (rhoCp * (60//simRun.minuteIntervals)) / (self.storageT_F - simRun.building.getDesignReturnTemp())
+        simRun.mixV[i] = simRun.mixV[i-1] + simRun.cWV[i] + simRun.rWV[i]
+        
+        # because in sizing, recirc loss is added to building demand, we must take it out of building demand for this calculation
+        simRun.cWV[i] = simRun.cWV[i] - simRun.rWV[i]
+        
+        energy_input = ((1000 * sysCap_kBTUhr * self.defrostFactor) / (rhoCp * (60//simRun.minuteIntervals))) / simRun.mixV[i]
+        temp_calc_total = (incomingWater_T * simRun.cWV[i]) + (simRun.building.getDesignReturnTemp() * simRun.rWV[i]) + (simRun.mixT_F[i-1] * simRun.mixV[i-1])
+        simRun.mixT_F[i] = energy_input + (temp_calc_total / simRun.mixV[i])
+
 
     def _getAvgTempBetweenTwoVols(self, low_vol, high_vol, incomingT_F, delta_energy : float, storage_temp : float):
         if low_vol > high_vol:
@@ -186,6 +209,66 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         mid_temp = low_temp + ((high_temp-low_temp)/2) # average because it is linear
         temp_sum = temp_sum + (mid_temp * (high_vol - low_vol))
         return temp_sum/vol_of_slug 
+    
+    def _calcRunningVol(self, heatHrs, onOffArr, loadshape, building : Building, effMixFract = 0):
+        """
+        Function to find the running volume for the hot water storage tank, which
+        is needed for calculating the total volume for primary sizing and in the event of load shift sizing
+        represents the entire volume.
+
+        Implimented seperatly for Swing Tank systems
+
+        Parameters
+        ----------
+        heatHrs : float
+            The number of hours primary heating equipment can run in a day.
+        onOffArr : ndarray
+            array of 1/0's where 1's allow heat pump to run and 0's dissallow. of length 24.
+        loadshape : ndarray
+            normalized array of length 24 representing the daily loadshape for this calculation.
+        building : Building
+            The building the system is being sized for
+        effMixFract: Int
+            unused value in this instance of the function. Used in Swing Tank implimentation
+
+        Raises
+        ------
+        Exception: Error if oversizing system.
+
+        Returns
+        -------
+        runV_G : float
+            The running volume in gallons at supply temp.
+        effMixFract: int
+            Needed for swing tank implementation.
+        """    
+        sysCap_kBTUhr, hwGenRate = self._primaryHeatHrs2kBTUHR(heatHrs, self.loadUpHours, building, 
+            effSwingVolFract = effMixFract, primaryCurve = True, lsFractTotalVol = self.fract_total_vol) #TODO maybe primaryCurve should be false?
+        hwDemand = building.magnitude * np.tile(loadshape,2)
+
+        genRate = np.tile(onOffArr,2) / heatHrs #hourly
+        diffN = genRate - np.tile(loadshape,2) #hourly
+        diffInd = getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
+        diffN *= building.magnitude
+        
+        # Get the running volume ##############################################
+        if len(diffInd) == 0:
+            raise Exception("ERROR ID 03","The heating rate is greater than the peak volume the system is oversized! Try increasing the hours the heat pump runs in a day",)
+        runV_G = 0
+        for peakInd in diffInd:
+            peak_sim = SimulationRun([hwGenRate]*48, hwDemand, 0, building, self.loadShiftSchedule, 60, self.doLoadShift)
+            peak_sim.initializeMPRTPValue(0, 0, 0)
+            for i in range(peakInd, 48):
+                self._oneSizingSlugStep(peak_sim, building.getDesignInlet(), i, sysCap_kBTUhr)
+                if peak_sim.mixT_F[i] >= building.supplyT_F: #self.storageT_F:
+                    break
+            print("===============================")
+            print(peak_sim.mixV)
+            print(peak_sim.mixT_F)
+            print(diffN[:24])
+            peakVol = max(peak_sim.mixV)
+            runV_G = max(runV_G, peakVol)
+        return runV_G, effMixFract
 
     def getInitializedSimulation(self, building : Building, initPV=None, initST=None, minuteIntervals = 1, nDays = 3, forcePeakyLoadshape = False) -> SimulationRun:
         """
