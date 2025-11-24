@@ -128,6 +128,7 @@ class SimulationRun:
             self.mixT_F = [0] * (len(self.hwDemand))
             self.cWV = [0] * (len(self.hwDemand))
             self.rWV = [0] * (len(self.hwDemand))
+            self.slugEnergyInput = [0] * (len(self.hwDemand))
 
         self.mixV[i] = cyclingV
         self.mixT_F[i] = init_mixT_F
@@ -970,31 +971,34 @@ class SimulationRun:
             list of columns to exclude from csv output
         """
         
-        hours = [(i // (60/self.minuteIntervals)) + 1 for i in range(len(self.getPrimaryVolume()))]
-        column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'Primary Generation (Gallons Storage Temp)', 'HW Demand (Gallons Storage Temp)',
-                        'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)',
-                        'Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'Input Capacity (kW)', 'Output Capacity (kW)', 'Primary COP', 
-                        'ON Setpoint Tank Volume (%)', 'ON Setpoint Temperature (F)', 'Actual Temperature at ON Setpoint (F)',
-                        'OFF Setpoint Tank Volume (%)','OFF Setpoint Temperature (F)','Actual Temperature at OFF Setpoint (F)',
-                        'Temperature at 100% Tank Volume (F)', 'Temperature at 75% Tank Volume (F)', 'Temperature at 50% Tank Volume (F)', 
-                        'Temperature at 25% Tank Volume (F)','Temperature at 0% Tank Volume (F)']
-        columns = [
-            hours,
-            self.getPrimaryVolume(),
-            self.getPrimaryGeneration(),
-            self.hwDamandAtStorage,
-            self.getHWDemand(),
-            self.getRecircLoss(),
-            self.getHWGeneration(),
-            self.getPrimaryRun(),
-            self.getCapIn(),
-            self.getCapOut(),
-            self.getPrimaryCOP(),
-            self.setpointPercentOn,self.pOnT,self.pTAtOn,
-            self.setpointPercentOff,self.pOffT,self.pTAtOff,
-            self.tempAt100,self.tempAt75,self.tempAt50,
-            self.tempAt25,self.tempAt0
-        ]
+        # hours = [(i // (60/self.minuteIntervals)) + 1 for i in range(len(self.getPrimaryVolume()))]
+        # column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'Primary Generation (Gallons Storage Temp)', 'HW Demand (Gallons Storage Temp)',
+        #                 'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)',
+        #                 'Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'Input Capacity (kW)', 'Output Capacity (kW)', 'Primary COP', 
+        #                 'ON Setpoint Tank Volume (%)', 'ON Setpoint Temperature (F)', 'Actual Temperature at ON Setpoint (F)',
+        #                 'OFF Setpoint Tank Volume (%)','OFF Setpoint Temperature (F)','Actual Temperature at OFF Setpoint (F)',
+        #                 'Temperature at 100% Tank Volume (F)', 'Temperature at 75% Tank Volume (F)', 'Temperature at 50% Tank Volume (F)', 
+        #                 'Temperature at 25% Tank Volume (F)','Temperature at 0% Tank Volume (F)']
+        # columns = [
+        #     hours,
+        #     self.getPrimaryVolume(),
+        #     self.getPrimaryGeneration(),
+        #     self.hwDamandAtStorage,
+        #     self.getHWDemand(),
+        #     self.getRecircLoss(),
+        #     self.getHWGeneration(),
+        #     self.getPrimaryRun(),
+        #     self.getCapIn(),
+        #     self.getCapOut(),
+        #     self.getPrimaryCOP(),
+        #     self.setpointPercentOn,self.pOnT,self.pTAtOn,
+        #     self.setpointPercentOff,self.pOffT,self.pTAtOff,
+        #     self.tempAt100,self.tempAt75,self.tempAt50,
+        #     self.tempAt25,self.tempAt0
+        # ]
+
+        column_names = []
+        columns = []
 
         if len(self.oat) > 0:
             column_names.append('OAT (F)')
@@ -1036,6 +1040,8 @@ class SimulationRun:
             columns.append(self.cWV)
             column_names.append('Entering Recirc Water (G)')
             columns.append(self.rWV)
+            column_names.append('Temperature delta from heating')
+            columns.append(self.slugEnergyInput)
 
         if len(exclude_columns) > 0:
             new_column_names = []
@@ -1046,6 +1052,9 @@ class SimulationRun:
                     new_columns.append(columns[i])
             column_names = new_column_names
             columns = columns
+
+        for i in range(len(column_names)):
+            print(f"{column_names[i]} = {len(columns[i])}")
 
         transposed_result = zip(*columns)
 
