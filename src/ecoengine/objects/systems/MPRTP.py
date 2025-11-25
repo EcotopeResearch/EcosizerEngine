@@ -143,20 +143,13 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
                 simRun.initializeMPRTPValue(mixV, 
                                         self._getAvgTempBetweenTwoVols((1 - self.percentUseable) * self.PVol_G_atStorageT, mixV_high, incomingWater_T, simRun.delta_energy, storage_outlet_temp), 
                                         i)
-            # print(f"initializing..... {i} {simRun.mixV[i]} {simRun.mixT_F[i]}")
         else:
             self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
-        # not_pheating = ls_mode != simRun.getLoadShiftMode(i-1) or not simRun.pheating   
-        # started_pheating = simRun.pheating and not_pheating
-        # if started_pheating:
-    
 
     def _oneMixedSlugStep(self, simRun : SimulationRun, incomingWater_T, storage_outlet_temp, i):
         if simRun.slugSim == False or i == 0:
             return
         simRun.cWV[i] = self.getWaterDraw(simRun.hwDemand[i], storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, simRun.getLoadShiftMode(i))
-        # prV = convertVolume(simRun.hwDemand[i], storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F)
-        # flow = TM loss / 500 / (T_Storage - T_HWR)
         temp_at_top = self.getTemperatureAtTankVol(self.PVol_G_atStorageT, incomingWater_T, simRun.getLoadShiftMode(i), simRun.delta_energy)
         simRun.rWV[i] = simRun.building.recirc_loss / (rhoCp * (60//simRun.minuteIntervals)) / (temp_at_top - simRun.building.getDesignReturnTemp())
         simRun.mixV[i] = simRun.mixV[i-1] + simRun.cWV[i] + simRun.rWV[i]
@@ -172,20 +165,20 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
             raise Exception (f"MPRTP was not able to heat water fast enough. DHW outage occurred at time step {i}. Water temp at {simRun.mixT_F[i]} at {simRun.mixV[i]} of {self.PVol_G_atStorageT * self.percentUseable} g")
         elif simRun.mixT_F[i] >= simRun.building.supplyT_F:
             simRun.slugSim = False
-            # print(f"simRun.mixT_F[i] = {simRun.mixT_F[i]}")
 
     def _oneSizingSlugStep(self, simRun : SimulationRun, incomingWater_T, i, sysCap_kBTUhr):
         simRun.cWV[i] = convertVolume(simRun.hwDemand[i], self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
-        simRun.rWV[i] = simRun.building.recirc_loss / (rhoCp * (60//simRun.minuteIntervals)) / (self.storageT_F - simRun.building.getDesignReturnTemp())
+        simRun.rWV[i] = simRun.building.recirc_loss / (60//simRun.minuteIntervals) / (rhoCp) / (self.storageT_F - simRun.building.getDesignReturnTemp())
         simRun.mixV[i] = simRun.mixV[i-1] + simRun.cWV[i] + simRun.rWV[i]
-        
-        # because in sizing, recirc loss is added to building demand, we must take it out of building demand for this calculation
-        # simRun.cWV[i] = simRun.cWV[i] - simRun.rWV[i]
-        
-        energy_input = ((1000 * sysCap_kBTUhr * self.defrostFactor) / (rhoCp * (60//simRun.minuteIntervals))) / simRun.mixV[i]
+
+        energy_in_btumin = 1000 * sysCap_kBTUhr / (60//simRun.minuteIntervals)
+        temp_delta = ((energy_in_btumin * self.defrostFactor) / rhoCp) / simRun.mixV[i]
         temp_calc_total = (incomingWater_T * simRun.cWV[i]) + (simRun.building.getDesignReturnTemp() * simRun.rWV[i]) + (simRun.mixT_F[i-1] * simRun.mixV[i-1])
-        simRun.mixT_F[i] = energy_input + (temp_calc_total / simRun.mixV[i])
-        simRun.slugEnergyInput[i] = energy_input
+        
+        simRun.mixT_F[i] = temp_delta + (temp_calc_total / simRun.mixV[i])
+        simRun.slugEnergyInput[i] = energy_in_btumin 
+        simRun.pTAtOn[i] = simRun.building.recirc_loss / 60
+        simRun.pOnT[i] = simRun.cWV[i] * (self.storageT_F - incomingWater_T) * (rhoCp)
 
 
     def _getAvgTempBetweenTwoVols(self, low_vol, high_vol, incomingT_F, delta_energy : float, storage_temp : float):
@@ -246,11 +239,13 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         diffInd = getPeakIndices(diffN[0:24]) #Days repeat so just get first day!
         diffN *= building.magnitude
 
-        #take recirc out of magnitude
-        building.magnitude = building.magnitude - (self.tm_hourly_load * 24)
         sysCap_kBTUhr, hwGenRate = self._primaryHeatHrs2kBTUHR(heatHrs, self.loadUpHours, building, 
             effSwingVolFract = effMixFract, primaryCurve = True, lsFractTotalVol = self.fract_total_vol) #TODO maybe primaryCurve should be false?
-        hwDemand = building.magnitude * np.tile(loadshape,2)
+        
+        # because in sizing, recirc loss is added to building demand, we must take it out of building demand for this calculation
+        day_load = [(hour_load * building.magnitude) - self.tm_hourly_load for hour_load in loadshape]
+        building.magnitude = building.magnitude - (self.tm_hourly_load * 24)
+        hwDemand = np.tile(day_load,2)
         hwDemand = np.array(hrToMinList(hwDemand)) / 60
         
         # Get the running volume ##############################################
@@ -262,13 +257,13 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
             peak_sim.initializeMPRTPValue(0, 0, 0)
             for i in range(peakInd*60, 48*60):
                 self._oneSizingSlugStep(peak_sim, building.getDesignInlet(), i, sysCap_kBTUhr)
-                if peak_sim.mixT_F[i] >= building.supplyT_F: #self.storageT_F:
+                if peak_sim.mixT_F[i] >= self.storageT_F:#building.supplyT_F:
                     break
-            print("===============================")
-            print(peak_sim.mixV[-24:])
-            print(peak_sim.mixT_F[-24:])
-            print(diffN[:24])
-            peak_sim.writeCSV(f"{heatHrs}_{peakInd}.csv")
+            # print("===============================")
+            # print(peak_sim.mixV[-24:])
+            # print(peak_sim.mixT_F[-24:])
+            # print(diffN[:24])
+            # peak_sim.writeCSV(f"{heatHrs}_{peakInd}.csv")
             peakVol = max(peak_sim.mixV)
             runV_G = max(runV_G, peakVol)
 

@@ -200,7 +200,6 @@ class SystemConfig:
         self.PVol_G_atStorageT, self.effSwingFract = self.sizePrimaryTankVolume(self.maxDayRun_hr, self.loadUpHours, building, lsFractTotalVol = self.fract_total_vol)
         self.PCap_kBTUhr = self._primaryHeatHrs2kBTUHR(self.maxDayRun_hr, self.loadUpHours, building, 
             effSwingVolFract = self.effSwingFract, primaryCurve = False, lsFractTotalVol = self.fract_total_vol)[0]
-        print(f"and ...... {self.PCap_kBTUhr}")
         self.maxCyclingCapacity_kBTUhr = self.sizeStagedCapacity(building, self.PVol_G_atStorageT, self.offFract, self.offT)
         if buildingWasAnnual:
             # set building load shape back to annual
@@ -397,10 +396,6 @@ class SystemConfig:
         self.preSystemStepSetUp(simRun, i, incomingWater_T, minuteIntervals, oat)
         storage_outlet_temp = self.getStorageOutletTemp(ls_mode) # TODO possible redistribution of stratification?
         water_draw = self.getWaterDraw(simRun.hwDemand[i], storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, ls_mode)
-        # hw_load_at_storageT = convertVolume(simRun.hwDemand[i], storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F) #TODO see if this needs to be adjusted
-        if i < 10:
-            print(f"....uh {water_draw}, {simRun.hwDemand[i]},...... {convertVolume(simRun.hwDemand[i], storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F)}")
-        
         self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
 
     def runOnePrimaryStep(self, simRun : SimulationRun, i : int, hw_load_at_storageT : float, entering_waterT : float, erCalc : bool = False):
@@ -533,8 +528,6 @@ class SystemConfig:
             the lowest volume on the tank where the water is storage temperature
         """
         tank_vol = ((temp - self.strat_inter) / self.strat_slope) - delta_energy
-        # if tank_vol < 0:
-        #     print(f"{tank_vol} = (({temp} - {self.strat_inter}) / {self.strat_slope}) - {delta_energy}")
         return tank_vol
     
     def _setLoadShift(self, loadShiftSchedule, loadUpHours, onFract, offFract, onT, offT, outletLoadUpT, onFractLoadUp, 
@@ -786,17 +779,11 @@ class SystemConfig:
             primary system. Only used in a swing tank system.
         
         """
-        # minCycVol_G = self._calcMinCyclingVol(building, heatHrs)
         if heatHrs <= 0 or heatHrs > 24:
             raise Exception("Heat hours is not within 1 - 24 hours")
         # Fraction used for adjusting swing tank volume.
         effMixFract = 1.
         minRunVol_G = pCompMinimumRunTime * (building.magnitude / heatHrs) # (generation rate - no usage) #REMOVED EFFMIXFRACT
-
-        # runningVol_G, effMixFract = self._calcRunningVol(heatHrs, np.ones(24), building.loadshape, building, effMixFract)
-        # totalVolAtStorage = self._getTotalVolAtStorage(runningVol_G, building.getDesignInlet(), building.supplyT_F)
-        # print(f'ayyyyyye {totalVolAtStorage}, totalVolAtStorage = {totalVolAtStorage * (1 - self.onFract)}, runningVol_G is {runningVol_G}')
-        # totalVolAtStorage *=  thermalStorageSF
 
         # Running vol
         runningVol_G, effMixFract = self._calcRunningVol(heatHrs, np.ones(24), building.loadshape, building, effMixFract)
@@ -804,11 +791,9 @@ class SystemConfig:
         strat_percent_of_tank = self.getStratificationFactor(self.onFract, self.onT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True) 
         totalVolAtStorage *=  thermalStorageSF
         totalVolAtStorage = totalVolAtStorage/strat_percent_of_tank # Volume needed without loadshifting
-        print(f"yooooo, strat_percent_of_tank is {strat_percent_of_tank}, totalVolAtStorage is {totalVolAtStorage}, runningVol_G is {runningVol_G}")
-        
+
         strat_percent_of_tank_off = self.getStratificationFactor(self.offFract, self.offT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True) 
-        cyclingVol_G = totalVolAtStorage * (strat_percent_of_tank_off - strat_percent_of_tank)
-        
+        cyclingVol_G = totalVolAtStorage * (strat_percent_of_tank_off - strat_percent_of_tank) 
 
         if self.doLoadShift and not primaryCurve:
             LSrunningVol_G, LSeffMixFract = self._calcRunningVolLS(loadUpHours, building.avgLoadshape, building, effMixFract, lsFractTotalVol = lsFractTotalVol)

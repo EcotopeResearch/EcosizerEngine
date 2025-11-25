@@ -1,3 +1,2 @@
 id,npep,supplyT_F,storageT_F,onFrac,offFract,onT,offT,outletLoadUpT,onFractLoadUp,offFractLoadUp,onLoadUpT,offLoadUpT,onFracShed,offFractShed,onShedT,offShedT,schematic,recirc_flow_gpm,recirc_return_temp,doLoadShift,compRuntime_hr
-19,200,120,140,0.2,0.2,125,140,140,0.2,0.2,135,140,0.2,0.2,120,130,mprtp,6,110,FALSE,24
-20,200,120,140,0.2,0.2,125,140,140,0.2,0.2,135,140,0.2,0.2,120,130,mprtp,6,110,FALSE,16
+1,200,120,140,0.2,0.2,125,140,140,0.2,0.2,135,140,0.2,0.2,120,130,mprtp,6,110,FALSE,16

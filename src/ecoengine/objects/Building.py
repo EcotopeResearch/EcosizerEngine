@@ -407,7 +407,6 @@ class MultiFamily(Building):
                 raise Exception("Error: standardGPD must be a String of one of the following values: " + str(possibleStandardGPDs))
             
         magnitude = gpdpp * n_people # gpdpp * number_of_people
-        print(f"n_people is {n_people}")
         # recalculate recirc_loss with different method if applicable
         if not ignoreRecirc and not nApt is None and not Wapt is None and (nApt > 0 and Wapt > 0):
             # nApt * Wapt will overwrite recirc_loss so it doesn't matter what numbers we put in for returnT_F, flowRate
