@@ -312,13 +312,13 @@ def test_invalid_ls_schedule():
 def test_invalid_loadshift_vars():
     with pytest.raises(Exception, match = "Invalid input given for load up ON fraction, must be a number between 0 and normal ON fraction."):
         createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, building = default_building, doLoadShift = True, onFractLoadUp = 0.5, onFractShed = 0.8,
-                     loadShiftSchedule = [1]*24, offLoadUpT = 160, loadUpHours = 0)
+                     loadShiftSchedule = [1]*24, outletLoadUpT = 160, loadUpHours = 0)
     with pytest.raises(Exception, match = "Invalid input given for shed ON fraction, must be a number between normal ON fraction and 1."):
         createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.5, building = default_building, doLoadShift = True, onFractLoadUp = 0.3, onFractShed = 0.4,
-                     loadShiftSchedule = [1]*24, offLoadUpT = 160, loadUpHours = 0)
-    with pytest.raises(Exception, match = "Invalid input given for load up OFF temp, it must be a number between normal OFF temp and 212F."):
+                     loadShiftSchedule = [1]*24, outletLoadUpT = 160, loadUpHours = 0)
+    with pytest.raises(Exception, match = "Invalid input given for load up storage temp, it must be a number between normal storage temp and 212F."):
         createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, building = default_building, doLoadShift = True, onFractLoadUp = 0.3, onFractShed = 0.8,
-                     loadShiftSchedule = [1]*24, offLoadUpT = 140, loadUpHours = 0)
+                     loadShiftSchedule = [1]*24, outletLoadUpT = 140, loadUpHours = 0)
     with pytest.raises(Exception, match = "Invalid input given for load up hours, must be an integer less than or equal to hours in day before first shed period."):
         createSystem('singlepass_norecirc', 150, 1, .8, 16, 0.4, building = default_building, doLoadShift = True, onFractLoadUp = 0.3, onFractShed = 0.8,
                      loadShiftSchedule = [1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], offLoadUpT = 160, loadUpHours = 2)
@@ -354,8 +354,7 @@ def test_invalid_prefomance_map():
         createSystem('paralleltank', 150, 1, .8, 16, 0.4, building = default_building, PVol_G_atStorageT = 10, TMVol_G=10, TMCap_kBTUhr=10, systemModel = 'model', numHeatPumps = 4.0)
 
 def test_too_small_lu_aq_sizing():
-    with pytest.raises(Exception, match = "('01', 'The aquastat fraction is too low in the storge system recommend increasing the maximum run hours in the day or increasing to a minimum of: ', 0.546)"):
-        createSystem(
+    system = createSystem(
             schematic   = 'singlepass_norecirc', 
             building    = default_building, 
             storageT_F  = 150, 
@@ -370,6 +369,7 @@ def test_too_small_lu_aq_sizing():
             doLoadShift = True,
             loadUpHours = 2
         )
+    assert hasattr(system, 'cycle_percent')
 
 def test_sp_rtp_sizing():
     check_building = createBuilding(

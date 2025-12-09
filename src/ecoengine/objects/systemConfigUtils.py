@@ -63,6 +63,7 @@ def convertVolume(originalVol, convertToT_F, referenceT_F, convertFromT_F):
 
     return originalVol * fraction
 
+
 def getMixedTemp(temp1_F, temp2_F, vol1_G, vol2_G):
         """
         Calculates average tank temperature for a tank with vol1_G gallons of water at temp1_F degrees F and

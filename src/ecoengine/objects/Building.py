@@ -72,7 +72,7 @@ class Building:
                 raise Exception("Error: designOAT_F must be a number or None.")
             
     def getHourlyLoadIncrease(self):
-        return (self.recirc_loss / rhoCp) / (self.supplyT_F - self.incomingT_F)
+        return (self.recirc_loss / rhoCp) / (self.supplyT_F - self.getDesignReturnTemp())#self.incomingT_F)
         
     def setToAnnualLS(self):
         raise Exception("Annual loadshape not available for this building type. This feature is only available for multi-family buildings.")
@@ -317,6 +317,9 @@ class Building:
             return ((self.monthlyCityWaterT_F[0]*31) + (self.monthlyCityWaterT_F[1]*28) + (self.monthlyCityWaterT_F[2]*31) + (self.monthlyCityWaterT_F[3]*30) \
                 + (self.monthlyCityWaterT_F[4]*31) + (self.monthlyCityWaterT_F[5]*30) + (self.monthlyCityWaterT_F[6]*31) + (self.monthlyCityWaterT_F[7]*31) \
                 + (self.monthlyCityWaterT_F[8]*30) + (self.monthlyCityWaterT_F[9]*31) + (self.monthlyCityWaterT_F[10]*30) + (self.monthlyCityWaterT_F[11]*31)) / 365
+        
+    def getMinimumVolume(self):
+        return 0
 
 class MensDorm(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F):
@@ -377,6 +380,7 @@ class MultiFamily(Building):
     def __init__(self, n_people, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F, 
                  gpdpp, nBR, nApt, Wapt, standardGPD):
         # check inputs
+        self.n_people = n_people
         if not nApt is None and not (isinstance(nApt, int)):
             raise Exception("Error: Number of apartments must be an integer.")
         if not Wapt is None and not (isinstance(Wapt, int)):
@@ -429,6 +433,9 @@ class MultiFamily(Building):
 
     def isAnnualLS(self):
         return len(self.loadshape) == 8760
+    
+    def getMinimumVolume(self):
+        return 1.7 * self.n_people
 
 class MultiUse(Building):
     def __init__(self, building_list, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F):

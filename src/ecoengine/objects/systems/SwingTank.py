@@ -301,7 +301,7 @@ class SwingTank(SystemConfig):
             normV = (1 - f) * runningVol_G
             loadV = f * runningVol_G
 
-            mixStorageT_F = (self.storageT_F * normV + self.offLoadUpT * loadV) / (normV + loadV)
+            mixStorageT_F = (self.storageT_F * normV + self.outletLoadUpT * loadV) / (normV + loadV)
         
         return mixStorageT_F
 
