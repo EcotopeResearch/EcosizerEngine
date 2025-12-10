@@ -8,11 +8,11 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building : Building = None,
                  outletLoadUpT = None, onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, onFractShed = None, offFractShed = None, onShedT = None, offShedT = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
-                 PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, stratFactor = 1):
+                 PCap_kBTUhr = None, useHPWHsimPrefMap = False, stratFactor = 1):
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
                  outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
-                 PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, stratFactor)
+                 PCap_kBTUhr, useHPWHsimPrefMap, stratFactor)
 
     def setStratificationPercentageSlope(self):
         self.stratPercentageSlope = 0.8 # degrees F per percentage point of volume on tank  
@@ -43,8 +43,6 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         """
         dhw_usage_magnitude = building.magnitude
         dhw_loadshape = building.loadshape
-        # tm_hourly_load = building.getHourlyLoadIncrease()
-        day_load = [(x * dhw_usage_magnitude) + self.tm_hourly_load for x in dhw_loadshape]
 
         # Define the heating hours we'll check
         delta = -0.25
@@ -60,33 +58,11 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         og_strat_slope = self.strat_slope
         for i in range(0,len(heatHours)):
             try:
-                # building.magnitude = dhw_usage_magnitude + (self.tm_hourly_load * 24)
-                # building.loadshape = [x/building.magnitude for x in day_load]
-                self.ignoreShortCycleEr = True
-
                 volN, effMixFract = self.sizePrimaryTankVolume(heatHours[i], self.loadUpHours, building, primaryCurve = True, lsFractTotalVol = self.fract_total_vol)
                 capN = self._primaryHeatHrs2kBTUHR(heatHours[i], self.loadUpHours, building, effSwingVolFract = effMixFract, primaryCurve = True, lsFractTotalVol = self.fract_total_vol)[0]
                 self.PVol_G_atStorageT = volN
                 self.PCap_kBTUhr = capN
                 self.strat_slope = 0.8 / (self.PVol_G_atStorageT/100)
-                # building.magnitude = dhw_usage_magnitude
-                # building.loadshape = dhw_loadshape
-                #check cycling error
-                self.ignoreShortCycleEr = False
-                # recirc_only_model = Building(
-                #     magnitude=self.tm_hourly_load * 24,
-                #     loadshape= [.1/.24] * 24,
-                #     avgLoadshape= [.1/.24] * 24,
-                #     incomingT_F=building.getDesignInlet(),
-                #     supplyT_F=building.getDesignReturnTemp(),
-                #     returnT_F=None,
-                #     flowRate=None,
-                #     climate=building.climateZone,
-                #     ignoreRecirc=True,
-                #     designOAT_F=building.designOAT_F
-                # )
-                # self._primaryHeatHrs2kBTUHR(heatHours[i], self.loadUpHours, recirc_only_model, 
-                #     effSwingVolFract = self.effSwingFract, primaryCurve = True, lsFractTotalVol = self.fract_total_vol)[0]
                 if self.miniSim(building):
                     heat_hours_list.append(heatHours[i])
                     vol_list.append(volN)
@@ -131,7 +107,6 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         interval_tm_load = simRun.generateRecircLoss(i)
         storage_outlet_temp = self.getStorageOutletTemp(ls_mode) # TODO possible redistribution of stratification?
         possible_storage_generation = convertVolume(simRun.hwGenRate, storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F)
-        # interval_tm_load = self.tm_hourly_load / (60//simRun.minuteIntervals)
         water_draw_at_recirc = self.getWaterDraw(self.tm_hourly_load / (60//simRun.minuteIntervals), storage_outlet_temp, simRun.building.supplyT_F, simRun.building.getDesignReturnTemp(), simRun.delta_energy, ls_mode)
         water_draw_at_city_temp = self.getWaterDraw(simRun.hwDemand[i], storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, ls_mode, possible_storage_generation)
         water_draw = self.getWaterDraw(simRun.hwDemand[i] + interval_tm_load, storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, ls_mode, possible_storage_generation)
@@ -174,14 +149,11 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
     def _oneSizingSlugStep(self, simRun : SimulationRun, incomingWater_T, i, sysCap_kBTUhr, ls_mode = 'N', lsFractTotalVol = 1.):
         simRun.cWV[i] = convertVolume(simRun.hwDemand[i], self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
         simRun.rWV[i] = simRun.building.recirc_loss / (60//simRun.minuteIntervals) / (rhoCp) / (self.storageT_F - simRun.building.getDesignReturnTemp())
-        # simRun.cWV[i] = simRun.hwDemand[i]
-        # simRun.rWV[i] = simRun.building.recirc_loss / (60//simRun.minuteIntervals) / (rhoCp) / (simRun.building.supplyT_F - simRun.building.getDesignReturnTemp())
         simRun.mixV[i] = simRun.mixV[i-1] + simRun.cWV[i] + simRun.rWV[i]
 
         energy_in_btumin = 1000 * sysCap_kBTUhr / (60//simRun.minuteIntervals)
         temp_delta = ((energy_in_btumin * self.defrostFactor) / rhoCp) / simRun.mixV[i]
         if ls_mode == 'S':
-            print(f"{i} mode is S, {simRun.mixV[i]}, {simRun.cWV[i]}, {simRun.rWV[i]}, {simRun.mixT_F[i-1]}")
             energy_in_btumin = 0
             temp_delta = 0
             if lsFractTotalVol < 1:
@@ -195,8 +167,8 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         simRun.slugEnergyInput[i] = energy_in_btumin 
 
         # should comment out :::
-        simRun.pTAtOn[i] = simRun.building.recirc_loss / 60 # recirc loss
-        simRun.pOnT[i] = simRun.cWV[i] * (self.storageT_F - incomingWater_T) * (rhoCp) # cw loss
+        # simRun.pTAtOn[i] = simRun.building.recirc_loss / 60 # recirc loss
+        # simRun.pOnT[i] = simRun.cWV[i] * (self.storageT_F - incomingWater_T) * (rhoCp) # cw loss
         # print(f"{simRun.cWV[i]}, {simRun.rWV[i]}, {simRun.pTAtOn[i]}, {simRun.pOnT[i]}, {energy_in_btumin}")
         # simRun.pOnT[i] = simRun.cWV[i] * (simRun.building.supplyT_F - incomingWater_T) * (rhoCp) # cw loss
 
@@ -264,8 +236,6 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
             effSwingVolFract = effMixFract, primaryCurve = True, lsFractTotalVol = self.fract_total_vol) #TODO maybe primaryCurve should be false?
         
         # because in sizing, recirc loss is added to building demand, we must take it out of building demand for this calculation
-        # day_load = [(hour_load * building.magnitude) - self.tm_hourly_load for hour_load in loadshape]
-        # building.magnitude = building.magnitude - (self.tm_hourly_load * 24)
         hwDemand = np.tile(loadshape,2) * building.magnitude
         hwDemand = np.array(hrToMinList(hwDemand)) / 60
         
@@ -280,15 +250,9 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
                 self._oneSizingSlugStep(peak_sim, building.getDesignInlet(), i, sysCap_kBTUhr)
                 if peak_sim.mixT_F[i] >= self.storageT_F: #building.supplyT_F:
                     break
-            # print("===============================")
-            # print(peak_sim.mixV[-24:])
-            # print(peak_sim.mixT_F[-24:])
-            # print(diffN[:24])
-            # peak_sim.writeCSV(f"{heatHrs}_{peakInd}_new.csv")
             peakVol = max(peak_sim.mixV)
             runV_G = max(runV_G, peakVol)
 
-        # building.magnitude = building.magnitude + (self.tm_hourly_load * 24)
         runV_G = convertVolume(runV_G, building.supplyT_F, building.getDesignInlet(), self.storageT_F) # expected return is in supply temp
         return runV_G, effMixFract
 
@@ -325,29 +289,19 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
 
         # because in sizing, recirc loss is added to building demand, we must take it out of building demand for this calculation
         day_load = [(hour_load * building.magnitude) for hour_load in loadshape]
-        # building.magnitude = building.magnitude - (self.tm_hourly_load * 24)
-
         hwDemand = np.tile(day_load,2)
         hwDemand = np.array(hrToMinList(hwDemand)) / 60
         
         # Get the running volume ##############################################
-        # if len(diffInd) == 0:
-        #     raise Exception("ERROR ID 03","The heating rate is greater than the peak volume the system is oversized! Try increasing the hours the heat pump runs in a day",)
-        # runV_G = 0
-        # for peakInd in diffInd:
         peak_sim = SimulationRun([genRateON/60]*48*60, hwDemand, 0, building, np.array(hrToMinList(self.loadShiftSchedule)), 1, self.doLoadShift,
                                  LS_sched=['N' if hour > 0 else 'S' for hour in self.loadShiftSchedule])
         peak_sim.initializeMPRTPValue(0, 0, 0)
         runV_G = 0
         for i in range(0, 48*60):
             self._oneSizingSlugStep(peak_sim, building.getDesignInlet(), i, sysCap_kBTUhr, ls_mode = peak_sim.getLoadShiftMode(i), lsFractTotalVol = lsFractTotalVol)
-            if peak_sim.mixT_F[i] >= self.storageT_F:#building.supplyT_F:
+            if peak_sim.mixT_F[i] >= self.storageT_F:
                 runV_G = max(runV_G, peak_sim.mixV[i])
                 peak_sim.mixV[i] = 0
-        # print("===============================")
-        # print(peak_sim.mixV[-24:])
-        # print(peak_sim.mixT_F[-24:])
-        # peak_sim.writeCSV(f"{self.maxDayRun_hr}_{building.magnitude}.csv")
         peakVol = max(peak_sim.mixV)
         runV_G = max(runV_G, peakVol)
 

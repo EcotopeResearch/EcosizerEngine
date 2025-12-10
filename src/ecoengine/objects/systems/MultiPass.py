@@ -7,7 +7,7 @@ class MultiPass(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
                  outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, 
-                 numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, inletWaterAdjustment = 0.5):
+                 numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, useHPWHsimPrefMap = False, inletWaterAdjustment = 0.5):
         onFract = 0.15
         onFractLoadUp = 0.15
         onFractShed = 0.3
@@ -18,7 +18,7 @@ class MultiPass(SystemConfig):
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
                  outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
-                 PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
+                 PCap_kBTUhr, useHPWHsimPrefMap)
         
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None):
         averageWater_T = self.storageT_F - 15 #simRun.getIncomingWaterT(i) + ((self.storageT_F - simRun.getIncomingWaterT(i)) * self.inletWaterAdjustment) This is the way HPWHsim does it

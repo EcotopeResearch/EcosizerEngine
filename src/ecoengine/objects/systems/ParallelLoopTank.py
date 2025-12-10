@@ -10,7 +10,7 @@ class ParallelLoopTank(SystemConfig):
     def __init__(self, safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr,  onFract, offFract, onT, offT, building = None,
                  outletLoadUpT = None, onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, onFractShed = None, offFractShed = None, onShedT = None, offShedT = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, 
-                 numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, ignoreShortCycleEr = False, 
+                 numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None,
                  useHPWHsimPrefMap = False, TMVol_G = None, TMCap_kBTUhr = None, tmModel = None, tmNumHeatPumps = None):
 
 
@@ -26,7 +26,7 @@ class ParallelLoopTank(SystemConfig):
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
                  outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
-                 PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
+                 PCap_kBTUhr, useHPWHsimPrefMap)
 
         # size if needed, else all sizing is taken care of in super().__init__
         if not PVol_G_atStorageT is None: # indicates system is sized

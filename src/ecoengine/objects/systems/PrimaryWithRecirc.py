@@ -8,14 +8,14 @@ class PrimaryWithRecirc(SystemConfig):
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
                  outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, 
-                 numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, inletWaterAdjustment = 0.25):
+                 numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, useHPWHsimPrefMap = False, inletWaterAdjustment = 0.25):
         
         self.inletWaterAdjustment = inletWaterAdjustment
         
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
                  outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
-                 PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
+                 PCap_kBTUhr, useHPWHsimPrefMap)
         
     def getDesignIncomingTemp(self, building: Building):
         return building.getHighestIncomingT_F() + ((self.storageT_F - building.getHighestIncomingT_F()) * self.inletWaterAdjustment)

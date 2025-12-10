@@ -127,8 +127,6 @@ class EcosizerEngine:
         The number of heat pumps on the temperature maintenance system
     inletWaterAdjustment : float
         adjustment for inlet water temperature fraction for primary recirculation systems
-    ignoreShortCycleEr : boolean
-        ignores errors for short cycling (when the AQ fract is too low in the system). The engineer should be informed to use multiple heat pumps to avoid shortcycling if they are overriding short cycling errors
     useHPWHsimPrefMap : boolean
         if available for the HPWH model in systemModel and/or tmModel, the system will use the preformance map from HPWHsim if useHPWHsimPrefMap is set to True. 
         Otherwise, it will use the most recent data model.
@@ -149,7 +147,7 @@ class EcosizerEngine:
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None,
                             PVol_G_atStorageT = None, PCap_kW = None, TMVol_G = None, TMCap_kW = None,
                             annual = False, zipCode = None, climateZone = None, systemModel = None, numHeatPumps = None, 
-                            tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None, ignoreShortCycleEr = False,
+                            tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None,
                             useHPWHsimPrefMap = False, designOAT_F = None, sizeAdditionalER = False, additionalERSaftey = 1.0):
         
         if sizeAdditionalER:
@@ -226,7 +224,6 @@ class EcosizerEngine:
                                 tmModel = tmModel,
                                 tmNumHeatPumps = tmNumHeatPumps,
                                 inletWaterAdjustment = inletWaterAdjustment,
-                                ignoreShortCycleEr = ignoreShortCycleEr,
                                 useHPWHsimPrefMap = useHPWHsimPrefMap,
                                 sizeAdditionalER = sizeAdditionalER,
                                 additionalERSaftey = additionalERSaftey

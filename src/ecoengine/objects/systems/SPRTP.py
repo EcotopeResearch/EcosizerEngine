@@ -9,7 +9,7 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
     def __init__(self, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building : Building = None, outletLoadUpT = None,
                  onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, onFractShed = None, offFractShed = None, onShedT = None, offShedT = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
-                 PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, stratFactor = 1):
+                 PCap_kBTUhr = None, useHPWHsimPrefMap = False, stratFactor = 1):
 
         if stratFactor > 1 or stratFactor <= 0: 
             raise Exception('Stratificationfactor must be greater than zero and less than or equal to 1.')
@@ -21,10 +21,7 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
         super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
                  outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
-                 PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
-        
-        # self.strat_slope = 1.7 / (self.PVol_G_atStorageT/100)
-        # self.strat_inter = self.onT - (1.7 * self.onFract * 100) 
+                 PCap_kBTUhr, useHPWHsimPrefMap)
 
     def setStratificationPercentageSlope(self):
         self.stratPercentageSlope = 1.7 # degrees F per percentage point of volume on tank 
@@ -82,20 +79,11 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
             effSwingVolFract, lsFractTotalVol)
         
         heatCap = usage_Cap_kBTUhr + recirc_Cap_kBTUhr
-        # print(f"heat_cap : {heatCap} = {usage_Cap_kBTUhr} + {recirc_Cap_kBTUhr}")
-        # recirc_storage_genRate = convertVolume(genRate_from_return, self.storageT_F, building.getDesignReturnTemp(), building.supplyT_F)
-        # usage_storage_genRate = convertVolume(genRate_from_cW, self.storageT_F, building.getLowestIncomingT_F(), building.supplyT_F)
-        # genRate_supply = convertVolume(recirc_storage_genRate + usage_storage_genRate, building.supplyT_F, building.getLowestIncomingT_F(), self.storageT_F)
         genRate_supply = genRate_from_cW + genRate_from_return
-        print(f"genRate_supply = {genRate_supply}")
-        # genRate =  heatCap / rhoCp / (building.supplyT_F - building.getLowestIncomingT_F()) * self.defrostFactor * 1000
-        # print(f"but it should be = {genRate}")
         return heatCap, genRate_supply
     
     def _getIntegratedLoadshapeAndMagnitude(self, loadshape, building : Building):
-        # recirc_vol_in_cw_per_hr = building.recirc_loss / ((rhoCp) * (building.getDesignReturnTemp() - building.getLowestIncomingT_F()))
         recirc_vol_in_cw_per_hr = building.recirc_loss / ((rhoCp) * (building.supplyT_F - building.getLowestIncomingT_F()))
-        # print(f"cold be = {building.recirc_loss / ((rhoCp) * (building.getDesignReturnTemp() - building.getLowestIncomingT_F()))}")
         day_load = [(x * building.magnitude) + recirc_vol_in_cw_per_hr for x in loadshape]
         new_magnitude = building.magnitude + (recirc_vol_in_cw_per_hr * 24)
         new_loadshape = [x/new_magnitude for x in day_load]
@@ -105,7 +93,6 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
     def _calcRunningVol(self, heatHrs, onOffArr, loadshape, building : Building, effMixFract = 0):
         dhw_usage_magnitude = building.magnitude
         new_loadshape, new_magnitude = self._getIntegratedLoadshapeAndMagnitude(loadshape, building)
-        print(f"{new_magnitude} > {building.magnitude}")
         building.magnitude = new_magnitude
         
         runV_G, effMixFract = super()._calcRunningVol(heatHrs, onOffArr, new_loadshape, building, effMixFract) 
@@ -180,19 +167,10 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
         ls_mode = simRun.getLoadShiftMode(i)
         self.preSystemStepSetUp(simRun, i, incomingWater_T, minuteIntervals, oat)
         interval_tm_load = simRun.generateRecircLoss(i) # interval load converted to city water -> supply temp
-        # interval_tm_load = self.tm_hourly_load / (60//simRun.minuteIntervals)
-        storage_outlet_temp = self.getStorageOutletTemp(ls_mode) # TODO possible redistribution of stratification?
+        storage_outlet_temp = self.getStorageOutletTemp(ls_mode)
         possible_storage_generation = convertVolume(simRun.hwGenRate, storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F)
-        # simRun.delta_energy += possible_storage_generation
-        # water_draw_at_recirc = self.getWaterDraw(interval_tm_load, storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, ls_mode)
-        # water_draw_at_recirc = self.getWaterDraw(interval_tm_load, storage_outlet_temp, simRun.building.supplyT_F, simRun.building.getDesignReturnTemp(), simRun.delta_energy, ls_mode)
-        # print(f"{i%60} {water_draw_at_recirc},,, {interval_tm_load}, simRun.pV = {simRun.pV[i-1]}")
         water_draw = self.getWaterDraw(simRun.hwDemand[i] + interval_tm_load, storage_outlet_temp, simRun.building.supplyT_F, incomingWater_T, simRun.delta_energy, ls_mode,
                                        potential_generation=possible_storage_generation, water_draw_interval=0.1)
-        # simRun.delta_energy -= possible_storage_generation
-        # water_draw = water_draw_at_recirc + water_draw_at_city_temp
-        # hw_load_at_storageT = convertVolume(simRun.hwDemand[i] + interval_tm_load, storage_outlet_temp, incomingWater_T, simRun.building.supplyT_F) #TODO see if this needs to be adjusted
-        
         self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
 
     def runOneRecircStep(self, simRun : SimulationRun, i : int, hw_load_at_storageT : float, entering_waterT : float, erCalc : bool = False):

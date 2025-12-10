@@ -12,12 +12,12 @@ class SwingTankER(SwingTank):
     def __init__(self, safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building = None, outletLoadUpT = None,
                  onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, onFractShed = None, offFractShed = None, onShedT = None, offShedT = None,
                  doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
-                 PCap_kBTUhr = None, ignoreShortCycleEr = False, useHPWHsimPrefMap = False, TMVol_G = None, TMCap_kBTUhr = None, sizeAdditionalER = True, additionalERSaftey = 1.0):
+                 PCap_kBTUhr = None, useHPWHsimPrefMap = False, TMVol_G = None, TMCap_kBTUhr = None, sizeAdditionalER = True, additionalERSaftey = 1.0):
 
         super().__init__(safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
                  outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT,
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
-                 PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap, TMVol_G, TMCap_kBTUhr)
+                 PCap_kBTUhr, useHPWHsimPrefMap, TMVol_G, TMCap_kBTUhr)
 
         self.original_TMCap_kBTUhr = self.TMCap_kBTUhr
         if sizeAdditionalER:
