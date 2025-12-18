@@ -139,7 +139,8 @@ class EcosizerEngine:
     """
 
     def __init__(self, supplyT_F, storageT_F, percentUseable, schematic, onFract, offFract = None, onT = None, offT = None, incomingT_F = None,
-                            magnitudeStat = None, buildingType = None, loadshape = None, avgLoadshape = None, loadShiftSchedule = None, loadUpHours = None, outletLoadUpT = None,
+                            magnitudeStat = None, buildingType = None, loadshape = None, avgLoadshape = None, loadShiftSchedule = None, 
+                            loadUpHours = None, outletLoadUpT = None,
                             onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, 
                             onFractShed = None, offFractShed = None, onShedT = None, offShedT = None, 
                             loadShiftPercent = 1, returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,

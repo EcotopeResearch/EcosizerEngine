@@ -791,6 +791,7 @@ class SystemConfig:
 
         totalVolAtStorage = convertVolume(runningVol_G, self.storageT_F, building.getDesignInlet(), building.supplyT_F)
         strat_percent_of_tank = self.getStratificationFactor(self.onFract, self.onT, building.supplyT_F, self.storageT_F, as_percent_of_tank=True) 
+        # print(f"strat_percent_of_tank is {strat_percent_of_tank} totalVolAtStorage is {totalVolAtStorage}")
         totalVolAtStorage *=  thermalStorageSF
         totalVolAtStorage = totalVolAtStorage/strat_percent_of_tank # Volume needed without loadshifting
 
