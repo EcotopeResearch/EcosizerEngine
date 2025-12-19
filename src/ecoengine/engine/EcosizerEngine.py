@@ -13,6 +13,9 @@ from plotly.offline import plot
 from numpy import around, flipud
 from io import TextIOWrapper
 
+# TODO need to add a dynamic staged capacity note in front end and get rid of swing tank resistance element output for rtp systems
+# Also need to fix other pages
+
 print("EcosizerEngine Copyright (C) 2023  Ecotope Inc.")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")
 
@@ -30,10 +33,16 @@ class EcosizerEngine:
         The hot water storage temperature. [°F]
     percentUseable : float
         The fraction of the storage volume that can be filled with hot water.
-    aquaFract: float
-        The fraction of the total height of the primary hot water tanks at which the Aquastat is located.
     schematic : String
         Indicates schematic type. Valid values are 'swingtank', 'paralleltank', and 'primary'
+    onFract: float
+        The fraction of the total height of the primary hot water tanks at which the ON temperature sensor is located.
+    offFract : float
+        The fraction of the total height of the primary hot water tanks at which the OFF temperature is located (defaults to onFract if not specified)
+    onT : float
+        The temperature detected at the onFract at which the HPWH system will be triggered to turn on. (defaults to supplyT_F if not specified)
+    offT : float
+        The temperature detected at the offFract at which the HPWH system will be triggered to turn off. (defaults to storageT_F if not specified)
     incomingT_F : float 
         The incoming city water temperature on the design day. [°F]
     building_type : string or list
@@ -46,20 +55,32 @@ class EcosizerEngine:
         List or array of 0's, 1's used for load shifting, 0 indicates system is off. 
     loadUpHours : float
         Number of hours spent loading up for first shed.
-    aquaFractLoadUp : float
-        The fraction of the total height of the primary hot water tanks at which the load up aquastat is located.
-    aquaFractShed : float
-        The fraction of the total height of the primary hot water tanks at which the shed aquastat is located.
-    loadUpT_F : float
-        The hot water storage temperature between the normal and load up aquastat. [°F]
+    outletLoadUpT : float 
+        The hot water outlet temperature during load up mode. [°F]
+    onFractLoadUp : float
+        The fraction of the total height of the primary hot water tanks at which the ON temperature sensor is located during load up periods. (defaults to onFract if not specified)
+    offFractLoadUp : float
+        The fraction of the total height of the primary hot water tanks at which the OFF temperature sensor is located during load up periods. (defaults to offFract if not specified)
+    onLoadUpT : float
+        The temperature detected at the onFractLoadUp at which the HPWH system will be triggered to turn on during load up periods. (defaults to onT if not specified)
+    offLoadUpT : float
+        The temperature detected at the offFractLoadUp at which the HPWH system will be triggered to turn off during load up periods. (defaults to offT if not specified)
+    onFractShed : float
+        The fraction of the total height of the primary hot water tanks at which the ON temperature sensor is located during shed periods. (defaults to onFract if not specified)
+    offFractShed : float
+        The fraction of the total height of the primary hot water tanks at which the OFF temperature is located during shed priods (defaults to offFract if not specified)
+    onShedT : float
+        The temperature detected at the onFractShed at which the HPWH system will be triggered to turn on during shed periods. (defaults to onT if not specified)
+    offShedT : float
+        The temperature detected at the offFractShed at which the HPWH system will be triggered to turn off during shed periods. (defaults to offT if not specified)
     loadShiftPercent : float
         Percentage of days the load shift will be met
     returnT_F : float 
         The water temperature returning from the recirculation loop. [°F]
-    flow_rate : float 
+    returnFlow_gpm : float 
         The pump flow rate of the recirculation loop. (GPM)
     gpdpp : float
-        The volume of water in gallons at 120F each person uses per dat.[°F]
+        The volume of water in gallons at DHW supply temperature each person uses per dat.[°F]
     nBR : list
         A list of the number of units by size in the order 0 bedroom units,
         1 bedroom units, 2 bedroom units, 3 bedroom units, 4 bedroom units,
@@ -109,8 +130,6 @@ class EcosizerEngine:
         The number of heat pumps on the temperature maintenance system
     inletWaterAdjustment : float
         adjustment for inlet water temperature fraction for primary recirculation systems
-    ignoreShortCycleEr : boolean
-        ignores errors for short cycling (when the AQ fract is too low in the system). The engineer should be informed to use multiple heat pumps to avoid shortcycling if they are overriding short cycling errors
     useHPWHsimPrefMap : boolean
         if available for the HPWH model in systemModel and/or tmModel, the system will use the preformance map from HPWHsim if useHPWHsimPrefMap is set to True. 
         Otherwise, it will use the most recent data model.
@@ -122,20 +141,23 @@ class EcosizerEngine:
         applicable for ER trade off swing tank only. Saftey factor to apply to additional electric resistance sizing
     """
 
-    def __init__(self, supplyT_F, storageT_F, percentUseable, aquaFract, schematic, incomingT_F = None,
-                            magnitudeStat = None, buildingType = None, loadshape = None, 
-                            avgLoadshape = None, loadShiftSchedule = None, loadUpHours = None,
-                            aquaFractLoadUp = None, aquaFractShed = None, loadUpT_F = None, loadShiftPercent = 1,
-                            returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
+    def __init__(self, supplyT_F, storageT_F, percentUseable, schematic, onFract, offFract = None, onT = None, offT = None, incomingT_F = None,
+                            magnitudeStat = None, buildingType = None, loadshape = None, avgLoadshape = None, loadShiftSchedule = None, 
+                            loadUpHours = None, outletLoadUpT = None,
+                            onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, 
+                            onFractShed = None, offFractShed = None, onShedT = None, offShedT = None, 
+                            loadShiftPercent = 1, returnT_F = 0, flowRate = 0, gpdpp = 0, nBR = None, safetyTM = 1.75,
                             defrostFactor = 1, compRuntime_hr = 16, nApt = None, Wapt = None, doLoadShift = False,
                             setpointTM_F = 135, TMonTemp_F = 120, offTime_hr = 0.333, standardGPD = None,
                             PVol_G_atStorageT = None, PCap_kW = None, TMVol_G = None, TMCap_kW = None,
                             annual = False, zipCode = None, climateZone = None, systemModel = None, numHeatPumps = None, 
-                            tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None, ignoreShortCycleEr = False,
+                            tmModel = None, tmNumHeatPumps = None, inletWaterAdjustment = None,
                             useHPWHsimPrefMap = False, designOAT_F = None, sizeAdditionalER = False, additionalERSaftey = 1.0):
         
         if sizeAdditionalER:
             schematic = "swingtank_er"
+        # if schematic == "mprtp":
+        #     compRuntime_hr = 10
         
         ignoreRecirc = False
         if schematic == 'singlepass_norecirc' or schematic == 'primary' or schematic == 'multipass_norecirc' or schematic == 'multipass':
@@ -177,11 +199,20 @@ class EcosizerEngine:
                                 defrostFactor, 
                                 percentUseable, 
                                 compRuntime_hr, 
-                                aquaFract,
+                                onFract,
                                 building = self.building, 
-                                aquaFractLoadUp = aquaFractLoadUp,
-                                aquaFractShed = aquaFractShed,
-                                loadUpT_F = loadUpT_F,
+                                offFract = offFract, 
+                                onT = onT, 
+                                offT = offT, 
+                                outletLoadUpT = outletLoadUpT,
+                                onFractLoadUp = onFractLoadUp, 
+                                offFractLoadUp = offFractLoadUp, 
+                                onLoadUpT = onLoadUpT, 
+                                offLoadUpT = offLoadUpT, 
+                                onFractShed = onFractShed, 
+                                offFractShed = offFractShed, 
+                                onShedT = onShedT, 
+                                offShedT = offShedT,
                                 doLoadShift = doLoadShift, 
                                 loadShiftPercent = loadShiftPercent, 
                                 loadShiftSchedule = loadShiftSchedule, 
@@ -199,7 +230,6 @@ class EcosizerEngine:
                                 tmModel = tmModel,
                                 tmNumHeatPumps = tmNumHeatPumps,
                                 inletWaterAdjustment = inletWaterAdjustment,
-                                ignoreShortCycleEr = ignoreShortCycleEr,
                                 useHPWHsimPrefMap = useHPWHsimPrefMap,
                                 sizeAdditionalER = sizeAdditionalER,
                                 additionalERSaftey = additionalERSaftey
@@ -279,7 +309,7 @@ class EcosizerEngine:
             simRun_ls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
             simResult_ls = simRun_ls.returnSimResult(kWhCalc = True)
             
-            loadshift_capacity = (8.345*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.storageT_F-simResult_ls[-1]))/3412 # stored energy, not input energy
+            loadshift_capacity = (8.345*self.system.PVol_G_atStorageT*(self.system.onFractShed-self.system.onFractLoadUp)*(self.system.storageT_F-simResult_ls[-1]))/3412 # stored energy, not input energy
             kGperkWh_ls = simResult_ls[-2]/loadshift_capacity
 
             nls_system = copy.copy(self.system)
@@ -352,7 +382,7 @@ class EcosizerEngine:
         loadshift_capacity : float
             Thermal storage capacity of the tank volume between the load up and shed aquastat in kWh
         """
-        return (rhoCp*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.loadUpT_F-self.building.getAvgIncomingWaterT()))/KWH_TO_BTU # stored energy, not input energy
+        return (rhoCp*self.system.PVol_G_atStorageT*(self.system.onFractShed-self.system.onFractLoadUp)*(self.system.offLoadUpT-self.building.getAvgIncomingWaterT()))/KWH_TO_BTU # stored energy, not input energy
 
     def getSimRunWithkWCalc(self, initPV=None, initST=None, minuteIntervals = 15, nDays = 365, optimizeNLS = False):
         """
@@ -398,7 +428,7 @@ class EcosizerEngine:
         
         simRun_ls = simulate(self.system, self.building, initPV=initPV, initST=initST, minuteIntervals = minuteIntervals, nDays = nDays)
         
-        loadshift_capacity = (rhoCp*self.system.PVol_G_atStorageT*(self.system.aquaFractShed-self.system.aquaFractLoadUp)*(self.system.loadUpT_F-self.building.getAvgIncomingWaterT()))/KWH_TO_BTU # stored energy, not input energy
+        loadshift_capacity = (rhoCp*self.system.PVol_G_atStorageT*(self.system.onFractShed-self.system.onFractLoadUp)*(self.system.offLoadUpT-self.building.getAvgIncomingWaterT()))/KWH_TO_BTU # stored energy, not input energy
         kG_sum_ls = simRun_ls.getkGCO2Sum()
         kGperkWh_ls = kG_sum_ls/loadshift_capacity
 
@@ -437,6 +467,9 @@ class EcosizerEngine:
             Available only in systems with a swing tank. The volume of the swing in gallons as specified by California sizing methods.
         """
         return self.system.getSizingResults()
+    
+    def getMaxCyclingCapacity_kBTUhr(self):
+        return self.system.getMaxCyclingCapacity_kBTUhr()
 
     def primaryCurve(self):
         """
@@ -734,7 +767,7 @@ class EcosizerEngine:
                                 self.system.defrostFactor, 
                                 self.system.percentUseable, 
                                 self.system.compRuntime_hr, 
-                                self.system.aquaFract,
+                                self.system.onFract,
                                 building = self.building
         )
         instant_wh_simRun = simulate(instant_wh_system, self.building, minuteIntervals = 15, nDays = 365)

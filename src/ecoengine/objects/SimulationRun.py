@@ -17,8 +17,6 @@ class SimulationRun:
         The generation of HW with time at the supply temperature
     hwDemand : list
         The hot water demand with time at the supply temperature
-    V0 : float
-        The storage volume of the primary system at the storage temperature
     pV : list 
         Volume of HW in the tank with time at the storage temperature. Initialized to array of 0s with pV[0] set to V0
     building : Building 
@@ -30,14 +28,15 @@ class SimulationRun:
     LS_sched : list
         list length 24 corresponding to hours of the day filled with 'N' for normal, 'L' for load up, and 'S' for shed
     """
-    def __init__(self, hwGenRate, hwDemand, V0, pV, building : Building, loadShiftSchedule, minuteIntervals = 1, doLoadshift = False, LS_sched = []):
+    def __init__(self, hwGenRate, hwDemand, pV, building : Building, loadShiftSchedule, minuteIntervals = 1, doLoadshift = False, LS_sched = [],
+                 delta_energy_0 : float = 0.):
         if minuteIntervals != 1 and minuteIntervals != 15 and minuteIntervals != 60:
             raise Exception("Simulations can only take place over 1, 15, or 60 minute intervals")
 
-        self.V0 = V0 
+        # self.V0 = V0 
         self.hwGenRate = hwGenRate # Can be initialized to None if hwGen is found dynamically
         self.hwDemand = hwDemand
-        self.pV = pV
+        self.pV = pV # Volume of water at or above supply temperature in the storage tank
         self.pheating = False # set to false. Simulation starts with primary heating off
         self.pGen = [0] * len(hwDemand) # The generation of HW with time at the storage temperature
         self.pRun = [0] * len(hwDemand) # amount of time in interval primary tank is heating
@@ -55,6 +54,25 @@ class SimulationRun:
         self.hwGean_at_storage_t = []
         self.recircLoss = []
         self.LS_sched = LS_sched
+
+        self.pOnV = [0] * len(hwDemand) # The on setpoint volume (gallons)
+        self.pOffV = [0] * len(hwDemand) # The off setpoint volume (gallons)
+        self.pOnT = [0] * len(hwDemand) # The on setpoint temperature (F)
+        self.pOffT = [0] * len(hwDemand) # The off setpoint temperature (F)
+        self.pTAtOn = [0] * len(hwDemand) # The actual temperature at on setpoint volume at end of interval(F)
+        self.pTAtOff = [0] * len(hwDemand) # The actual temperature at off setpoint volume at end of interval(F)
+
+        self.tempAt100 = [0] * len(hwDemand)
+        self.tempAt75 = [0] * len(hwDemand)
+        self.tempAt50 = [0] * len(hwDemand)
+        self.tempAt25 = [0] * len(hwDemand)
+        self.tempAt0 = [0] * len(hwDemand)
+
+        self.setpointPercentOn = [0] * len(hwDemand)
+        self.setpointPercentOff = [0] * len(hwDemand)
+        self.hwDamandAtStorage = [0] * len(hwDemand)
+
+        self.delta_energy = delta_energy_0
 
     def passedCOPAssumptionThreshold(self, times_COP_assumed : int):
         """
@@ -92,6 +110,28 @@ class SimulationRun:
         # next two items are for the resulting plotly plot
         self.TM_setpoint = supplyT_F
         self.TMCap_kBTUhr = TMCap_kBTUhr
+
+    def initializeMPRTPValue(self, cyclingV, init_mixT_F, i = 0):
+        """
+        Initializes MPRTP values
+
+        Parameters
+        ----------
+        cyclingV : float
+            the cycling volume of the HPWH system's storage tank in gallons
+        init_mixT_F : float
+            the average temperature of the cycling volume at the begining of the simulation
+        """
+        self.slugSim = True
+        if i == 0:
+            self.mixV = [0] * (len(self.hwDemand))
+            self.mixT_F = [0] * (len(self.hwDemand))
+            self.cWV = [0] * (len(self.hwDemand))
+            self.rWV = [0] * (len(self.hwDemand))
+            self.slugEnergyInput = [0] * (len(self.hwDemand))
+
+        self.mixV[i] = cyclingV
+        self.mixT_F[i] = init_mixT_F
 
     def getLoadShiftMode(self, i):
         """
@@ -233,7 +273,7 @@ class SimulationRun:
             raise Exception(str(out_tm_cap_value) + " is an invalid system capacity.")
         if not (isinstance(in_tm_cap_value, float) or isinstance(in_tm_cap_value, int)):
             raise Exception(str(in_tm_cap_value) + " is an invalid system capacity.")
-        
+         
         self.tm_cap_out.append(out_tm_cap_value)
         self.tm_cap_in.append(in_tm_cap_value)
 
@@ -713,7 +753,7 @@ class SimulationRun:
             retList.append(self.building.getAvgIncomingWaterT())               
         return retList
     
-    def plotStorageLoadSim(self, return_as_div=True, numDays = 1):
+    def plotStorageLoadSim(self, return_as_div : bool =True, numDays : int = 1, include_tank_temps : bool = False):
         """
         Returns a plot of the of the simulation for the minimum sized primary
         system as a div or plotly figure. Can plot the minute level simulation
@@ -722,6 +762,11 @@ class SimulationRun:
         ----------
         return_as_div : boolean
             A logical on the output, as a div (true) or as a figure (false)
+        numDays : int
+            number of days plotted in the simulation from the end of the simulation
+        include_tank_temps : bool
+            set to True to add tank temperatures to the y2 axis on the plot
+         
 
         Returns
         -------
@@ -739,43 +784,105 @@ class SimulationRun:
         if any(i < 0 for i in V):
             raise Exception("Primary storage ran out of Volume!")
 
-        fig = Figure()
+        # Determine if we need subplots and secondary y-axis
+        has_swing_tank = hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'TM_setpoint')
 
-        #swing tank
-        if hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'TM_setpoint'):
+        if has_swing_tank:
             fig = make_subplots(rows=2, cols=1,
-                                specs=[[{"secondary_y": False}],
+                                specs=[[{"secondary_y": include_tank_temps}],
                                         [{"secondary_y": True}]])
+        elif include_tank_temps:
+            fig = make_subplots(specs=[[{"secondary_y": True}]])
+        else:
+            fig = Figure()
 
 
         # Do primary components
         x_data = list(range(len(V)))
         # x_data = [x/(60/self.minuteIntervals) for x in x_data]
 
+        # Determine trace addition parameters based on figure type
+        trace_kwargs = {}
+        if has_swing_tank or include_tank_temps:
+            trace_kwargs = {'row': 1, 'col': 1, 'secondary_y': False}
+
         if self.doLoadShift:
             ls_off = [int(not x)* max(V)*2 for x in loadShiftSchedule]
             fig.add_trace(Scatter(x=x_data, y=ls_off, name='Load Shift Shed Period',
                                   mode='lines', line_shape='hv',
                                   opacity=0.5, marker_color='grey',
-                                  fill='tonexty'))
+                                  fill='tonexty'), **trace_kwargs)
 
         fig.add_trace(Scatter(x=x_data, y=V, name='Useful Storage Volume at Storage Temperature',
                               mode='lines', line_shape='hv',
-                              opacity=0.8, marker_color='green'))
+                              opacity=0.8, marker_color='green'), **trace_kwargs)
         fig.add_trace(Scatter(x=x_data, y=run, name = "Hot Water Generation at Storage Temperature",
                               mode='lines', line_shape='hv',
-                              opacity=0.8, marker_color='red'))
+                              opacity=0.8, marker_color='red'), **trace_kwargs)
         fig.add_trace(Scatter(x=x_data, y=hwDemand, name='Hot Water Demand at Supply Temperature',
                               mode='lines', line_shape='hv',
-                              opacity=0.8, marker_color='blue'))
-        fig.update_yaxes(range=[0, np.ceil(max(np.append(V,hwDemand))/100)*100])
+                              opacity=0.8, marker_color='blue'), **trace_kwargs)
+
+        # Add tank temperature traces if requested
+        if include_tank_temps:
+            tempAt100 = np.array(roundList(self.tempAt100, 3)[-(60*hrind_fromback):])
+            tempAt75 = np.array(roundList(self.tempAt75, 3)[-(60*hrind_fromback):])
+            tempAt50 = np.array(roundList(self.tempAt50, 3)[-(60*hrind_fromback):])
+            tempAt25 = np.array(roundList(self.tempAt25, 3)[-(60*hrind_fromback):])
+            tempAt0 = np.array(roundList(self.tempAt0, 3)[-(60*hrind_fromback):])
+
+            fig.add_trace(Scatter(x=x_data, y=tempAt100, name='Temp at 100% Tank',
+                                  mode='lines', line_shape='hv',
+                                  opacity=0.7, marker_color='darkred'),
+                          row=1, col=1, secondary_y=True)
+            fig.add_trace(Scatter(x=x_data, y=tempAt75, name='Temp at 75% Tank',
+                                  mode='lines', line_shape='hv',
+                                  opacity=0.7, marker_color='orange'),
+                          row=1, col=1, secondary_y=True)
+            fig.add_trace(Scatter(x=x_data, y=tempAt50, name='Temp at 50% Tank',
+                                  mode='lines', line_shape='hv',
+                                  opacity=0.7, marker_color='yellow'),
+                          row=1, col=1, secondary_y=True)
+            fig.add_trace(Scatter(x=x_data, y=tempAt25, name='Temp at 25% Tank',
+                                  mode='lines', line_shape='hv',
+                                  opacity=0.7, marker_color='lightblue'),
+                          row=1, col=1, secondary_y=True)
+            fig.add_trace(Scatter(x=x_data, y=tempAt0, name='Temp at 0% Tank',
+                                  mode='lines', line_shape='hv',
+                                  opacity=0.7, marker_color='darkblue'),
+                          row=1, col=1, secondary_y=True)
+
+        # Update primary y-axis
+        if has_swing_tank or include_tank_temps:
+            fig.update_yaxes(range=[0, np.ceil(max(np.append(V,hwDemand))/100)*100], row=1, col=1, secondary_y=False)
+        else:
+            fig.update_yaxes(range=[0, np.ceil(max(np.append(V,hwDemand))/100)*100])
         
         fig.update_layout(title="Hot Water Simulation",
                           xaxis_title= "Minute of Day",
                           yaxis_title="Gallons or\nGallons per Hour",
                           width=900,
                           height=700)
-        
+
+        # Configure secondary y-axis for tank temperatures if requested
+        if include_tank_temps:
+            all_temps = []
+            if hasattr(self, 'tempAt100'):
+                all_temps.extend([np.array(roundList(self.tempAt100, 3)[-(60*hrind_fromback):]),
+                                  np.array(roundList(self.tempAt75, 3)[-(60*hrind_fromback):]),
+                                  np.array(roundList(self.tempAt50, 3)[-(60*hrind_fromback):]),
+                                  np.array(roundList(self.tempAt25, 3)[-(60*hrind_fromback):]),
+                                  np.array(roundList(self.tempAt0, 3)[-(60*hrind_fromback):])])
+                min_temp = np.floor(min([np.min(t) for t in all_temps]) / 10) * 10
+                max_temp = np.ceil(max([np.max(t) for t in all_temps]) / 10) * 10
+            else:
+                min_temp = 40
+                max_temp = 200
+
+            fig.update_yaxes(title_text="Tank Temperature\n(\N{DEGREE SIGN}F)",
+                            showgrid=False, row=1, col=1,
+                            secondary_y=True, range=[min_temp, max_temp])
+
         # Swing tank
         if hasattr(self, 'tmT_F') and hasattr(self, 'tmRun') and hasattr(self, 'TMCap_kBTUhr') and hasattr(self, 'TM_setpoint') and hasattr(self, 'hw_outSwing'):
 
@@ -850,7 +957,7 @@ class SimulationRun:
 
             self.energyCost[i] = self.energyRate[i] * interval_kWh
     
-    def writeCSV(self, file_path):
+    def writeCSV(self, file_path, exclude_columns : list = []):
         """
         writes all simulation data to a formated csv
 
@@ -858,23 +965,38 @@ class SimulationRun:
         ----------
         file_path : string
             the file path for the output csv file
+        exclude_columns : list [str]
+            list of columns to exclude from csv output
         """
         
         hours = [(i // (60/self.minuteIntervals)) + 1 for i in range(len(self.getPrimaryVolume()))]
-        column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'Primary Generation (Gallons Storage Temp)', 'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)',
-                        'Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'Input Capacity (kW)', 'Output Capacity (kW)', 'Primary COP']
+        column_names = ['Hour','Primary Volume (Gallons Storage Temp)', 'Primary Generation (Gallons Storage Temp)', 'HW Demand (Gallons Storage Temp)',
+                        'HW Demand (Gallons Supply Temp)', 'Recirculation Loss to Primary System (Gallons Supply Temp)',
+                        'Theoretical HW Generation (Gallons Supply Temp)', 'Primary Run Time (Min)', 'Input Capacity (kW)', 'Output Capacity (kW)', 'Primary COP', 
+                        'ON Setpoint Tank Volume (%)', 'ON Setpoint Temperature (F)', 'Actual Temperature at ON Setpoint (F)',
+                        'OFF Setpoint Tank Volume (%)','OFF Setpoint Temperature (F)','Actual Temperature at OFF Setpoint (F)',
+                        'Temperature at 100% Tank Volume (F)', 'Temperature at 75% Tank Volume (F)', 'Temperature at 50% Tank Volume (F)', 
+                        'Temperature at 25% Tank Volume (F)','Temperature at 0% Tank Volume (F)']
         columns = [
             hours,
             self.getPrimaryVolume(),
             self.getPrimaryGeneration(),
+            self.hwDamandAtStorage,
             self.getHWDemand(),
             self.getRecircLoss(),
             self.getHWGeneration(),
             self.getPrimaryRun(),
             self.getCapIn(),
             self.getCapOut(),
-            self.getPrimaryCOP()
+            self.getPrimaryCOP(),
+            self.setpointPercentOn,self.pOnT,self.pTAtOn,
+            self.setpointPercentOff,self.pOffT,self.pTAtOff,
+            self.tempAt100,self.tempAt75,self.tempAt50,
+            self.tempAt25,self.tempAt0
         ]
+
+        # column_names = ["recirc loss", "cw loss"]
+        # columns = [self.pTAtOn,self.pOnT]
 
         if len(self.oat) > 0:
             column_names.append('OAT (F)')
@@ -906,6 +1028,31 @@ class SimulationRun:
             columns.append(self.energyCost)
             column_names.append('Demand Period')
             columns.append(self.demandPeriod)
+
+        if hasattr(self, 'mixV'):
+            column_names.append('Mixed Slug Volume (G)')
+            columns.append(self.mixV)
+            column_names.append('Mixed Slug Temp (F)')
+            columns.append(self.mixT_F)
+            column_names.append('Entering City Water (G)')
+            columns.append(self.cWV)
+            column_names.append('Entering Recirc Water (G)')
+            columns.append(self.rWV)
+            column_names.append('Temperature delta from heating')
+            columns.append(self.slugEnergyInput)
+
+        if len(exclude_columns) > 0:
+            new_column_names = []
+            new_columns = []
+            for i in range(len(column_names)):
+                if not column_names[i] in exclude_columns:
+                    new_column_names.append(column_names[i])
+                    new_columns.append(columns[i])
+            column_names = new_column_names
+            columns = columns
+
+        # for i in range(len(column_names)):
+        #     print(f"{column_names[i]} = {len(columns[i])}")
 
         transposed_result = zip(*columns)
 

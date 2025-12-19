@@ -9,19 +9,18 @@ from plotly.offline import plot
 
 class SwingTankER(SwingTank):
 
-    def __init__(self, safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building : Building,
-                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, 
-                 aquaFractShed = None, loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, 
-                 ignoreShortCycleEr = False, useHPWHsimPrefMap = False, TMVol_G = None, TMCap_kBTUhr = None, sizeAdditionalER = True, additionalERSaftey = 1.0):
+    def __init__(self, safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building = None, outletLoadUpT = None,
+                 onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, onFractShed = None, offFractShed = None, onShedT = None, offShedT = None,
+                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, 
+                 PCap_kBTUhr = None, useHPWHsimPrefMap = False, TMVol_G = None, TMCap_kBTUhr = None, sizeAdditionalER = True, additionalERSaftey = 1.0):
 
-        super().__init__(safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
-                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, 
-                 aquaFractShed, loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, 
-                 ignoreShortCycleEr, useHPWHsimPrefMap, TMVol_G, TMCap_kBTUhr)
+        super().__init__(safetyTM, storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
+                 outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT,
+                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
+                 PCap_kBTUhr, useHPWHsimPrefMap, TMVol_G, TMCap_kBTUhr)
 
         self.original_TMCap_kBTUhr = self.TMCap_kBTUhr
         if sizeAdditionalER:
-            self.setLoadUPVolumeAndTrigger(building.getDesignInlet())
             self.sizeERElement(building, additionalERSaftey)
 
     def sizeERElement(self, building : Building, saftey_factor = 1.0, minuteIntervals = 1):
@@ -43,7 +42,6 @@ class SwingTankER(SwingTank):
         perfMap_holder = self.perfMap # Store existing performance map in a temporary variable
         self.perfMap = PrefMapTracker(output_kBTUhr, usePkl=False, kBTUhr = True) # create simple performance map that only uses default output capacity
         self.setCapacity(self.perfMap.getDefaultCapacity())
-        self.setLoadUPVolumeAndTrigger(building.getDesignInlet())
 
         # start the 72-hour sizing simulation to find HW deficit. Starting with the primary storage tank almost empty to ensure that water runs out if system is undersized.
         simRun_empty = self.getInitializedSimulation(building, initPV = 0, initST=building.supplyT_F, minuteIntervals = minuteIntervals, nDays = 2, forcePeakyLoadshape = True)
@@ -70,31 +68,27 @@ class SwingTankER(SwingTank):
     def runOneSystemStep(self, simRun : SimulationRun, i, minuteIntervals = 1, oat = None, erCalc=False):
         incomingWater_T = simRun.getIncomingWaterT(i)
         self.preSystemStepSetUp(simRun, i, incomingWater_T + 15.0, minuteIntervals, oat) # CHPWH IWT is assumed 15°F (adjustable) warmer than DCW temperature on average, based on lab test data. 
-
+        ls_mode = simRun.getLoadShiftMode(i)
         # aquire draw amount for time step
         last_temp = simRun.tmT_F[i-1]
         simRun.hw_outSwing[i] = convertVolume(simRun.hwDemand[i], last_temp, incomingWater_T, simRun.building.supplyT_F)
         #Get the generation rate in storage temp
-        mixedGHW = convertVolume(simRun.hwGenRate, self.storageT_F, incomingWater_T, simRun.building.supplyT_F)
+        mixedGHW = convertVolume(simRun.hwGenRate, self.getStorageOutletTemp(ls_mode), incomingWater_T, simRun.building.supplyT_F)
         if simRun.hw_outSwing[i] > simRun.pV[i-1] + mixedGHW:
             hwVol_G = simRun.pV[i-1] + mixedGHW
-            mixedT_F = getMixedTemp(incomingWater_T, self.storageT_F, simRun.hw_outSwing[i] - hwVol_G, hwVol_G)
+            mixedT_F = getMixedTemp(incomingWater_T, self.getStorageOutletTemp(ls_mode), simRun.hw_outSwing[i] - hwVol_G, hwVol_G)
             simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, 
                 simRun.tmheating, last_temp, simRun.hw_outSwing[i], mixedT_F, minuteIntervals = minuteIntervals, erCalc=erCalc)
         else:
             simRun.tmheating, simRun.tmT_F[i], simRun.tmRun[i] = self._runOneSwingStep(simRun.building, 
-                simRun.tmheating, last_temp, simRun.hw_outSwing[i], self.storageT_F, minuteIntervals = minuteIntervals, erCalc=erCalc)
+                simRun.tmheating, last_temp, simRun.hw_outSwing[i], self.getStorageOutletTemp(ls_mode), minuteIntervals = minuteIntervals, erCalc=erCalc)
 
-        simRun.pheating, simRun.pV[i], simRun.pGen[i], simRun.pRun[i] = self.runOnePrimaryStep(pheating = simRun.pheating,
-                                                                                                Vcurr = simRun.pV[i-1], 
-                                                                                                hw_out = simRun.hw_outSwing[i], 
-                                                                                                hw_in = mixedGHW, 
-                                                                                                mode = simRun.getLoadShiftMode(i),
-                                                                                                modeChanged = (simRun.getLoadShiftMode(i) != simRun.getLoadShiftMode(i-1)),
-                                                                                                minuteIntervals = minuteIntervals,
-                                                                                                erCalc = True)
+        self.runOnePrimaryStep(simRun, i, simRun.hw_outSwing[i], incomingWater_T, erCalc = True)
+
         if simRun.pV[i] < 0.:
             simRun.pV[i] = 0.
+            simRun.delta_energy = -1 * ((1-self.onFract)*self.PVol_G_atStorageT) # delta energy cannot shrink past empty tank
+            
 
     def getERCapacityDif(self, kW = True):
         TMCap_kBTUhr_dif = self.TMCap_kBTUhr - self.original_TMCap_kBTUhr

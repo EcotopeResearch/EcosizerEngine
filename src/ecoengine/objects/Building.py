@@ -19,6 +19,8 @@ class Building:
         self.incomingT_F = incomingT_F
         self.supplyT_F = supplyT_F
         self.designOAT_F = designOAT_F
+        self.returnT_F = returnT_F
+        self.recircFlow = flowRate
 
         self.highestIncomingT_F = None
         self.lowestIncomingT_F = None
@@ -68,6 +70,9 @@ class Building:
         if not designOAT_F is None:
             if not (isinstance(designOAT_F, int) or isinstance(designOAT_F, float)):
                 raise Exception("Error: designOAT_F must be a number or None.")
+            
+    def getHourlyLoadIncrease(self):
+        return (self.recirc_loss / rhoCp) / (self.supplyT_F - self.getDesignReturnTemp())#self.incomingT_F)
         
     def setToAnnualLS(self):
         raise Exception("Annual loadshape not available for this building type. This feature is only available for multi-family buildings.")
@@ -112,6 +117,22 @@ class Building:
         elif not self.climateZone is None:
             return self.getLowestIncomingT_F()
         return None
+    def getDesignReturnTemp(self):
+        if not self.returnT_F is None:
+            return self.returnT_F
+        elif not self.recircFlow is None:
+            self.returnT_F = self.supplyT_F - (self.recirc_loss / (self.recircFlow * rhoCp * 60))
+            return self.returnT_F
+        else:
+            raise Exception("No available return temperature")
+    def getDesignReturnFlow(self):
+        if not self.recircFlow is None:
+            return self.recircFlow
+        elif not self.returnT_F is None:
+            self.recircFlow = self.recirc_loss / ((self.supplyT_F - self.returnT_F) * rhoCp * 60.)
+            return self.recircFlow
+        else:
+            raise Exception("No available return flow")
     
     def getHighestStorageTempAtFifthPercentileOAT(self, perfMap : PrefMapTracker):
         if self.climateZone is None:
@@ -296,6 +317,9 @@ class Building:
             return ((self.monthlyCityWaterT_F[0]*31) + (self.monthlyCityWaterT_F[1]*28) + (self.monthlyCityWaterT_F[2]*31) + (self.monthlyCityWaterT_F[3]*30) \
                 + (self.monthlyCityWaterT_F[4]*31) + (self.monthlyCityWaterT_F[5]*30) + (self.monthlyCityWaterT_F[6]*31) + (self.monthlyCityWaterT_F[7]*31) \
                 + (self.monthlyCityWaterT_F[8]*30) + (self.monthlyCityWaterT_F[9]*31) + (self.monthlyCityWaterT_F[10]*30) + (self.monthlyCityWaterT_F[11]*31)) / 365
+        
+    def getMinimumVolume(self):
+        return 0
 
 class MensDorm(Building):
     def __init__(self, n_students, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F):
@@ -356,6 +380,7 @@ class MultiFamily(Building):
     def __init__(self, n_people, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F, 
                  gpdpp, nBR, nApt, Wapt, standardGPD):
         # check inputs
+        self.n_people = n_people
         if not nApt is None and not (isinstance(nApt, int)):
             raise Exception("Error: Number of apartments must be an integer.")
         if not Wapt is None and not (isinstance(Wapt, int)):
@@ -386,7 +411,6 @@ class MultiFamily(Building):
                 raise Exception("Error: standardGPD must be a String of one of the following values: " + str(possibleStandardGPDs))
             
         magnitude = gpdpp * n_people # gpdpp * number_of_people
-        print(f"n_people is {n_people}")
         # recalculate recirc_loss with different method if applicable
         if not ignoreRecirc and not nApt is None and not Wapt is None and (nApt > 0 and Wapt > 0):
             # nApt * Wapt will overwrite recirc_loss so it doesn't matter what numbers we put in for returnT_F, flowRate
@@ -409,6 +433,9 @@ class MultiFamily(Building):
 
     def isAnnualLS(self):
         return len(self.loadshape) == 8760
+    
+    def getMinimumVolume(self):
+        return 1.7 * self.n_people
 
 class MultiUse(Building):
     def __init__(self, building_list, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F):

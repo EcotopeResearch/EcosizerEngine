@@ -23,7 +23,7 @@ def roundList(a_list, n=3):
 
 def checkLiqudWater(var_F):
     """
-    Checks if the variable has a temperuter with in the range of liquid water at atm pressure
+    Checks if the variable has a temperature with in the range of liquid water at atm pressure
 
     Args:
         var_F (float): Temperature of water.
@@ -62,6 +62,7 @@ def convertVolume(originalVol, convertToT_F, referenceT_F, convertFromT_F):
     fraction = (convertFromT_F - referenceT_F) / (convertToT_F - referenceT_F)
 
     return originalVol * fraction
+
 
 def getMixedTemp(temp1_F, temp2_F, vol1_G, vol2_G):
         """

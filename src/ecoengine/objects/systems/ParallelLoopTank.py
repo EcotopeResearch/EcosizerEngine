@@ -7,10 +7,12 @@ from ecoengine.constants.Constants import *
 from ecoengine.objects.systemConfigUtils import checkLiqudWater
 
 class ParallelLoopTank(SystemConfig):
-    def __init__(self, safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building = None,
-                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, aquaFractLoadUp = None, aquaFractShed = None, 
-                 loadUpT_F = None, systemModel = None, numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None, ignoreShortCycleEr = False, 
+    def __init__(self, safetyTM, setpointTM_F, TMonTemp_F, offTime_hr, storageT_F, defrostFactor, percentUseable, compRuntime_hr,  onFract, offFract, onT, offT, building = None,
+                 outletLoadUpT = None, onFractLoadUp = None, offFractLoadUp = None, onLoadUpT = None, offLoadUpT = None, onFractShed = None, offFractShed = None, onShedT = None, offShedT = None,
+                 doLoadShift = False, loadShiftPercent = 1, loadShiftSchedule = None, loadUpHours = None, systemModel = None, 
+                 numHeatPumps = None, PVol_G_atStorageT = None, PCap_kBTUhr = None,
                  useHPWHsimPrefMap = False, TMVol_G = None, TMCap_kBTUhr = None, tmModel = None, tmNumHeatPumps = None):
+
 
         if TMonTemp_F == 0:
             TMonTemp_F = building.getAvgIncomingWaterT() + 2
@@ -21,9 +23,10 @@ class ParallelLoopTank(SystemConfig):
         self.offTime_hr = offTime_hr # Hour
         self.safetyTM = safetyTM # Safety factor
 
-        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, aquaFract, building,
-                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, aquaFractLoadUp, aquaFractShed, 
-                 loadUpT_F, systemModel, numHeatPumps, PVol_G_atStorageT, PCap_kBTUhr, ignoreShortCycleEr, useHPWHsimPrefMap)
+        super().__init__(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, offFract, onT, offT, building,
+                 outletLoadUpT, onFractLoadUp, offFractLoadUp, onLoadUpT, offLoadUpT, onFractShed, offFractShed, onShedT, offShedT, 
+                 doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
+                 PCap_kBTUhr, useHPWHsimPrefMap)
 
         # size if needed, else all sizing is taken care of in super().__init__
         if not PVol_G_atStorageT is None: # indicates system is sized
@@ -93,8 +96,6 @@ class ParallelLoopTank(SystemConfig):
         """
         helper function for runOneSystemStep
         """
-        if i == 0 or (i > 0 and simRun.getIncomingWaterT(i) != simRun.getIncomingWaterT(i-1)):
-            self.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(i)) #adjust load up volume to reflect usefull energy
         if not (oat is None or self.perfMap is None):
             if i%(60/minuteIntervals) == 0: # we have reached the next hour and should thus be at the next OAT
                 # set primary system capacity based on outdoor air temp and incoming water temp 

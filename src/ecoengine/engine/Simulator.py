@@ -37,7 +37,7 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
     system.resetPerfMap()
     simRun = system.getInitializedSimulation(building, initPV, initST, minuteIntervals, nDays)
 
-    system.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(0)) # set initial load up volume and aquafraction adjusted for useful energy
+    # system.setLoadUPVolumeAndTrigger(simRun.getIncomingWaterT(0)) # set initial load up volume and aquafraction adjusted for useful energy
 
     with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/DryBulbTemperatures_ByClimateZone.csv'), 'r') as oat_file:
         with open(os.path.join(os.path.dirname(__file__), '../data/climate_data/kGperkWh_ByClimateZone.csv'), 'r') as kG_file:
@@ -73,7 +73,9 @@ def simulate(system : SystemConfig, building : Building, initPV=None, initST=Non
                             simRun.addTMCap(system.getTMOutputCapacity(kW=True), system.getTMInputCapacity(kW=True))
             
             except Exception as e:
-                if not exceptOnWaterShortage and (str(e) == "Primary storage ran out of Volume!" or str(e) == "The swing tank dropped below the supply temperature! The system is undersized"):
+                if not exceptOnWaterShortage and (str(e) == "Primary storage ran out of Volume!" or str(e) == "The swing tank dropped below the supply temperature! The system is undersized"
+                                                  or str(e) == "DHW storage dropped below supply temperature. The system is undersized." or
+                                                  'MPRTP was not able to heat water fast enough' in str(e)):
                     print(f"{str(e)} Returning simulation result for analysis.")
                 else:
                     raise
