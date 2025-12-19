@@ -368,7 +368,6 @@ class SystemConfig:
             return hw_load_at_storageT
         else:
             supplyT_demand_covered = max(0, convertVolume(storage_temp_vol, supply_temp, incoming_water_temp, storage_temp)) # max of 0 in case storage_temp_vol is negative
-            
             remaining_demand = demand_at_supply - supplyT_demand_covered
             gallons_removed_from_storage = max(0, storage_temp_vol)
             gallons_added = 0
@@ -385,7 +384,7 @@ class SystemConfig:
                 galsAtSupply = convertVolume(water_draw_interval, supply_temp, incoming_water_temp, top_of_tank_temp)
                 remaining_demand = remaining_demand - galsAtSupply
                 if remaining_demand < 0:
-                    gallons_added = gallons_added + (remaining_demand/galsAtSupply) # account for overdraw
+                    gallons_added = gallons_added + (galsAtSupply*(remaining_demand/galsAtSupply)) # account for overdraw
                     remaining_demand = 0
             return gallons_removed_from_storage + gallons_added
 
