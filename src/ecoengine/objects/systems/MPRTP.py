@@ -522,7 +522,7 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         
         # Get the running volume ##############################################
         if len(diffInd) == 0:
-            raise Exception("ERROR ID 03","The heating rate is greater than the peak volume the system is oversized! Try increasing the hours the heat pump runs in a day",)
+            raise Exception("ERROR ID 03","The heating rate is greater than the peak volume, the system is oversized! Try lowering the flow rate or raising the return temperature of the recirculation loop for a more variable load.",)
         runV_G = 0
         # size cycling as 15 min run time
         for peakInd in diffInd:

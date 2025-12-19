@@ -95,8 +95,12 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
         new_loadshape, new_magnitude = self._getIntegratedLoadshapeAndMagnitude(loadshape, building)
         building.magnitude = new_magnitude
         
-        runV_G, effMixFract = super()._calcRunningVol(heatHrs, onOffArr, new_loadshape, building, effMixFract) 
-
+        try:
+            runV_G, effMixFract = super()._calcRunningVol(heatHrs, onOffArr, new_loadshape, building, effMixFract)
+        except Exception as ex: 
+            if ex.args[0] == 'ERROR ID 03':
+                raise Exception("ERROR ID 03","The heating rate is greater than the peak volume, the system is oversized! Try lowering the flow rate or raising the return temperature of the recirculation loop for a more variable load.",)
+            raise ex
         building.magnitude = dhw_usage_magnitude
 
         return runV_G, effMixFract
