@@ -13,6 +13,9 @@ from plotly.offline import plot
 from numpy import around, flipud
 from io import TextIOWrapper
 
+# TODO need to add a dynamic staged capacity note in front end and get rid of swing tank resistance element output for rtp systems
+# Also need to fix other pages
+
 print("EcosizerEngine Copyright (C) 2023  Ecotope Inc.")
 print("This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.")
 
@@ -153,6 +156,8 @@ class EcosizerEngine:
         
         if sizeAdditionalER:
             schematic = "swingtank_er"
+        # if schematic == "mprtp":
+        #     compRuntime_hr = 10
         
         ignoreRecirc = False
         if schematic == 'singlepass_norecirc' or schematic == 'primary' or schematic == 'multipass_norecirc' or schematic == 'multipass':
@@ -462,6 +467,9 @@ class EcosizerEngine:
             Available only in systems with a swing tank. The volume of the swing in gallons as specified by California sizing methods.
         """
         return self.system.getSizingResults()
+    
+    def getMaxCyclingCapacity_kBTUhr(self):
+        return self.system.getMaxCyclingCapacity_kBTUhr()
 
     def primaryCurve(self):
         """

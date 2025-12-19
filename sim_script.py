@@ -11,9 +11,22 @@ from numpy import around, flipud
 import numpy as np
 import pandas as pd
 
+def get_oversize_amount(hpwh : EcosizerEngine):
+    stor_size = hpwh.system.PVol_G_atStorageT
+    oversize_amount = 50
+    continue_loop = True
+    while oversize_amount < stor_size and continue_loop:
+        hpwh.system.PVol_G_atStorageT = stor_size - oversize_amount
+        try:
+            simRun = simulate(hpwh.system, hpwh.building, minuteIntervals = 1, nDays = 3, exceptOnWaterShortage=True)
+            oversize_amount = oversize_amount + 50
+        except Exception as e:
+            oversize_amount = oversize_amount - 50
+            continue_loop = False
+    hpwh.system.PVol_G_atStorageT = stor_size
+    return oversize_amount
 
-
-def make_oupput_file(hpwh : EcosizerEngine, file_name, schem : str, npep: int):
+def make_oupput_file(hpwh : EcosizerEngine, file_name, schem : str, npep: int, ovr_amt : int):
 
     print(f"+++++++++++{file_name}+++++++++++")
     print(hpwh.system.getOutputCapacity(kW = True))
@@ -21,13 +34,12 @@ def make_oupput_file(hpwh : EcosizerEngine, file_name, schem : str, npep: int):
     try:
         load_sim = simRun.plotStorageLoadSim(True, include_tank_temps = True)
 
-        # [storage_data, capacity_data, hours, startIndex] = system.primaryCurve(building)
-        # storage_data = around(flipud(storage_data),2)
-        # capacity_data = around(flipud(capacity_data),2)
-        # hours = around(flipud(hours),2)
-        # startIndex = len(storage_data)-startIndex-1
         curve = hpwh.plotSizingCurve(True)
-        # curve = system.getPrimaryCurveAndSlider(storage_data, capacity_data, startIndex, hours, returnAsDiv = True)
+
+        hpwh.system.PVol_G_atStorageT = hpwh.system.PVol_G_atStorageT - ovr_amt
+        simRun_sml = simulate(hpwh.system, hpwh.building, minuteIntervals = 1, nDays = 3, exceptOnWaterShortage=False)
+        load_sim_sml = simRun_sml.plotStorageLoadSim(True, include_tank_temps = True)
+        hpwh.system.PVol_G_atStorageT = hpwh.system.PVol_G_atStorageT + ovr_amt
 
         title = "sims"
 
@@ -41,11 +53,14 @@ def make_oupput_file(hpwh : EcosizerEngine, file_name, schem : str, npep: int):
         </head>
         <body>
             <br>
-            Sized for {schem} for {npep} people building and {hpwh.system.compRuntime_hr} hr run time.
+            Sized for {schem} for {npep} people building and {hpwh.system.compRuntime_hr} hr run time. Oversized by {ovr_amt} g
             <br><br><br>
             {load_sim}
             <br><br><br>
             {curve}
+            <br><br><br>
+            Shrunk storage
+            {load_sim_sml}
         </body>
         </html>"""
     except Exception as e:
@@ -69,6 +84,7 @@ def make_oupput_file(hpwh : EcosizerEngine, file_name, schem : str, npep: int):
 df = pd.read_csv('input.csv')
 stor_size = []
 cap = []
+oversize = []
 for index, row in df.iterrows():
     # Extract parameters from the row
     row_id = row['id']
@@ -128,15 +144,17 @@ for index, row in df.iterrows():
 
     stor_size.append(hpwh.system.PVol_G_atStorageT)
     cap.append(hpwh.system.PCap_kBTUhr)
+    ovr_amt = get_oversize_amount(hpwh)
+    oversize.append(ovr_amt)
     # print(hpwh.getSizingResults())
 
     # Create filename based on row data
     ls_suffix = 'ls' if doLoadShift else 'notls'
     file_name = f"{row_id}_{schematic}_{ls_suffix}_new"
 
-    make_oupput_file(hpwh, file_name, schematic, npep)
+    make_oupput_file(hpwh, file_name, schematic, npep, ovr_amt)
 
 df['Storage Size (G)'] = stor_size
 df['capacity (kBTU/hr)'] = cap
-
+df['Rough Oversize Amount (G)'] = oversize
 df.to_csv("output.csv")

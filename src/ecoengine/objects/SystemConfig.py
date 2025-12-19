@@ -19,6 +19,7 @@ class SystemConfig:
         # check inputs. Schedule not checked because it is checked elsewhere
         self._checkInputs(storageT_F, defrostFactor, percentUseable, compRuntime_hr, onFract, doLoadShift, loadShiftPercent)
         self.doLoadShift = doLoadShift
+        self.maxCyclingCapacity_kBTUhr = None
         self.storageT_F = storageT_F
         self.defrostFactor = defrostFactor
         self.percentUseable = percentUseable
@@ -203,7 +204,10 @@ class SystemConfig:
         if buildingWasAnnual:
             # set building load shape back to annual
             building.setToAnnualLS()
-        
+
+    def getMaxCyclingCapacity_kBTUhr(self):
+        return self.maxCyclingCapacity_kBTUhr
+
     def getSizingResults(self):
         """
         Returns the minimum primary volume and heating capacity sizing results. Implimented seperatly in Temp Maintenence systems.
@@ -820,7 +824,6 @@ class SystemConfig:
 
         if minRunVol_G > cyclingVol_G:
             self.cycle_percent = cyclingVol_G/minRunVol_G
-            print(f"short cycled percent = {self.cycle_percent}")
 
         if building.getMinimumVolume() > totalVolAtStorage:
             raise Exception("ERROR ID 04","The sized volume is smaller than the minimum required volume for the building. Please increasing the hours the heat pump runs in a day to ensure adequate volume.",)

@@ -39,12 +39,13 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
             else:
                 oversize_amount = oversize_amount - step_size
                 if step_size < 0.5:
-                    print(f"I am here and oversize_amount is {oversize_amount}")
                     continue_loop = False
-                elif step_size < 25 and step_size > 1:
-                    step_size = step_size - 0.5
                 else:
-                    step_size = step_size/2.0
+                    if step_size < 25 and step_size > 1:
+                        step_size = step_size - 0.5
+                    else:
+                        step_size = step_size/2.0
+                    oversize_amount = oversize_amount + step_size
         stor_size = stor_size - oversize_amount
         stor_size = self.PVol_G_atStorageT + (self.PVol_G_atStorageT * saftey_buffer)
         self.PVol_G_atStorageT = saved_stor_size
@@ -83,14 +84,13 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         recIndex : int
             The index of the recommended heating rate. 
         """
-        print("all of this is in primary curve")
         dhw_usage_magnitude = building.magnitude
         dhw_loadshape = building.loadshape
 
         # Define the heating hours we'll check
         delta = -1.0
         maxHeatHours = 1/(max(building.loadshape))*1.001   
-        arr1 = np.arange(24, self.maxDayRun_hr, delta)
+        arr1 = np.arange(24 if self.maxDayRun_hr > 13 else 14, self.maxDayRun_hr, delta)
         recIndex = len(arr1)
         heatHours = np.concatenate((arr1, np.arange(self.maxDayRun_hr, maxHeatHours, delta)))
         heat_hours_list = [] 
@@ -213,6 +213,8 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         if simRun.slugSim:
             self._oneMixedSlugStep(simRun, incomingWater_T, water_draw_at_recirc, water_draw_at_city_temp, i)
             self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
+            if simRun.mixT_F[i] < simRun.building.supplyT_F:
+                simRun.pV[i] = (self.PVol_G_atStorageT * self.percentUseable) - simRun.mixV[i]
         elif simRun.pheating and not simRun.slugSim:
             self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
             mixV_high = self.getTankVolAtTemp(simRun.building.supplyT_F, simRun.delta_energy)
@@ -221,6 +223,8 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
                 simRun.initializeMPRTPValue(mixV, 
                                         self._getAvgTempBetweenTwoVols((1 - self.percentUseable) * self.PVol_G_atStorageT, mixV_high, incomingWater_T, simRun.delta_energy, storage_outlet_temp), 
                                         i)
+                if simRun.mixT_F[i] < simRun.building.supplyT_F:
+                    simRun.pV[i] = (self.PVol_G_atStorageT * self.percentUseable) - simRun.mixV[i]
         else:
             self.runOnePrimaryStep(simRun, i, water_draw, incomingWater_T)
         simRun.cWV[i] = water_draw_at_city_temp
