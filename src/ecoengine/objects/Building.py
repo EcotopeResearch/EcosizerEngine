@@ -413,8 +413,8 @@ class MultiFamily(Building):
         magnitude = gpdpp * n_people # gpdpp * number_of_people
         # recalculate recirc_loss with different method if applicable
         if not ignoreRecirc and not nApt is None and not Wapt is None and (nApt > 0 and Wapt > 0):
-            # nApt * Wapt will overwrite recirc_loss so it doesn't matter what numbers we put in for returnT_F, flowRate
-            super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, None, None, climate, ignoreRecirc = True, designOAT_F = designOAT_F)
+            # nApt * Wapt will overwrite recirc_loss so it doesn't matter what numbers we put in for flowRate
+            super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, None, climate, ignoreRecirc = True, designOAT_F = designOAT_F)
             self.recirc_loss = nApt * Wapt * W_TO_BTUHR
         else:
             super().__init__(magnitude, loadshape, avgLoadshape, incomingT_F, supplyT_F, returnT_F, flowRate, climate, ignoreRecirc, designOAT_F)
