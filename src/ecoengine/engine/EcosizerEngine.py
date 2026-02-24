@@ -171,7 +171,6 @@ class EcosizerEngine:
         TMCap_kBTUhr = None
         if not TMCap_kW is None:
             TMCap_kBTUhr = TMCap_kW * W_TO_BTUHR
-
         self.building = createBuilding( 
                                 incomingT_F     = incomingT_F,
                                 magnitudeStat   = magnitudeStat, 
