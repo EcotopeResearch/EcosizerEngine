@@ -92,11 +92,9 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
 
     def _calcRunningVol(self, heatHrs, onOffArr, loadshape, building : Building, effMixFract = 0):
         dhw_usage_magnitude = building.magnitude
-        new_loadshape, new_magnitude = self._getIntegratedLoadshapeAndMagnitude(loadshape, building)
-        building.magnitude = new_magnitude
         
         try:
-            runV_G, effMixFract = super()._calcRunningVol(heatHrs, onOffArr, new_loadshape, building, effMixFract)
+            runV_G, effMixFract = super()._calcRunningVol(heatHrs, onOffArr, building.loadshape, building, effMixFract)
         except Exception as ex: 
             if ex.args[0] == 'ERROR ID 03':
                 raise Exception("ERROR ID 03","The heating rate is greater than the peak volume, the system is oversized! Try lowering the flow rate or raising the return temperature of the recirculation loop for a more variable load.",)
@@ -107,10 +105,8 @@ class SPRTP(SystemConfig): # Single Pass Return to Primary (SPRTP)
     
     def _calcRunningVolLS(self, loadUpHours, loadshape, building : Building, effMixFract = 1, lsFractTotalVol = 1):
         dhw_usage_magnitude = building.magnitude
-        new_loadshape, new_magnitude = self._getIntegratedLoadshapeAndMagnitude(loadshape, building)
-        building.magnitude = new_magnitude
         
-        runV_G, effMixFract = super()._calcRunningVolLS(loadUpHours, new_loadshape, building, effMixFract, lsFractTotalVol) 
+        runV_G, effMixFract = super()._calcRunningVolLS(loadUpHours, building.loadshape, building, effMixFract, lsFractTotalVol) 
 
         building.magnitude = dhw_usage_magnitude
 

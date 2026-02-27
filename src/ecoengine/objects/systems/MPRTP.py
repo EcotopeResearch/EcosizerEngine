@@ -17,41 +17,147 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
                  doLoadShift, loadShiftPercent, loadShiftSchedule, loadUpHours, systemModel, numHeatPumps, PVol_G_atStorageT, 
                  PCap_kBTUhr, useHPWHsimPrefMap, stratFactor)
         if self.sized_system:
-            self.PVol_G_atStorageT = self.adjust_storage_oversize(self.PVol_G_atStorageT, building)
-            self.strat_slope = self.stratPercentageSlope / (self.PVol_G_atStorageT/100)
+            print(f"I have {self.getSizingResults()} and does it pass? {self.miniSim(building)}")
+            if not self.miniSim(building):
+                print(f"original_cap is {self.PCap_kBTUhr}")
+                self.PCap_kBTUhr = self.adjust_capacity_undersize(self.PCap_kBTUhr, building)
+                self.perfMap.defaultCapacity_kBTUhr = self.PCap_kBTUhr
+                print(f"now cap is {self.PCap_kBTUhr}, storage is {self.PVol_G_atStorageT}")
+            # else:
+            #     new_storage = self.adjust_storage_oversize(self.PVol_G_atStorageT, building)
+            #     if self.PVol_G_atStorageT > new_storage:
+            #         self.PVol_G_atStorageT = new_storage
+            #         self.strat_slope = self.stratPercentageSlope / (self.PVol_G_atStorageT/100)
+                    # if not self.miniSim(building):
+                    #     print(f"inner fix is {self.PCap_kBTUhr}")
+                    #     self.PCap_kBTUhr = self.adjust_capacity_undersize(self.PCap_kBTUhr, building)
+                    #     self.perfMap.defaultCapacity_kBTUhr = self.PCap_kBTUhr
+                    #     print(f"inner fix is {self.PCap_kBTUhr}, storage is {self.PVol_G_atStorageT}")
 
     def setStratificationPercentageSlope(self):
         self.stratPercentageSlope = 0.8 # degrees F per percentage point of volume on tank  
 
-    def adjust_storage_oversize(self, original_vol : float, building : Building, saftey_buffer = .2):
-        saved_stor_size = self.PVol_G_atStorageT
-        step_size = saved_stor_size / 2.0
-        og_strat_slope = self.strat_slope
-        stor_size = original_vol
-        oversize_amount = step_size
+    def adjust_capacity_undersize(self, original_cap : float, building : Building, verbose = False, change_inner_vals : bool = False):
+        saved_cap_size = original_cap
+        step_size = saved_cap_size * 0.5
         continue_loop = True
-        while oversize_amount < stor_size and continue_loop:
-            self.PVol_G_atStorageT = stor_size - oversize_amount
-            self.strat_slope = self.stratPercentageSlope / (self.PVol_G_atStorageT/100)
-            completed_sim = self.miniSim(building)
+        stored_cap = saved_cap_size + step_size
+        while continue_loop:
+            # print("in while loop")
+            self.PCap_kBTUhr = stored_cap
+            if verbose:
+                print(f"capacity now is {stored_cap}")
+            completed_sim = self.miniSim(building, verbose = verbose)
+
             if completed_sim:
-                oversize_amount = oversize_amount + step_size
-            else:
-                oversize_amount = oversize_amount - step_size
-                if step_size < 0.5:
+                if verbose:
+                    print(f"Tthe simulation successfully completed with {self.PVol_G_atStorageT}")
+                if step_size <= 1:
                     continue_loop = False
                 else:
-                    if step_size < 25 and step_size > 1:
-                        step_size = step_size - 0.5
-                    else:
-                        step_size = step_size/2.0
-                    oversize_amount = oversize_amount + step_size
-        stor_size = stor_size - oversize_amount
-        stor_size = self.PVol_G_atStorageT + (self.PVol_G_atStorageT * saftey_buffer)
-        self.PVol_G_atStorageT = saved_stor_size
-        self.strat_slope = og_strat_slope
-        return stor_size
+                    # if step_size < 25:
+                    #     step_size = step_size - 0.5
+                    # else:
+                    step_size = step_size/2.0
+                    stored_cap -= step_size
+            else:
+                stored_cap += step_size
+
+        # self.PCap_kBTUhr = stored_cap
+        self.PCap_kBTUhr = saved_cap_size
+        if verbose:
+            print(f"Finally, capacity now is {stored_cap}")
+        if change_inner_vals:
+            self.PCap_kBTUhr = stored_cap
+        return stored_cap
     
+    # def adjust_storage_oversize(self, original_vol : float, building : Building, saftey_buffer = .2, verbose = False, change_inner_vals : bool = False):
+    #     # save previous PVol
+    #     saved_stor_size = self.PVol_G_atStorageT
+    #     og_strat_slope = self.strat_slope
+
+    #     self.PVol_G_atStorageT = original_vol
+    #     self.strat_slope = self.stratPercentageSlope / (self.PVol_G_atStorageT/100)
+    #     if not self.miniSim(building, verbose = verbose):
+    #         raise Exception("System could not be properly sized! Try lowering the aquastat fraction.")
+    #     if original_vol < 50:
+    #         return original_vol
+    #     step_size = 5
+    #     max_step = 50
+    #     if original_vol > 100:
+    #         step_size = 10
+    #     if original_vol > 1000:
+    #         step_size = 100
+    #     if original_vol > 10000:
+    #         step_size = 100
+    #     stor_size = original_vol
+    #     self.PVol_G_atStorageT = stor_size - step_size
+    #     continue_loop = True
+    #     while self.miniSim(building, verbose = verbose):
+    #         stor_size = stor_size - step_size
+    #         self.PVol_G_atStorageT = stor_size - step_size
+    #         self.strat_slope = self.stratPercentageSlope / (self.PVol_G_atStorageT/100)
+    #         # if self.miniSim(building, verbose = verbose)
+
+    #     self.PVol_G_atStorageT = stor_size
+    #     stor_size = self.PVol_G_atStorageT + (self.PVol_G_atStorageT * saftey_buffer)
+    #     self.PVol_G_atStorageT = saved_stor_size
+    #     if verbose:
+    #         print(f"Finally, vol now is {stor_size}")
+    #     self.strat_slope = og_strat_slope
+    #     if change_inner_vals:
+    #         self.PVol_G_atStorageT = stor_size
+    #         self.strat_slope = self.stratPercentageSlope / (self.PVol_G_atStorageT/100)
+    #     return stor_size
+
+    
+    # def adjust_storage_oversize(self, original_vol : float, building : Building, saftey_buffer = .2, verbose = False, change_inner_vals : bool = False):
+    #     # save previous PVol
+    #     saved_stor_size = self.PVol_G_atStorageT
+    #     og_strat_slope = self.strat_slope
+
+    #     self.PVol_G_atStorageT = original_vol
+    #     self.strat_slope = self.stratPercentageSlope / (self.PVol_G_atStorageT/100)
+    #     if not self.miniSim(building, verbose = verbose):
+    #         raise Exception("System could not be properly sized! Try lowering the aquastat fraction.")
+    #     step_size = original_vol / 2.0
+    #     stor_size = original_vol
+    #     continue_loop = True
+    #     while continue_loop:
+    #         self.PVol_G_atStorageT = stor_size - step_size
+                
+    #         if self.PVol_G_atStorageT <= 0:
+    #             completed_sim = False
+    #         else:
+    #             if verbose:
+    #                 print(f"vol now is {self.PVol_G_atStorageT}")
+    #             self.strat_slope = self.stratPercentageSlope / (self.PVol_G_atStorageT/100)
+    #             completed_sim = self.miniSim(building, verbose = verbose)
+
+    #         if completed_sim:
+    #             if verbose:
+    #                 print(f"hey hey, the simulation successfully completed with {self.PVol_G_atStorageT}")
+    #             stor_size = self.PVol_G_atStorageT
+    #         else:
+    #             if step_size < 0.5:
+    #                 continue_loop = False
+    #             else:
+    #                 if step_size < 25 and step_size > 1:
+    #                     step_size = step_size - 0.5
+    #                 else:
+    #                     step_size = step_size/2.0
+
+    #     self.PVol_G_atStorageT = stor_size
+    #     stor_size = self.PVol_G_atStorageT + (self.PVol_G_atStorageT * saftey_buffer)
+    #     self.PVol_G_atStorageT = saved_stor_size
+    #     if verbose:
+    #         print(f"Finally, vol now is {stor_size}")
+    #     self.strat_slope = og_strat_slope
+    #     if change_inner_vals:
+    #         self.PVol_G_atStorageT = stor_size
+    #         self.strat_slope = self.stratPercentageSlope / (self.PVol_G_atStorageT/100)
+    #     return stor_size
+
     def sizeSystem(self, building : Building):
         self.sized_system = True
         super().sizeSystem(building)
@@ -100,18 +206,28 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         og_cap = self.PCap_kBTUhr
         og_strat_slope = self.strat_slope
         for i in range(0,len(heatHours)):
+            print(f"{heatHours} {heatHours[i]}")
             try:
                 mprtp = MPRTP(self.storageT_F, self.defrostFactor, self.percentUseable, heatHours[i], self.onFract, self.offFract, self.onT, self.offT, building,
                  doLoadShift = False)
-                # if len(vol_list) > 1 and mprtp.PVol_G_atStorageT > vol_list[-1]:
-                #     # no zig zags on the primary curve (fix for small weird bug of coincidence)
-                #     mprtp.PVol_G_atStorageT = vol_list[-1] - 1
-                if mprtp.miniSim(building):
+                print(mprtp.getSizingResults())
+                # if len(vol_list) > 0 and mprtp.PVol_G_atStorageT > vol_list[-1]:
+                #     print(f"I am in here, sizing currently is {mprtp.getSizingResults()}")
+                #     # if heatHours[i] <= 11.0:
+                #     #     mprtp.adjust_storage_oversize(vol_list[-1], building, verbose=True, saftey_buffer=0.0, change_inner_vals=True)
+                #     # else:
+                #     mprtp.adjust_storage_oversize(vol_list[-1], building, verbose=False, saftey_buffer=0.0, change_inner_vals=True)
+                #     print(f"I am at the end of adjustment, sizing currently is {mprtp.getSizingResults()}")
+                if mprtp.miniSim(building, verbose = False):
+                    print(f"adding {heatHours[i]}")
                     heat_hours_list.append(heatHours[i])
                     vol_list.append(mprtp.PVol_G_atStorageT)
                     cap_list.append(mprtp.PCap_kBTUhr)
                 elif heatHours[i] > self.maxDayRun_hr:
+                    print(f"{heatHours[i]} failed : {mprtp.getSizingResults()}")
                     recIndex = recIndex - 1 
+                else:
+                    print(f"{heatHours[i]} failed even though it should not have failed......: {mprtp.getSizingResults()}")
                 # volN, effMixFract = self.sizePrimaryTankVolume(heatHours[i], self.loadUpHours, building, primaryCurve = True, lsFractTotalVol = self.fract_total_vol)
                 # capN = self._primaryHeatHrs2kBTUHR(heatHours[i], self.loadUpHours, building, effSwingVolFract = effMixFract, primaryCurve = True, lsFractTotalVol = self.fract_total_vol)[0]
                 # self.PCap_kBTUhr = capN
@@ -127,6 +243,7 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
             except ValueError:
                 break
             except Exception as ex:
+                print(ex)
                 if ex.args[0] == 'ERROR ID 03' or ex.args[0] == 'ERROR ID 04':
                     break
                 else:
@@ -186,7 +303,7 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
         return [volN, capN, N, int(np.ceil((self.loadShiftPercent * 100)-25))]
     
     
-    def miniSim(self, building : Building):
+    def miniSim(self, building : Building, verbose : bool = True):
         simRun = self.getInitializedSimulation(building)
         complete_success = True
         # Run the simulation
@@ -194,7 +311,8 @@ class MPRTP(SPRTP): # Single Pass Return to Primary (SPRTP)
             for i in range(len(simRun.hwDemand)):
                 self.runOneSystemStep(simRun, i, minuteIntervals = 1)
         except Exception as e:
-            print(f'exception {self.maxDayRun_hr}', e)
+            if verbose:
+                print(f'exception {self.maxDayRun_hr}', e)
             complete_success = False
         self.resetToDefaultCapacity()
         return complete_success
