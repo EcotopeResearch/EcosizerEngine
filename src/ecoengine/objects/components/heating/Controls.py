@@ -14,17 +14,18 @@ class Controls:
     Sensor fractions refer to fractional vertical positions in the storage tank
     (0 = bottom, 1 = top).
 
-    Only the ON sensor parameters are required — they drive both sizing (via the
-    stratification factor calculation) and simulation. The OFF sensor and load-shift
-    parameters are optional and only needed at simulation time.
+    The ON sensor parameters drive both sizing (stratification factor and
+    short-cycling check) and simulation. The OFF sensor parameters are also
+    required: they are used during sizing to check for short-cycling risk and
+    during simulation to determine when the heater shuts off.
     """
 
     def __init__(
         self,
         on_sensor_fract: float,
         on_trigger_t_f: float,
-        off_sensor_fract: float | None = None,
-        off_trigger_t_f: float | None = None,
+        off_sensor_fract: float,
+        off_trigger_t_f: float,
         load_up_sensor_fract: float | None = None,
         load_up_trigger_t_f: float | None = None,
         shed_sensor_fract: float | None = None,
@@ -36,16 +37,16 @@ class Controls:
         ----------
         on_sensor_fract : float
             Fractional tank height of the ON temperature sensor (0 = bottom, 1 = top).
-            Used during both sizing (stratification factor) and simulation.
+            Used during sizing (stratification factor, short-cycling check) and simulation.
         on_trigger_t_f : float
             Temperature at on_sensor_fract that triggers the heater ON [°F].
-            Used during both sizing (stratification factor) and simulation.
-        off_sensor_fract : float | None
-            Fractional tank height of the OFF temperature sensor.
-            Required for simulation; not used during sizing.
-        off_trigger_t_f : float | None
+            Used during sizing (stratification factor, short-cycling check) and simulation.
+        off_sensor_fract : float
+            Fractional tank height of the OFF temperature sensor (0 = bottom, 1 = top).
+            Used during sizing (short-cycling check) and simulation.
+        off_trigger_t_f : float
             Temperature at off_sensor_fract that triggers the heater OFF [°F].
-            Required for simulation; not used during sizing.
+            Used during sizing (short-cycling check) and simulation.
         load_up_sensor_fract : float | None
             Sensor fraction used during load-up mode.
         load_up_trigger_t_f : float | None

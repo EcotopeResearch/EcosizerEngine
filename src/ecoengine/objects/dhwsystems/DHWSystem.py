@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import warnings
 import numpy as np
 from typing import TYPE_CHECKING
 
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
-from ecoengine.objects.components.heating.PerformanceMap import NominalPerformanceMap
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.storage.StorageTank import StorageTank
 
@@ -169,8 +169,8 @@ class DHWSystem:
         system.storage_tank  = StorageTank(
             total_volume_gal=system._minimum_storage_storageT_gal
         )
-        system.water_heaters = [WaterHeater(
-            performance_map=NominalPerformanceMap(system._minimum_capacity_kbtuh),
+        system.water_heaters = [WaterHeater.from_nominal_capacity(
+            nominal_capacity_kbtuh=system._minimum_capacity_kbtuh,
             controls=controls,
         )]
         return system
@@ -270,6 +270,9 @@ class DHWSystem:
 
         self._minimum_capacity_kbtuh       = capacity_kbtuh
         self._minimum_storage_storageT_gal = storage_vol_storageT
+
+        if controls is not None:
+            self._warn_if_short_cycling(controls, capacity_kbtuh, storage_vol_storageT)
 
         if was_annual:
             building.set_to_annual_load_shape()
@@ -501,6 +504,72 @@ class DHWSystem:
                 "or design_inlet_water_temp_f) when constructing the Building."
             )
         return temp
+
+    # Minimum heater cycle time below which short cycling is flagged [minutes].
+    _MIN_CYCLE_MIN: float = 10.0
+
+    def _warn_if_short_cycling(
+        self,
+        controls: Controls,
+        capacity_kbtuh: float,
+        storage_vol_storageT_gal: float,
+    ) -> None:
+        """
+        Emit a UserWarning if the sized system is likely to short-cycle.
+
+        Short cycling occurs when the tank volume between the ON and OFF
+        sensors is small relative to the heater's output rate, causing the
+        heater to turn on and off in rapid succession.
+
+        The estimated cycle time is:
+
+            deadband_vol = (off_fract - on_fract) * storage_vol
+            heat_rate_gph = capacity_kbtuh * 1000 / (RHO_CP * (storage_T - supply_T))
+            cycle_time = deadband_vol / heat_rate_gph   [hours]
+
+        A warning is issued when cycle_time < _MIN_CYCLE_MIN minutes, or when
+        the OFF sensor is not above the ON sensor (heater would never shut off).
+
+        Parameters
+        ----------
+        controls : Controls
+        capacity_kbtuh : float
+            Minimum required heating capacity [kBTU/hr] from sizing.
+        storage_vol_storageT_gal : float
+            Minimum required storage volume [gallons] from sizing.
+        """
+        deadband_fract = controls.off_sensor_fract - controls.on_sensor_fract
+        if deadband_fract <= 0:
+            warnings.warn(
+                f"Controls off_sensor_fract ({controls.off_sensor_fract}) is not above "
+                f"on_sensor_fract ({controls.on_sensor_fract}). The heater may never "
+                f"shut off during normal operation.",
+                UserWarning,
+                stacklevel=4,
+            )
+            return
+
+        delta_t_storage = self.storage_temp_f - self.supply_temp_f
+        if delta_t_storage <= 0:
+            return  # degenerate temperatures — skip check
+
+        # Gallons of storage-temperature water in the deadband zone
+        deadband_vol_gal = deadband_fract * storage_vol_storageT_gal
+
+        # Rate at which the heater fills the deadband [gallons / hour]
+        heat_rate_gph = capacity_kbtuh * 1000 / (_RHO_CP * delta_t_storage)
+
+        cycle_time_min = (deadband_vol_gal / heat_rate_gph) * 60
+        if cycle_time_min < self._MIN_CYCLE_MIN:
+            warnings.warn(
+                f"Short cycling risk: estimated heater cycle time is "
+                f"{cycle_time_min:.1f} min (minimum recommended: {self._MIN_CYCLE_MIN} min). "
+                f"Consider increasing storage volume or widening the sensor deadband "
+                f"(on_sensor_fract={controls.on_sensor_fract}, "
+                f"off_sensor_fract={controls.off_sensor_fract}).",
+                UserWarning,
+                stacklevel=4,
+            )
 
     # ------------------------------------------------------------------
     # Simulation step (stubs — implemented in subclasses)
