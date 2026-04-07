@@ -56,11 +56,11 @@ def building_no_zone():
 
 @pytest.fixture
 def basic_controls():
-    """Controls with a wide deadband (on at bottom, off at 80%)."""
+    """Controls with a wide deadband (on sensor at 80%, off sensor at bottom)."""
     return Controls(
-        on_sensor_fract=0.0,
+        on_sensor_fract=0.8,
         on_trigger_t_f=SUPPLY_T,
-        off_sensor_fract=0.8,
+        off_sensor_fract=0.0,
         off_trigger_t_f=STORAGE_T,
     )
 
@@ -277,22 +277,22 @@ class TestShortCyclingWarning:
     def test_no_warning_with_large_deadband(self):
         """Wide deadband → long cycle time → no warning."""
         sys = self._sys()
-        ctrl = self._controls(0.0, 0.9)
+        ctrl = self._controls(on_fract=0.9, off_fract=0.0)
         with warnings.catch_warnings():
             warnings.simplefilter("error")
             sys._warn_if_short_cycling(ctrl, capacity_kbtuh=20.0, storage_vol_storageT_gal=500.0)
 
     def test_warning_with_tiny_deadband(self):
-        """Tiny deadband → short cycle time → UserWarning."""
+        """Tiny deadband (on and off sensors nearly at same height) → UserWarning."""
         sys = self._sys()
-        ctrl = self._controls(0.0, 0.01)  # only 1% of tank between sensors
+        ctrl = self._controls(on_fract=0.01, off_fract=0.0)  # only 1% of tank between sensors
         with pytest.warns(UserWarning, match="Short cycling"):
             sys._warn_if_short_cycling(ctrl, capacity_kbtuh=200.0, storage_vol_storageT_gal=50.0)
 
-    def test_warning_when_off_below_on(self):
-        """off_sensor_fract <= on_sensor_fract emits a different warning."""
+    def test_warning_when_off_above_on(self):
+        """off_sensor_fract > on_sensor_fract is backwards — heater may never shut off."""
         sys = self._sys()
-        ctrl = self._controls(0.5, 0.2)  # off below on — heater never shuts off
+        ctrl = self._controls(on_fract=0.2, off_fract=0.5)  # off above on — backwards
         with pytest.warns(UserWarning, match="never shut off"):
             sys._warn_if_short_cycling(ctrl, capacity_kbtuh=20.0, storage_vol_storageT_gal=500.0)
 
@@ -305,7 +305,7 @@ class TestShortCyclingWarning:
 
     def test_from_size_emits_warning_for_bad_controls(self, building_with_zone):
         """from_size() propagates the short-cycling warning when controls are tight."""
-        bad_ctrl = self._controls(0.0, 0.01)
+        bad_ctrl = self._controls(on_fract=0.01, off_fract=0.0)
         with pytest.warns(UserWarning, match="Short cycling"):
             DHWSystem.from_size(
                 building=building_with_zone,
@@ -388,11 +388,13 @@ class TestFromSize:
         assert sized_system.water_heaters[0].controls is None
 
     def test_controls_on_sensor_fract_affects_sizing(self, building_with_zone):
-        """A higher aquastat reduces the strat factor and requires more storage."""
-        ctrl_low  = Controls(on_sensor_fract=0.0, on_trigger_t_f=SUPPLY_T, off_sensor_fract=0.8, off_trigger_t_f=STORAGE_T)
-        ctrl_high = Controls(on_sensor_fract=0.5, on_trigger_t_f=SUPPLY_T, off_sensor_fract=0.9, off_trigger_t_f=STORAGE_T)
-        sys_low  = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, controls=ctrl_low)
-        sys_high = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, controls=ctrl_high)
+        """A higher ON sensor (larger on_sensor_fract) reduces the strat factor,
+        requiring more storage."""
+        ctrl_low_on  = Controls(on_sensor_fract=0.3, on_trigger_t_f=SUPPLY_T, off_sensor_fract=0.0, off_trigger_t_f=STORAGE_T)
+        ctrl_high_on = Controls(on_sensor_fract=0.8, on_trigger_t_f=SUPPLY_T, off_sensor_fract=0.0, off_trigger_t_f=STORAGE_T)
+        sys_low  = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, controls=ctrl_low_on)
+        sys_high = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, controls=ctrl_high_on)
+        # Higher ON sensor → less of the tank is "above the aquastat" → lower strat factor → more storage
         assert sys_high._minimum_storage_storageT_gal >= sys_low._minimum_storage_storageT_gal
 
 

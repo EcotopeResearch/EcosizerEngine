@@ -538,16 +538,22 @@ class DHWSystem:
         storage_vol_storageT_gal : float
             Minimum required storage volume [gallons] from sizing.
         """
-        deadband_fract = controls.off_sensor_fract - controls.on_sensor_fract
-        if deadband_fract <= 0:
+        # Normal configuration: on_sensor_fract >= off_sensor_fract.
+        # The ON sensor sits above the OFF sensor: the heater triggers when the
+        # upper portion of the tank cools, and shuts off when the lower portion
+        # has warmed. If off > on the sensors are backwards and the heater may
+        # never shut off.
+        if controls.off_sensor_fract > controls.on_sensor_fract:
             warnings.warn(
-                f"Controls off_sensor_fract ({controls.off_sensor_fract}) is not above "
-                f"on_sensor_fract ({controls.on_sensor_fract}). The heater may never "
-                f"shut off during normal operation.",
+                f"Controls off_sensor_fract ({controls.off_sensor_fract}) is above "
+                f"on_sensor_fract ({controls.on_sensor_fract}). Expected off <= on — "
+                f"the heater may never shut off during normal operation.",
                 UserWarning,
                 stacklevel=4,
             )
             return
+
+        deadband_fract = controls.on_sensor_fract - controls.off_sensor_fract
 
         delta_t_storage = self.storage_temp_f - self.supply_temp_f
         if delta_t_storage <= 0:

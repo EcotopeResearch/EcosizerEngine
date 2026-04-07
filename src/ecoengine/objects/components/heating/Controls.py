@@ -14,10 +14,20 @@ class Controls:
     Sensor fractions refer to fractional vertical positions in the storage tank
     (0 = bottom, 1 = top).
 
-    The ON sensor parameters drive both sizing (stratification factor and
-    short-cycling check) and simulation. The OFF sensor parameters are also
-    required: they are used during sizing to check for short-cycling risk and
-    during simulation to determine when the heater shuts off.
+    Sensor position convention
+    --------------------------
+    The ON sensor sits *above* the OFF sensor in the tank
+    (on_sensor_fract >= off_sensor_fract).
+
+    * ON sensor (upper): the heater turns ON when this sensor drops below
+      on_trigger_t_f — i.e. the top of the tank has cooled enough that hot
+      water supply is at risk.
+    * OFF sensor (lower): the heater turns OFF when this sensor rises above
+      off_trigger_t_f — i.e. the entire tank has been heated to setpoint.
+
+    Both sensor parameters are required: the ON sensor drives sizing
+    (stratification factor, short-cycling check) and simulation; the OFF
+    sensor drives the short-cycling check and simulation.
     """
 
     def __init__(
@@ -36,13 +46,15 @@ class Controls:
         Parameters
         ----------
         on_sensor_fract : float
-            Fractional tank height of the ON temperature sensor (0 = bottom, 1 = top).
+            Fractional tank height of the ON (upper) temperature sensor
+            (0 = bottom, 1 = top). Must be >= off_sensor_fract.
             Used during sizing (stratification factor, short-cycling check) and simulation.
         on_trigger_t_f : float
             Temperature at on_sensor_fract that triggers the heater ON [°F].
             Used during sizing (stratification factor, short-cycling check) and simulation.
         off_sensor_fract : float
-            Fractional tank height of the OFF temperature sensor (0 = bottom, 1 = top).
+            Fractional tank height of the OFF (lower) temperature sensor
+            (0 = bottom, 1 = top). Must be <= on_sensor_fract.
             Used during sizing (short-cycling check) and simulation.
         off_trigger_t_f : float
             Temperature at off_sensor_fract that triggers the heater OFF [°F].
