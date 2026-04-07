@@ -1,0 +1,118 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ecoengine.objects.components.storage.StorageTank import StorageTank
+
+
+class Controls:
+    """
+    Defines the on/off control logic for a single WaterHeater, including normal
+    operation setpoints and load shift (load-up / shed) overrides.
+
+    Sensor fractions refer to fractional vertical positions in the storage tank
+    (0 = bottom, 1 = top).
+
+    Only the ON sensor parameters are required — they drive both sizing (via the
+    stratification factor calculation) and simulation. The OFF sensor and load-shift
+    parameters are optional and only needed at simulation time.
+    """
+
+    def __init__(
+        self,
+        on_sensor_fract: float,
+        on_trigger_t_f: float,
+        off_sensor_fract: float | None = None,
+        off_trigger_t_f: float | None = None,
+        load_up_sensor_fract: float | None = None,
+        load_up_trigger_t_f: float | None = None,
+        shed_sensor_fract: float | None = None,
+        shed_trigger_t_f: float | None = None,
+        load_up_hours: float = 0,
+    ) -> None:
+        """
+        Parameters
+        ----------
+        on_sensor_fract : float
+            Fractional tank height of the ON temperature sensor (0 = bottom, 1 = top).
+            Used during both sizing (stratification factor) and simulation.
+        on_trigger_t_f : float
+            Temperature at on_sensor_fract that triggers the heater ON [°F].
+            Used during both sizing (stratification factor) and simulation.
+        off_sensor_fract : float | None
+            Fractional tank height of the OFF temperature sensor.
+            Required for simulation; not used during sizing.
+        off_trigger_t_f : float | None
+            Temperature at off_sensor_fract that triggers the heater OFF [°F].
+            Required for simulation; not used during sizing.
+        load_up_sensor_fract : float | None
+            Sensor fraction used during load-up mode.
+        load_up_trigger_t_f : float | None
+            OFF trigger temperature during load-up mode [°F].
+        shed_sensor_fract : float | None
+            Sensor fraction used during shed mode.
+        shed_trigger_t_f : float | None
+            ON trigger temperature during shed mode [°F].
+        load_up_hours : float
+            Number of hours spent in load-up mode before the first shed period.
+        """
+        self.on_sensor_fract      = on_sensor_fract
+        self.on_trigger_t_f       = on_trigger_t_f
+        self.off_sensor_fract     = off_sensor_fract
+        self.off_trigger_t_f      = off_trigger_t_f
+        self.load_up_sensor_fract = load_up_sensor_fract
+        self.load_up_trigger_t_f  = load_up_trigger_t_f
+        self.shed_sensor_fract    = shed_sensor_fract
+        self.shed_trigger_t_f     = shed_trigger_t_f
+        self.load_up_hours        = load_up_hours
+
+    def should_turn_on(self, storage_tank: StorageTank, mode: str = "normal") -> bool:
+        """
+        Return True if the heater should turn on given the current tank state and mode.
+
+        Parameters
+        ----------
+        storage_tank : StorageTank
+        mode : str
+            One of 'normal', 'load_up', or 'shed'.
+
+        Returns
+        -------
+        bool
+        """
+        pass
+
+    def should_turn_off(self, storage_tank: StorageTank, mode: str = "normal") -> bool:
+        """
+        Return True if the heater should turn off given the current tank state and mode.
+
+        Parameters
+        ----------
+        storage_tank : StorageTank
+        mode : str
+            One of 'normal', 'load_up', or 'shed'.
+
+        Returns
+        -------
+        bool
+        """
+        pass
+
+    def get_active_mode(self, timestep: int, load_shift_schedule: list[int]) -> str:
+        """
+        Determine the current operating mode based on the load shift schedule.
+
+        Parameters
+        ----------
+        timestep : int
+            Current simulation timestep (minutes from start of day).
+        load_shift_schedule : list[int]
+            24-element list of 0s and 1s (0 = shed/off, 1 = run).
+
+        Returns
+        -------
+        str
+            One of 'normal', 'load_up', or 'shed'.
+        """
+        pass

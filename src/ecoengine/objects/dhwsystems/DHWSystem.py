@@ -4,6 +4,8 @@ import numpy as np
 from typing import TYPE_CHECKING
 
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
+from ecoengine.objects.components.heating.PerformanceMap import NominalPerformanceMap
+from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.storage.StorageTank import StorageTank
 
 if TYPE_CHECKING:
@@ -54,9 +56,11 @@ class DHWSystem:
     ------------
     Do not call __init__ directly. Use one of the two factory class methods:
 
-    * DHWSystem.from_size(building, ...)
+    * DHWSystem.from_size(building, controls, ...)
         Runs the sizing algorithm to find minimum required capacity and storage
-        volume, then builds one WaterHeater holding all that capacity.
+        volume, then builds one WaterHeater holding all that capacity. The
+        WaterHeater receives the provided Controls object; its on-sensor
+        parameters drive the stratification factor used during sizing.
 
     * DHWSystem.from_components(storage_volume_storageT_gal, water_heaters, ...)
         Builds the system from explicitly provided components.
@@ -70,8 +74,6 @@ class DHWSystem:
         storage_temp_f: float,
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
-        on_fract: float = 0.0,
-        on_temp_f: float | None = None,
     ) -> None:
         """
         Parameters
@@ -90,13 +92,6 @@ class DHWSystem:
         defrost_factor : float
             Fraction of rated capacity available after accounting for defrost
             cycles (0–1). Typically 1.0 for non-frosting conditions.
-        on_fract : float
-            Fractional tank height (0 = bottom, 1 = top) of the aquastat
-            sensor that triggers the heater ON. Used to calculate the
-            stratification factor during sizing.
-        on_temp_f : float | None
-            Temperature [°F] at the aquastat sensor when the heater turns on.
-            Defaults to supply_temp_f when not provided.
         """
         self.water_heaters  = water_heaters
         self.storage_tank   = storage_tank
@@ -104,8 +99,6 @@ class DHWSystem:
         self.storage_temp_f = storage_temp_f
         self.max_daily_run_hr = max_daily_run_hr
         self.defrost_factor   = defrost_factor
-        self._on_fract  = on_fract
-        self._on_temp_f = on_temp_f if on_temp_f is not None else supply_temp_f
 
         # Sizing results — populated by size()
         self._minimum_capacity_kbtuh:        float | None = None
@@ -123,16 +116,20 @@ class DHWSystem:
         storage_temp_f: float,
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
-        on_fract: float = 0.0,
-        on_temp_f: float | None = None,
+        controls: Controls | None = None,
     ) -> DHWSystem:
         """
         Size the system for the given building, then build it.
 
         Runs the sizing algorithm to determine the minimum required heating
-        capacity and storage volume. Creates one WaterHeater that holds all
-        of the required capacity, and a StorageTank sized to the minimum
-        required volume.
+        capacity and storage volume. Creates one WaterHeater backed by a
+        NominalPerformanceMap (constant-output placeholder) holding all of the
+        required capacity, and a StorageTank sized to the minimum required volume.
+
+        The Controls object serves double duty: its on-sensor parameters
+        (on_sensor_fract, on_trigger_t_f) drive the stratification factor
+        calculation during sizing, and the same Controls instance is assigned
+        to the created WaterHeater for use at simulation time.
 
         Parameters
         ----------
@@ -149,12 +146,11 @@ class DHWSystem:
             higher capacity requirements and smaller storage requirements.
         defrost_factor : float
             Fraction of rated capacity available after defrost (0–1).
-        on_fract : float
-            Aquastat ON sensor height (0 = bottom, 1 = top). Used for the
-            stratification factor calculation during sizing.
-        on_temp_f : float | None
-            Temperature at the aquastat ON sensor [°F]. Defaults to
-            supply_temp_f when not provided.
+        controls : Controls | None
+            Control setpoints for the heater. The on-sensor position and
+            trigger temperature are used during sizing to compute the
+            stratification factor. If None, defaults of on_sensor_fract=0.0
+            and on_trigger_t_f=supply_temp_f are assumed.
 
         Returns
         -------
@@ -167,18 +163,15 @@ class DHWSystem:
             storage_temp_f=storage_temp_f,
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
-            on_fract=on_fract,
-            on_temp_f=on_temp_f,
         )
-        system.size(building)
+        system.size(building, controls=controls)
 
         system.storage_tank  = StorageTank(
             total_volume_gal=system._minimum_storage_storageT_gal
         )
         system.water_heaters = [WaterHeater(
-            performance_map=None,
-            controls=None,
-            nominal_capacity_kbtuh=system._minimum_capacity_kbtuh,
+            performance_map=NominalPerformanceMap(system._minimum_capacity_kbtuh),
+            controls=controls,
         )]
         return system
 
@@ -191,8 +184,6 @@ class DHWSystem:
         storage_temp_f: float,
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
-        on_fract: float = 0.0,
-        on_temp_f: float | None = None,
     ) -> DHWSystem:
         """
         Build the system from explicitly provided storage volume and heaters.
@@ -200,6 +191,8 @@ class DHWSystem:
         Use this path when storage volume and heating capacity are already
         known (e.g. from a previous sizing run, from equipment specs, or
         from user input) rather than being calculated from a building load.
+        Each WaterHeater in the list should already carry its own Controls
+        object.
 
         Parameters
         ----------
@@ -217,10 +210,6 @@ class DHWSystem:
             Maximum hours the system may run per day.
         defrost_factor : float
             Fraction of rated capacity available after defrost (0–1).
-        on_fract : float
-            Aquastat ON sensor height (0 = bottom, 1 = top).
-        on_temp_f : float | None
-            Temperature at the aquastat ON sensor [°F].
 
         Returns
         -------
@@ -233,15 +222,13 @@ class DHWSystem:
             storage_temp_f=storage_temp_f,
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
-            on_fract=on_fract,
-            on_temp_f=on_temp_f,
         )
 
     # ------------------------------------------------------------------
     # Sizing — public interface
     # ------------------------------------------------------------------
 
-    def size(self, building: Building) -> None:
+    def size(self, building: Building, controls: Controls | None = None) -> None:
         """
         Compute the minimum heating capacity and storage volume for this
         system in the given building. Stores results internally; retrieve
@@ -255,6 +242,11 @@ class DHWSystem:
         Parameters
         ----------
         building : Building
+        controls : Controls | None
+            Controls whose on-sensor parameters (on_sensor_fract,
+            on_trigger_t_f) determine the stratification factor. If None,
+            defaults of on_sensor_fract=0.0 and on_trigger_t_f=supply_temp_f
+            are used.
 
         Raises
         ------
@@ -262,13 +254,16 @@ class DHWSystem:
             If the building has no design inlet water temperature available
             (no ClimateZone was provided at construction).
         """
+        on_fract  = controls.on_sensor_fract if controls is not None else 0.0
+        on_temp_f = controls.on_trigger_t_f  if controls is not None else self.supply_temp_f
+
         was_annual = building.is_annual_load_shape()
         if was_annual:
             building.set_to_daily_load_shape()
 
         capacity_kbtuh       = self._calc_required_capacity(building)
         running_vol_supplyT  = self._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
-        strat_factor         = self._calc_stratification_factor(self._on_fract, self._on_temp_f)
+        strat_factor         = self._calc_stratification_factor(on_fract, on_temp_f)
         storage_vol_storageT = self._calc_storage_volume_storageT_gal(
             running_vol_supplyT, strat_factor, building.get_design_inlet_water_temp_f()
         )
@@ -459,8 +454,10 @@ class DHWSystem:
         ----------
         on_fract : float
             Fractional height of the aquastat ON sensor (0 = bottom, 1 = top).
+            Taken from Controls.on_sensor_fract.
         on_temp_f : float
             Temperature at the aquastat sensor when the heater turns on [°F].
+            Taken from Controls.on_trigger_t_f.
 
         Returns
         -------

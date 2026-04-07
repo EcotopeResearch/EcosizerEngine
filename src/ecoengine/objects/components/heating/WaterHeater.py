@@ -19,26 +19,22 @@ class WaterHeater:
         performance_map: PerformanceMap | None,
         controls: Controls | None,
         model_name: str = "",
-        nominal_capacity_kbtuh: float | None = None,
     ) -> None:
         """
         Parameters
         ----------
         performance_map : PerformanceMap | None
-            Performance map for this specific HPWH model. If None, capacity
-            queries fall back to nominal_capacity_kbtuh.
+            Performance map for this HPWH model. Use NominalPerformanceMap for
+            a constant-capacity placeholder during preliminary sizing.
+            If None, all capacity/power queries return None.
         controls : Controls | None
             Control setpoints and logic for this heater.
         model_name : str
             Human-readable model identifier.
-        nominal_capacity_kbtuh : float | None
-            Rated heating output capacity [kBTU/hr]. Used as a fallback when
-            no performance_map is provided (e.g. during preliminary sizing).
         """
         self.performance_map = performance_map
         self.controls = controls
         self.model_name = model_name
-        self.nominal_capacity_kbtuh = nominal_capacity_kbtuh
         self._active = False
 
     def is_active(self) -> bool:
@@ -57,9 +53,8 @@ class WaterHeater:
         """
         Return heating output capacity [kBTU/hr] at current conditions.
 
-        If a performance_map is available it is used; otherwise falls back to
-        nominal_capacity_kbtuh (set at construction during sizing). Returns
-        None when neither is available.
+        Delegates to performance_map.get_capacity_kbtuh(). Returns None when
+        no performance map is assigned.
 
         Parameters
         ----------
@@ -73,8 +68,8 @@ class WaterHeater:
         float | None
         """
         if self.performance_map is not None:
-            pass  # TODO: return self.performance_map.get_capacity_kbtuh(oat_f, water_temp_f)
-        return self.nominal_capacity_kbtuh
+            return self.performance_map.get_capacity_kbtuh(oat_f, water_temp_f)
+        return None
 
     def get_power_in_kw(self, oat_f: float, water_temp_f: float) -> float | None:
         """
@@ -89,7 +84,9 @@ class WaterHeater:
         -------
         float | None
         """
-        pass
+        if self.performance_map is not None:
+            return self.performance_map.get_power_in_kw(oat_f, water_temp_f)
+        return None
 
     def get_output_kbtuh(self, oat_f: float, water_temp_f: float) -> float | None:
         """
