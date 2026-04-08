@@ -112,7 +112,8 @@ class DHWSystem:
         storage_temp_f: float,
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
-        controls: Controls | None = None,
+        control_schedule: list[int] | None = None,
+        control_map: dict[int, Controls] | None = None,
         strat_slope: float = 2.8,
     ) -> DHWSystem:
         """
@@ -123,10 +124,10 @@ class DHWSystem:
         NominalPerformanceMap (constant-output placeholder) holding all of the
         required capacity, and a StorageTank sized to the minimum required volume.
 
-        The Controls object serves double duty: its on-sensor parameters
-        drive the stratification factor calculation during sizing, and the
-        same Controls instance is assigned to the created WaterHeater for
-        use at simulation time.
+        The control_map is used during sizing: each Controls in the map
+        contributes a stratification factor, and the minimum (worst-case) value
+        drives storage volume. The same schedule and map are assigned to the
+        created WaterHeater for use at simulation time.
 
         Parameters
         ----------
@@ -143,11 +144,14 @@ class DHWSystem:
             higher capacity requirements and smaller storage requirements.
         defrost_factor : float
             Fraction of rated capacity available after defrost (0-1).
-        controls : Controls | None
-            Control setpoints for the heater. The on-sensor position and
-            trigger temperature are used during sizing to compute the
-            stratification factor. If None, defaults of on_sensor_fract=0.0
-            and on_trigger_t_f=supply_temp_f are assumed.
+        control_schedule : list[int] | None
+            24-element list mapping each hour of the day to a key in
+            control_map. Assigned to the created WaterHeater. None when
+            no load-shifting or multi-mode control is required.
+        control_map : dict[int, Controls] | None
+            Maps control_schedule integers to Controls objects. All Controls
+            in the map are considered during sizing (worst-case strat factor).
+            None when no control logic is configured.
         strat_slope : float
             Temperature gradient through the tank's transition zone
             [°F per percentage-point of tank height]. Stored on the
@@ -167,7 +171,7 @@ class DHWSystem:
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
         )
-        system.size(building, controls=controls, strat_slope=strat_slope)
+        system.size(building, control_map=control_map, strat_slope=strat_slope)
 
         system.storage_tank  = StorageTank(
             total_volume_gal=system._minimum_storage_storageT_gal,
@@ -175,7 +179,8 @@ class DHWSystem:
         )
         system.water_heaters = [WaterHeater.from_nominal_capacity(
             nominal_capacity_kbtuh=system._minimum_capacity_kbtuh,
-            controls=controls,
+            control_schedule=control_schedule,
+            control_map=control_map,
         )]
         return system
 
@@ -243,7 +248,7 @@ class DHWSystem:
     def size(
         self,
         building: Building,
-        controls: Controls | None = None,
+        control_map: dict[int, Controls] | None = None,
         strat_slope: float = 2.8,
     ) -> None:
         """
@@ -259,10 +264,11 @@ class DHWSystem:
         Parameters
         ----------
         building : Building
-        controls : Controls | None
-            Controls whose on-sensor parameters drive the stratification
-            factor calculation. If None, defaults of on_sensor_fract=0.0
-            and on_trigger_t_f=supply_temp_f are used.
+        control_map : dict[int, Controls] | None
+            All Controls objects that may be active during operation. Each
+            Controls contributes a stratification factor; the minimum value
+            (worst case) drives storage volume sizing. Each Controls is also
+            checked for short-cycling risk. None uses sizing defaults.
         strat_slope : float
             Temperature gradient through the tank's transition zone
             [°F per percentage-point of tank height]. Should match the
@@ -280,7 +286,7 @@ class DHWSystem:
 
         capacity_kbtuh       = self._calc_required_capacity(building)
         running_vol_supplyT  = self._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
-        strat_factor         = self._calc_stratification_factor(controls, strat_slope)
+        strat_factor         = self._calc_stratification_factor(control_map, strat_slope)
         storage_vol_storageT = self._calc_storage_volume_storageT_gal(
             running_vol_supplyT, strat_factor, building.get_design_inlet_water_temp_f()
         )
@@ -288,8 +294,8 @@ class DHWSystem:
         self._minimum_capacity_kbtuh       = capacity_kbtuh
         self._minimum_storage_storageT_gal = storage_vol_storageT
 
-        if controls is not None:
-            self._warn_if_short_cycling(controls, capacity_kbtuh, storage_vol_storageT)
+        if control_map:
+            self._warn_if_short_cycling(control_map, capacity_kbtuh, storage_vol_storageT)
 
         if was_annual:
             building.set_to_annual_load_shape()
@@ -461,27 +467,25 @@ class DHWSystem:
 
     def _calc_stratification_factor(
         self,
-        controls: Controls | None,
+        control_map: dict[int, Controls] | None,
         strat_slope: float,
     ) -> float:
         """
-        Calculate the stratification factor: the fraction of the volume
-        above the aquastat that contains water at or above supply temperature.
+        Calculate the worst-case stratification factor across all Controls in
+        the control_map.
 
-        The tank temperature profile is modeled as a linear gradient in the
-        transition zone between cold and fully-hot layers. The slope of that
-        gradient is strat_slope [°F / %-height], taken from the StorageTank.
+        Each Controls object produces a stratification factor based on its
+        on_sensor_fract and on_trigger_t_f. For conservative sizing the
+        minimum factor (least favorable stratification) is returned, since a
+        lower factor requires a larger storage volume.
 
-        When controls is None, defaults of on_sensor_fract=0.0 and
-        on_trigger_t_f=supply_temp_f are used (ideal single-sensor case).
-        Additional Controls fields (e.g. load-shift setpoints) may influence
-        this calculation in the future.
+        When control_map is None or empty, sizing defaults of
+        on_sensor_fract=0.0 and on_trigger_t_f=supply_temp_f are used.
 
         Parameters
         ----------
-        controls : Controls | None
-            Heater controls. on_sensor_fract and on_trigger_t_f are used for
-            the current calculation.
+        control_map : dict[int, Controls] | None
+            All Controls objects that may be active during operation.
         strat_slope : float
             Temperature gradient [°F per percentage-point of tank height].
             Taken from StorageTank.strat_slope.
@@ -489,12 +493,46 @@ class DHWSystem:
         Returns
         -------
         float
+            Minimum stratification factor across all Controls (0-1).
+        """
+        if not control_map:
+            return self._strat_factor_for_on_params(0.0, self.supply_temp_f, strat_slope)
+
+        return min(
+            self._strat_factor_for_on_params(
+                ctrl.on_sensor_fract, ctrl.on_trigger_t_f, strat_slope
+            )
+            for ctrl in control_map.values()
+        )
+
+    def _strat_factor_for_on_params(
+        self,
+        on_fract: float,
+        on_temp_f: float,
+        strat_slope: float,
+    ) -> float:
+        """
+        Compute the stratification factor for a single (on_fract, on_temp_f) pair.
+
+        The tank temperature profile is modeled as a linear gradient in the
+        transition zone between cold and fully-hot layers. The slope of that
+        gradient is strat_slope [°F / %-height].
+
+        Parameters
+        ----------
+        on_fract : float
+            Fractional height of the aquastat ON sensor (0 = bottom, 1 = top).
+        on_temp_f : float
+            Temperature at the aquastat sensor when the heater turns on [°F].
+        strat_slope : float
+            Temperature gradient [°F per percentage-point of tank height].
+
+        Returns
+        -------
+        float
             Stratification factor (0-1). A value of 1.0 means all storage
             above the aquastat is at full storage temperature (ideal).
         """
-        on_fract  = controls.on_sensor_fract if controls is not None else 0.0
-        on_temp_f = controls.on_trigger_t_f  if controls is not None else self.supply_temp_f
-
         on_pct  = on_fract * 100
         delta_t = self.storage_temp_f - self.supply_temp_f
 
@@ -509,8 +547,8 @@ class DHWSystem:
         supply_height_pct = max(supply_height_pct, on_pct)
 
         # Volume above supply temp = fully-hot zone + trapezoidal transition zone
-        vol_fully_hot  = (100 - storage_height_pct) * delta_t
-        vol_transition = (storage_height_pct - supply_height_pct) * delta_t / 2
+        vol_fully_hot    = (100 - storage_height_pct) * delta_t
+        vol_transition   = (storage_height_pct - supply_height_pct) * delta_t / 2
         vol_above_supply = vol_fully_hot + vol_transition
 
         # Ideal case: all volume above the aquastat is at full storage temp
@@ -537,72 +575,60 @@ class DHWSystem:
 
     def _warn_if_short_cycling(
         self,
-        controls: Controls,
+        control_map: dict[int, Controls],
         capacity_kbtuh: float,
         storage_vol_storageT_gal: float,
     ) -> None:
         """
-        Emit a UserWarning if the sized system is likely to short-cycle.
+        Emit a UserWarning for any Controls in the map that would cause short
+        cycling or have backwards sensor positions.
 
-        Short cycling occurs when the tank volume between the ON and OFF
-        sensors is small relative to the heater's output rate, causing the
-        heater to turn on and off in rapid succession.
+        Each Controls in control_map is checked independently. Short cycling
+        occurs when the deadband volume (between ON and OFF sensors) is small
+        relative to the heater's output rate.
 
-        The estimated cycle time is:
+        Estimated cycle time per Controls:
 
-            deadband_vol = (off_fract - on_fract) * storage_vol
+            deadband_vol = (on_fract - off_fract) * storage_vol
             heat_rate_gph = capacity_kbtuh * 1000 / (RHO_CP * (storage_T - supply_T))
             cycle_time = deadband_vol / heat_rate_gph   [hours]
 
-        A warning is issued when cycle_time < _MIN_CYCLE_MIN minutes, or when
-        the OFF sensor is not above the ON sensor (heater would never shut off).
-
         Parameters
         ----------
-        controls : Controls
+        control_map : dict[int, Controls]
         capacity_kbtuh : float
             Minimum required heating capacity [kBTU/hr] from sizing.
         storage_vol_storageT_gal : float
             Minimum required storage volume [gallons] from sizing.
         """
-        # Normal configuration: on_sensor_fract >= off_sensor_fract.
-        # The ON sensor sits above the OFF sensor: the heater triggers when the
-        # upper portion of the tank cools, and shuts off when the lower portion
-        # has warmed. If off > on the sensors are backwards and the heater may
-        # never shut off.
-        if controls.off_sensor_fract > controls.on_sensor_fract:
-            warnings.warn(
-                f"Controls off_sensor_fract ({controls.off_sensor_fract}) is above "
-                f"on_sensor_fract ({controls.on_sensor_fract}). Expected off <= on — "
-                f"the heater may never shut off during normal operation.",
-                UserWarning,
-                stacklevel=4,
-            )
-            return
-
-        deadband_fract = controls.on_sensor_fract - controls.off_sensor_fract
-
         delta_t_storage = self.storage_temp_f - self.supply_temp_f
         if delta_t_storage <= 0:
             return  # degenerate temperatures — skip check
 
-        # Gallons of storage-temperature water in the deadband zone
-        deadband_vol_gal = deadband_fract * storage_vol_storageT_gal
-
-        # Rate at which the heater fills the deadband [gallons / hour]
         heat_rate_gph = capacity_kbtuh * 1000 / (_RHO_CP * delta_t_storage)
 
-        cycle_time_min = (deadband_vol_gal / heat_rate_gph) * 60
-        if cycle_time_min < self._MIN_CYCLE_MIN:
-            warnings.warn(
-                f"Short cycling risk: estimated heater cycle time is "
-                f"{cycle_time_min:.1f} min (minimum recommended: {self._MIN_CYCLE_MIN} min). "
-                f"Consider increasing storage volume or widening the sensor deadband "
-                f"(on_sensor_fract={controls.on_sensor_fract}, "
-                f"off_sensor_fract={controls.off_sensor_fract}).",
-                UserWarning,
-                stacklevel=4,
-            )
+        for key, ctrl in control_map.items():
+            if ctrl.off_sensor_fract > ctrl.on_sensor_fract:
+                warnings.warn(
+                    f"Controls key {key}: off_sensor_fract ({ctrl.off_sensor_fract}) "
+                    f"is above on_sensor_fract ({ctrl.on_sensor_fract}). "
+                    f"Expected off <= on — the heater may never shut off.",
+                    UserWarning,
+                    stacklevel=4,
+                )
+                continue
+
+            deadband_vol_gal = (ctrl.on_sensor_fract - ctrl.off_sensor_fract) * storage_vol_storageT_gal
+            cycle_time_min   = (deadband_vol_gal / heat_rate_gph) * 60
+            if cycle_time_min < self._MIN_CYCLE_MIN:
+                warnings.warn(
+                    f"Controls key {key}: short cycling risk — estimated cycle time is "
+                    f"{cycle_time_min:.1f} min (minimum recommended: {self._MIN_CYCLE_MIN} min). "
+                    f"Consider increasing storage volume or widening the sensor deadband "
+                    f"(on_sensor_fract={ctrl.on_sensor_fract}, off_sensor_fract={ctrl.off_sensor_fract}).",
+                    UserWarning,
+                    stacklevel=4,
+                )
 
     # ------------------------------------------------------------------
     # Simulation step (stubs — implemented in subclasses)

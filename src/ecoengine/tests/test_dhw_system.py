@@ -7,7 +7,7 @@ Tests cover:
 - Storage volume calculation (_calc_storage_volume_storageT_gal)
 - Stratification factor calculation (_calc_stratification_factor)
 - Short-cycling warning (_warn_if_short_cycling)
-- from_size() factory: correct types, sizing results stored, Controls wiring
+- from_size() factory: correct types, sizing results, control wiring
 - from_components() factory: correct storage volume and heater list
 - size() guard: raises when no design inlet temp available
 - NominalPerformanceMap: constant-capacity placeholder
@@ -28,12 +28,26 @@ from ecoengine.objects.components.storage.StorageTank import StorageTank
 
 
 # ===========================================================================
-# Fixtures
+# Fixtures and helpers
 # ===========================================================================
 
 SUPPLY_T  = 120.0   # °F
 STORAGE_T = 150.0   # °F
 INLET_T   = 50.0    # °F
+DEFAULT_STRAT_SLOPE = 2.8
+
+
+def make_controls(on_fract: float, off_fract: float) -> Controls:
+    return Controls(
+        on_sensor_fract=on_fract,  on_trigger_t_f=SUPPLY_T,
+        off_sensor_fract=off_fract, off_trigger_t_f=STORAGE_T,
+        outlet_temp_f=STORAGE_T,
+    )
+
+
+def make_control_map(*on_off_pairs) -> dict[int, Controls]:
+    """Build a control_map from (on_fract, off_fract) pairs, keyed 0, 1, 2..."""
+    return {i: make_controls(on, off) for i, (on, off) in enumerate(on_off_pairs)}
 
 
 @pytest.fixture
@@ -55,14 +69,15 @@ def building_no_zone():
 
 
 @pytest.fixture
-def basic_controls():
-    """Controls with a wide deadband (on sensor at 80%, off sensor at bottom)."""
-    return Controls(
-        on_sensor_fract=0.8,
-        on_trigger_t_f=SUPPLY_T,
-        off_sensor_fract=0.0,
-        off_trigger_t_f=STORAGE_T,
-    )
+def basic_control_map():
+    """Single-mode control_map with a wide deadband."""
+    return make_control_map((0.8, 0.0))
+
+
+@pytest.fixture
+def basic_schedule():
+    """All-day schedule using control key 0."""
+    return [0] * 24
 
 
 @pytest.fixture
@@ -75,12 +90,13 @@ def sized_system(building_with_zone):
 
 
 @pytest.fixture
-def sized_system_with_controls(building_with_zone, basic_controls):
+def sized_system_with_controls(building_with_zone, basic_schedule, basic_control_map):
     return DHWSystem.from_size(
         building=building_with_zone,
         supply_temp_f=SUPPLY_T,
         storage_temp_f=STORAGE_T,
-        controls=basic_controls,
+        control_schedule=basic_schedule,
+        control_map=basic_control_map,
     )
 
 
@@ -107,45 +123,58 @@ class TestNominalPerformanceMap:
 # ===========================================================================
 
 class TestWaterHeaterFactories:
-    def test_from_nominal_capacity_returns_water_heater(self, basic_controls):
-        wh = WaterHeater.from_nominal_capacity(
-            nominal_capacity_kbtuh=40.0,
-            controls=basic_controls,
-        )
+    def test_from_nominal_capacity_returns_water_heater(self, basic_schedule, basic_control_map):
+        wh = WaterHeater.from_nominal_capacity(40.0, basic_schedule, basic_control_map)
         assert isinstance(wh, WaterHeater)
 
-    def test_from_nominal_capacity_uses_nominal_map(self, basic_controls):
-        wh = WaterHeater.from_nominal_capacity(nominal_capacity_kbtuh=40.0, controls=basic_controls)
+    def test_from_nominal_capacity_uses_nominal_map(self, basic_schedule, basic_control_map):
+        wh = WaterHeater.from_nominal_capacity(40.0, basic_schedule, basic_control_map)
         assert isinstance(wh.performance_map, NominalPerformanceMap)
 
-    def test_from_nominal_capacity_correct_value(self, basic_controls):
-        wh = WaterHeater.from_nominal_capacity(nominal_capacity_kbtuh=40.0, controls=basic_controls)
+    def test_from_nominal_capacity_correct_value(self, basic_schedule, basic_control_map):
+        wh = WaterHeater.from_nominal_capacity(40.0, basic_schedule, basic_control_map)
         assert wh.get_capacity_kbtuh(oat_f=35.0, water_temp_f=120.0) == pytest.approx(40.0)
 
-    def test_from_nominal_capacity_wires_controls(self, basic_controls):
-        wh = WaterHeater.from_nominal_capacity(nominal_capacity_kbtuh=40.0, controls=basic_controls)
-        assert wh.controls is basic_controls
+    def test_from_nominal_capacity_wires_schedule_and_map(self, basic_schedule, basic_control_map):
+        wh = WaterHeater.from_nominal_capacity(40.0, basic_schedule, basic_control_map)
+        assert wh.control_schedule is basic_schedule
+        assert wh.control_map is basic_control_map
 
-    def test_from_nominal_capacity_model_name(self, basic_controls):
-        wh = WaterHeater.from_nominal_capacity(
-            nominal_capacity_kbtuh=40.0, controls=basic_controls, model_name="test_unit",
-        )
+    def test_from_nominal_capacity_model_name(self, basic_schedule, basic_control_map):
+        wh = WaterHeater.from_nominal_capacity(40.0, basic_schedule, basic_control_map, model_name="test_unit")
         assert wh.model_name == "test_unit"
 
     def test_from_nominal_capacity_no_controls(self):
-        wh = WaterHeater.from_nominal_capacity(nominal_capacity_kbtuh=25.0, controls=None)
-        assert wh.controls is None
+        wh = WaterHeater.from_nominal_capacity(25.0, control_schedule=None, control_map=None)
+        assert wh.control_schedule is None
+        assert wh.control_map is None
         assert wh.get_capacity_kbtuh(35.0, 120.0) == pytest.approx(25.0)
 
-    def test_from_model_name_is_stub(self, basic_controls):
-        """from_model_name is a stub — just verify it exists and is callable."""
-        # Should return None (stub body is `pass`) without raising
-        result = WaterHeater.from_model_name(model_name="some_model", controls=basic_controls)
-        assert result is None  # stub returns None
+    def test_get_controls_for_hour_returns_correct_controls(self, basic_schedule, basic_control_map):
+        wh = WaterHeater.from_nominal_capacity(40.0, basic_schedule, basic_control_map)
+        ctrl = wh.get_controls_for_hour(hour_of_day=12)
+        assert ctrl is basic_control_map[0]
+
+    def test_get_controls_for_hour_respects_schedule(self):
+        ctrl_a = make_controls(0.8, 0.0)
+        ctrl_b = make_controls(0.5, 0.0)
+        schedule = [0] * 8 + [1] * 8 + [0] * 8   # key 1 during hours 8-15
+        cmap     = {0: ctrl_a, 1: ctrl_b}
+        wh = WaterHeater.from_nominal_capacity(40.0, schedule, cmap)
+        assert wh.get_controls_for_hour(0)  is ctrl_a
+        assert wh.get_controls_for_hour(10) is ctrl_b
+
+    def test_get_controls_for_hour_no_schedule_returns_none(self):
+        wh = WaterHeater.from_nominal_capacity(40.0, None, None)
+        assert wh.get_controls_for_hour(5) is None
+
+    def test_from_model_name_is_stub(self, basic_schedule, basic_control_map):
+        result = WaterHeater.from_model_name("some_model", basic_schedule, basic_control_map)
+        assert result is None
 
 
 # ===========================================================================
-# _get_peak_indices — module-level helper
+# _get_peak_indices
 # ===========================================================================
 
 class TestGetPeakIndices:
@@ -245,47 +274,47 @@ class TestCalcStorageVolume:
 # _calc_stratification_factor
 # ===========================================================================
 
-DEFAULT_STRAT_SLOPE = 2.8
-
-
 class TestStratificationFactor:
     def _sys(self):
         return DHWSystem(water_heaters=[], storage_tank=None, supply_temp_f=SUPPLY_T, storage_temp_f=STORAGE_T)
 
-    def _ctrl(self, on_fract, on_temp):
-        return Controls(
-            on_sensor_fract=on_fract, on_trigger_t_f=on_temp,
-            off_sensor_fract=0.0,    off_trigger_t_f=STORAGE_T,
-        )
-
     def test_returns_between_zero_and_one(self):
-        ctrl = self._ctrl(0.0, SUPPLY_T)
-        assert 0.0 < self._sys()._calc_stratification_factor(ctrl, DEFAULT_STRAT_SLOPE) <= 1.0
+        cmap = make_control_map((0.0, 0.0))
+        assert 0.0 < self._sys()._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE) <= 1.0
 
-    def test_none_controls_uses_defaults(self):
-        """controls=None should give the same result as on_fract=0.0, on_temp=supply_temp."""
+    def test_none_map_uses_defaults(self):
+        """control_map=None gives same result as on_fract=0.0, on_temp=supply_temp."""
         sys = self._sys()
         factor_none = sys._calc_stratification_factor(None, DEFAULT_STRAT_SLOPE)
-        factor_ctrl = sys._calc_stratification_factor(self._ctrl(0.0, SUPPLY_T), DEFAULT_STRAT_SLOPE)
+        cmap = make_control_map((0.0, 0.0))
+        factor_ctrl = sys._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE)
         assert factor_none == pytest.approx(factor_ctrl)
 
     def test_lower_aquastat_gives_higher_factor(self):
         sys = self._sys()
-        ctrl_low  = self._ctrl(0.0, SUPPLY_T)
-        ctrl_high = self._ctrl(0.5, SUPPLY_T)
-        assert sys._calc_stratification_factor(ctrl_low, DEFAULT_STRAT_SLOPE) >= sys._calc_stratification_factor(ctrl_high, DEFAULT_STRAT_SLOPE)
+        cmap_low  = make_control_map((0.0, 0.0))
+        cmap_high = make_control_map((0.5, 0.0))
+        assert sys._calc_stratification_factor(cmap_low, DEFAULT_STRAT_SLOPE) >= sys._calc_stratification_factor(cmap_high, DEFAULT_STRAT_SLOPE)
 
     def test_on_temp_at_storage_gives_factor_one(self):
-        ctrl = self._ctrl(0.0, STORAGE_T)
-        assert self._sys()._calc_stratification_factor(ctrl, DEFAULT_STRAT_SLOPE) == pytest.approx(1.0)
+        ctrl = Controls(on_sensor_fract=0.0, on_trigger_t_f=STORAGE_T,
+                        off_sensor_fract=0.0, off_trigger_t_f=STORAGE_T,
+                        outlet_temp_f=STORAGE_T)
+        cmap = {0: ctrl}
+        assert self._sys()._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE) == pytest.approx(1.0)
 
     def test_higher_strat_slope_gives_higher_factor(self):
-        """A steeper thermocline means more of the tank is fully hot."""
+        cmap = make_control_map((0.0, 0.0))
         sys  = self._sys()
-        ctrl = self._ctrl(0.0, SUPPLY_T)
-        factor_shallow = sys._calc_stratification_factor(ctrl, strat_slope=1.0)
-        factor_steep   = sys._calc_stratification_factor(ctrl, strat_slope=5.0)
-        assert factor_steep > factor_shallow
+        assert sys._calc_stratification_factor(cmap, 5.0) > sys._calc_stratification_factor(cmap, 1.0)
+
+    def test_uses_worst_case_across_map(self):
+        """When multiple Controls are in the map, the minimum factor is returned."""
+        sys = self._sys()
+        cmap = make_control_map((0.1, 0.0), (0.8, 0.0))  # key 0 = shallow, key 1 = deep
+        factor_multi  = sys._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE)
+        factor_worst  = sys._calc_stratification_factor(make_control_map((0.8, 0.0)), DEFAULT_STRAT_SLOPE)
+        assert factor_multi == pytest.approx(factor_worst)
 
 
 # ===========================================================================
@@ -296,50 +325,46 @@ class TestShortCyclingWarning:
     def _sys(self):
         return DHWSystem(water_heaters=[], storage_tank=None, supply_temp_f=SUPPLY_T, storage_temp_f=STORAGE_T)
 
-    def _controls(self, on_fract, off_fract):
-        return Controls(
-            on_sensor_fract=on_fract,  on_trigger_t_f=SUPPLY_T,
-            off_sensor_fract=off_fract, off_trigger_t_f=STORAGE_T,
-        )
-
     def test_no_warning_with_large_deadband(self):
-        """Wide deadband → long cycle time → no warning."""
-        sys = self._sys()
-        ctrl = self._controls(on_fract=0.9, off_fract=0.0)
+        sys  = self._sys()
+        cmap = make_control_map((0.9, 0.0))
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            sys._warn_if_short_cycling(ctrl, capacity_kbtuh=20.0, storage_vol_storageT_gal=500.0)
+            sys._warn_if_short_cycling(cmap, capacity_kbtuh=20.0, storage_vol_storageT_gal=500.0)
 
     def test_warning_with_tiny_deadband(self):
-        """Tiny deadband (on and off sensors nearly at same height) → UserWarning."""
-        sys = self._sys()
-        ctrl = self._controls(on_fract=0.01, off_fract=0.0)  # only 1% of tank between sensors
-        with pytest.warns(UserWarning, match="Short cycling"):
-            sys._warn_if_short_cycling(ctrl, capacity_kbtuh=200.0, storage_vol_storageT_gal=50.0)
+        sys  = self._sys()
+        cmap = make_control_map((0.01, 0.0))  # 1% deadband
+        with pytest.warns(UserWarning, match="short cycling"):
+            sys._warn_if_short_cycling(cmap, capacity_kbtuh=200.0, storage_vol_storageT_gal=50.0)
 
     def test_warning_when_off_above_on(self):
-        """off_sensor_fract > on_sensor_fract is backwards — heater may never shut off."""
-        sys = self._sys()
-        ctrl = self._controls(on_fract=0.2, off_fract=0.5)  # off above on — backwards
+        sys  = self._sys()
+        cmap = make_control_map((0.2, 0.5))  # off above on — backwards
         with pytest.warns(UserWarning, match="never shut off"):
-            sys._warn_if_short_cycling(ctrl, capacity_kbtuh=20.0, storage_vol_storageT_gal=500.0)
+            sys._warn_if_short_cycling(cmap, capacity_kbtuh=20.0, storage_vol_storageT_gal=500.0)
 
-    def test_no_warning_when_controls_is_none(self, building_with_zone):
-        """size() with controls=None skips the short-cycling check entirely."""
+    def test_warning_includes_key(self):
+        """Warning message should identify which Controls key is problematic."""
+        sys  = self._sys()
+        cmap = {7: make_controls(0.01, 0.0)}
+        with pytest.warns(UserWarning, match="key 7"):
+            sys._warn_if_short_cycling(cmap, capacity_kbtuh=200.0, storage_vol_storageT_gal=50.0)
+
+    def test_no_warning_when_control_map_is_none(self, building_with_zone):
         sys = DHWSystem(water_heaters=[], storage_tank=None, supply_temp_f=SUPPLY_T, storage_temp_f=STORAGE_T)
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            sys.size(building_with_zone, controls=None)  # must not raise
+            sys.size(building_with_zone, control_map=None)
 
     def test_from_size_emits_warning_for_bad_controls(self, building_with_zone):
-        """from_size() propagates the short-cycling warning when controls are tight."""
-        bad_ctrl = self._controls(on_fract=0.01, off_fract=0.0)
-        with pytest.warns(UserWarning, match="Short cycling"):
+        bad_map = make_control_map((0.01, 0.0))
+        with pytest.warns(UserWarning, match="short cycling"):
             DHWSystem.from_size(
                 building=building_with_zone,
                 supply_temp_f=SUPPLY_T,
                 storage_temp_f=STORAGE_T,
-                controls=bad_ctrl,
+                control_map=bad_map,
             )
 
 
@@ -382,21 +407,14 @@ class TestFromSize:
         )
 
     def test_strat_slope_default_stored_on_tank(self, sized_system):
-        """Default strat_slope (2.8) should be stored on the StorageTank."""
         assert sized_system.storage_tank.strat_slope == pytest.approx(2.8)
 
     def test_custom_strat_slope_stored_on_tank(self, building_with_zone):
-        """A custom strat_slope should be passed through to the StorageTank."""
-        system = DHWSystem.from_size(
-            building=building_with_zone,
-            supply_temp_f=SUPPLY_T,
-            storage_temp_f=STORAGE_T,
-            strat_slope=4.0,
-        )
+        system = DHWSystem.from_size(building=building_with_zone, supply_temp_f=SUPPLY_T,
+                                     storage_temp_f=STORAGE_T, strat_slope=4.0)
         assert system.storage_tank.strat_slope == pytest.approx(4.0)
 
     def test_strat_slope_affects_storage_size(self, building_with_zone):
-        """A higher strat_slope (better stratification) requires less storage."""
         sys_low  = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, strat_slope=1.0)
         sys_high = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, strat_slope=5.0)
         assert sys_high._minimum_storage_storageT_gal < sys_low._minimum_storage_storageT_gal
@@ -429,21 +447,35 @@ class TestFromSize:
         assert sized_system.supply_temp_f  == SUPPLY_T
         assert sized_system.storage_temp_f == STORAGE_T
 
-    def test_controls_assigned_to_water_heater(self, sized_system_with_controls, basic_controls):
-        assert sized_system_with_controls.water_heaters[0].controls is basic_controls
+    def test_schedule_and_map_assigned_to_water_heater(
+        self, sized_system_with_controls, basic_schedule, basic_control_map
+    ):
+        heater = sized_system_with_controls.water_heaters[0]
+        assert heater.control_schedule is basic_schedule
+        assert heater.control_map is basic_control_map
 
-    def test_no_controls_leaves_heater_controls_none(self, sized_system):
-        assert sized_system.water_heaters[0].controls is None
+    def test_no_controls_leaves_heater_fields_none(self, sized_system):
+        heater = sized_system.water_heaters[0]
+        assert heater.control_schedule is None
+        assert heater.control_map is None
 
-    def test_controls_on_sensor_fract_affects_sizing(self, building_with_zone):
-        """A higher ON sensor (larger on_sensor_fract) reduces the strat factor,
-        requiring more storage."""
-        ctrl_low_on  = Controls(on_sensor_fract=0.3, on_trigger_t_f=SUPPLY_T, off_sensor_fract=0.0, off_trigger_t_f=STORAGE_T)
-        ctrl_high_on = Controls(on_sensor_fract=0.8, on_trigger_t_f=SUPPLY_T, off_sensor_fract=0.0, off_trigger_t_f=STORAGE_T)
-        sys_low  = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, controls=ctrl_low_on)
-        sys_high = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, controls=ctrl_high_on)
-        # Higher ON sensor → less of the tank is "above the aquastat" → lower strat factor → more storage
+    def test_control_map_on_sensor_affects_sizing(self, building_with_zone):
+        """A higher ON sensor in the map drives a lower strat factor → more storage."""
+        map_low  = make_control_map((0.3, 0.0))
+        map_high = make_control_map((0.8, 0.0))
+        sys_low  = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, control_map=map_low)
+        sys_high = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, control_map=map_high)
         assert sys_high._minimum_storage_storageT_gal >= sys_low._minimum_storage_storageT_gal
+
+    def test_multimode_map_uses_worst_case_for_sizing(self, building_with_zone):
+        """A multi-mode map uses the Controls with the lowest strat factor."""
+        map_single = make_control_map((0.8, 0.0))           # worst case only
+        map_multi  = make_control_map((0.3, 0.0), (0.8, 0.0))  # same worst case + a better one
+        sys_single = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, control_map=map_single)
+        sys_multi  = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, control_map=map_multi)
+        assert sys_multi._minimum_storage_storageT_gal == pytest.approx(
+            sys_single._minimum_storage_storageT_gal, rel=1e-9
+        )
 
 
 # ===========================================================================
@@ -452,7 +484,7 @@ class TestFromSize:
 
 class TestFromComponents:
     def _make_heater(self, capacity_kbtuh=50.0):
-        return WaterHeater.from_nominal_capacity(capacity_kbtuh, controls=None)
+        return WaterHeater.from_nominal_capacity(capacity_kbtuh, control_schedule=None, control_map=None)
 
     def test_returns_dhw_system(self):
         assert isinstance(
@@ -465,9 +497,7 @@ class TestFromComponents:
         assert system.storage_tank.total_volume_gal == pytest.approx(500.0)
 
     def test_strat_slope_stored_on_tank(self):
-        system = DHWSystem.from_components(
-            500.0, [self._make_heater()], SUPPLY_T, STORAGE_T, strat_slope=3.5,
-        )
+        system = DHWSystem.from_components(500.0, [self._make_heater()], SUPPLY_T, STORAGE_T, strat_slope=3.5)
         assert system.storage_tank.strat_slope == pytest.approx(3.5)
 
     def test_water_heater_list_preserved(self):
@@ -488,6 +518,8 @@ class TestFromComponents:
             system.get_minimum_capacity_kbtuh()
 
     def test_temperature_params_stored(self):
-        system = DHWSystem.from_components(100.0, [WaterHeater(None, None)], SUPPLY_T, STORAGE_T)
+        system = DHWSystem.from_components(
+            100.0, [WaterHeater(None, None, None)], SUPPLY_T, STORAGE_T,
+        )
         assert system.supply_temp_f  == SUPPLY_T
         assert system.storage_temp_f == STORAGE_T
