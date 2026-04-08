@@ -245,19 +245,47 @@ class TestCalcStorageVolume:
 # _calc_stratification_factor
 # ===========================================================================
 
+DEFAULT_STRAT_SLOPE = 2.8
+
+
 class TestStratificationFactor:
     def _sys(self):
         return DHWSystem(water_heaters=[], storage_tank=None, supply_temp_f=SUPPLY_T, storage_temp_f=STORAGE_T)
 
+    def _ctrl(self, on_fract, on_temp):
+        return Controls(
+            on_sensor_fract=on_fract, on_trigger_t_f=on_temp,
+            off_sensor_fract=0.0,    off_trigger_t_f=STORAGE_T,
+        )
+
     def test_returns_between_zero_and_one(self):
-        assert 0.0 < self._sys()._calc_stratification_factor(0.0, SUPPLY_T) <= 1.0
+        ctrl = self._ctrl(0.0, SUPPLY_T)
+        assert 0.0 < self._sys()._calc_stratification_factor(ctrl, DEFAULT_STRAT_SLOPE) <= 1.0
+
+    def test_none_controls_uses_defaults(self):
+        """controls=None should give the same result as on_fract=0.0, on_temp=supply_temp."""
+        sys = self._sys()
+        factor_none = sys._calc_stratification_factor(None, DEFAULT_STRAT_SLOPE)
+        factor_ctrl = sys._calc_stratification_factor(self._ctrl(0.0, SUPPLY_T), DEFAULT_STRAT_SLOPE)
+        assert factor_none == pytest.approx(factor_ctrl)
 
     def test_lower_aquastat_gives_higher_factor(self):
         sys = self._sys()
-        assert sys._calc_stratification_factor(0.0, SUPPLY_T) >= sys._calc_stratification_factor(0.5, SUPPLY_T)
+        ctrl_low  = self._ctrl(0.0, SUPPLY_T)
+        ctrl_high = self._ctrl(0.5, SUPPLY_T)
+        assert sys._calc_stratification_factor(ctrl_low, DEFAULT_STRAT_SLOPE) >= sys._calc_stratification_factor(ctrl_high, DEFAULT_STRAT_SLOPE)
 
     def test_on_temp_at_storage_gives_factor_one(self):
-        assert self._sys()._calc_stratification_factor(0.0, STORAGE_T) == pytest.approx(1.0)
+        ctrl = self._ctrl(0.0, STORAGE_T)
+        assert self._sys()._calc_stratification_factor(ctrl, DEFAULT_STRAT_SLOPE) == pytest.approx(1.0)
+
+    def test_higher_strat_slope_gives_higher_factor(self):
+        """A steeper thermocline means more of the tank is fully hot."""
+        sys  = self._sys()
+        ctrl = self._ctrl(0.0, SUPPLY_T)
+        factor_shallow = sys._calc_stratification_factor(ctrl, strat_slope=1.0)
+        factor_steep   = sys._calc_stratification_factor(ctrl, strat_slope=5.0)
+        assert factor_steep > factor_shallow
 
 
 # ===========================================================================
@@ -353,6 +381,26 @@ class TestFromSize:
             sized_system._minimum_storage_storageT_gal, rel=1e-9
         )
 
+    def test_strat_slope_default_stored_on_tank(self, sized_system):
+        """Default strat_slope (2.8) should be stored on the StorageTank."""
+        assert sized_system.storage_tank.strat_slope == pytest.approx(2.8)
+
+    def test_custom_strat_slope_stored_on_tank(self, building_with_zone):
+        """A custom strat_slope should be passed through to the StorageTank."""
+        system = DHWSystem.from_size(
+            building=building_with_zone,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+            strat_slope=4.0,
+        )
+        assert system.storage_tank.strat_slope == pytest.approx(4.0)
+
+    def test_strat_slope_affects_storage_size(self, building_with_zone):
+        """A higher strat_slope (better stratification) requires less storage."""
+        sys_low  = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, strat_slope=1.0)
+        sys_high = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, strat_slope=5.0)
+        assert sys_high._minimum_storage_storageT_gal < sys_low._minimum_storage_storageT_gal
+
     def test_sizing_results_are_positive(self, sized_system):
         assert sized_system._minimum_capacity_kbtuh > 0
         assert sized_system._minimum_storage_storageT_gal >= 0
@@ -415,6 +463,12 @@ class TestFromComponents:
     def test_storage_tank_volume(self):
         system = DHWSystem.from_components(500.0, [self._make_heater()], SUPPLY_T, STORAGE_T)
         assert system.storage_tank.total_volume_gal == pytest.approx(500.0)
+
+    def test_strat_slope_stored_on_tank(self):
+        system = DHWSystem.from_components(
+            500.0, [self._make_heater()], SUPPLY_T, STORAGE_T, strat_slope=3.5,
+        )
+        assert system.storage_tank.strat_slope == pytest.approx(3.5)
 
     def test_water_heater_list_preserved(self):
         h1, h2 = self._make_heater(30.0), self._make_heater(20.0)

@@ -18,10 +18,6 @@ if TYPE_CHECKING:
 # Volumetric heat capacity of water [BTU / (gallon * °F)]
 _RHO_CP: float = 8.353535
 
-# Stratification model: temperature gradient in the transition zone of the
-# tank [°F per percentage-point of tank height]. Calibrated empirically.
-_STRAT_SLOPE: float = 2.8
-
 
 # ---------------------------------------------------------------------------
 # Module-level helpers
@@ -72,7 +68,7 @@ class DHWSystem:
         storage_tank: StorageTank | None,
         supply_temp_f: float,
         storage_temp_f: float,
-        max_daily_run_hr: float = 24.0,
+        max_daily_run_hr: float = 16.0,
         defrost_factor: float = 1.0,
     ) -> None:
         """
@@ -87,11 +83,11 @@ class DHWSystem:
         storage_temp_f : float
             Hot water storage setpoint temperature [°F].
         max_daily_run_hr : float
-            Maximum hours the heating system may run per day (1–24). Used to
+            Maximum hours the heating system may run per day (1-24). Used to
             calculate the required generation rate during sizing.
         defrost_factor : float
             Fraction of rated capacity available after accounting for defrost
-            cycles (0–1). Typically 1.0 for non-frosting conditions.
+            cycles (0-1). Typically 1.0 for non-frosting conditions.
         """
         self.water_heaters  = water_heaters
         self.storage_tank   = storage_tank
@@ -117,6 +113,7 @@ class DHWSystem:
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
         controls: Controls | None = None,
+        strat_slope: float = 2.8,
     ) -> DHWSystem:
         """
         Size the system for the given building, then build it.
@@ -127,9 +124,9 @@ class DHWSystem:
         required capacity, and a StorageTank sized to the minimum required volume.
 
         The Controls object serves double duty: its on-sensor parameters
-        (on_sensor_fract, on_trigger_t_f) drive the stratification factor
-        calculation during sizing, and the same Controls instance is assigned
-        to the created WaterHeater for use at simulation time.
+        drive the stratification factor calculation during sizing, and the
+        same Controls instance is assigned to the created WaterHeater for
+        use at simulation time.
 
         Parameters
         ----------
@@ -145,12 +142,18 @@ class DHWSystem:
             Maximum hours the system may run per day. Lower values drive
             higher capacity requirements and smaller storage requirements.
         defrost_factor : float
-            Fraction of rated capacity available after defrost (0–1).
+            Fraction of rated capacity available after defrost (0-1).
         controls : Controls | None
             Control setpoints for the heater. The on-sensor position and
             trigger temperature are used during sizing to compute the
             stratification factor. If None, defaults of on_sensor_fract=0.0
             and on_trigger_t_f=supply_temp_f are assumed.
+        strat_slope : float
+            Temperature gradient through the tank's transition zone
+            [°F per percentage-point of tank height]. Stored on the
+            StorageTank and used during stratification factor calculations.
+            Subclasses that model different tank geometries should override
+            this via their own from_size() implementation.
 
         Returns
         -------
@@ -164,10 +167,11 @@ class DHWSystem:
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
         )
-        system.size(building, controls=controls)
+        system.size(building, controls=controls, strat_slope=strat_slope)
 
         system.storage_tank  = StorageTank(
-            total_volume_gal=system._minimum_storage_storageT_gal
+            total_volume_gal=system._minimum_storage_storageT_gal,
+            strat_slope=strat_slope,
         )
         system.water_heaters = [WaterHeater.from_nominal_capacity(
             nominal_capacity_kbtuh=system._minimum_capacity_kbtuh,
@@ -184,6 +188,7 @@ class DHWSystem:
         storage_temp_f: float,
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
+        strat_slope: float = 2.8,
     ) -> DHWSystem:
         """
         Build the system from explicitly provided storage volume and heaters.
@@ -209,7 +214,11 @@ class DHWSystem:
         max_daily_run_hr : float
             Maximum hours the system may run per day.
         defrost_factor : float
-            Fraction of rated capacity available after defrost (0–1).
+            Fraction of rated capacity available after defrost (0-1).
+        strat_slope : float
+            Temperature gradient through the tank's transition zone
+            [°F per percentage-point of tank height]. Stored on the
+            StorageTank for use during simulation.
 
         Returns
         -------
@@ -217,7 +226,10 @@ class DHWSystem:
         """
         return cls(
             water_heaters=water_heaters,
-            storage_tank=StorageTank(total_volume_gal=storage_volume_storageT_gal),
+            storage_tank=StorageTank(
+                total_volume_gal=storage_volume_storageT_gal,
+                strat_slope=strat_slope,
+            ),
             supply_temp_f=supply_temp_f,
             storage_temp_f=storage_temp_f,
             max_daily_run_hr=max_daily_run_hr,
@@ -228,7 +240,12 @@ class DHWSystem:
     # Sizing — public interface
     # ------------------------------------------------------------------
 
-    def size(self, building: Building, controls: Controls | None = None) -> None:
+    def size(
+        self,
+        building: Building,
+        controls: Controls | None = None,
+        strat_slope: float = 2.8,
+    ) -> None:
         """
         Compute the minimum heating capacity and storage volume for this
         system in the given building. Stores results internally; retrieve
@@ -243,10 +260,13 @@ class DHWSystem:
         ----------
         building : Building
         controls : Controls | None
-            Controls whose on-sensor parameters (on_sensor_fract,
-            on_trigger_t_f) determine the stratification factor. If None,
-            defaults of on_sensor_fract=0.0 and on_trigger_t_f=supply_temp_f
-            are used.
+            Controls whose on-sensor parameters drive the stratification
+            factor calculation. If None, defaults of on_sensor_fract=0.0
+            and on_trigger_t_f=supply_temp_f are used.
+        strat_slope : float
+            Temperature gradient through the tank's transition zone
+            [°F per percentage-point of tank height]. Should match the
+            value that will be set on the StorageTank.
 
         Raises
         ------
@@ -254,16 +274,13 @@ class DHWSystem:
             If the building has no design inlet water temperature available
             (no ClimateZone was provided at construction).
         """
-        on_fract  = controls.on_sensor_fract if controls is not None else 0.0
-        on_temp_f = controls.on_trigger_t_f  if controls is not None else self.supply_temp_f
-
         was_annual = building.is_annual_load_shape()
         if was_annual:
             building.set_to_daily_load_shape()
 
         capacity_kbtuh       = self._calc_required_capacity(building)
         running_vol_supplyT  = self._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
-        strat_factor         = self._calc_stratification_factor(on_fract, on_temp_f)
+        strat_factor         = self._calc_stratification_factor(controls, strat_slope)
         storage_vol_storageT = self._calc_storage_volume_storageT_gal(
             running_vol_supplyT, strat_factor, building.get_design_inlet_water_temp_f()
         )
@@ -388,6 +405,8 @@ class DHWSystem:
         # Deficit accumulation starts at each transition from surplus to deficit.
         peak_indices = _get_peak_indices(hourly_diff_gph)
         if not peak_indices:
+            print("Warning: The HPWH capacity has been sized greater than the largest peak in the building's load. This system will function as an instantaneous water heater.")
+            print("Please use a more 'peaky' load shape or raise the number of hours in a day the HPWH should run.")
             return 0.0
 
         running_vol = 0.0
@@ -442,8 +461,8 @@ class DHWSystem:
 
     def _calc_stratification_factor(
         self,
-        on_fract: float,
-        on_temp_f: float,
+        controls: Controls | None,
+        strat_slope: float,
     ) -> float:
         """
         Calculate the stratification factor: the fraction of the volume
@@ -451,29 +470,37 @@ class DHWSystem:
 
         The tank temperature profile is modeled as a linear gradient in the
         transition zone between cold and fully-hot layers. The slope of that
-        gradient is _STRAT_SLOPE [°F / %-height].
+        gradient is strat_slope [°F / %-height], taken from the StorageTank.
+
+        When controls is None, defaults of on_sensor_fract=0.0 and
+        on_trigger_t_f=supply_temp_f are used (ideal single-sensor case).
+        Additional Controls fields (e.g. load-shift setpoints) may influence
+        this calculation in the future.
 
         Parameters
         ----------
-        on_fract : float
-            Fractional height of the aquastat ON sensor (0 = bottom, 1 = top).
-            Taken from Controls.on_sensor_fract.
-        on_temp_f : float
-            Temperature at the aquastat sensor when the heater turns on [°F].
-            Taken from Controls.on_trigger_t_f.
+        controls : Controls | None
+            Heater controls. on_sensor_fract and on_trigger_t_f are used for
+            the current calculation.
+        strat_slope : float
+            Temperature gradient [°F per percentage-point of tank height].
+            Taken from StorageTank.strat_slope.
 
         Returns
         -------
         float
-            Stratification factor (0–1). A value of 1.0 means all storage
+            Stratification factor (0-1). A value of 1.0 means all storage
             above the aquastat is at full storage temperature (ideal).
         """
+        on_fract  = controls.on_sensor_fract if controls is not None else 0.0
+        on_temp_f = controls.on_trigger_t_f  if controls is not None else self.supply_temp_f
+
         on_pct  = on_fract * 100
         delta_t = self.storage_temp_f - self.supply_temp_f
 
         # Tank height (%) where temperature profile crosses supply and storage setpoints
-        supply_height_pct  = on_pct + (self.supply_temp_f  - on_temp_f) / _STRAT_SLOPE
-        storage_height_pct = on_pct + (self.storage_temp_f - on_temp_f) / _STRAT_SLOPE
+        supply_height_pct  = on_pct + (self.supply_temp_f  - on_temp_f) / strat_slope
+        storage_height_pct = on_pct + (self.storage_temp_f - on_temp_f) / strat_slope
         storage_height_pct = min(storage_height_pct, 100.0)
 
         # Clamp supply_height_pct so the transition zone stays within [on_pct, 100].
