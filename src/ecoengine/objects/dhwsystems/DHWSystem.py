@@ -293,35 +293,47 @@ class DHWSystem:
         if was_annual:
             building.set_to_daily_load_shape()
 
-        design_inlet_temp_f  = self._require_design_inlet_temp(building)
-        capacity_kbtuh       = self._calc_required_capacity(building)
-        running_vol_supplyT_gal  = self._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
-        strat_factor         = self._calc_stratification_factor(control_map, strat_slope)
-        storage_vol_storageT_gal = self._calc_storage_volume_storageT_gal(
-            running_vol_supplyT_gal, strat_factor, design_inlet_temp_f
-        )
-
+        # When load shifting, the heater cannot run during shed hours, so the
+        # effective maximum daily run time is capped at the number of non-shed
+        # hours. Matches original: maxDayRun_hr = min(compRuntime_hr, sum(loadShiftSchedule)).
+        original_max_run_hr = self.max_daily_run_hr
         if control_schedule and self._is_load_shifting(control_map):
-            ls_capacity_kbtuh = self._calc_required_capacity_ls_kbtuh(
-                control_schedule, control_map, building, strat_slope
-            )
-            gen_rate_ls_gph = self._calc_gen_rate_ls_gph(
-                control_schedule, control_map, building, strat_slope
-            )
-            ls_running_vol_supplyT_gal = self._calc_running_volume_ls_supplyT_gal(
-                control_schedule, building, gen_rate_ls_gph
-            )
-            ls_storage_vol_storageT_gal = self._calc_storage_volume_ls_storageT_gal(
-                ls_running_vol_supplyT_gal, control_map, design_inlet_temp_f, strat_slope
-            )
-            capacity_kbtuh       = max(capacity_kbtuh, ls_capacity_kbtuh)
-            storage_vol_storageT_gal = max(storage_vol_storageT_gal, ls_storage_vol_storageT_gal)
+            non_shed_hours_hr = float(sum(1 for h in control_schedule if h != "shed"))
+            self.max_daily_run_hr = min(self.max_daily_run_hr, non_shed_hours_hr)
 
-        self._minimum_capacity_kbtuh       = capacity_kbtuh
-        self._minimum_storage_storageT_gal = storage_vol_storageT_gal
+        try:
+            design_inlet_temp_f      = self._require_design_inlet_temp(building)
+            capacity_kbtuh           = self._calc_required_capacity(building)
+            running_vol_supplyT_gal  = self._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
+            strat_factor             = self._calc_stratification_factor(control_map, strat_slope)
+            storage_vol_storageT_gal = self._calc_storage_volume_storageT_gal(
+                running_vol_supplyT_gal, strat_factor, design_inlet_temp_f
+            )
 
-        if control_map:
-            self._warn_if_short_cycling(control_map, capacity_kbtuh, storage_vol_storageT_gal)
+            if control_schedule and self._is_load_shifting(control_map):
+                ls_capacity_kbtuh = self._calc_required_capacity_ls_kbtuh(
+                    control_schedule, control_map, building, strat_slope
+                )
+                gen_rate_ls_gph = self._calc_gen_rate_ls_gph(
+                    control_schedule, control_map, building, strat_slope
+                )
+                ls_running_vol_supplyT_gal = self._calc_running_volume_ls_supplyT_gal(
+                    control_schedule, building, gen_rate_ls_gph
+                )
+                ls_storage_vol_storageT_gal = self._calc_storage_volume_ls_storageT_gal(
+                    ls_running_vol_supplyT_gal, control_map, design_inlet_temp_f, strat_slope
+                )
+                capacity_kbtuh           = max(capacity_kbtuh, ls_capacity_kbtuh)
+                storage_vol_storageT_gal = max(storage_vol_storageT_gal, ls_storage_vol_storageT_gal)
+
+            self._minimum_capacity_kbtuh       = capacity_kbtuh
+            self._minimum_storage_storageT_gal = storage_vol_storageT_gal
+
+            if control_map:
+                self._warn_if_short_cycling(control_map, capacity_kbtuh, storage_vol_storageT_gal)
+
+        finally:
+            self.max_daily_run_hr = original_max_run_hr
 
         if was_annual:
             building.set_to_annual_load_shape()
@@ -519,13 +531,25 @@ class DHWSystem:
         Returns
         -------
         float
-            Minimum stratification factor across all Controls (0-1).
+            Effective tank fraction (0-1) for the normal operating mode.
+            This is the "percent of whole tank" form:
+            ``strat_factor * (1 - on_fract)``, matching the original sizing
+            formula which divides running volume by the fraction of the *total*
+            tank volume that is usable at or above supply temperature.
         """
         if not control_map:
-            return self._strat_factor_for_on_params(0.0, self.supply_temp_f, strat_slope)
+            return self._strat_pct_of_tank(0.0, self.supply_temp_f, strat_slope)
+
+        # Normal sizing uses the "normal" aquastat position only.
+        # "loadUp" and "shed" aquastats are handled exclusively in the LS path.
+        # For maps without a "normal" key (custom non-standard configs), fall
+        # back to worst-case across all entries.
+        if "normal" in control_map:
+            ctrl = control_map["normal"]
+            return self._strat_pct_of_tank(ctrl.on_sensor_fract, ctrl.on_trigger_t_f, strat_slope)
 
         return min(
-            self._strat_factor_for_on_params(
+            self._strat_pct_of_tank(
                 ctrl.on_sensor_fract, ctrl.on_trigger_t_f, strat_slope
             )
             for ctrl in control_map.values()
@@ -685,7 +709,7 @@ class DHWSystem:
         """
         first_shed_block, load_up_hours = self._get_first_shed_block_and_load_up_hours(control_schedule)
 
-        load_shape_gph = building.peak_load_shape * building.daily_dhw_use_supplyT_gal
+        load_shape_gph = building.avg_load_shape * building.daily_dhw_use_supplyT_gal
 
         vshift_supplyT_gal       = float(sum(load_shape_gph[h] for h in first_shed_block))
         lu_start                 = first_shed_block[0] - load_up_hours
@@ -822,7 +846,7 @@ class DHWSystem:
         first_shed_block, _ = self._get_first_shed_block_and_load_up_hours(control_schedule)
         vshift_supplyT_gal, _ = self._calc_prelim_vols_supplyT_gal(control_schedule, building)
 
-        load_shape = building.peak_load_shape
+        load_shape = building.avg_load_shape
         daily_gal  = building.daily_dhw_use_supplyT_gal
 
         # 24-hr generation profile: gen_rate_ls during non-shed hours, 0 during shed

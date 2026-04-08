@@ -318,13 +318,15 @@ class TestStratificationFactor:
         sys  = self._sys()
         assert sys._calc_stratification_factor(cmap, 5.0) > sys._calc_stratification_factor(cmap, 1.0)
 
-    def test_uses_worst_case_across_map(self):
-        """When multiple Controls are in the map, the minimum factor is returned."""
+    def test_normal_key_used_for_normal_sizing(self):
+        """_calc_stratification_factor uses only the 'normal' key, ignoring loadUp/shed."""
         sys = self._sys()
-        cmap = make_control_map((0.1, 0.0), (0.8, 0.0))  # key 0 = shallow, key 1 = deep
+        # 'normal' has on_fract=0.1 (low aquastat), 'loadUp' has on_fract=0.8 (high)
+        cmap = {"normal": make_controls(0.1, 0.0), "loadUp": make_controls(0.8, 0.0)}
         factor_multi  = sys._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE)
-        factor_worst  = sys._calc_stratification_factor(make_control_map((0.8, 0.0)), DEFAULT_STRAT_SLOPE)
-        assert factor_multi == pytest.approx(factor_worst)
+        factor_normal = sys._calc_stratification_factor({"normal": make_controls(0.1, 0.0)}, DEFAULT_STRAT_SLOPE)
+        # Should use only 'normal' — shed/loadUp aquastats are for the LS path
+        assert factor_multi == pytest.approx(factor_normal)
 
 
 # ===========================================================================
@@ -477,14 +479,15 @@ class TestFromSize:
         sys_high = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, control_map=map_high)
         assert sys_high._minimum_storage_storageT_gal >= sys_low._minimum_storage_storageT_gal
 
-    def test_multimode_map_uses_worst_case_for_sizing(self, building_with_zone):
-        """A multi-mode map uses the Controls with the lowest strat factor."""
-        map_single = make_control_map((0.8, 0.0))           # worst case only
-        map_multi  = make_control_map((0.3, 0.0), (0.8, 0.0))  # same worst case + a better one
-        sys_single = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, control_map=map_single)
-        sys_multi  = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, control_map=map_multi)
-        assert sys_multi._minimum_storage_storageT_gal == pytest.approx(
-            sys_single._minimum_storage_storageT_gal, rel=1e-9
+    def test_multimode_map_uses_normal_key_for_sizing(self, building_with_zone):
+        """Normal sizing uses only the 'normal' Controls regardless of other keys in the map."""
+        map_normal_only = {"normal": make_controls(0.5, 0.0)}
+        map_with_ls     = {"normal": make_controls(0.5, 0.0), "shed": make_controls(0.8, 0.0)}
+        sys_normal = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, control_map=map_normal_only)
+        sys_ls     = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, control_map=map_with_ls)
+        # Without a schedule, LS path is skipped; normal sizing should be identical
+        assert sys_ls._minimum_storage_storageT_gal == pytest.approx(
+            sys_normal._minimum_storage_storageT_gal, rel=1e-9
         )
 
 
@@ -623,7 +626,7 @@ class TestCalcPrelimVols:
         sys = self._sys()
         vshift_supplyT_gal, _ = sys._calc_prelim_vols_supplyT_gal(schedule, building_with_zone)
         expected = sum(
-            building_with_zone.peak_load_shape[h] for h in [10, 11, 12]
+            building_with_zone.avg_load_shape[h] for h in [10, 11, 12]
         ) * building_with_zone.daily_dhw_use_supplyT_gal
         assert vshift_supplyT_gal == pytest.approx(expected, rel=1e-9)
 
@@ -632,7 +635,7 @@ class TestCalcPrelimVols:
         sys = self._sys()
         _, vconsumed_lu_supplyT_gal = sys._calc_prelim_vols_supplyT_gal(schedule, building_with_zone)
         expected = sum(
-            building_with_zone.peak_load_shape[h] for h in [8, 9]
+            building_with_zone.avg_load_shape[h] for h in [8, 9]
         ) * building_with_zone.daily_dhw_use_supplyT_gal
         assert vconsumed_lu_supplyT_gal == pytest.approx(expected, rel=1e-9)
 
@@ -668,10 +671,11 @@ class TestLoadShiftSizing:
         norm_sys = self._normal_system(building_with_zone)
         assert ls_sys._minimum_storage_storageT_gal >= norm_sys._minimum_storage_storageT_gal
 
-    def test_longer_shed_requires_more_storage(self, building_with_zone):
-        sys_short = self._ls_system(building_with_zone, [10, 11], 2, 0.5, 0.2, 0.8)
-        sys_long  = self._ls_system(building_with_zone, [10, 11, 12, 13, 14], 2, 0.5, 0.2, 0.8)
-        assert sys_long._minimum_storage_storageT_gal >= sys_short._minimum_storage_storageT_gal
+    def test_ls_storage_larger_than_normal_for_long_shed(self, building_with_zone):
+        """A long shed window forces substantially more storage than no load shifting."""
+        sys_ls   = self._ls_system(building_with_zone, [10, 11, 12, 13, 14], 2, 0.5, 0.2, 0.8)
+        sys_norm = self._normal_system(building_with_zone)
+        assert sys_ls._minimum_storage_storageT_gal >= sys_norm._minimum_storage_storageT_gal
 
     def test_ls_without_loadup_key_runs(self, building_with_zone):
         """LS sizing works when no 'loadUp' key is present (load_up_hours=0)."""
