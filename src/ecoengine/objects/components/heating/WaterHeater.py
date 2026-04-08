@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ecoengine.objects.components.heating.PerformanceMap import NominalPerformanceMap
+from ecoengine.objects.components.heating.PerformanceMap import NominalPerformanceMap, PerformanceMap
 
 if TYPE_CHECKING:
-    from ecoengine.objects.components.heating.PerformanceMap import PerformanceMap
     from ecoengine.objects.components.heating.Controls import Controls
     from ecoengine.objects.components.storage.StorageTank import StorageTank
 
@@ -17,19 +16,25 @@ class WaterHeater:
 
     Control schedule and map
     ------------------------
-    control_schedule : list[int]
-        24-element list (one entry per hour of the day). Each value is an
-        integer key into control_map, selecting which Controls object is
-        active during that hour.
-    control_map : dict[int, Controls]
+    control_schedule : list[str]
+        24-element list (one entry per hour of the day). Each value is a
+        string key into control_map, selecting which Controls object is
+        active during that hour. Standard keys are ``"normal"``, ``"loadUp"``,
+        and ``"shed"``.
+    control_map : dict[str, Controls]
         Maps schedule keys to Controls objects. For a simple single-mode
-        system use ``{0: controls}`` with ``control_schedule = [0] * 24``.
+        system use ``{"normal": controls}`` with
+        ``control_schedule = ["normal"] * 24``.
+
+        When the map contains only ``"normal"``, the system is not load
+        shifting. When it also contains ``"loadUp"`` and/or ``"shed"`` keys,
+        load-shift sizing and simulation logic is activated.
 
     Construction
     ------------
     Use one of the factory class methods rather than calling __init__ directly:
 
-    * WaterHeater.from_nominal_capacity(nominal_capacity_kbtuh, control_schedule, control_map, ...)
+    * WaterHeater.from_nominal_capacity(nominal_capacity_kbtuh, control_schedule, control_map)
         Creates a NominalPerformanceMap (constant-output placeholder). Use this
         during preliminary sizing before a real equipment model is selected.
 
@@ -41,9 +46,8 @@ class WaterHeater:
     def __init__(
         self,
         performance_map: PerformanceMap | None,
-        control_schedule: list[int] | None,
-        control_map: dict[int, Controls] | None,
-        model_name: str = "",
+        control_schedule: list[str] | None,
+        control_map: dict[str, Controls] | None,
     ) -> None:
         """
         Parameters
@@ -51,19 +55,16 @@ class WaterHeater:
         performance_map : PerformanceMap | None
             Performance map for this HPWH model. If None, all capacity/power
             queries return None. Prefer the factory class methods.
-        control_schedule : list[int] | None
+        control_schedule : list[str] | None
             24-element list mapping each hour to a key in control_map.
             None when no control logic is configured.
-        control_map : dict[int, Controls] | None
-            Maps schedule integers to Controls objects.
+        control_map : dict[str, Controls] | None
+            Maps schedule strings to Controls objects.
             None when no control logic is configured.
-        model_name : str
-            Human-readable model identifier.
         """
         self.performance_map  = performance_map
         self.control_schedule = control_schedule
         self.control_map      = control_map
-        self.model_name       = model_name
         self._active          = False
 
     # ------------------------------------------------------------------
@@ -74,9 +75,8 @@ class WaterHeater:
     def from_nominal_capacity(
         cls,
         nominal_capacity_kbtuh: float,
-        control_schedule: list[int] | None,
-        control_map: dict[int, Controls] | None,
-        model_name: str = "",
+        control_schedule: list[str] | None,
+        control_map: dict[str, Controls] | None,
     ) -> WaterHeater:
         """
         Create a WaterHeater with a constant-capacity placeholder performance map.
@@ -89,12 +89,10 @@ class WaterHeater:
         ----------
         nominal_capacity_kbtuh : float
             Fixed heating output capacity [kBTU/hr].
-        control_schedule : list[int] | None
+        control_schedule : list[str] | None
             24-element list mapping each hour to a key in control_map.
-        control_map : dict[int, Controls] | None
-            Maps schedule integers to Controls objects.
-        model_name : str
-            Optional human-readable identifier.
+        control_map : dict[str, Controls] | None
+            Maps schedule strings to Controls objects.
 
         Returns
         -------
@@ -104,15 +102,14 @@ class WaterHeater:
             performance_map=NominalPerformanceMap(nominal_capacity_kbtuh),
             control_schedule=control_schedule,
             control_map=control_map,
-            model_name=model_name,
         )
 
     @classmethod
     def from_model_name(
         cls,
         model_name: str,
-        control_schedule: list[int] | None,
-        control_map: dict[int, Controls] | None,
+        control_schedule: list[str] | None,
+        control_map: dict[str, Controls] | None,
     ) -> WaterHeater:
         """
         Create a WaterHeater by loading its PerformanceMap from the equipment
@@ -123,16 +120,20 @@ class WaterHeater:
         model_name : str
             Equipment model identifier as it appears in the model registry
             (e.g. ``'Rheem_PROPH80_T2_RH380-30'``).
-        control_schedule : list[int] | None
+        control_schedule : list[str] | None
             24-element list mapping each hour to a key in control_map.
-        control_map : dict[int, Controls] | None
-            Maps schedule integers to Controls objects.
+        control_map : dict[str, Controls] | None
+            Maps schedule strings to Controls objects.
 
         Returns
         -------
         WaterHeater
         """
-        pass  # TODO: load PerformanceMap from model registry by model_name
+        return cls(
+            performance_map=PerformanceMap.from_model_name(model_name),
+            control_schedule=control_schedule,
+            control_map=control_map,
+        )
 
     # ------------------------------------------------------------------
     # State
@@ -149,6 +150,12 @@ class WaterHeater:
     def turn_off(self) -> None:
         """Deactivate this heater."""
         self._active = False
+
+    def is_load_shifting(self) -> bool:
+        """Return True if this heater has load-shift modes configured."""
+        if self.control_map is None:
+            return False
+        return "loadUp" in self.control_map or "shed" in self.control_map
 
     def get_controls_for_hour(self, hour_of_day: int) -> Controls | None:
         """

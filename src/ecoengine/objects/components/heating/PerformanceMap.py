@@ -5,16 +5,49 @@ class PerformanceMap:
     """
     Wraps HPWH performance map data to predict real-world heating capacity and
     power input as a function of outdoor air temperature and water temperature.
+
+    Construction
+    ------------
+    Use one of the factory class methods rather than calling __init__ directly:
+
+    * PerformanceMap.from_model_name(model_name)
+        Loads performance map data from the equipment model registry by name.
+        (Registry lookup is a stub — to be implemented.)
+
+    * NominalPerformanceMap(nominal_capacity_kbtuh)
+        Constant-output placeholder for use during preliminary sizing.
     """
 
-    def __init__(self, map_data: object) -> None:
+    def __init__(self, map_data: object, model_name: str = "") -> None:
         """
         Parameters
         ----------
         map_data : object
             Raw performance map data (e.g. loaded from pickle/JSON files).
+        model_name : str
+            Human-readable equipment model identifier (e.g.
+            ``'Rheem_PROPH80_T2_RH380-30'``). Used to look up map data from
+            the equipment model registry via from_model_name().
         """
-        self.map_data = map_data
+        self.map_data   = map_data
+        self.model_name = model_name
+
+    @classmethod
+    def from_model_name(cls, model_name: str) -> PerformanceMap:
+        """
+        Load a PerformanceMap from the equipment model registry by name.
+
+        Parameters
+        ----------
+        model_name : str
+            Equipment model identifier as it appears in the model registry
+            (e.g. ``'Rheem_PROPH80_T2_RH380-30'``).
+
+        Returns
+        -------
+        PerformanceMap
+        """
+        pass  # TODO: load map_data from model registry by model_name
 
     def get_capacity_kbtuh(self, oat_f: float, water_temp_f: float) -> float:
         """
@@ -94,14 +127,16 @@ class NominalPerformanceMap(PerformanceMap):
     Power and COP queries remain stubs until a real map is assigned.
     """
 
-    def __init__(self, nominal_capacity_kbtuh: float) -> None:
+    def __init__(self, nominal_capacity_kbtuh: float, model_name: str = "") -> None:
         """
         Parameters
         ----------
         nominal_capacity_kbtuh : float
             Fixed heating output capacity [kBTU/hr] returned for all conditions.
+        model_name : str
+            Optional human-readable identifier.
         """
-        super().__init__(map_data=None)
+        super().__init__(map_data=None, model_name=model_name)
         self.nominal_capacity_kbtuh = nominal_capacity_kbtuh
 
     def get_capacity_kbtuh(self, oat_f: float, water_temp_f: float) -> float:

@@ -112,8 +112,8 @@ class DHWSystem:
         storage_temp_f: float,
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
-        control_schedule: list[int] | None = None,
-        control_map: dict[int, Controls] | None = None,
+        control_schedule: list[str] | None = None,
+        control_map: dict[str, Controls] | None = None,
         strat_slope: float = 2.8,
     ) -> DHWSystem:
         """
@@ -144,11 +144,12 @@ class DHWSystem:
             higher capacity requirements and smaller storage requirements.
         defrost_factor : float
             Fraction of rated capacity available after defrost (0-1).
-        control_schedule : list[int] | None
+        control_schedule : list[str] | None
             24-element list mapping each hour of the day to a key in
-            control_map. Assigned to the created WaterHeater. None when
-            no load-shifting or multi-mode control is required.
-        control_map : dict[int, Controls] | None
+            control_map. Standard keys are ``"normal"``, ``"loadUp"``, and
+            ``"shed"``. Assigned to the created WaterHeater. None when no
+            load-shifting or multi-mode control is required.
+        control_map : dict[str, Controls] | None
             Maps control_schedule integers to Controls objects. All Controls
             in the map are considered during sizing (worst-case strat factor).
             None when no control logic is configured.
@@ -171,7 +172,7 @@ class DHWSystem:
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
         )
-        system.size(building, control_map=control_map, strat_slope=strat_slope)
+        system.size(building, control_schedule=control_schedule, control_map=control_map, strat_slope=strat_slope)
 
         system.storage_tank  = StorageTank(
             total_volume_gal=system._minimum_storage_storageT_gal,
@@ -248,7 +249,8 @@ class DHWSystem:
     def size(
         self,
         building: Building,
-        control_map: dict[int, Controls] | None = None,
+        control_schedule: list[str] | None = None,
+        control_map: dict[str, Controls] | None = None,
         strat_slope: float = 2.8,
     ) -> None:
         """
@@ -261,10 +263,17 @@ class DHWSystem:
         building is currently set to the annual shape, this method
         temporarily switches it back, sizes, then restores the annual shape.
 
+        If the control_map contains a ``"shed"`` key, load-shift sizing is
+        run in addition to normal sizing. The final capacity and storage volume
+        are the maximum of the two paths.
+
         Parameters
         ----------
         building : Building
-        control_map : dict[int, Controls] | None
+        control_schedule : list[str] | None
+            24-element schedule of control keys (``"normal"``, ``"loadUp"``,
+            ``"shed"``). Required for load-shift sizing; ignored otherwise.
+        control_map : dict[str, Controls] | None
             All Controls objects that may be active during operation. Each
             Controls contributes a stratification factor; the minimum value
             (worst case) drives storage volume sizing. Each Controls is also
@@ -284,18 +293,35 @@ class DHWSystem:
         if was_annual:
             building.set_to_daily_load_shape()
 
+        design_inlet_temp_f  = self._require_design_inlet_temp(building)
         capacity_kbtuh       = self._calc_required_capacity(building)
-        running_vol_supplyT  = self._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
+        running_vol_supplyT_gal  = self._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
         strat_factor         = self._calc_stratification_factor(control_map, strat_slope)
-        storage_vol_storageT = self._calc_storage_volume_storageT_gal(
-            running_vol_supplyT, strat_factor, building.get_design_inlet_water_temp_f()
+        storage_vol_storageT_gal = self._calc_storage_volume_storageT_gal(
+            running_vol_supplyT_gal, strat_factor, design_inlet_temp_f
         )
 
+        if control_schedule and self._is_load_shifting(control_map):
+            ls_capacity_kbtuh = self._calc_required_capacity_ls_kbtuh(
+                control_schedule, control_map, building, strat_slope
+            )
+            gen_rate_ls_gph = self._calc_gen_rate_ls_gph(
+                control_schedule, control_map, building, strat_slope
+            )
+            ls_running_vol_supplyT_gal = self._calc_running_volume_ls_supplyT_gal(
+                control_schedule, building, gen_rate_ls_gph
+            )
+            ls_storage_vol_storageT_gal = self._calc_storage_volume_ls_storageT_gal(
+                ls_running_vol_supplyT_gal, control_map, design_inlet_temp_f, strat_slope
+            )
+            capacity_kbtuh       = max(capacity_kbtuh, ls_capacity_kbtuh)
+            storage_vol_storageT_gal = max(storage_vol_storageT_gal, ls_storage_vol_storageT_gal)
+
         self._minimum_capacity_kbtuh       = capacity_kbtuh
-        self._minimum_storage_storageT_gal = storage_vol_storageT
+        self._minimum_storage_storageT_gal = storage_vol_storageT_gal
 
         if control_map:
-            self._warn_if_short_cycling(control_map, capacity_kbtuh, storage_vol_storageT)
+            self._warn_if_short_cycling(control_map, capacity_kbtuh, storage_vol_storageT_gal)
 
         if was_annual:
             building.set_to_annual_load_shape()
@@ -467,7 +493,7 @@ class DHWSystem:
 
     def _calc_stratification_factor(
         self,
-        control_map: dict[int, Controls] | None,
+        control_map: dict[str, Controls] | None,
         strat_slope: float,
     ) -> float:
         """
@@ -484,7 +510,7 @@ class DHWSystem:
 
         Parameters
         ----------
-        control_map : dict[int, Controls] | None
+        control_map : dict[str, Controls] | None
             All Controls objects that may be active during operation.
         strat_slope : float
             Temperature gradient [°F per percentage-point of tank height].
@@ -556,6 +582,311 @@ class DHWSystem:
 
         return vol_above_supply / ideal_vol
 
+    def _strat_pct_of_tank(
+        self,
+        on_fract: float,
+        on_temp_f: float,
+        strat_slope: float,
+    ) -> float:
+        """
+        Return the fraction of the *total* tank volume that is at or above
+        supply temperature when the ON sensor is at on_fract and reads
+        on_temp_f.
+
+        This is the "percent of whole tank" form of the stratification factor:
+
+            strat_pct = strat_factor * (1 - on_fract)
+
+        Used in load-shift sizing where the effective storage band is the
+        difference between two aquastat levels expressed as fractions of the
+        entire tank volume, not just the volume above one aquastat.
+
+        Parameters
+        ----------
+        on_fract : float
+        on_temp_f : float
+        strat_slope : float
+
+        Returns
+        -------
+        float
+        """
+        return self._strat_factor_for_on_params(on_fract, on_temp_f, strat_slope) * (1.0 - on_fract)
+
+    @staticmethod
+    def _is_load_shifting(control_map: dict[str, Controls] | None) -> bool:
+        """Return True if the control_map has a ``"shed"`` key."""
+        return bool(control_map) and "shed" in control_map
+
+    @staticmethod
+    def _get_first_shed_block_and_load_up_hours(
+        control_schedule: list[str],
+    ) -> tuple[list[int], int]:
+        """
+        Find the first consecutive block of ``"shed"`` hours in the schedule
+        and count the ``"loadUp"`` hours immediately preceding it.
+
+        Parameters
+        ----------
+        control_schedule : list[str]
+            24-element list of control keys.
+
+        Returns
+        -------
+        first_shed_block : list[int]
+            Hour indices (0-23) of the first consecutive ``"shed"`` run.
+        load_up_hours : int
+            Number of consecutive ``"loadUp"`` hours directly before the
+            first shed block. 0 if no load-up hours are configured.
+        """
+        shed_indices = [h for h in range(24) if control_schedule[h] == "shed"]
+        if not shed_indices:
+            return [], 0
+
+        # Build first consecutive shed block
+        first_shed_block = [shed_indices[0]]
+        for h in shed_indices[1:]:
+            if h == first_shed_block[-1] + 1:
+                first_shed_block.append(h)
+            else:
+                break
+
+        # Count consecutive "loadUp" hours immediately before the first shed
+        load_up_hours = 0
+        h = first_shed_block[0] - 1
+        while h >= 0 and control_schedule[h] == "loadUp":
+            load_up_hours += 1
+            h -= 1
+
+        return first_shed_block, load_up_hours
+
+    def _calc_prelim_vols_supplyT_gal(
+        self,
+        control_schedule: list[str],
+        building: Building,
+    ) -> tuple[float, float]:
+        """
+        Calculate volumes consumed during the first shed block and the
+        preceding load-up period.
+
+        Parameters
+        ----------
+        control_schedule : list[str]
+        building : Building
+
+        Returns
+        -------
+        vshift_supplyT_gal : float
+            Volume [gal at supplyT] consumed during the first shed block.
+            Must be stored above the shed aquastat before entering shed.
+        vconsumed_lu_supplyT_gal : float
+            Volume [gal at supplyT] consumed during the load-up hours.
+            The heater must both fill Vload AND offset this demand.
+        """
+        first_shed_block, load_up_hours = self._get_first_shed_block_and_load_up_hours(control_schedule)
+
+        load_shape_gph = building.peak_load_shape * building.daily_dhw_use_supplyT_gal
+
+        vshift_supplyT_gal       = float(sum(load_shape_gph[h] for h in first_shed_block))
+        lu_start                 = first_shed_block[0] - load_up_hours
+        vconsumed_lu_supplyT_gal = float(sum(load_shape_gph[h] for h in range(lu_start, first_shed_block[0])))
+
+        return vshift_supplyT_gal, vconsumed_lu_supplyT_gal
+
+    def _calc_gen_rate_ls_gph(
+        self,
+        control_schedule: list[str],
+        control_map: dict[str, Controls],
+        building: Building,
+        strat_slope: float,
+    ) -> float:
+        """
+        Calculate the load-shift generation rate [gal/hr at supplyT].
+
+        The LS generation rate is the maximum of:
+
+        * Normal gen rate: ``daily_gal / max_daily_run_hr``
+        * Load-up gen rate: rate needed to fill the load-up portion of the
+          tank AND offset demand during the load-up hours.
+
+        When no ``"loadUp"`` key is in the map or ``load_up_hours == 0``,
+        returns the normal gen rate.
+
+        Parameters
+        ----------
+        control_schedule : list[str]
+        control_map : dict[str, Controls]
+        building : Building
+        strat_slope : float
+
+        Returns
+        -------
+        float
+            Generation rate [gal/hr at supplyT].
+        """
+        daily_gal           = building.daily_dhw_use_supplyT_gal
+        normal_gen_rate_gph = daily_gal / self.max_daily_run_hr
+
+        _, load_up_hours = self._get_first_shed_block_and_load_up_hours(control_schedule)
+        if load_up_hours == 0:
+            return normal_gen_rate_gph
+
+        vshift_supplyT_gal, vconsumed_lu_supplyT_gal = self._calc_prelim_vols_supplyT_gal(
+            control_schedule, building
+        )
+
+        normal_ctrl = control_map["normal"]
+        lu_ctrl     = control_map.get("loadUp", normal_ctrl)
+        shed_ctrl   = control_map["shed"]
+
+        normal_strat_pct = self._strat_pct_of_tank(
+            normal_ctrl.on_sensor_fract, normal_ctrl.on_trigger_t_f, strat_slope
+        )
+        lu_strat_pct = self._strat_pct_of_tank(
+            lu_ctrl.on_sensor_fract, lu_ctrl.on_trigger_t_f, strat_slope
+        )
+        shed_strat_pct = self._strat_pct_of_tank(
+            shed_ctrl.on_sensor_fract, shed_ctrl.on_trigger_t_f, strat_slope
+        )
+
+        ls_band = lu_strat_pct - shed_strat_pct
+        if ls_band <= 0:
+            return normal_gen_rate_gph
+
+        # Volume in the load-up zone (between normal and load-up aquastats)
+        vload_supplyT_gal = vshift_supplyT_gal * (lu_strat_pct - normal_strat_pct) / ls_band
+
+        lu_gen_rate_gph = (vload_supplyT_gal + vconsumed_lu_supplyT_gal) / load_up_hours
+
+        return max(normal_gen_rate_gph, lu_gen_rate_gph)
+
+    def _calc_required_capacity_ls_kbtuh(
+        self,
+        control_schedule: list[str],
+        control_map: dict[str, Controls],
+        building: Building,
+        strat_slope: float,
+    ) -> float:
+        """
+        Calculate required heating capacity [kBTU/hr] for load-shift sizing.
+
+        Converts the load-shift generation rate (max of normal and load-up
+        rates) to a heating capacity via the standard formula.
+
+        Parameters
+        ----------
+        control_schedule : list[str]
+        control_map : dict[str, Controls]
+        building : Building
+        strat_slope : float
+
+        Returns
+        -------
+        float
+            Required heating capacity [kBTU/hr].
+        """
+        design_inlet_temp_f = self._require_design_inlet_temp(building)
+        gen_rate_ls_gph     = self._calc_gen_rate_ls_gph(
+            control_schedule, control_map, building, strat_slope
+        )
+        delta_t = self.supply_temp_f - design_inlet_temp_f
+        return gen_rate_ls_gph * _RHO_CP * delta_t / self.defrost_factor / 1000
+
+    def _calc_running_volume_ls_supplyT_gal(
+        self,
+        control_schedule: list[str],
+        building: Building,
+        gen_rate_ls_gph: float,
+    ) -> float:
+        """
+        Calculate the load-shift running volume [gal at supplyT].
+
+        The tank is modeled as "empty" (only Vshift above the shed aquastat)
+        at the moment the first shed ends. From that point forward the
+        cumulative deficit between generation and demand gives the additional
+        volume needed above Vshift.
+
+        Parameters
+        ----------
+        control_schedule : list[str]
+        building : Building
+        gen_rate_ls_gph : float
+            Load-shift generation rate [gal/hr at supplyT], from
+            _calc_gen_rate_ls_gph.
+
+        Returns
+        -------
+        float
+            Load-shift running volume [gal at supplyT].
+        """
+        first_shed_block, _ = self._get_first_shed_block_and_load_up_hours(control_schedule)
+        vshift_supplyT_gal, _ = self._calc_prelim_vols_supplyT_gal(control_schedule, building)
+
+        load_shape = building.peak_load_shape
+        daily_gal  = building.daily_dhw_use_supplyT_gal
+
+        # 24-hr generation profile: gen_rate_ls during non-shed hours, 0 during shed
+        gen_profile_gph    = np.array([
+            0.0 if control_schedule[h] == "shed" else gen_rate_ls_gph
+            for h in range(24)
+        ])
+        demand_profile_gph = daily_gal * load_shape
+        diff_gph           = gen_profile_gph - demand_profile_gph
+
+        # Accumulate deficit starting from the first hour after the shed ends.
+        # The tank is "empty" at that point — it holds only Vshift above shedT.
+        shed_end_idx = first_shed_block[-1] + 1
+        tiled_diff   = np.tile(diff_gph, 2)
+        cum_diff     = np.cumsum(tiled_diff[shed_end_idx:])
+        neg_values   = cum_diff[cum_diff < 0]
+        ls_deficit_supplyT_gal = float(-np.min(neg_values)) if len(neg_values) > 0 else 0.0
+
+        return ls_deficit_supplyT_gal + vshift_supplyT_gal
+
+    def _calc_storage_volume_ls_storageT_gal(
+        self,
+        ls_running_vol_supplyT_gal: float,
+        control_map: dict[str, Controls],
+        design_inlet_temp_f: float,
+        strat_slope: float,
+    ) -> float:
+        """
+        Convert the load-shift running volume [gal at supplyT] to required
+        physical storage [gal at storageT].
+
+        The effective stratification denominator for load-shift sizing is the
+        band between the load-up and shed aquastat levels expressed as
+        fractions of the total tank (``lu_strat_pct - shed_strat_pct``).
+        This replaces the single strat factor used in normal sizing.
+
+        Parameters
+        ----------
+        ls_running_vol_supplyT_gal : float
+        control_map : dict[str, Controls]
+        design_inlet_temp_f : float
+        strat_slope : float
+
+        Returns
+        -------
+        float
+            Required storage volume [gal at storageT].
+        """
+        normal_ctrl = control_map["normal"]
+        lu_ctrl     = control_map.get("loadUp", normal_ctrl)
+        shed_ctrl   = control_map["shed"]
+
+        lu_strat_pct   = self._strat_pct_of_tank(
+            lu_ctrl.on_sensor_fract,   lu_ctrl.on_trigger_t_f,   strat_slope
+        )
+        shed_strat_pct = self._strat_pct_of_tank(
+            shed_ctrl.on_sensor_fract, shed_ctrl.on_trigger_t_f, strat_slope
+        )
+        ls_band = lu_strat_pct - shed_strat_pct
+
+        return self._calc_storage_volume_storageT_gal(
+            ls_running_vol_supplyT_gal, ls_band, design_inlet_temp_f
+        )
+
     def _require_design_inlet_temp(self, building: Building) -> float:
         """
         Return the design inlet water temperature, raising a clear error if
@@ -575,7 +906,7 @@ class DHWSystem:
 
     def _warn_if_short_cycling(
         self,
-        control_map: dict[int, Controls],
+        control_map: dict[str, Controls],
         capacity_kbtuh: float,
         storage_vol_storageT_gal: float,
     ) -> None:
@@ -595,7 +926,7 @@ class DHWSystem:
 
         Parameters
         ----------
-        control_map : dict[int, Controls]
+        control_map : dict[str, Controls]
         capacity_kbtuh : float
             Minimum required heating capacity [kBTU/hr] from sizing.
         storage_vol_storageT_gal : float

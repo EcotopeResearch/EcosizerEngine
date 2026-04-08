@@ -45,9 +45,12 @@ def make_controls(on_fract: float, off_fract: float) -> Controls:
     )
 
 
-def make_control_map(*on_off_pairs) -> dict[int, Controls]:
-    """Build a control_map from (on_fract, off_fract) pairs, keyed 0, 1, 2..."""
-    return {i: make_controls(on, off) for i, (on, off) in enumerate(on_off_pairs)}
+_CONTROL_KEYS = ["normal", "loadUp", "shed"]
+
+
+def make_control_map(*on_off_pairs) -> dict[str, Controls]:
+    """Build a control_map from (on_fract, off_fract) pairs, keyed 'normal', 'loadUp', 'shed'..."""
+    return {_CONTROL_KEYS[i]: make_controls(on, off) for i, (on, off) in enumerate(on_off_pairs)}
 
 
 @pytest.fixture
@@ -76,8 +79,8 @@ def basic_control_map():
 
 @pytest.fixture
 def basic_schedule():
-    """All-day schedule using control key 0."""
-    return [0] * 24
+    """All-day schedule using the 'normal' control key."""
+    return ["normal"] * 24
 
 
 @pytest.fixture
@@ -140,26 +143,31 @@ class TestWaterHeaterFactories:
         assert wh.control_schedule is basic_schedule
         assert wh.control_map is basic_control_map
 
-    def test_from_nominal_capacity_model_name(self, basic_schedule, basic_control_map):
-        wh = WaterHeater.from_nominal_capacity(40.0, basic_schedule, basic_control_map, model_name="test_unit")
-        assert wh.model_name == "test_unit"
-
     def test_from_nominal_capacity_no_controls(self):
         wh = WaterHeater.from_nominal_capacity(25.0, control_schedule=None, control_map=None)
         assert wh.control_schedule is None
         assert wh.control_map is None
         assert wh.get_capacity_kbtuh(35.0, 120.0) == pytest.approx(25.0)
 
+    def test_from_nominal_capacity_not_load_shifting(self, basic_schedule, basic_control_map):
+        wh = WaterHeater.from_nominal_capacity(40.0, basic_schedule, basic_control_map)
+        assert not wh.is_load_shifting()
+
+    def test_is_load_shifting_with_loadup_key(self):
+        cmap = make_control_map((0.8, 0.0), (0.4, 0.0))  # "normal" + "loadUp"
+        wh = WaterHeater.from_nominal_capacity(40.0, ["normal"] * 24, cmap)
+        assert wh.is_load_shifting()
+
     def test_get_controls_for_hour_returns_correct_controls(self, basic_schedule, basic_control_map):
         wh = WaterHeater.from_nominal_capacity(40.0, basic_schedule, basic_control_map)
         ctrl = wh.get_controls_for_hour(hour_of_day=12)
-        assert ctrl is basic_control_map[0]
+        assert ctrl is basic_control_map["normal"]
 
     def test_get_controls_for_hour_respects_schedule(self):
         ctrl_a = make_controls(0.8, 0.0)
         ctrl_b = make_controls(0.5, 0.0)
-        schedule = [0] * 8 + [1] * 8 + [0] * 8   # key 1 during hours 8-15
-        cmap     = {0: ctrl_a, 1: ctrl_b}
+        schedule = ["normal"] * 8 + ["loadUp"] * 8 + ["normal"] * 8
+        cmap     = {"normal": ctrl_a, "loadUp": ctrl_b}
         wh = WaterHeater.from_nominal_capacity(40.0, schedule, cmap)
         assert wh.get_controls_for_hour(0)  is ctrl_a
         assert wh.get_controls_for_hour(10) is ctrl_b
@@ -168,9 +176,11 @@ class TestWaterHeaterFactories:
         wh = WaterHeater.from_nominal_capacity(40.0, None, None)
         assert wh.get_controls_for_hour(5) is None
 
-    def test_from_model_name_is_stub(self, basic_schedule, basic_control_map):
-        result = WaterHeater.from_model_name("some_model", basic_schedule, basic_control_map)
-        assert result is None
+    def test_from_model_name_returns_water_heater(self, basic_schedule, basic_control_map):
+        wh = WaterHeater.from_model_name("some_model", basic_schedule, basic_control_map)
+        assert isinstance(wh, WaterHeater)
+        assert wh.control_schedule is basic_schedule
+        assert wh.control_map is basic_control_map
 
 
 # ===========================================================================
@@ -300,7 +310,7 @@ class TestStratificationFactor:
         ctrl = Controls(on_sensor_fract=0.0, on_trigger_t_f=STORAGE_T,
                         off_sensor_fract=0.0, off_trigger_t_f=STORAGE_T,
                         outlet_temp_f=STORAGE_T)
-        cmap = {0: ctrl}
+        cmap = {"normal": ctrl}
         assert self._sys()._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE) == pytest.approx(1.0)
 
     def test_higher_strat_slope_gives_higher_factor(self):
@@ -347,8 +357,8 @@ class TestShortCyclingWarning:
     def test_warning_includes_key(self):
         """Warning message should identify which Controls key is problematic."""
         sys  = self._sys()
-        cmap = {7: make_controls(0.01, 0.0)}
-        with pytest.warns(UserWarning, match="key 7"):
+        cmap = {"loadUp": make_controls(0.01, 0.0)}
+        with pytest.warns(UserWarning, match="key loadUp"):
             sys._warn_if_short_cycling(cmap, capacity_kbtuh=200.0, storage_vol_storageT_gal=50.0)
 
     def test_no_warning_when_control_map_is_none(self, building_with_zone):
@@ -523,3 +533,172 @@ class TestFromComponents:
         )
         assert system.supply_temp_f  == SUPPLY_T
         assert system.storage_temp_f == STORAGE_T
+
+
+# ===========================================================================
+# Load-shift sizing helpers and integration
+# ===========================================================================
+
+def make_ls_schedule(shed_hours: list[int], load_up_hours: int) -> list[str]:
+    """
+    Build a 24-element control_schedule with shed_hours marked as "shed",
+    the load_up_hours immediately before the first shed marked as "loadUp",
+    and everything else as "normal".
+    """
+    schedule = ["normal"] * 24
+    for h in shed_hours:
+        schedule[h] = "shed"
+    first_shed = shed_hours[0]
+    for i in range(load_up_hours):
+        schedule[first_shed - 1 - i] = "loadUp"
+    return schedule
+
+
+def make_ls_control_map(
+    normal_on: float,
+    load_up_on: float,
+    shed_on: float,
+) -> dict[str, Controls]:
+    """
+    Build a load-shift control_map with three modes.
+    ON trigger = SUPPLY_T, OFF trigger = STORAGE_T for all modes.
+    """
+    return {
+        "normal": Controls(normal_on, SUPPLY_T, 0.0, STORAGE_T, STORAGE_T),
+        "loadUp": Controls(load_up_on, SUPPLY_T, 0.0, STORAGE_T, STORAGE_T),
+        "shed":   Controls(shed_on,    SUPPLY_T, 0.0, STORAGE_T, STORAGE_T),
+    }
+
+
+class TestLoadShiftDetection:
+    def test_is_load_shifting_true_with_shed_key(self):
+        cmap = make_ls_control_map(0.5, 0.3, 0.7)
+        assert DHWSystem._is_load_shifting(cmap)
+
+    def test_is_load_shifting_false_without_shed_key(self, basic_control_map):
+        assert not DHWSystem._is_load_shifting(basic_control_map)
+
+    def test_is_load_shifting_false_with_only_load_up(self):
+        cmap = {"normal": make_controls(0.5, 0.0), "loadUp": make_controls(0.3, 0.0)}
+        assert not DHWSystem._is_load_shifting(cmap)
+
+    def test_is_load_shifting_false_with_none(self):
+        assert not DHWSystem._is_load_shifting(None)
+
+
+class TestGetFirstShedBlockAndLoadUpHours:
+    def test_simple_shed_block(self):
+        schedule = make_ls_schedule([10, 11, 12], load_up_hours=2)
+        block, lu_hrs = DHWSystem._get_first_shed_block_and_load_up_hours(schedule)
+        assert block == [10, 11, 12]
+        assert lu_hrs == 2
+
+    def test_no_load_up_hours(self):
+        schedule = make_ls_schedule([8, 9, 10], load_up_hours=0)
+        block, lu_hrs = DHWSystem._get_first_shed_block_and_load_up_hours(schedule)
+        assert block == [8, 9, 10]
+        assert lu_hrs == 0
+
+    def test_only_first_consecutive_block_returned(self):
+        # Two separated shed blocks — only first returned
+        schedule = ["normal"] * 24
+        for h in [6, 7, 14, 15]:
+            schedule[h] = "shed"
+        block, _ = DHWSystem._get_first_shed_block_and_load_up_hours(schedule)
+        assert block == [6, 7]
+
+    def test_no_shed_hours(self):
+        schedule = ["normal"] * 24
+        block, lu_hrs = DHWSystem._get_first_shed_block_and_load_up_hours(schedule)
+        assert block == []
+        assert lu_hrs == 0
+
+
+class TestCalcPrelimVols:
+    def _sys(self):
+        return DHWSystem(water_heaters=[], storage_tank=None, supply_temp_f=SUPPLY_T, storage_temp_f=STORAGE_T)
+
+    def test_vshift_equals_demand_during_shed(self, building_with_zone):
+        schedule = make_ls_schedule([10, 11, 12], load_up_hours=2)
+        sys = self._sys()
+        vshift_supplyT_gal, _ = sys._calc_prelim_vols_supplyT_gal(schedule, building_with_zone)
+        expected = sum(
+            building_with_zone.peak_load_shape[h] for h in [10, 11, 12]
+        ) * building_with_zone.daily_dhw_use_supplyT_gal
+        assert vshift_supplyT_gal == pytest.approx(expected, rel=1e-9)
+
+    def test_vconsumed_lu_equals_demand_during_loadup(self, building_with_zone):
+        schedule = make_ls_schedule([10, 11, 12], load_up_hours=2)
+        sys = self._sys()
+        _, vconsumed_lu_supplyT_gal = sys._calc_prelim_vols_supplyT_gal(schedule, building_with_zone)
+        expected = sum(
+            building_with_zone.peak_load_shape[h] for h in [8, 9]
+        ) * building_with_zone.daily_dhw_use_supplyT_gal
+        assert vconsumed_lu_supplyT_gal == pytest.approx(expected, rel=1e-9)
+
+    def test_vconsumed_lu_zero_when_no_load_up(self, building_with_zone):
+        schedule = make_ls_schedule([10, 11, 12], load_up_hours=0)
+        _, vconsumed_lu_supplyT_gal = self._sys()._calc_prelim_vols_supplyT_gal(schedule, building_with_zone)
+        assert vconsumed_lu_supplyT_gal == pytest.approx(0.0)
+
+
+class TestLoadShiftSizing:
+    """Integration tests: LS sizing produces larger capacity/storage than normal."""
+
+    def _ls_system(self, building, shed_hours, load_up_hours, normal_on, load_up_on, shed_on):
+        schedule = make_ls_schedule(shed_hours, load_up_hours)
+        cmap     = make_ls_control_map(normal_on, load_up_on, shed_on)
+        return DHWSystem.from_size(
+            building=building,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+            control_schedule=schedule,
+            control_map=cmap,
+        )
+
+    def _normal_system(self, building):
+        return DHWSystem.from_size(
+            building=building,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+        )
+
+    def test_ls_storage_at_least_as_large_as_normal(self, building_with_zone):
+        ls_sys  = self._ls_system(building_with_zone, [10, 11, 12, 13, 14], 2, 0.5, 0.2, 0.8)
+        norm_sys = self._normal_system(building_with_zone)
+        assert ls_sys._minimum_storage_storageT_gal >= norm_sys._minimum_storage_storageT_gal
+
+    def test_longer_shed_requires_more_storage(self, building_with_zone):
+        sys_short = self._ls_system(building_with_zone, [10, 11], 2, 0.5, 0.2, 0.8)
+        sys_long  = self._ls_system(building_with_zone, [10, 11, 12, 13, 14], 2, 0.5, 0.2, 0.8)
+        assert sys_long._minimum_storage_storageT_gal >= sys_short._minimum_storage_storageT_gal
+
+    def test_ls_without_loadup_key_runs(self, building_with_zone):
+        """LS sizing works when no 'loadUp' key is present (load_up_hours=0)."""
+        schedule = make_ls_schedule([10, 11, 12], load_up_hours=0)
+        cmap     = {"normal": make_controls(0.5, 0.0), "shed": make_controls(0.8, 0.0)}
+        system   = DHWSystem.from_size(
+            building=building_with_zone,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+            control_schedule=schedule,
+            control_map=cmap,
+        )
+        assert system._minimum_storage_storageT_gal > 0
+        assert system._minimum_capacity_kbtuh > 0
+
+    def test_no_ls_without_schedule(self, building_with_zone):
+        """Passing control_map with shed but no schedule skips LS path."""
+        cmap    = make_ls_control_map(0.5, 0.2, 0.8)
+        sys_no_sched = DHWSystem.from_size(
+            building=building_with_zone,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+            control_schedule=None,
+            control_map=cmap,
+        )
+        norm_sys = self._normal_system(building_with_zone)
+        # Without schedule, LS path is skipped — result may equal normal sizing
+        assert sys_no_sched._minimum_capacity_kbtuh == pytest.approx(
+            norm_sys._minimum_capacity_kbtuh, rel=1e-6
+        )
