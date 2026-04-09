@@ -49,6 +49,7 @@ class SimulationRun:
         self.heater_power_in_kw:        list[float | None] = []
         self.oat_f:                     list[float] = []
         self.inlet_water_temp_f:        list[float] = []
+        self.heater_mode:               list[str]   = []   # "normal", "shed", "loadUp", etc.
 
         # Tank temperature nodes — one list per fractional height
         # Indexed as: tank_temps_f[node_idx][timestep]
@@ -76,6 +77,7 @@ class SimulationRun:
         oat_f: float,
         inlet_water_temp_f: float,
         tank_temps_f: list[float],
+        mode: str = "normal",
     ) -> None:
         """
         Append one timestep's worth of data to the run record.
@@ -105,6 +107,7 @@ class SimulationRun:
         self.heater_power_in_kw.append(heater_power_in_kw)
         self.oat_f.append(oat_f)
         self.inlet_water_temp_f.append(inlet_water_temp_f)
+        self.heater_mode.append(mode)
         for node_idx, temp in enumerate(tank_temps_f):
             self.tank_temps_f[node_idx].append(temp)
 
@@ -360,6 +363,36 @@ class SimulationRun:
                     ),
                     secondary_y=True,
                 )
+
+        # --- Load-shift shading: blue=shed, green=loadUp ---
+        if self.heater_mode:
+            _LS_COLORS = {"shed": "rgba(0,0,255,0.2)", "loadUp": "rgba(0,200,0,0.2)"}
+            _LS_LEGEND_ADDED: set[str] = set()
+            i = 0
+            n = len(self.heater_mode)
+            while i < n:
+                m = self.heater_mode[i]
+                if m in _LS_COLORS:
+                    # Find end of this contiguous block
+                    j = i + 1
+                    while j < n and self.heater_mode[j] == m:
+                        j += 1
+                    x0 = time_min[i]
+                    x1 = time_min[j - 1] + self.timestep_min
+                    label = "Shed Period" if m == "shed" else "Load-Up Period"
+                    fig.add_vrect(
+                        x0=x0, x1=x1,
+                        fillcolor=_LS_COLORS[m],
+                        layer="below",
+                        line_width=0,
+                        annotation_text="" if m in _LS_LEGEND_ADDED else label,
+                        annotation_position="top left",
+                        annotation_font_size=10,
+                    )
+                    _LS_LEGEND_ADDED.add(m)
+                    i = j
+                else:
+                    i += 1
 
         fig.update_xaxes(title_text="Time (minutes)")
         fig.update_yaxes(title_text="Volume (gal) / Flow Rate (gal/hr)", secondary_y=False)

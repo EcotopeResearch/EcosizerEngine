@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import warnings
 import numpy as np
+from statistics import NormalDist
 from typing import TYPE_CHECKING
 
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.heating.Controls import Controls
-from ecoengine.objects.components.storage.StorageTank import StorageTank
+from ecoengine.objects.components.storage.StorageTank import StorageTank, StratifiedTank
 
 if TYPE_CHECKING:
     from ecoengine.objects.building.Building import Building
@@ -17,6 +18,38 @@ if TYPE_CHECKING:
 
 # Volumetric heat capacity of water [BTU / (gallon * °F)]
 _RHO_CP: float = 8.353535
+
+# Normal distribution parameters for multi-family daily DHW demand variability.
+# Used to compute fract_total_vol from load_shift_percent (percentile of days covered).
+# Source: calibrated from multi-family occupancy stream data in original EcosizerEngine.
+_LS_NORM_MEAN: float = 0.7052988591269841
+_LS_NORM_STD:  float = 0.08236427664525116
+_LS_NORM_DIST: NormalDist = NormalDist(mu=_LS_NORM_MEAN, sigma=_LS_NORM_STD)
+
+
+def _load_shift_fract_total_vol(load_shift_percent: float) -> float:
+    """
+    Convert a load-shift coverage percentile to a demand scaling fraction.
+
+    At load_shift_percent=1.0 the system is sized for 100% of days (no scaling).
+    Below 1.0, daily demand is assumed to follow a normal distribution and the
+    system is sized for the given percentile, accepting that higher-demand days
+    will occasionally breach the shed window.
+
+    Parameters
+    ----------
+    load_shift_percent : float
+        Fraction of days the load-shift sizing must cover [0.25, 1.0].
+
+    Returns
+    -------
+    float
+        Scaling factor to apply to daily DHW demand during load-shift sizing (≤ 1.0).
+    """
+    if load_shift_percent >= 1.0:
+        return 1.0
+    fract = _LS_NORM_DIST.inv_cdf(load_shift_percent)
+    return min(fract, 1.0)
 
 
 # ---------------------------------------------------------------------------
@@ -115,6 +148,7 @@ class DHWSystem:
         control_schedule: list[str] | None = None,
         control_map: dict[str, Controls] | None = None,
         strat_slope: float = 2.8,
+        load_shift_fract_total_vol: float = 1.0,
     ) -> DHWSystem:
         """
         Size the system for the given building, then build it.
@@ -172,9 +206,15 @@ class DHWSystem:
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
         )
-        system.size(building, control_schedule=control_schedule, control_map=control_map, strat_slope=strat_slope)
+        system.size(
+            building,
+            control_schedule=control_schedule,
+            control_map=control_map,
+            strat_slope=strat_slope,
+            load_shift_fract_total_vol=load_shift_fract_total_vol,
+        )
 
-        system.storage_tank  = StorageTank(
+        system.storage_tank  = StratifiedTank(
             total_volume_gal=system._minimum_storage_storageT_gal,
             strat_slope=strat_slope,
         )
@@ -232,7 +272,7 @@ class DHWSystem:
         """
         return cls(
             water_heaters=water_heaters,
-            storage_tank=StorageTank(
+            storage_tank=StratifiedTank(
                 total_volume_gal=storage_volume_storageT_gal,
                 strat_slope=strat_slope,
             ),
@@ -252,6 +292,7 @@ class DHWSystem:
         control_schedule: list[str] | None = None,
         control_map: dict[str, Controls] | None = None,
         strat_slope: float = 2.8,
+        load_shift_fract_total_vol: float = 1.0,
     ) -> None:
         """
         Compute the minimum heating capacity and storage volume for this
@@ -282,6 +323,11 @@ class DHWSystem:
             Temperature gradient through the tank's transition zone
             [°F per percentage-point of tank height]. Should match the
             value that will be set on the StorageTank.
+        load_shift_fract_total_vol : float
+            Demand scaling factor for load-shift sizing (0–1). Derived from
+            load_shift_percent via _load_shift_fract_total_vol(). Default 1.0
+            (no scaling — size for 100% of days). Only applied to the LS sizing
+            path; normal sizing is always against the full daily demand.
 
         Raises
         ------
@@ -318,7 +364,8 @@ class DHWSystem:
                     control_schedule, control_map, building, strat_slope
                 )
                 ls_running_vol_supplyT_gal = self._calc_running_volume_ls_supplyT_gal(
-                    control_schedule, building, gen_rate_ls_gph
+                    control_schedule, building, gen_rate_ls_gph,
+                    fract_total_vol=load_shift_fract_total_vol,
                 )
                 ls_storage_vol_storageT_gal = self._calc_storage_volume_ls_storageT_gal(
                     ls_running_vol_supplyT_gal, control_map, design_inlet_temp_f, strat_slope
@@ -821,6 +868,7 @@ class DHWSystem:
         control_schedule: list[str],
         building: Building,
         gen_rate_ls_gph: float,
+        fract_total_vol: float = 1.0,
     ) -> float:
         """
         Calculate the load-shift running volume [gal at supplyT].
@@ -837,6 +885,10 @@ class DHWSystem:
         gen_rate_ls_gph : float
             Load-shift generation rate [gal/hr at supplyT], from
             _calc_gen_rate_ls_gph.
+        fract_total_vol : float
+            Demand scaling factor from load_shift_percent (0–1). Scales the
+            daily demand profile so the system is sized for the given percentile
+            of days rather than the absolute peak. Default 1.0 (no scaling).
 
         Returns
         -------
@@ -847,7 +899,7 @@ class DHWSystem:
         vshift_supplyT_gal, _ = self._calc_prelim_vols_supplyT_gal(control_schedule, building)
 
         load_shape = building.avg_load_shape
-        daily_gal  = building.daily_dhw_use_supplyT_gal
+        daily_gal  = building.daily_dhw_use_supplyT_gal * fract_total_vol
 
         # 24-hr generation profile: gen_rate_ls during non-shed hours, 0 during shed
         gen_profile_gph    = np.array([
@@ -1035,6 +1087,11 @@ class DHWSystem:
         inlet_temp_f   = building.get_inlet_water_temp_f(timestep_interval, interval_min)
         hour_of_day    = (timestep_interval * interval_min // 60) % 24
         outlet_temp_f  = self._get_outlet_temp_f(hour_of_day)
+        mode = (
+            self.water_heaters[0].control_schedule[hour_of_day]
+            if self.water_heaters and self.water_heaters[0].control_schedule
+            else "normal"
+        )
 
         if self.storage_tank is not None:
             # Update on/off state for each heater based on current tank condition
@@ -1084,6 +1141,7 @@ class DHWSystem:
             "oat_f":                     oat_f,
             "inlet_water_temp_f":        inlet_temp_f,
             "tank_temps_f":              tank_temps_f,
+            "mode":                      mode,
         }
 
     def _get_outlet_temp_f(self, hour_of_day: int) -> float:

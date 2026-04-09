@@ -6,7 +6,7 @@ THREE_DAY_TIMESTEP_MIN = 1
 ANNUAL_TIMESTEP_MIN    = 10
 
 
-def simulate(dhw_system, building, duration="3day") -> SimulationRun:
+def simulate(dhw_system, building, duration="3day", **sim_run_kwargs) -> SimulationRun:
     """
     Run a time-step simulation of a sized DHWSystem in a Building.
 
@@ -50,16 +50,25 @@ def simulate(dhw_system, building, duration="3day") -> SimulationRun:
     else:
         raise ValueError(f"duration must be '3day' or 'annual', got {duration!r}")
 
-    sim_run = SimulationRun(duration_min, timestep_min)
+    sim_run = SimulationRun(duration_min, timestep_min, **sim_run_kwargs)
 
-    # Initialize the storage tank
+    # Initialize storage tanks
+    inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
+    percent_useable = _initial_percent_useable(dhw_system)
     if dhw_system.storage_tank is not None:
-        inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
-        percent_useable = _initial_percent_useable(dhw_system)
         dhw_system.storage_tank.initialize(
             storage_temp_f  = dhw_system.storage_temp_f,
             cold_temp_f     = inlet_temp_f,
             percent_useable = percent_useable,
+        )
+    # Initialize TM tank if present (ParallelLoopSystem, SwingSystem)
+    tm_tank = getattr(dhw_system, "tm_storage_tank", None)
+    if tm_tank is not None:
+        tm_off_temp_f = getattr(dhw_system, "tm_off_temp_f", dhw_system.storage_temp_f)
+        tm_tank.initialize(
+            storage_temp_f  = tm_off_temp_f,
+            cold_temp_f     = inlet_temp_f,
+            percent_useable = 1.0,
         )
 
     sim_run.storage_temp_f = dhw_system.storage_temp_f
@@ -80,6 +89,7 @@ def simulate(dhw_system, building, duration="3day") -> SimulationRun:
             oat_f                     = step["oat_f"],
             inlet_water_temp_f        = step["inlet_water_temp_f"],
             tank_temps_f              = step["tank_temps_f"],
+            mode                      = step.get("mode", "normal"),
         )
 
         if step["usable_volume_supplyT_gal"] <= 0.0:
@@ -93,7 +103,7 @@ def simulate(dhw_system, building, duration="3day") -> SimulationRun:
     return sim_run
 
 
-def simulate_3day(dhw_system, building) -> SimulationRun:
+def simulate_3day(dhw_system, building, **sim_run_kwargs) -> SimulationRun:
     """
     Convenience wrapper: run a 3-day simulation at 1-minute timesteps.
 
@@ -101,15 +111,17 @@ def simulate_3day(dhw_system, building) -> SimulationRun:
     ----------
     dhw_system : DHWSystem
     building : Building
+    **sim_run_kwargs
+        Forwarded to SimulationRun.__init__() (e.g. outlet_deficit_threshold_f).
 
     Returns
     -------
     SimulationRun
     """
-    return simulate(dhw_system, building, duration="3day")
+    return simulate(dhw_system, building, duration="3day", **sim_run_kwargs)
 
 
-def simulate_annual(dhw_system, building) -> SimulationRun:
+def simulate_annual(dhw_system, building, **sim_run_kwargs) -> SimulationRun:
     """
     Convenience wrapper: run a full annual simulation at 10-minute timesteps.
 
@@ -117,12 +129,14 @@ def simulate_annual(dhw_system, building) -> SimulationRun:
     ----------
     dhw_system : DHWSystem
     building : Building
+    **sim_run_kwargs
+        Forwarded to SimulationRun.__init__().
 
     Returns
     -------
     SimulationRun
     """
-    return simulate(dhw_system, building, duration="annual")
+    return simulate(dhw_system, building, duration="annual", **sim_run_kwargs)
 
 
 # ---------------------------------------------------------------------------
