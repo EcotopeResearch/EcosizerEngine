@@ -59,6 +59,9 @@ class Controls:
         """
         Return True if the heater should turn on given the current tank state.
 
+        The heater turns ON when the upper (on) sensor drops below
+        ``on_trigger_t_f``.
+
         Parameters
         ----------
         storage_tank : StorageTank
@@ -67,12 +70,16 @@ class Controls:
         -------
         bool
         """
-        pass
+        temp = storage_tank.get_temperature_at_fraction(self.on_sensor_fract)
+        return temp < self.on_trigger_t_f
 
     def should_turn_off(self, storage_tank: StorageTank) -> bool:
         """
         Return True if the heater should turn off given the current tank state.
 
+        The heater turns OFF when the lower (off) sensor rises to or above
+        ``off_trigger_t_f``.
+
         Parameters
         ----------
         storage_tank : StorageTank
@@ -81,4 +88,5 @@ class Controls:
         -------
         bool
         """
-        pass
+        temp = storage_tank.get_temperature_at_fraction(self.off_sensor_fract)
+        return temp >= self.off_trigger_t_f

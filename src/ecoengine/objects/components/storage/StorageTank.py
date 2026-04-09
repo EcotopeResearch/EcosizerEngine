@@ -4,16 +4,36 @@ from __future__ import annotations
 # Calibrated empirically for a standard 12-node tank model.
 _DEFAULT_STRAT_SLOPE: float = 2.8
 
+# Volumetric heat capacity of water [BTU / (gallon · °F)]
+_RHO_CP: float = 8.353535
+
 
 class StorageTank:
     """
-    Stratified storage tank model. Tracks temperature stratification (temperature
-    at each height layer) and the volume of water at or above supply temperature.
+    Stratified storage tank model using a continuous linear temperature profile.
 
-    The strat_slope parameter controls how steeply the temperature gradient
-    rises through the transition zone between cold and hot layers. DHWSystem
-    subclasses that model different tank geometries or mixing assumptions
-    should override this value when constructing the tank.
+    Temperature profile
+    -------------------
+    The tank is hot on top and cold on bottom. Temperature as a function of
+    height is described by three regions:
+
+        T(x_pct) = inlet_temp_f                                   x_pct <= x_cold
+                 = strat_slope * (x_pct + shift_pct) + strat_inter  x_cold < x_pct < x_hot
+                 = outlet_temp_f                                   x_pct >= x_hot
+
+    where x_pct is height as a percentage (0 = bottom, 100 = top) and
+    shift_pct = delta_gal / total_volume_gal * 100 translates the gallons-based
+    running tally into a percentage shift of the thermocline.
+
+    delta_gal bookkeeping
+    ---------------------
+    ``_delta_gal`` tracks how much the thermocline has shifted from its
+    initialized position, measured in gallons:
+
+    * ``draw()`` decreases ``_delta_gal`` — cold water enters the bottom,
+      the thermocline rises (less hot water available).
+    * ``heat()`` increases ``_delta_gal`` — cold water is heated and moves to
+      the top, the thermocline falls (more hot water available).
     """
 
     def __init__(
@@ -28,7 +48,8 @@ class StorageTank:
         total_volume_gal : float
             Total physical tank volume [gallons].
         num_nodes : int
-            Number of vertical temperature nodes used to model stratification.
+            Number of vertical temperature nodes (retained for future use;
+            the analytical profile model does not use discrete nodes).
         strat_slope : float
             Temperature gradient through the transition zone between cold and
             hot layers [°F per percentage-point of tank height]. Higher values
@@ -39,7 +60,16 @@ class StorageTank:
         self.total_volume_gal = total_volume_gal
         self.num_nodes        = num_nodes
         self.strat_slope      = strat_slope
-        self._node_temps: list[float] = []  # temperature [°F] at each node, bottom to top
+
+        # Internal state — set by initialize()
+        self._delta_gal:    float = 0.0
+        self._strat_inter:  float = 0.0
+        self._inlet_temp_f: float = 50.0   # updated each timestep by draw()
+        self._outlet_temp_f: float = 140.0  # updated each timestep by heat()
+
+    # ------------------------------------------------------------------
+    # Initialization
+    # ------------------------------------------------------------------
 
     def initialize(
         self,
@@ -50,16 +80,33 @@ class StorageTank:
         """
         Set initial temperature stratification profile.
 
+        Places the cold boundary (where T = cold_temp_f) at
+        ``(1 - percent_useable) * 100`` percent height, so the top
+        ``percent_useable`` fraction of the tank starts at storage temperature.
+
         Parameters
         ----------
         storage_temp_f : float
-            Hot storage setpoint temperature [°F].
+            Initial hot storage temperature [°F]. Also sets the initial
+            outlet temperature cap.
         cold_temp_f : float
             Cold/incoming water temperature [°F].
         percent_useable : float
-            Fraction of tank volume that starts hot (0-1).
+            Fraction of tank volume that starts hot (0–1).
         """
-        pass
+        self._inlet_temp_f  = cold_temp_f
+        self._outlet_temp_f = storage_temp_f
+        self._delta_gal     = 0.0
+
+        # Solve for strat_inter so the ramp passes through cold_temp_f at
+        # x_cold_pct with delta_gal = 0:
+        #   strat_slope * x_cold_pct + strat_inter = cold_temp_f
+        x_cold_pct = (1.0 - percent_useable) * 100.0
+        self._strat_inter = cold_temp_f - self.strat_slope * x_cold_pct
+
+    # ------------------------------------------------------------------
+    # Temperature queries
+    # ------------------------------------------------------------------
 
     def get_temperature_at_fraction(self, fract: float) -> float:
         """
@@ -73,9 +120,12 @@ class StorageTank:
         Returns
         -------
         float
-            Temperature [°F].
+            Temperature [°F], clamped to [inlet_temp_f, outlet_temp_f].
         """
-        pass
+        x_pct     = fract * 100.0
+        shift_pct = self._delta_gal / self.total_volume_gal * 100.0
+        temp      = self.strat_slope * (x_pct + shift_pct) + self._strat_inter
+        return max(self._inlet_temp_f, min(self._outlet_temp_f, temp))
 
     def get_usable_volume_supplyT_gal(self, supply_temp_f: float) -> float:
         """
@@ -89,24 +139,76 @@ class StorageTank:
         -------
         float
         """
-        pass
+        # Solve for x_pct where T = supply_temp_f (lower boundary of usable zone):
+        #   strat_slope * (x_pct + shift_pct) + strat_inter = supply_temp_f
+        #   x_pct = (supply_temp_f - strat_inter) / strat_slope - shift_pct
+        shift_pct     = self._delta_gal / self.total_volume_gal * 100.0
+        x_supply_pct  = (supply_temp_f - self._strat_inter) / self.strat_slope - shift_pct
+        x_supply_pct  = max(0.0, min(100.0, x_supply_pct))
+        usable_fract  = (100.0 - x_supply_pct) / 100.0
+        return usable_fract * self.total_volume_gal
 
-    def draw(self, volume_supplyT_gal: float, cold_temp_f: float) -> None:
+    # ------------------------------------------------------------------
+    # Simulation operations
+    # ------------------------------------------------------------------
+
+    def draw(
+        self,
+        volume_supplyT_gal: float,
+        cold_temp_f: float,
+        supply_temp_f: float,
+        outlet_temp_f: float,
+    ) -> None:
         """
-        Remove hot water from the top of the tank and replace with cold at the bottom.
+        Remove hot water from the top of the tank and replace with cold at the
+        bottom, representing DHW delivery to building occupants.
+
+        Because storage temperature may exceed supply temperature, the actual
+        physical volume removed from the tank is smaller than the supply-temp
+        demand — the hot water is mixed with cold at the tap. The conversion is:
+
+            physical_vol = volume_supplyT_gal
+                           * (supply_temp_f - cold_temp_f)
+                           / (outlet_temp_f - cold_temp_f)
+
+        Decreases ``_delta_gal`` (thermocline rises → less hot water).
 
         Parameters
         ----------
         volume_supplyT_gal : float
-            Volume of supply-temperature water drawn [gallons].
+            DHW demand in supply-temperature gallons [gal].
         cold_temp_f : float
-            Temperature of incoming cold water [°F].
+            Incoming cold water temperature [°F]. Stored for subsequent
+            temperature queries.
+        supply_temp_f : float
+            System supply (delivery) temperature [°F].
+        outlet_temp_f : float
+            Current maximum hot water temperature at the tank outlet [°F].
         """
-        pass
+        self._inlet_temp_f = cold_temp_f
+        if outlet_temp_f <= cold_temp_f or volume_supplyT_gal <= 0.0:
+            return
+        physical_vol_gal = (
+            volume_supplyT_gal
+            * (supply_temp_f - cold_temp_f)
+            / (outlet_temp_f - cold_temp_f)
+        )
+        self._delta_gal -= physical_vol_gal
 
-    def heat(self, kbtuh: float, duration_min: float, supply_temp_f: float) -> None:
+    def heat(
+        self,
+        kbtuh: float,
+        duration_min: float,
+        outlet_temp_f: float,
+    ) -> None:
         """
-        Apply heat from active water heaters to the tank for one timestep.
+        Apply heat from active water heaters for one timestep.
+
+        Models the HPWH drawing cold water from the bottom of the tank,
+        heating it to ``outlet_temp_f``, and returning it to the top.
+
+        Increases ``_delta_gal`` (thermocline falls → more hot water), capped
+        when the tank is fully heated.
 
         Parameters
         ----------
@@ -114,10 +216,25 @@ class StorageTank:
             Total heating rate from all active heaters [kBTU/hr].
         duration_min : float
             Length of the timestep [minutes].
-        supply_temp_f : float
-            System supply temperature; caps heating at storage setpoint [°F].
+        outlet_temp_f : float
+            Maximum temperature the heater delivers to the tank top [°F].
+            Sets the hot-zone temperature cap for subsequent temperature queries.
         """
-        pass
+        self._outlet_temp_f = outlet_temp_f
+        if kbtuh <= 0.0 or outlet_temp_f <= self._inlet_temp_f:
+            return
+
+        heat_kbtu    = kbtuh * duration_min / 60.0           # kBTU
+        v_heated_gal = heat_kbtu * 1000.0 / (_RHO_CP * (outlet_temp_f - self._inlet_temp_f))  # gal
+        self._delta_gal += v_heated_gal
+
+        # Cap: tank cannot be heated beyond "fully hot" (hot zone fills the
+        # entire tank, x=0% is at outlet_temp_f):
+        #   strat_slope * (0 + shift_pct_max) + strat_inter = outlet_temp_f
+        #   shift_pct_max = (outlet_temp_f - strat_inter) / strat_slope
+        shift_pct_max  = (outlet_temp_f - self._strat_inter) / self.strat_slope
+        delta_gal_max  = shift_pct_max * self.total_volume_gal / 100.0
+        self._delta_gal = min(self._delta_gal, delta_gal_max)
 
     def add_recirc_return(
         self,
@@ -128,6 +245,15 @@ class StorageTank:
         """
         Mix recirculation loop return flow into the bottom of the tank.
 
+        The recirc loop takes hot water from the tank top at ``outlet_temp_f``,
+        circulates it through the building pipes, and returns it cooled to
+        ``return_temp_f`` at the tank bottom. The total tank volume is unchanged,
+        but the net energy loss reduces the hot zone.
+
+        Net effect on ``_delta_gal``:
+            vol * (return_temp_f - outlet_temp_f) / (outlet_temp_f - inlet_temp_f)
+        (always negative → thermocline rises → less hot water)
+
         Parameters
         ----------
         flow_gpm : float
@@ -137,7 +263,19 @@ class StorageTank:
         duration_min : float
             Length of the timestep [minutes].
         """
-        pass
+        if self._outlet_temp_f <= self._inlet_temp_f:
+            return
+        vol_gal = flow_gpm * duration_min
+        net_delta_gal = (
+            vol_gal
+            * (return_temp_f - self._outlet_temp_f)
+            / (self._outlet_temp_f - self._inlet_temp_f)
+        )
+        self._delta_gal += net_delta_gal  # always negative
+
+    # ------------------------------------------------------------------
+    # Sizing support
+    # ------------------------------------------------------------------
 
     def get_stratification_factor(
         self,
@@ -146,8 +284,12 @@ class StorageTank:
         storage_temp_f: float,
     ) -> float:
         """
-        Calculate the stratification factor: ratio of actual usable volume to
-        perfectly-stratified usable volume, given the ON aquastat position.
+        Return the stratification factor: the fraction of total tank volume
+        that is usable at supply temperature given the ON aquastat position.
+
+        Matches the sizing formula used in DHWSystem:
+            strat_factor_pct = (storage_temp_f - supply_temp_f) / strat_slope
+            usable_fraction  = strat_factor_pct * (1 - on_fract)
 
         Parameters
         ----------
@@ -159,4 +301,21 @@ class StorageTank:
         -------
         float
         """
-        pass
+        if storage_temp_f <= supply_temp_f:
+            return 0.0
+        strat_factor_pct = (storage_temp_f - supply_temp_f) / self.strat_slope
+        return max(0.0, strat_factor_pct * (1.0 - on_fract))
+
+
+class MixedStorageTank(StorageTank):
+    """
+    Fully-mixed (single-node) storage tank.
+
+    Uses strat_slope = infinity equivalent: the entire tank is always at a
+    uniform temperature. Modelled by setting strat_slope to a very large value
+    so the thermocline collapses to zero width.
+    """
+
+    def __init__(self, total_volume_gal: float) -> None:
+        # A very large slope collapses the thermocline to near-zero width.
+        super().__init__(total_volume_gal=total_volume_gal, strat_slope=1e6)

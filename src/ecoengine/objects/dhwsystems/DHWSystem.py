@@ -1000,6 +1000,15 @@ class DHWSystem:
         Execute one simulation timestep: query controls, apply heating,
         draw DHW from tank. Returns per-step metrics.
 
+        Order of operations
+        -------------------
+        1. Query Building for demand, OAT, and inlet water temperature.
+        2. Determine outlet_temp_f for the current hour from active Controls.
+        3. Update each WaterHeater's on/off state via its Controls.
+        4. Sum heating output from all active heaters; apply to storage tank.
+        5. Draw DHW from tank to meet demand.
+        6. Return per-step metrics dict.
+
         Parameters
         ----------
         building : Building
@@ -1008,18 +1017,102 @@ class DHWSystem:
         interval_min : int
             Length of each interval in minutes.
         mode : str
-            Operating mode: 'normal', 'load_up', or 'shed'.
+            Ignored — operating mode is determined automatically by each
+            WaterHeater's control_schedule for the current hour.
 
         Returns
         -------
         dict
-            Per-timestep metrics (demand, usable volume, heater output, power).
+            Keys: 'demand_supplyT_gal', 'usable_volume_supplyT_gal',
+            'heater_output_kbtuh', 'heater_power_in_kw', 'oat_f',
+            'inlet_water_temp_f', 'tank_temps_f'.
         """
-        pass
+        use_avg = any(wh.is_load_shifting() for wh in self.water_heaters)
+        demand_supplyT_gal = building.get_dhw_load_supplyT_gal(
+            timestep_interval, interval_min, use_avg=use_avg
+        )
+        oat_f          = building.get_oat_f(timestep_interval, interval_min)
+        inlet_temp_f   = building.get_inlet_water_temp_f(timestep_interval, interval_min)
+        hour_of_day    = (timestep_interval * interval_min // 60) % 24
+        outlet_temp_f  = self._get_outlet_temp_f(hour_of_day)
+
+        if self.storage_tank is not None:
+            # Update on/off state for each heater based on current tank condition
+            for wh in self.water_heaters:
+                wh.update_state(self.storage_tank, hour_of_day)
+
+            # Apply heating from all active heaters to the tank
+            top_temp_f     = self.storage_tank.get_temperature_at_fraction(1.0)
+            total_kbtuh    = sum(
+                wh.get_output_kbtuh(oat_f, top_temp_f)
+                for wh in self.water_heaters
+            )
+            total_kw: float | None = None
+            active_kws = [
+                wh.get_power_in_kw(oat_f, top_temp_f)
+                for wh in self.water_heaters
+                if wh.is_active()
+            ]
+            if any(kw is not None for kw in active_kws):
+                total_kw = sum(kw or 0.0 for kw in active_kws)
+
+            self.storage_tank.heat(total_kbtuh, interval_min, outlet_temp_f)
+
+            # Draw hot water from tank to meet demand
+            self.storage_tank.draw(
+                demand_supplyT_gal, inlet_temp_f, self.supply_temp_f, outlet_temp_f
+            )
+
+            usable_vol_gal = self.storage_tank.get_usable_volume_supplyT_gal(
+                self.supply_temp_f
+            )
+            tank_temps_f = [
+                self.storage_tank.get_temperature_at_fraction(f)
+                for f in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+            ]
+        else:
+            total_kbtuh    = 0.0
+            total_kw       = None
+            usable_vol_gal = 0.0
+            tank_temps_f   = [0.0] * 6
+
+        return {
+            "demand_supplyT_gal":        demand_supplyT_gal,
+            "usable_volume_supplyT_gal": usable_vol_gal,
+            "heater_output_kbtuh":       total_kbtuh,
+            "heater_power_in_kw":        total_kw,
+            "oat_f":                     oat_f,
+            "inlet_water_temp_f":        inlet_temp_f,
+            "tank_temps_f":              tank_temps_f,
+        }
+
+    def _get_outlet_temp_f(self, hour_of_day: int) -> float:
+        """
+        Return the maximum outlet temperature among all water heaters' active
+        Controls for the given hour. Falls back to storage_temp_f if no
+        Controls are configured.
+
+        Parameters
+        ----------
+        hour_of_day : int
+            Hour of the day (0-23).
+
+        Returns
+        -------
+        float
+        """
+        outlet_temps = [
+            wh.get_controls_for_hour(hour_of_day).outlet_temp_f
+            for wh in self.water_heaters
+            if wh.get_controls_for_hour(hour_of_day) is not None
+        ]
+        return max(outlet_temps) if outlet_temps else self.storage_temp_f
 
     def check_for_outage(self, demand_supplyT_gal: float) -> bool:
         """
         Return True if the storage tank cannot meet the given demand.
+
+        Checks whether usable volume at supply temperature has reached zero.
 
         Parameters
         ----------
@@ -1030,4 +1123,6 @@ class DHWSystem:
         -------
         bool
         """
-        pass
+        if self.storage_tank is None:
+            return False
+        return self.storage_tank.get_usable_volume_supplyT_gal(self.supply_temp_f) <= 0.0

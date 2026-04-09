@@ -214,9 +214,9 @@ class WaterHeater:
             return self.performance_map.get_power_in_kw(oat_f, water_temp_f)
         return None
 
-    def get_output_kbtuh(self, oat_f: float, water_temp_f: float) -> float | None:
+    def get_output_kbtuh(self, oat_f: float, water_temp_f: float) -> float:
         """
-        Return actual heating output this timestep (0 if inactive).
+        Return actual heating output this timestep: capacity if active, 0 if not.
 
         Parameters
         ----------
@@ -225,14 +225,21 @@ class WaterHeater:
 
         Returns
         -------
-        float | None
+        float
         """
-        pass
+        if not self._active:
+            return 0.0
+        cap = self.get_capacity_kbtuh(oat_f, water_temp_f)
+        return cap if cap is not None else 0.0
 
     def update_state(self, storage_tank: StorageTank, hour_of_day: int) -> None:
         """
         Look up the active Controls for the given hour, then update
         active/inactive state based on current tank condition.
+
+        If the heater is currently ON, check should_turn_off().
+        If the heater is currently OFF, check should_turn_on().
+        If no Controls are configured for this hour, state is unchanged.
 
         Parameters
         ----------
@@ -241,4 +248,12 @@ class WaterHeater:
             Hour of the day (0-23), used to select the active Controls from
             the control schedule.
         """
-        pass
+        controls = self.get_controls_for_hour(hour_of_day)
+        if controls is None:
+            return
+        if self._active:
+            if controls.should_turn_off(storage_tank):
+                self.turn_off()
+        else:
+            if controls.should_turn_on(storage_tank):
+                self.turn_on()
