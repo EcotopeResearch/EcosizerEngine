@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
+
 # Default stratification slope [°F per percentage-point of tank height].
 # Calibrated empirically for a standard 12-node tank model.
 _DEFAULT_STRAT_SLOPE: float = 2.8
@@ -8,7 +10,77 @@ _DEFAULT_STRAT_SLOPE: float = 2.8
 _RHO_CP: float = 8.353535
 
 
-class StorageTank:
+# ---------------------------------------------------------------------------
+# Abstract base
+# ---------------------------------------------------------------------------
+
+class StorageTank(ABC):
+    """
+    Abstract base class for all storage tank models.
+
+    Defines the interface that WaterHeater, Controls, and DHWSystem rely on.
+    Concrete subclasses implement the thermal model (stratified vs. mixed).
+
+    Every subclass must expose ``total_volume_gal`` as a plain attribute and
+    implement the five simulation methods listed below.
+    """
+
+    total_volume_gal: float
+
+    @abstractmethod
+    def initialize(
+        self,
+        storage_temp_f: float,
+        cold_temp_f: float,
+        percent_useable: float,
+    ) -> None:
+        """Set initial tank thermal state before a simulation begins."""
+
+    @abstractmethod
+    def get_temperature_at_fraction(self, fract: float) -> float:
+        """
+        Return water temperature at fractional tank height (0=bottom, 1=top).
+        Used by Controls to decide whether to fire the heater.
+        """
+
+    @abstractmethod
+    def get_usable_volume_supplyT_gal(self, supply_temp_f: float) -> float:
+        """Return gallons currently at or above supply temperature."""
+
+    @abstractmethod
+    def draw(
+        self,
+        volume_supplyT_gal: float,
+        cold_temp_f: float,
+        supply_temp_f: float,
+        outlet_temp_f: float,
+    ) -> None:
+        """Remove DHW demand from the tank and replace with cold make-up water."""
+
+    @abstractmethod
+    def heat(
+        self,
+        kbtuh: float,
+        duration_min: float,
+        outlet_temp_f: float,
+    ) -> None:
+        """Apply heat from active water heaters for one timestep."""
+
+    @abstractmethod
+    def add_recirc_return(
+        self,
+        flow_gpm: float,
+        return_temp_f: float,
+        duration_min: float,
+    ) -> None:
+        """Mix recirculation loop return flow into the tank."""
+
+
+# ---------------------------------------------------------------------------
+# Stratified tank
+# ---------------------------------------------------------------------------
+
+class StratifiedTank(StorageTank):
     """
     Stratified storage tank model using a continuous linear temperature profile.
 
@@ -305,17 +377,3 @@ class StorageTank:
             return 0.0
         strat_factor_pct = (storage_temp_f - supply_temp_f) / self.strat_slope
         return max(0.0, strat_factor_pct * (1.0 - on_fract))
-
-
-class MixedStorageTank(StorageTank):
-    """
-    Fully-mixed (single-node) storage tank.
-
-    Uses strat_slope = infinity equivalent: the entire tank is always at a
-    uniform temperature. Modelled by setting strat_slope to a very large value
-    so the thermocline collapses to zero width.
-    """
-
-    def __init__(self, total_volume_gal: float) -> None:
-        # A very large slope collapses the thermocline to near-zero width.
-        super().__init__(total_volume_gal=total_volume_gal, strat_slope=1e6)

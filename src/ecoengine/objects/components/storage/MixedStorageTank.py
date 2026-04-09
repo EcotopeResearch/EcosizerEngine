@@ -1,39 +1,186 @@
-from .StorageTank import StorageTank
+from __future__ import annotations
+
+from .StorageTank import StorageTank, _RHO_CP
 
 
 class MixedStorageTank(StorageTank):
     """
     Fully-mixed (uniform temperature) storage tank model.
-    Inherits the StorageTank interface but models the tank as a single
-    temperature node rather than a stratified profile.
+
+    Unlike the stratified StratifiedTank, the entire volume is assumed to be
+    at a single uniform temperature at all times.  This matches the behaviour
+    of a temperature-maintenance (TM) tank in a parallel-loop system, where
+    the tank is small and continuously stirred by the recirc loop.
+
+    Interface contract
+    ------------------
+    * ``get_temperature_at_fraction()`` returns the same value for any height.
+    * ``get_usable_volume_supplyT_gal()`` returns the full tank volume when
+      the temperature is at or above supply, otherwise 0.
+    * ``heat()`` raises the tank temperature proportionally to heat added.
+    * ``draw()`` cools the tank proportionally to cold make-up water added.
+    * ``add_recirc_return()`` applies a net temperature drop equal to the
+      recirc heat loss for the timestep.
     """
 
-    def __init__(self, total_volume_gal):
+    def __init__(self, total_volume_gal: float) -> None:
         """
         Parameters
         ----------
         total_volume_gal : float
             Total physical tank volume [gallons].
         """
-        super().__init__(total_volume_gal, num_nodes=1)
-        self._temp_f = None  # single mixed temperature
+        self.total_volume_gal = total_volume_gal
+        self._temperature_f: float = 0.0   # set by initialize()
 
-    def initialize(self, storage_temp_f, cold_temp_f, percent_useable):
-        """Set initial mixed temperature as a blend of hot and cold fractions."""
-        pass
+    # ------------------------------------------------------------------
+    # Initialization
+    # ------------------------------------------------------------------
 
-    def get_temperature_at_fraction(self, fract):
-        """Return uniform temperature regardless of height fraction."""
-        pass
+    def initialize(
+        self,
+        storage_temp_f: float,
+        cold_temp_f: float,
+        percent_useable: float,
+    ) -> None:
+        """
+        Set the uniform tank temperature before a simulation begins.
 
-    def get_usable_volume_supplyT_gal(self, supply_temp_f):
-        """Return full tank volume if above supply temp, else 0."""
-        pass
+        For a fully-mixed tank, ``percent_useable`` does not have a spatial
+        meaning; the tank is simply initialized at ``storage_temp_f``.
 
-    def draw(self, volume_supplyT_gal, cold_temp_f):
-        """Draw hot water and mix in cold water, updating the uniform temperature."""
-        pass
+        Parameters
+        ----------
+        storage_temp_f : float
+            Initial tank temperature [°F].
+        cold_temp_f : float
+            Cold water temperature — stored for energy-balance calculations.
+        percent_useable : float
+            Ignored for the mixed model (all volume is always at one temp).
+        """
+        self._temperature_f = storage_temp_f
+        self._cold_temp_f   = cold_temp_f
 
-    def heat(self, kbtuh, duration_min, supply_temp_f):
-        """Raise the uniform tank temperature by the heat added this timestep."""
-        pass
+    # ------------------------------------------------------------------
+    # Temperature queries
+    # ------------------------------------------------------------------
+
+    def get_temperature_at_fraction(self, fract: float) -> float:
+        """Return the uniform tank temperature (identical at all heights)."""
+        return self._temperature_f
+
+    def get_usable_volume_supplyT_gal(self, supply_temp_f: float) -> float:
+        """Return full tank volume if at or above supply temperature, else 0."""
+        return self.total_volume_gal if self._temperature_f >= supply_temp_f else 0.0
+
+    # ------------------------------------------------------------------
+    # Simulation operations
+    # ------------------------------------------------------------------
+
+    def draw(
+        self,
+        volume_supplyT_gal: float,
+        cold_temp_f: float,
+        supply_temp_f: float,
+        outlet_temp_f: float,
+    ) -> None:
+        """
+        Remove DHW demand from the tank and replace with cold make-up water.
+
+        Uses a simple energy-balance mix: physically removes hot water at the
+        current tank temperature and replaces it with cold water, cooling the
+        tank uniformly.
+
+        The physical volume removed is adjusted for the temperature difference
+        between storage and supply (the same conversion used by StratifiedTank).
+
+        Parameters
+        ----------
+        volume_supplyT_gal : float
+            DHW demand in supply-temperature gallons [gal].
+        cold_temp_f : float
+            Incoming cold water temperature [°F].
+        supply_temp_f : float
+            System supply (delivery) temperature [°F].
+        outlet_temp_f : float
+            Current hot water delivery temperature — used for physical-volume
+            conversion (same formula as StratifiedTank).
+        """
+        self._cold_temp_f = cold_temp_f
+        if self._temperature_f <= cold_temp_f or volume_supplyT_gal <= 0.0:
+            return
+        # Physical gallons removed from tank
+        physical_vol_gal = (
+            volume_supplyT_gal
+            * (supply_temp_f - cold_temp_f)
+            / max(self._temperature_f - cold_temp_f, 1e-6)
+        )
+        # Energy balance: mix physical_vol of cold water into the remaining hot tank
+        remaining_gal = self.total_volume_gal - physical_vol_gal
+        if remaining_gal <= 0.0:
+            self._temperature_f = cold_temp_f
+            return
+        total_energy_btu = remaining_gal * _RHO_CP * self._temperature_f + physical_vol_gal * _RHO_CP * cold_temp_f
+        self._temperature_f = total_energy_btu / (self.total_volume_gal * _RHO_CP)
+
+    def heat(
+        self,
+        kbtuh: float,
+        duration_min: float,
+        outlet_temp_f: float,
+    ) -> None:
+        """
+        Apply heat from active water heaters for one timestep.
+
+        Raises the uniform tank temperature proportionally to heat added,
+        capped at ``outlet_temp_f``.
+
+        Parameters
+        ----------
+        kbtuh : float
+            Total heating rate from all active heaters [kBTU/hr].
+        duration_min : float
+            Length of the timestep [minutes].
+        outlet_temp_f : float
+            Maximum temperature the heater can deliver [°F].
+        """
+        if kbtuh <= 0.0:
+            return
+        heat_kbtu = kbtuh * duration_min / 60.0   # kBTU
+        delta_t   = heat_kbtu * 1000.0 / (self.total_volume_gal * _RHO_CP)
+        self._temperature_f = min(self._temperature_f + delta_t, outlet_temp_f)
+
+    def add_recirc_return(
+        self,
+        flow_gpm: float,
+        return_temp_f: float,
+        duration_min: float,
+    ) -> None:
+        """
+        Apply the net temperature drop from recirc loop losses.
+
+        The recirc loop continuously draws hot water from the tank at the
+        current temperature and returns it cooled to ``return_temp_f``. For a
+        fully-mixed tank, the net effect is a uniform temperature drop computed
+        from the energy removed:
+
+            ΔT = flow_gpm × duration_min × (return_temp_f − tank_temp) / total_volume_gal
+
+        (ΔT is negative when return_temp_f < tank_temp, i.e., heat is lost.)
+
+        Parameters
+        ----------
+        flow_gpm : float
+            Recirculation loop flow rate [GPM].
+        return_temp_f : float
+            Temperature of water returning from the recirc loop [°F].
+        duration_min : float
+            Length of the timestep [minutes].
+        """
+        vol_circulated_gal = flow_gpm * duration_min
+        delta_t = (
+            vol_circulated_gal
+            * (return_temp_f - self._temperature_f)
+            / self.total_volume_gal
+        )
+        self._temperature_f += delta_t  # always negative when return < tank temp

@@ -24,7 +24,7 @@ from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem, _RHO_CP, _get_peak
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.heating.PerformanceMap import NominalPerformanceMap
 from ecoengine.objects.components.heating.Controls import Controls
-from ecoengine.objects.components.storage.StorageTank import StorageTank
+from ecoengine.objects.components.storage.StorageTank import StorageTank, StratifiedTank
 
 
 # ===========================================================================
