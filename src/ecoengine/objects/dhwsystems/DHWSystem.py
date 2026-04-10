@@ -358,10 +358,12 @@ class DHWSystem:
 
             if control_schedule and self._is_load_shifting(control_map):
                 ls_capacity_kbtuh = self._calc_required_capacity_ls_kbtuh(
-                    control_schedule, control_map, building, strat_slope
+                    control_schedule, control_map, building, strat_slope,
+                    fract_total_vol=load_shift_fract_total_vol,
                 )
                 gen_rate_ls_gph = self._calc_gen_rate_ls_gph(
-                    control_schedule, control_map, building, strat_slope
+                    control_schedule, control_map, building, strat_slope,
+                    fract_total_vol=load_shift_fract_total_vol,
                 )
                 ls_running_vol_supplyT_gal = self._calc_running_volume_ls_supplyT_gal(
                     control_schedule, building, gen_rate_ls_gph,
@@ -735,6 +737,7 @@ class DHWSystem:
         self,
         control_schedule: list[str],
         building: Building,
+        fract_total_vol: float = 1.0,
     ) -> tuple[float, float]:
         """
         Calculate volumes consumed during the first shed block and the
@@ -744,12 +747,16 @@ class DHWSystem:
         ----------
         control_schedule : list[str]
         building : Building
+        fract_total_vol : float
+            Demand scaling factor from load_shift_percent. Applied to vshift
+            (the volume needed to carry through the first shed) to match the
+            original's _calcPrelimVol behavior. Default 1.0 (no scaling).
 
         Returns
         -------
         vshift_supplyT_gal : float
-            Volume [gal at supplyT] consumed during the first shed block.
-            Must be stored above the shed aquastat before entering shed.
+            Volume [gal at supplyT] consumed during the first shed block,
+            scaled by fract_total_vol.
         vconsumed_lu_supplyT_gal : float
             Volume [gal at supplyT] consumed during the load-up hours.
             The heater must both fill Vload AND offset this demand.
@@ -758,7 +765,7 @@ class DHWSystem:
 
         load_shape_gph = building.avg_load_shape * building.daily_dhw_use_supplyT_gal
 
-        vshift_supplyT_gal       = float(sum(load_shape_gph[h] for h in first_shed_block))
+        vshift_supplyT_gal       = float(sum(load_shape_gph[h] for h in first_shed_block)) * fract_total_vol
         lu_start                 = first_shed_block[0] - load_up_hours
         vconsumed_lu_supplyT_gal = float(sum(load_shape_gph[h] for h in range(lu_start, first_shed_block[0])))
 
@@ -770,6 +777,7 @@ class DHWSystem:
         control_map: dict[str, Controls],
         building: Building,
         strat_slope: float,
+        fract_total_vol: float = 1.0,
     ) -> float:
         """
         Calculate the load-shift generation rate [gal/hr at supplyT].
@@ -789,6 +797,9 @@ class DHWSystem:
         control_map : dict[str, Controls]
         building : Building
         strat_slope : float
+        fract_total_vol : float
+            Demand scaling factor from load_shift_percent. Passed through to
+            _calc_prelim_vols_supplyT_gal. Default 1.0 (no scaling).
 
         Returns
         -------
@@ -803,7 +814,7 @@ class DHWSystem:
             return normal_gen_rate_gph
 
         vshift_supplyT_gal, vconsumed_lu_supplyT_gal = self._calc_prelim_vols_supplyT_gal(
-            control_schedule, building
+            control_schedule, building, fract_total_vol
         )
 
         normal_ctrl = control_map["normal"]
@@ -837,6 +848,7 @@ class DHWSystem:
         control_map: dict[str, Controls],
         building: Building,
         strat_slope: float,
+        fract_total_vol: float = 1.0,
     ) -> float:
         """
         Calculate required heating capacity [kBTU/hr] for load-shift sizing.
@@ -850,6 +862,9 @@ class DHWSystem:
         control_map : dict[str, Controls]
         building : Building
         strat_slope : float
+        fract_total_vol : float
+            Demand scaling factor from load_shift_percent. Passed through to
+            _calc_gen_rate_ls_gph. Default 1.0 (no scaling).
 
         Returns
         -------
@@ -858,7 +873,7 @@ class DHWSystem:
         """
         design_inlet_temp_f = self._require_design_inlet_temp(building)
         gen_rate_ls_gph     = self._calc_gen_rate_ls_gph(
-            control_schedule, control_map, building, strat_slope
+            control_schedule, control_map, building, strat_slope, fract_total_vol
         )
         delta_t = self.supply_temp_f - design_inlet_temp_f
         return gen_rate_ls_gph * _RHO_CP * delta_t / self.defrost_factor / 1000
@@ -896,10 +911,12 @@ class DHWSystem:
             Load-shift running volume [gal at supplyT].
         """
         first_shed_block, _ = self._get_first_shed_block_and_load_up_hours(control_schedule)
-        vshift_supplyT_gal, _ = self._calc_prelim_vols_supplyT_gal(control_schedule, building)
+        vshift_supplyT_gal, _ = self._calc_prelim_vols_supplyT_gal(
+            control_schedule, building, fract_total_vol
+        )
 
         load_shape = building.avg_load_shape
-        daily_gal  = building.daily_dhw_use_supplyT_gal * fract_total_vol
+        daily_gal  = building.daily_dhw_use_supplyT_gal
 
         # 24-hr generation profile: gen_rate_ls during non-shed hours, 0 during shed
         gen_profile_gph    = np.array([
@@ -916,6 +933,10 @@ class DHWSystem:
         cum_diff     = np.cumsum(tiled_diff[shed_end_idx:])
         neg_values   = cum_diff[cum_diff < 0]
         ls_deficit_supplyT_gal = float(-np.min(neg_values)) if len(neg_values) > 0 else 0.0
+
+        # Post-multiply the deficit by fract_total_vol to match the original's behavior:
+        # the sizing is against unscaled demand but the deficit is scaled back down.
+        ls_deficit_supplyT_gal *= fract_total_vol
 
         return ls_deficit_supplyT_gal + vshift_supplyT_gal
 
@@ -1083,6 +1104,15 @@ class DHWSystem:
         demand_supplyT_gal = building.get_dhw_load_supplyT_gal(
             timestep_interval, interval_min, use_avg=use_avg
         )
+        # NOTE: The original EcosizerEngine scaled hwDemand by fract_total_vol
+        # (derived from load_shift_percent) in the simulation as well as sizing.
+        # This codebase intentionally does NOT do that. Sizing is scaled so the
+        # system is optimally sized for the target percentile of days, but the
+        # simulation always runs against the full unscaled average daily demand.
+        # The practical consequence: a system sized with load_shift_percent < 1.0
+        # may show the primary heater firing during shed on some simulated days,
+        # which is the expected and honest behavior for a design that accepts
+        # occasional shed violations in exchange for a smaller tank.
         oat_f          = building.get_oat_f(timestep_interval, interval_min)
         inlet_temp_f   = building.get_inlet_water_temp_f(timestep_interval, interval_min)
         hour_of_day    = (timestep_interval * interval_min // 60) % 24
