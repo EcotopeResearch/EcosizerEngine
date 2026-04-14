@@ -54,7 +54,7 @@ class PerformanceMap:
 
     API notes
     ---------
-    * ``water_temp_f``  — outlet water temperature leaving the heater [°F].
+    * ``outlet_temp_f`` — outlet water temperature leaving the heater [°F].
       In a stratified-tank simulation this is ``top_temp_f`` (the storage setpoint).
     * ``inlet_temp_f``  — cold water entering the heater from the tank bottom [°F].
       Optional; falls back to the ``design_inlet_temp_f`` stored at construction
@@ -184,7 +184,7 @@ class PerformanceMap:
     def get_capacity_kbtuh(
         self,
         oat_f: float,
-        water_temp_f: float,
+        outlet_temp_f: float,
         inlet_temp_f: float | None = None,
     ) -> float | None:
         """Return heating output [kBTU/hr] at the given conditions."""
@@ -193,7 +193,7 @@ class PerformanceMap:
     def get_power_in_kw(
         self,
         oat_f: float,
-        water_temp_f: float,
+        outlet_temp_f: float,
         inlet_temp_f: float | None = None,
     ) -> float | None:
         """Return electrical power input [kW] at the given conditions."""
@@ -202,17 +202,17 @@ class PerformanceMap:
     def get_cop(
         self,
         oat_f: float,
-        water_temp_f: float,
+        outlet_temp_f: float,
         inlet_temp_f: float | None = None,
     ) -> float | None:
         """Return COP at the given conditions (None if power data is unavailable)."""
-        cap_kbtuh = self.get_capacity_kbtuh(oat_f, water_temp_f, inlet_temp_f)
-        pwr_kw    = self.get_power_in_kw(oat_f, water_temp_f, inlet_temp_f)
+        cap_kbtuh = self.get_capacity_kbtuh(oat_f, outlet_temp_f, inlet_temp_f)
+        pwr_kw    = self.get_power_in_kw(oat_f, outlet_temp_f, inlet_temp_f)
         if cap_kbtuh is None or pwr_kw is None or pwr_kw <= 0:
             return None
         return (cap_kbtuh / _W_TO_KBTUH) / pwr_kw
 
-    def is_within_operating_bounds(self, oat_f: float, water_temp_f: float) -> bool:
+    def is_within_operating_bounds(self, oat_f: float, outlet_temp_f: float) -> bool:
         """Return True if the conditions are within the map's valid operating range."""
         pass
 
@@ -244,7 +244,7 @@ class NominalPerformanceMap(PerformanceMap):
         super().__init__(map_data=None, model_name=model_name)
         self.nominal_capacity_kbtuh = nominal_capacity_kbtuh
 
-    def get_capacity_kbtuh(self, oat_f: float, water_temp_f: float, inlet_temp_f: float | None = None) -> float:
+    def get_capacity_kbtuh(self, oat_f: float, outlet_temp_f: float, inlet_temp_f: float | None = None) -> float:
         """Return the fixed nominal capacity [kBTU/hr] regardless of conditions."""
         return self.nominal_capacity_kbtuh
 
@@ -320,11 +320,11 @@ class PklPerformanceMap(PerformanceMap):
     # ------------------------------------------------------------------
 
     def _resolve_temps(
-        self, water_temp_f: float, inlet_temp_f: float | None
+        self, outlet_temp_f: float, inlet_temp_f: float | None
     ) -> tuple[float, float]:
         """Apply HX shift and inlet capping; return (inlet, outlet)."""
         inlet  = inlet_temp_f if inlet_temp_f is not None else self._design_inlet_f
-        outlet = water_temp_f
+        outlet = outlet_temp_f
         if self._secondary_hx:
             inlet  += self._hx_increase
             outlet += self._hx_increase
@@ -426,6 +426,11 @@ class PklPerformanceMap(PerformanceMap):
         Core lookup. Returns (output_kw, input_kw) for a single unit,
         with full out-of-bounds handling.
         """
+        if oat_f is None:
+            raise ValueError(
+                "oat_f is required for real performance maps. "
+                "Provide a ClimateZone with a design OAT when constructing the Building."
+            )
         # OAT at or above map maximum → use default high-OAT values
         if oat_f >= self.oat_max:
             return self._default_out_high_kw, self._default_in_high_kw
@@ -456,24 +461,24 @@ class PklPerformanceMap(PerformanceMap):
     def get_capacity_kbtuh(
         self,
         oat_f: float,
-        water_temp_f: float,
+        outlet_temp_f: float,
         inlet_temp_f: float | None = None,
     ) -> float:
-        inlet, outlet = self._resolve_temps(water_temp_f, inlet_temp_f)
+        inlet, outlet = self._resolve_temps(outlet_temp_f, inlet_temp_f)
         out_kw, _     = self._get_per_unit_kw(oat_f, inlet, outlet)
         return out_kw * self.num_units * _W_TO_KBTUH
 
     def get_power_in_kw(
         self,
         oat_f: float,
-        water_temp_f: float,
+        outlet_temp_f: float,
         inlet_temp_f: float | None = None,
     ) -> float:
-        inlet, outlet = self._resolve_temps(water_temp_f, inlet_temp_f)
+        inlet, outlet = self._resolve_temps(outlet_temp_f, inlet_temp_f)
         _, inp_kw     = self._get_per_unit_kw(oat_f, inlet, outlet)
         return inp_kw * self.num_units
 
-    def is_within_operating_bounds(self, oat_f: float, water_temp_f: float) -> bool:
+    def is_within_operating_bounds(self, oat_f: float, outlet_temp_f: float) -> bool:
         return oat_f >= self.oat_min
 
 
@@ -564,6 +569,11 @@ class HPWHsimPerformanceMap(PerformanceMap):
         self, oat_f: float, condenser_t: float, outlet_t: float
     ) -> tuple[float, float]:
         """Returns (output_kbtuh, input_kbtuh) for a single unit."""
+        if oat_f is None:
+            raise ValueError(
+                "oat_f is required for real performance maps. "
+                "Provide a ClimateZone with a design OAT when constructing the Building."
+            )
         perfmap = self._perfmap
 
         if not perfmap:
@@ -614,22 +624,22 @@ class HPWHsimPerformanceMap(PerformanceMap):
     def get_capacity_kbtuh(
         self,
         oat_f: float,
-        water_temp_f: float,
+        outlet_temp_f: float,
         inlet_temp_f: float | None = None,
     ) -> float:
         condenser_t = inlet_temp_f if inlet_temp_f is not None else self._design_inlet_f
-        out_kbtuh, _ = self._get_per_unit_kbtuh(oat_f, condenser_t, water_temp_f)
+        out_kbtuh, _ = self._get_per_unit_kbtuh(oat_f, condenser_t, outlet_temp_f)
         return out_kbtuh * self.num_units
 
     def get_power_in_kw(
         self,
         oat_f: float,
-        water_temp_f: float,
+        outlet_temp_f: float,
         inlet_temp_f: float | None = None,
     ) -> float:
         condenser_t  = inlet_temp_f if inlet_temp_f is not None else self._design_inlet_f
-        _, inp_kbtuh = self._get_per_unit_kbtuh(oat_f, condenser_t, water_temp_f)
+        _, inp_kbtuh = self._get_per_unit_kbtuh(oat_f, condenser_t, outlet_temp_f)
         return inp_kbtuh / _W_TO_KBTUH * self.num_units
 
-    def is_within_operating_bounds(self, oat_f: float, water_temp_f: float) -> bool:
+    def is_within_operating_bounds(self, oat_f: float, outlet_temp_f: float) -> bool:
         return oat_f >= self.oat_min

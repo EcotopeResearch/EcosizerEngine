@@ -86,13 +86,20 @@ class StorageTank(ABC):
         """
 
     @abstractmethod
-    def draw_physical_gal(self, gal: float, inlet_temp_f: float) -> None:
+    def draw_physical_gal(
+        self,
+        gal: float,
+        inlet_temp_f: float,
+        supply_temp_f: float | None = None,
+    ) -> None:
         """
         Remove ``gal`` physical gallons from the top of the tank and replace
         with cold make-up water at the bottom.
 
         Unlike ``draw()``, no supply-temperature conversion is applied — the
-        caller provides physical gallons directly.
+        caller provides physical gallons directly. ``supply_temp_f`` is used
+        by stratified tanks to floor ``_delta_gal`` at the no-usable-hot-water
+        state rather than the absolute fully-cold state.
         """
 
 
@@ -244,6 +251,24 @@ class StratifiedTank(StorageTank):
     # Simulation operations
     # ------------------------------------------------------------------
 
+    def _delta_gal_floor(self, min_temp_f: float | None = None) -> float:
+        """
+        Minimum physical value of ``_delta_gal``: the state where the top of
+        the tank is at ``min_temp_f`` (thermocline at the very top).
+
+        When ``min_temp_f`` is ``supply_temp_f``, this is the point where the
+        entire primary storage has dropped below usable delivery temperature —
+        drawing further provides no hot water and only deepens the recovery hole.
+
+        When ``min_temp_f`` is ``None``, falls back to ``_inlet_temp_f`` (the
+        absolute fully-cold baseline).
+
+        Symmetric with the cap applied in ``heat()`` for the fully-hot case.
+        """
+        t_floor = min_temp_f if min_temp_f is not None else self._inlet_temp_f
+        shift_pct_min = (t_floor - self._strat_inter) / self.strat_slope - 100.0
+        return shift_pct_min * self.total_volume_gal / 100.0
+
     def draw(
         self,
         volume_supplyT_gal: float,
@@ -301,6 +326,7 @@ class StratifiedTank(StorageTank):
         avg_temp = self.get_average_draw_temp_f(physical_vol)
         if avg_temp >= outlet_temp_f - 1e-6:
             self._delta_gal -= physical_vol
+            self._delta_gal = max(self._delta_gal, self._delta_gal_floor(supply_temp_f))
             return
 
         # Slow path: draw dips into the transition / cold zone.
@@ -324,6 +350,7 @@ class StratifiedTank(StorageTank):
                 break
 
         self._delta_gal -= min((lo + hi) * 0.5, self.total_volume_gal)
+        self._delta_gal = max(self._delta_gal, self._delta_gal_floor(supply_temp_f))
 
     def heat(
         self,
@@ -459,7 +486,12 @@ class StratifiedTank(StorageTank):
             return self._outlet_temp_f
         return (cold_integral + trans_integral + hot_integral) / total_width
 
-    def draw_physical_gal(self, gal: float, inlet_temp_f: float) -> None:
+    def draw_physical_gal(
+        self,
+        gal: float,
+        inlet_temp_f: float,
+        supply_temp_f: float | None = None,
+    ) -> None:
         """
         Remove ``gal`` physical gallons from the top of the tank and replace
         with cold make-up water at the bottom.
@@ -474,10 +506,16 @@ class StratifiedTank(StorageTank):
             Physical gallons to remove [gal].
         inlet_temp_f : float
             Incoming cold water temperature [°F].
+        supply_temp_f : float | None
+            Hot-water delivery temperature [°F]. When provided, ``_delta_gal``
+            is floored at the state where the tank top is at ``supply_temp_f``
+            (no more usable hot water). When ``None``, the absolute fully-cold
+            floor (``inlet_temp_f`` at top) is used instead.
         """
         self._inlet_temp_f = inlet_temp_f
         if gal > 0.0:
             self._delta_gal -= gal
+            self._delta_gal = max(self._delta_gal, self._delta_gal_floor(supply_temp_f))
 
     # ------------------------------------------------------------------
     # Sizing support

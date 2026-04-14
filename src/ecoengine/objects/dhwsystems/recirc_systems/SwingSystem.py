@@ -739,21 +739,6 @@ class SwingSystem(RecircSystem):
         return self._minimum_tm_capacity_kbtuh
 
     # ------------------------------------------------------------------
-    # ER resize stub (to be implemented later)
-    # ------------------------------------------------------------------
-
-    def resize_with_er(self, building: Building, primary_capacity_kbtuh: float) -> None:
-        """
-        Placeholder for ER-element resizing (SwingTankER behavior).
-
-        When implemented, this will reduce the primary heating capacity to
-        ``primary_capacity_kbtuh`` and add an ER element to the swing tank
-        to compensate for the reduced primary output at design conditions,
-        following the SwingTankER.sizeERElement() logic from the original.
-        """
-        raise NotImplementedError("resize_with_er() is not yet implemented.")
-
-    # ------------------------------------------------------------------
     # Simulation
     # ------------------------------------------------------------------
 
@@ -872,7 +857,7 @@ class SwingSystem(RecircSystem):
         self.tm_storage_tank.heat(tm_kbtuh, interval_min, tm_outlet_f)
 
         # --- 8. Draw computed volume from primary storage ---
-        self.storage_tank.draw_physical_gal(hw_swing_gal, inlet_temp_f)
+        self.storage_tank.draw_physical_gal(hw_swing_gal, inlet_temp_f, self.supply_temp_f)
 
         # --- 9. Usable volume ---
         if swing_t < self.supply_temp_f:

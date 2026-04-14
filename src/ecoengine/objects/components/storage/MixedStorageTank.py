@@ -241,12 +241,19 @@ class MixedStorageTank(StorageTank):
         """Return the uniform tank temperature (fully mixed — no stratification)."""
         return self._temperature_f
 
-    def draw_physical_gal(self, gal: float, inlet_temp_f: float) -> None:
+    def draw_physical_gal(
+        self,
+        gal: float,
+        inlet_temp_f: float,
+        supply_temp_f: float | None = None,
+    ) -> None:
         """
         Remove ``gal`` physical gallons and replace with cold make-up water.
 
         For a fully-mixed tank this is an energy-balance mix: the removed hot
         water is replaced by ``gal`` gallons of cold water at ``inlet_temp_f``.
+        ``supply_temp_f`` is accepted for interface compatibility but unused —
+        a fully-mixed tank has no thermocline to floor.
         """
         if gal <= 0.0:
             return

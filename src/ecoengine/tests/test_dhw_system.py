@@ -110,7 +110,7 @@ def sized_system_with_controls(building_with_zone, basic_schedule, basic_control
 class TestNominalPerformanceMap:
     def test_returns_constant_capacity(self):
         pm = NominalPerformanceMap(nominal_capacity_kbtuh=42.5)
-        assert pm.get_capacity_kbtuh(oat_f=35.0, water_temp_f=120.0) == pytest.approx(42.5)
+        assert pm.get_capacity_kbtuh(oat_f=35.0, outlet_temp_f=120.0) == pytest.approx(42.5)
 
     def test_capacity_independent_of_conditions(self):
         pm = NominalPerformanceMap(nominal_capacity_kbtuh=30.0)
@@ -136,7 +136,7 @@ class TestWaterHeaterFactories:
 
     def test_from_nominal_capacity_correct_value(self, basic_schedule, basic_control_map):
         wh = WaterHeater.from_nominal_capacity(40.0, basic_schedule, basic_control_map)
-        assert wh.get_capacity_kbtuh(oat_f=35.0, water_temp_f=120.0) == pytest.approx(40.0)
+        assert wh.get_capacity_kbtuh(oat_f=35.0, outlet_temp_f=120.0) == pytest.approx(40.0)
 
     def test_from_nominal_capacity_wires_schedule_and_map(self, basic_schedule, basic_control_map):
         wh = WaterHeater.from_nominal_capacity(40.0, basic_schedule, basic_control_map)
@@ -414,7 +414,7 @@ class TestFromSize:
 
     def test_capacity_query_returns_minimum(self, sized_system):
         heater = sized_system.water_heaters[0]
-        assert heater.get_capacity_kbtuh(oat_f=35.0, water_temp_f=120.0) == pytest.approx(
+        assert heater.get_capacity_kbtuh(oat_f=35.0, outlet_temp_f=120.0) == pytest.approx(
             sized_system._minimum_capacity_kbtuh, rel=1e-9
         )
 
