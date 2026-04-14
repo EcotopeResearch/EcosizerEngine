@@ -1047,8 +1047,13 @@ import sys, json
 sys.path.insert(0, r"{src}")
 
 from ecoengine.engine.BuildingCreator import createBuilding
-from ecoengine.objects.systems.SwingTank import SwingTank
 from ecoengine.objects.systems.SwingTankER import SwingTankER
+
+# Each scenario already carries pre-computed sizing from the new codebase:
+#   sc["shared_half_cap_kbtuh"]  — halved primary capacity to use
+#   sc["shared_storage_gal"]     — primary storage volume to use
+#   sc["shared_tm_volume_gal"]   — swing tank volume to use
+#   sc["shared_base_tm_cap_kbtuh"] — base TM capacity (before ER) to use
 
 scenarios = json.loads('{scenarios_json_escaped}')
 
@@ -1073,27 +1078,11 @@ for sc in scenarios:
         supply_t  = sc["supply_t_f"]
         storage_t = sc["storage_t_f"]
 
-        # Step 1: size SwingTank normally to get base volumes
-        base_swing = SwingTank(
-            safetyTM       = sc["tm_safety_factor"],
-            storageT_F     = storage_t,
-            defrostFactor  = sc["defrost_factor"],
-            percentUseable = 1.0,
-            compRuntime_hr = sc["max_run_hr"],
-            onFract        = sc["on_fract"],
-            offFract       = sc["off_fract"],
-            onT            = supply_t,
-            offT           = storage_t,
-            building       = building,
-        )
+        half_cap    = sc["shared_half_cap_kbtuh"]
+        prim_vol    = sc["shared_storage_gal"]
+        tm_vol      = sc["shared_tm_volume_gal"]
+        base_tm_cap = sc["shared_base_tm_cap_kbtuh"]
 
-        # Step 2: halve primary capacity
-        half_cap   = base_swing.PCap_kBTUhr / 2.0
-        prim_vol   = base_swing.PVol_G_atStorageT
-        tm_vol     = base_swing.TMVol_G
-        base_tm_cap = base_swing.TMCap_kBTUhr
-
-        # Step 3: create SwingTankER with halved primary capacity + original volumes
         er_system = SwingTankER(
             safetyTM            = sc["tm_safety_factor"],
             storageT_F          = storage_t,
@@ -1113,21 +1102,13 @@ for sc in scenarios:
 
         results.append({{
             "label":                  sc["label"],
-            "orig_half_cap_kbtuh":    round(half_cap,                        2),
-            "orig_storage_gal":       round(prim_vol,                        2),
-            "orig_tm_volume_gal":     round(tm_vol,                          2),
-            "orig_base_tm_cap_kbtuh": round(base_tm_cap,                     2),
-            "orig_total_tm_cap_kbtuh":round(er_system.TMCap_kBTUhr,          2),
+            "orig_total_tm_cap_kbtuh":round(er_system.TMCap_kBTUhr,              2),
             "orig_er_addition_kbtuh": round(er_system.getERCapacityDif(kW=False), 2),
             "orig_error":             None,
         }})
     except Exception as e:
         results.append({{
             "label":                  sc["label"],
-            "orig_half_cap_kbtuh":    None,
-            "orig_storage_gal":       None,
-            "orig_tm_volume_gal":     None,
-            "orig_base_tm_cap_kbtuh": None,
             "orig_total_tm_cap_kbtuh":None,
             "orig_er_addition_kbtuh": None,
             "orig_error":             str(e),
@@ -1150,9 +1131,7 @@ def run_original_swing_er_sizing(scenarios: list[dict]) -> list[dict]:
     if proc.returncode != 0 or not json_line:
         print("ERROR running original swing ER sizing script:")
         print(proc.stderr[-800:])
-        return [{"label": sc["label"], "orig_half_cap_kbtuh": None,
-                 "orig_storage_gal": None, "orig_tm_volume_gal": None,
-                 "orig_base_tm_cap_kbtuh": None, "orig_total_tm_cap_kbtuh": None,
+        return [{"label": sc["label"], "orig_total_tm_cap_kbtuh": None,
                  "orig_er_addition_kbtuh": None, "orig_error": proc.stderr.strip()[-120:]}
                 for sc in scenarios]
     return json.loads(json_line)
@@ -1239,25 +1218,25 @@ def run_new_swing_er_sizing(scenarios: list[dict]) -> list[dict]:
             )
 
             results.append({
-                "label":                  sc["label"],
-                "new_half_cap_kbtuh":     round(half_cap,                       2),
-                "new_storage_gal":        round(base_swing._minimum_storage_storageT_gal, 2),
-                "new_tm_volume_gal":      round(base_swing._minimum_tm_volume_gal,        2),
-                "new_base_tm_cap_kbtuh":  round(base_tm_cap,                    2),
-                "new_total_tm_cap_kbtuh": round(er_system._minimum_tm_capacity_kbtuh,     2),
-                "new_er_addition_kbtuh":  round(er_system.get_er_capacity_kbtuh(),        2),
-                "new_error":              None,
+                "label":                       sc["label"],
+                "shared_half_cap_kbtuh":       round(half_cap,                                    2),
+                "shared_storage_gal":          round(base_swing._minimum_storage_storageT_gal,    2),
+                "shared_tm_volume_gal":        round(base_swing._minimum_tm_volume_gal,           2),
+                "shared_base_tm_cap_kbtuh":    round(base_tm_cap,                                 2),
+                "new_total_tm_cap_kbtuh":      round(er_system._minimum_tm_capacity_kbtuh,        2),
+                "new_er_addition_kbtuh":       round(er_system.get_er_capacity_kbtuh(),           2),
+                "new_error":                   None,
             })
         except Exception as e:
             results.append({
-                "label":                  sc["label"],
-                "new_half_cap_kbtuh":     None,
-                "new_storage_gal":        None,
-                "new_tm_volume_gal":      None,
-                "new_base_tm_cap_kbtuh":  None,
-                "new_total_tm_cap_kbtuh": None,
-                "new_er_addition_kbtuh":  None,
-                "new_error":              str(e),
+                "label":                       sc["label"],
+                "shared_half_cap_kbtuh":       None,
+                "shared_storage_gal":          None,
+                "shared_tm_volume_gal":        None,
+                "shared_base_tm_cap_kbtuh":    None,
+                "new_total_tm_cap_kbtuh":      None,
+                "new_er_addition_kbtuh":       None,
+                "new_error":                   str(e),
             })
     return results
 
@@ -1423,21 +1402,34 @@ def main():
     # ------------------------------------------------------------------
     # Swing Tank ER comparison
     # ------------------------------------------------------------------
-    print("Running original codebase sizing (swing tank ER)...")
-    ser_orig_results = run_original_swing_er_sizing(SWING_SCENARIOS)
-
+    # Run new codebase first — it sizes the base SwingSystem and provides
+    # shared primary dimensions (half_cap, storage_gal, tm_volume, base_tm_cap)
+    # that both codebases will use, ensuring an apples-to-apples ER comparison.
     print("Running new codebase sizing (swing tank ER)...")
     ser_new_results = run_new_swing_er_sizing(SWING_SCENARIOS)
+    ser_new_by_label = {r["label"]: r for r in ser_new_results}
 
+    # Enrich SWING_SCENARIOS with shared dimension fields from new sizing
+    enriched_swing_scenarios = [
+        {
+            **sc,
+            **{k: ser_new_by_label.get(sc["label"], {}).get(k)
+               for k in ("shared_half_cap_kbtuh", "shared_storage_gal",
+                         "shared_tm_volume_gal", "shared_base_tm_cap_kbtuh")},
+        }
+        for sc in SWING_SCENARIOS
+    ]
+
+    print("Running original codebase sizing (swing tank ER)...")
+    ser_orig_results = run_original_swing_er_sizing(enriched_swing_scenarios)
     ser_orig_by_label = {r["label"]: r for r in ser_orig_results}
-    ser_new_by_label  = {r["label"]: r for r in ser_new_results}
 
     ser_fieldnames = [
         "label",
-        "orig_half_cap_kbtuh", "new_half_cap_kbtuh",
-        "orig_storage_gal", "new_storage_gal",
-        "orig_tm_volume_gal", "new_tm_volume_gal",
-        "orig_base_tm_cap_kbtuh", "new_base_tm_cap_kbtuh",
+        "shared_half_cap_kbtuh",
+        "shared_storage_gal",
+        "shared_tm_volume_gal",
+        "shared_base_tm_cap_kbtuh",
         "orig_total_tm_cap_kbtuh", "new_total_tm_cap_kbtuh",
         "total_tm_cap_diff_kbtuh", "total_tm_cap_pct_diff",
         "orig_er_addition_kbtuh", "new_er_addition_kbtuh",
@@ -1455,14 +1447,10 @@ def main():
         er_n  = new.get("new_er_addition_kbtuh")
         ser_rows.append({
             "label":                    lbl,
-            "orig_half_cap_kbtuh":      orig.get("orig_half_cap_kbtuh"),
-            "new_half_cap_kbtuh":       new.get("new_half_cap_kbtuh"),
-            "orig_storage_gal":         orig.get("orig_storage_gal"),
-            "new_storage_gal":          new.get("new_storage_gal"),
-            "orig_tm_volume_gal":       orig.get("orig_tm_volume_gal"),
-            "new_tm_volume_gal":        new.get("new_tm_volume_gal"),
-            "orig_base_tm_cap_kbtuh":   orig.get("orig_base_tm_cap_kbtuh"),
-            "new_base_tm_cap_kbtuh":    new.get("new_base_tm_cap_kbtuh"),
+            "shared_half_cap_kbtuh":    new.get("shared_half_cap_kbtuh"),
+            "shared_storage_gal":       new.get("shared_storage_gal"),
+            "shared_tm_volume_gal":     new.get("shared_tm_volume_gal"),
+            "shared_base_tm_cap_kbtuh": new.get("shared_base_tm_cap_kbtuh"),
             "orig_total_tm_cap_kbtuh":  tot_o,
             "new_total_tm_cap_kbtuh":   tot_n,
             "total_tm_cap_diff_kbtuh":  _diff(tot_o, tot_n),
@@ -1574,19 +1562,17 @@ def main():
     print()
     ser_hdr = (
         f"{'Scenario':<45} "
-        f"{'OHalfCap':>9} {'NHalfCap':>9}  "
-        f"{'OBaseTM':>8} {'NBaseTM':>8}  "
+        f"{'HalfCap':>9} {'BaseTM':>8}  "
         f"{'OTotTM':>8} {'NTotTM':>8} {'TM%':>7}  "
         f"{'OERAdd':>8} {'NERAdd':>8} {'ER%':>7}"
     )
-    print("SWING TANK ER SYSTEM  (primary capacity halved before ER sizing)")
+    print("SWING TANK ER SYSTEM  (both codebases use same primary dimensions from new sizing)")
     print(ser_hdr)
     print("-" * len(ser_hdr))
     for row in ser_rows:
         print(
             f"{row['label']:<45} "
-            f"{_fmt(row['orig_half_cap_kbtuh']):>9} {_fmt(row['new_half_cap_kbtuh']):>9}  "
-            f"{_fmt(row['orig_base_tm_cap_kbtuh']):>8} {_fmt(row['new_base_tm_cap_kbtuh']):>8}  "
+            f"{_fmt(row['shared_half_cap_kbtuh']):>9} {_fmt(row['shared_base_tm_cap_kbtuh']):>8}  "
             f"{_fmt(row['orig_total_tm_cap_kbtuh']):>8} {_fmt(row['new_total_tm_cap_kbtuh']):>8} {_fmt_pct(row['total_tm_cap_pct_diff']):>7}  "
             f"{_fmt(row['orig_er_addition_kbtuh']):>8} {_fmt(row['new_er_addition_kbtuh']):>8} {_fmt_pct(row['er_pct_diff']):>7}"
         )

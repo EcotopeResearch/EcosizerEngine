@@ -313,6 +313,10 @@ class SwingERTrdOffSystem(SwingSystem):
            When the tank falls below ``supply_temp_f``, record the deficit
            and clamp to ``supply_temp_f`` (simulating ER closing the gap).
 
+        When the primary tank is empty the HPWH is still running; its output
+        flows directly to the swing tank, so the feed temperature is blended
+        (hot HPWH output + cold city water) rather than pure cold.
+
         ER capacity formula::
 
             er_cap = (tm_vol × rhoCp × 60 × max_deficit / 1000) × er_safety_factor
@@ -377,15 +381,27 @@ class SwingERTrdOffSystem(SwingSystem):
                 else:
                     hw_from_primary = hw_out_min[i]
 
+                # Total hot water available this minute: stored hot + HPWH generation.
+                # Even when the primary tank is empty, the HPWH is running and its
+                # output flows straight through to the swing tank, so the feed is a
+                # blend of hot HPWH output and cold city water rather than pure cold.
+                hot_available = primary_level + gen_gpm
+                if hw_from_primary <= 0.0 or hot_available <= 0.0:
+                    feed_temp = inlet_t_f
+                elif hw_from_primary <= hot_available:
+                    feed_temp = self.storage_temp_f   # full demand met at storage temp
+                else:
+                    # Blend: hot_available gal at storage_temp + shortfall at inlet_t_f
+                    feed_temp = (
+                        hot_available * self.storage_temp_f
+                        + (hw_from_primary - hot_available) * inlet_t_f
+                    ) / hw_from_primary
+
                 # Update primary tank level
                 primary_level = min(
                     max(primary_level + gen_gpm - hw_from_primary, 0.0),
                     self._minimum_storage_storageT_gal,
                 )
-
-                # When primary has hot water available, it feeds at storage_temp;
-                # when depleted, only cold city water is available
-                feed_temp = self.storage_temp_f if primary_level > 0.0 else inlet_t_f
 
                 swingheating, swing_t, deficit = self._run_one_swing_step_er(
                     swingheating, swing_t, hw_from_primary, feed_temp, base_tm_kbtuh,
