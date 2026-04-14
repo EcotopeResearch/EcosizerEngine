@@ -110,6 +110,9 @@ class WaterHeater:
         model_name: str,
         control_schedule: list[str] | None,
         control_map: dict[str, Controls] | None,
+        num_units: int = 1,
+        design_inlet_temp_f: float = 50.0,
+        nominal_capacity_kbtuh: float | None = None,
     ) -> WaterHeater:
         """
         Create a WaterHeater by loading its PerformanceMap from the equipment
@@ -124,13 +127,24 @@ class WaterHeater:
             24-element list mapping each hour to a key in control_map.
         control_map : dict[str, Controls] | None
             Maps schedule strings to Controls objects.
+        num_units : int
+            Number of identical units deployed; outputs scale linearly. Default 1.
+        design_inlet_temp_f : float
+            Cold-water inlet temperature used when not supplied per-call. Default 50 °F.
+        nominal_capacity_kbtuh : float | None
+            Total system capacity for ER fallback sizing. Default None.
 
         Returns
         -------
         WaterHeater
         """
         return cls(
-            performance_map=PerformanceMap.from_model_name(model_name),
+            performance_map=PerformanceMap.from_model_name(
+                model_name,
+                num_units=num_units,
+                design_inlet_temp_f=design_inlet_temp_f,
+                nominal_capacity_kbtuh=nominal_capacity_kbtuh,
+            ),
             control_schedule=control_schedule,
             control_map=control_map,
         )
@@ -180,7 +194,12 @@ class WaterHeater:
     # Performance queries
     # ------------------------------------------------------------------
 
-    def get_capacity_kbtuh(self, oat_f: float, water_temp_f: float) -> float | None:
+    def get_capacity_kbtuh(
+        self,
+        oat_f: float,
+        water_temp_f: float,
+        inlet_temp_f: float | None = None,
+    ) -> float | None:
         """
         Return heating output capacity [kBTU/hr] at current conditions.
 
@@ -188,16 +207,24 @@ class WaterHeater:
         ----------
         oat_f : float
         water_temp_f : float
+        inlet_temp_f : float | None
+            Cold-water inlet temperature. Falls back to the performance map's
+            design_inlet_temp_f when not provided.
 
         Returns
         -------
         float | None
         """
         if self.performance_map is not None:
-            return self.performance_map.get_capacity_kbtuh(oat_f, water_temp_f)
+            return self.performance_map.get_capacity_kbtuh(oat_f, water_temp_f, inlet_temp_f)
         return None
 
-    def get_power_in_kw(self, oat_f: float, water_temp_f: float) -> float | None:
+    def get_power_in_kw(
+        self,
+        oat_f: float,
+        water_temp_f: float,
+        inlet_temp_f: float | None = None,
+    ) -> float | None:
         """
         Return electrical power input [kW] at current conditions.
 
@@ -205,16 +232,24 @@ class WaterHeater:
         ----------
         oat_f : float
         water_temp_f : float
+        inlet_temp_f : float | None
+            Cold-water inlet temperature. Falls back to the performance map's
+            design_inlet_temp_f when not provided.
 
         Returns
         -------
         float | None
         """
         if self.performance_map is not None:
-            return self.performance_map.get_power_in_kw(oat_f, water_temp_f)
+            return self.performance_map.get_power_in_kw(oat_f, water_temp_f, inlet_temp_f)
         return None
 
-    def get_output_kbtuh(self, oat_f: float, water_temp_f: float) -> float:
+    def get_output_kbtuh(
+        self,
+        oat_f: float,
+        water_temp_f: float,
+        inlet_temp_f: float | None = None,
+    ) -> float:
         """
         Return actual heating output this timestep: capacity if active, 0 if not.
 
@@ -222,6 +257,8 @@ class WaterHeater:
         ----------
         oat_f : float
         water_temp_f : float
+        inlet_temp_f : float | None
+            Cold-water inlet temperature forwarded to the performance map.
 
         Returns
         -------
@@ -229,7 +266,7 @@ class WaterHeater:
         """
         if not self._active:
             return 0.0
-        cap = self.get_capacity_kbtuh(oat_f, water_temp_f)
+        cap = self.get_capacity_kbtuh(oat_f, water_temp_f, inlet_temp_f)
         return cap if cap is not None else 0.0
 
     def update_state(self, storage_tank: StorageTank, hour_of_day: int) -> None:

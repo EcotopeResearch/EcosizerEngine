@@ -177,7 +177,7 @@ class TestWaterHeaterFactories:
         assert wh.get_controls_for_hour(5) is None
 
     def test_from_model_name_returns_water_heater(self, basic_schedule, basic_control_map):
-        wh = WaterHeater.from_model_name("some_model", basic_schedule, basic_control_map)
+        wh = WaterHeater.from_model_name("MODELS_ColmacCxV_5_C_SP", basic_schedule, basic_control_map)
         assert isinstance(wh, WaterHeater)
         assert wh.control_schedule is basic_schedule
         assert wh.control_map is basic_control_map

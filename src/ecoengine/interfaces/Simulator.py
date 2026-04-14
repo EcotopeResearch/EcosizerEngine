@@ -1,4 +1,6 @@
 from ecoengine.objects.simulation.SimulationRun import SimulationRun
+from ecoengine.objects.building.Building import Building
+from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem
 
 THREE_DAY_DURATION_MIN = 3 * 24 * 60    # 4320 minutes
 ANNUAL_DURATION_MIN    = 365 * 24 * 60  # 525600 minutes
@@ -6,7 +8,7 @@ THREE_DAY_TIMESTEP_MIN = 1
 ANNUAL_TIMESTEP_MIN    = 10
 
 
-def simulate(dhw_system, building, duration="3day", **sim_run_kwargs) -> SimulationRun:
+def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", **sim_run_kwargs) -> SimulationRun:
     """
     Run a time-step simulation of a sized DHWSystem in a Building.
 
@@ -71,7 +73,7 @@ def simulate(dhw_system, building, duration="3day", **sim_run_kwargs) -> Simulat
             percent_useable = 1.0,
         )
 
-    sim_run.storage_temp_f = dhw_system.storage_temp_f
+    sim_run.supply_temp_f = dhw_system.supply_temp_f
 
     num_steps = duration_min // timestep_min
     for i in range(num_steps):
@@ -97,15 +99,17 @@ def simulate(dhw_system, building, duration="3day", **sim_run_kwargs) -> Simulat
         if step["usable_volume_supplyT_gal"] <= 0.0:
             sim_run.record_outage(timestep_min)
 
-        # Check outlet-deficit stop condition (top-of-tank temp too far below supply)
-        top_tank_temp_f = step["tank_temps_f"][-1]
-        if sim_run.check_outlet_deficit(top_tank_temp_f, dhw_system.supply_temp_f):
+        # Check outlet-deficit stop condition. For systems where the TM/swing
+        # tank is the actual delivery point (e.g. SwingSystem), use its
+        # temperature; for all others fall back to the primary tank top.
+        delivery_temp_f = step.get("delivery_temp_f", step["tank_temps_f"][-1])
+        if sim_run.check_outlet_deficit(delivery_temp_f, dhw_system.supply_temp_f):
             break
 
     return sim_run
 
 
-def simulate_3day(dhw_system, building, **sim_run_kwargs) -> SimulationRun:
+def simulate_3day(dhw_system: DHWSystem, building: Building, **sim_run_kwargs) -> SimulationRun:
     """
     Convenience wrapper: run a 3-day simulation at 1-minute timesteps.
 
@@ -123,7 +127,7 @@ def simulate_3day(dhw_system, building, **sim_run_kwargs) -> SimulationRun:
     return simulate(dhw_system, building, duration="3day", **sim_run_kwargs)
 
 
-def simulate_annual(dhw_system, building, **sim_run_kwargs) -> SimulationRun:
+def simulate_annual(dhw_system: DHWSystem, building: Building, **sim_run_kwargs) -> SimulationRun:
     """
     Convenience wrapper: run a full annual simulation at 10-minute timesteps.
 
@@ -145,7 +149,7 @@ def simulate_annual(dhw_system, building, **sim_run_kwargs) -> SimulationRun:
 # Private helpers
 # ---------------------------------------------------------------------------
 
-def _initial_percent_useable(dhw_system) -> float:
+def _initial_percent_useable(dhw_system: DHWSystem) -> float:
     """
     Determine the initial tank charge level (fraction hot) from the system's
     "normal" Controls on-aquastat fraction.

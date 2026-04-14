@@ -64,7 +64,7 @@ class SimulationRun:
         self.outage_minutes: int = 0
 
         # Set by Simulator after construction; used for unit conversions in output methods
-        self.storage_temp_f: float | None = None
+        self.supply_temp_f: float | None = None
 
         # Outlet deficit stop condition
         self.outlet_deficit_threshold_f   = outlet_deficit_threshold_f
@@ -272,7 +272,7 @@ class SimulationRun:
         title: str = "Simulation Results",
         filepath: str | None = None,
         include_temperatures: bool = False,
-    ):
+    ) -> "plotly.graph_objects.Figure":
         """
         Return a Plotly figure with gallons/flow on the left Y axis and
         temperature on the right Y axis, both plotted against time (minutes).
@@ -339,28 +339,28 @@ class SimulationRun:
         # --- Row 1: Volume traces (Y1, left axis) ---
         fig.add_trace(
             go.Scatter(x=time_min, y=self.usable_volume_supplyT_gal,
-                       name="Usable Volume (gal)", line=dict(color="green", width=1.5)),
+                       name="Usable Volume (gal at or above Supply Temp)", line=dict(color="green", width=1.5)),
             secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
         )
         hourly_demand = [v * steps_per_hour for v in self.dhw_demand_supplyT_gal]
         fig.add_trace(
             go.Scatter(x=time_min, y=hourly_demand,
-                       name="DHW Demand (gal/hr)", line=dict(color="blue", width=1)),
+                       name="DHW Demand (gal/hr at Supply Temp)", line=dict(color="blue", width=1)),
             secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
         )
 
-        if self.storage_temp_f is not None:
+        if self.supply_temp_f is not None:
             _RHO_CP = 8.353535  # BTU / (gal·°F)
             heater_gph = [
                 kbtuh * 1000.0
-                / (_RHO_CP * max(1.0, self.storage_temp_f - inlet_t))
+                / (_RHO_CP * max(1.0, self.supply_temp_f - inlet_t))
                 for kbtuh, inlet_t in zip(
                     self.heater_output_kbtuh, self.inlet_water_temp_f
                 )
             ]
             fig.add_trace(
                 go.Scatter(x=time_min, y=heater_gph,
-                           name="Heater Generation (gal/hr)", line=dict(color="red", width=1)),
+                           name="Heater Generation (gal/hr at Supply Temperature)", line=dict(color="red", width=1)),
                 secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
             )
 
@@ -425,7 +425,7 @@ class SimulationRun:
                         j += 1
                     x0 = time_min[i]
                     x1 = time_min[j - 1] + self.timestep_min
-                    label = "Shed Period" if m == "shed" else "Load-Up Period"
+                    label = "Shed" if m == "shed" else "Load-Up"
                     fig.add_vrect(
                         x0=x0, x1=x1,
                         fillcolor=_LS_COLORS[m],

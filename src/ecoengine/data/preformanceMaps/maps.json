@@ -1,0 +1,1566 @@
+{
+    "MODELS_AOSmithHPTS50_R_MP" : {
+        "name" : "AOSmith HPTS 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [66.82, 2.49, 0.0],
+                "COP_coeffs" : [8.64, -0.0436, 0.0]
+            },
+            {
+                "T_F" : 67.5,
+                "inputPower_coeffs" : [85.1, 2.38, 0.0],
+                "COP_coeffs" : [10.82, -0.0551, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [89, 2.62, 0.0],
+                "COP_coeffs" : [12.52, -0.0534, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_AOSmithHPTS66_R_MP" : {
+        "name" : "AOSmith HPTS 66 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [66.82, 2.49, 0.0],
+                "COP_coeffs" : [8.64, -0.0436, 0.0]
+            },
+            {
+                "T_F" : 67.5,
+                "inputPower_coeffs" : [85.1, 2.38, 0.0],
+                "COP_coeffs" : [10.82, -0.0551, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [89, 2.62, 0.0],
+                "COP_coeffs" : [12.52, -0.0534, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_AOSmithHPTS80_R_MP" : {
+        "name" : "AOSmith HPTS 80 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [66.82, 2.49, 0.0],
+                "COP_coeffs" : [8.64, -0.0436, 0.0]
+            },
+            {
+                "T_F" : 67.5,
+                "inputPower_coeffs" : [85.1, 2.38, 0.0],
+                "COP_coeffs" : [10.82, -0.0551, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [89, 2.62, 0.0],
+                "COP_coeffs" : [12.52, -0.0534, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_AOSmithHPTU50_R_MP" : {
+        "name" : "AOSmith HPTU 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_AOSmithHPTU66_R_MP" : {
+        "name" : "AOSmith HPTU 66 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_AOSmithHPTU80_R_MP" : {
+        "name" : "AOSmith HPTU 80 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_AOSmithHPTU80_DR_R_MP" : {
+        "name" : "AOSmith HPTU 80 gallon DR",
+        "perfmap": [
+            {
+                "T_F" : 47,
+                "inputPower_coeffs" : [142.6, 2.152, 0.0],
+                "COP_coeffs" : [6.989258, -0.038320, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [120.14, 2.513, 0.0],
+                "COP_coeffs" : [8.188, -0.0432, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_AOSmithCAHP120_C_MP" : {
+        "name" : "AOSmith CAHP 120 gallon Commercial Grade",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [2010.49966, -4.20966, 0.085395],
+                "COP_coeffs" : [5.91, -0.026299, 0.0]
+            },
+            {
+                "T_F" : 67.5,
+                "inputPower_coeffs" : [2171.012, -6.936571, 0.1094962],
+                "COP_coeffs" : [7.26272, -0.034135, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [2276.0625, -7.106608, 0.119911],
+                "COP_coeffs" : [8.821262, -0.042059, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_BWC2020_65_R_MP" : {
+        "name" : "Bradford White 2020 65 gallon unit",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [187.064124, 1.939747, 0.0],
+                "COP_coeffs" : [5.4977772, -0.0243008, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [148.0418, 2.553291, 0.0],
+                "COP_coeffs" : [7.207307, -0.0335265, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxV_5_C_SP" : {
+        "name" : "Colmac CxV_5 external heat pump in Single Pass Mode",
+        "pkl_prefix": "Colmac_CxV5_Single_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [4.9621645063, -0.0096084144, -0.0095647009, -0.0115911960, -0.0000788517, 0.0000886176,
+                    0.0001114142, 0.0001832377, -0.0000451308, 0.0000411975, 0.0000003535],
+                "COP_coeffs" : [3.8189922420, 0.0569412237, -0.0320101962, -0.0012859036, 0.0000576439, 0.0001101241, 
+                    -0.0000352368, -0.0002630301, -0.0000509365, 0.0000369655, -0.0000000606]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_10_C_SP" : {
+        "name" : "Colmac CxA_10 external heat pump in Single Pass Mode",
+        "pkl_prefix": "Colmac_CxA10_Single_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [5.9786974243, 0.0194445115, -0.0077802278, 0.0053809029, -0.0000334832, 0.0001864310, 0.0001190540,
+                    0.0000040405, -0.0002538279, -0.0000477652, 0.0000014101],
+                "COP_coeffs" : [3.6128563086, 0.0527064498, -0.0278198945, -0.0070529748, 0.0000934705, 0.0000781711, -0.0000359215,
+                    -0.0002223206, 0.0000359239, 0.0000727189, -0.0000005037]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_10_Oversized_C_SP" : {
+        "name" : "Colmac CxA_10 external heat pump in Single Pass Mode (Oversized Condenser)",
+        "pkl_prefix": "Colmac_CxA10_Oversized_Condenser_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_10_VFD_45_Hz_C_SP" : {
+        "name" : "Colmac CxA_10 external heat pump in Single Pass Mode (VFD 45 Hz)",
+        "pkl_prefix": "Colmac_CxA10_VFD_45_Hz_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_10_VFD_60_Hz_C_SP" : {
+        "name" : "Colmac CxA_10 external heat pump in Single Pass Mode (VFD 60 Hz)",
+        "pkl_prefix": "Colmac_CxA10_VFD_60_Hz_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_15_C_SP" : {
+        "name" : "Colmac CxA_15 external heat pump in Single Pass Mode",
+        "pkl_prefix": "Colmac_CxA15_Single_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [15.5869846555, -0.0044503761, -0.0577941202, -0.0286911185, -0.0000803325, 0.0003399817,
+                    0.0002009576, 0.0002494761, -0.0000595773, 0.0001401800, 0.0000004312],
+                "COP_coeffs" : [1.6643120405, 0.0515623393, -0.0110239930, 0.0041514430, 0.0000481544, 0.0000493424,
+                    -0.0000262721, -0.0002356218, -0.0000989625, -0.0000070572, 0.0000004108]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_15_VFD_45_Hz_C_SP" : {
+        "name" : "Colmac CxA_15 external heat pump in Single Pass Mode (VDF 45 Hz)",
+        "pkl_prefix": "Colmac_CxA15_VFD_45_Hz_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_15_R513a_C_SP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Single Pass Mode",
+        "pkl_prefix": "Colmac_CxA15_R513a_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_15_R513a_VFD_45_Hz_C_SP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Single Pass Mode (VFD 45 Hz)",
+        "pkl_prefix": "Colmac_CxA15_R513a_VFD_45_Hz_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxV_15_VFD_45_Hz_C_SP" : {
+        "name" : "Colmac CxV_15 external heat pump in Single Pass Mode (VFD 45 Hz)",
+        "pkl_prefix": "Colmac_CxV15_VFD_45_Hz_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxV_15_VFD_60_Hz_C_SP" : {
+        "name" : "Colmac CxV_15 external heat pump in Single Pass Mode (VFD 60 Hz)",
+        "pkl_prefix": "Colmac_CxV15_VFD_60_Hz_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+
+    "MODELS_ColmacCxA_20_C_SP" : {
+        "name" : "Colmac CxA_20 external heat pump in Single Pass Mode",
+        "pkl_prefix": "Colmac_CxA20_Single_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [23.0746692231, 0.0248584608, -0.1417927282, -0.0253733303, -0.0004882754, 0.0006508079, 
+                0.0002139934, 0.0005552752, -0.0002026772, 0.0000607338, 0.0000021571],
+                "COP_coeffs" : [1.7692660120, 0.0525134783, -0.0081102040, -0.0008715405, 0.0001274956, 0.0000369489, 
+                -0.0000293775, -0.0002778086, -0.0000095067, 0.0000381186, -0.0000003135]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_20_Oversized_C_SP" : {
+        "name" : "Colmac CxA_20 external heat pump in Single Pass Mode (Oversized Condenser)",
+        "pkl_prefix": "Colmac_CxA20_Oversized_Condenser_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_20_VFD_35_Hz_C_SP" : {
+        "name" : "Colmac CxA_20 external heat pump in Single Pass Mode (VFD 35 Hz)",
+        "pkl_prefix": "Colmac_CxA20_VFD_35_Hz_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_25_C_SP" : {
+        "name" : "Colmac CxA_25 external heat pump in Single Pass Mode",
+        "pkl_prefix": "Colmac_CxA25_Single_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [20.4185336541, -0.0236920615, -0.0736219119, -0.0260385082, -0.0005048074, 0.0004940510,
+                0.0002632660, 0.0009820050, -0.0000223587, 0.0000885101, 0.0000005649],
+                "COP_coeffs" : [0.8942843854, 0.0677641611, -0.0001582927, 0.0048083998, 0.0001196407, 0.0000334921, 
+                -0.0000378740, -0.0004146401, -0.0001213363, -0.0000031856, 0.0000006306]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_25_Oversized_C_SP" : {
+        "name" : "Colmac CxA_25 external heat pump in Single Pass Mode (Oversized Condenser)",
+        "pkl_prefix": "Colmac_CxA25_Oversized_Condenser_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_25_VFD_35_Hz_C_SP" : {
+        "name" : "Colmac CxA_25 external heat pump in Single Pass Mode (VFD 35 Hz)",
+        "pkl_prefix": "Colmac_CxA25_VFD_35_Hz_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_30_C_SP" : {
+        "name" : "Colmac CxA_30 external heat pump in Single Pass Mode",
+        "pkl_prefix": "Colmac_CxA30_Single_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [11.3687485772, -0.0207292362, 0.0496254077, -0.0038394967, -0.0005991041, 0.0001304318,
+                0.0003099774, 0.0012092717, -0.0001455509, -0.0000893889, 0.0000018221],
+                "COP_coeffs" : [4.4170108542, 0.0596384263, -0.0416104579, -0.0017199887, 0.0000774664, 0.0001521934,
+                -0.0000251665, -0.0003289731, -0.0000801823, 0.0000325972, 0.0000002705]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_30_Oversized_C_SP" : {
+        "name" : "Colmac CxA_30 external heat pump in Single Pass Mode (Oversized Condenser)",
+        "pkl_prefix": "Colmac_CxA30_Oversized_Condenser_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_30_VFD_35_Hz_C_SP" : {
+        "name" : "Colmac CxA_30 external heat pump in Single Pass Mode (VFD 35 Hz)",
+        "pkl_prefix": "Colmac_CxA30_VFD_35_Hz_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_30_R513a_C_SP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Single Pass Mode",
+        "pkl_prefix": "Colmac_CxA30_R513a_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_30_R513a_VFD_35_Hz_C_SP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Single Pass Mode (VFD 35 Hz)",
+        "pkl_prefix": "Colmac_CxA30_R513a_VFD_35_Hz_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_Colmac_HPA4_C_SP" : {
+        "name" : "Colmac HPA4 in Single Pass Mode",
+        "pkl_prefix": "Colmac_HPA4_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_Colmac_HPA4_R513a_C_SP" : {
+        "name" : "Colmac HPA4 R513a in Single Pass Mode",
+        "pkl_prefix": "Colmac_HPA4_R513a_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+
+    "MODELS_ColmacCxV_5_C_MP" : {
+        "name" : "Colmac CxV_5 external heat pump in Multi Pass Mode",
+        "pkl_prefix": "Colmac_CxV5_Multi_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [5.8438525529, 0.0003288231, -0.0494255840, -0.0000386642, 0.0004385362, 0.0000647268],
+                "COP_coeffs" : [0.6679056901, 0.0499777846, 0.0251828292, 0.0000699764, -0.0001552229, -0.0002911167]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_10_C_MP" : {
+        "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode",
+        "pkl_prefix": "Colmac_CxA10_Multi_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [8.6918824405, 0.0136666667, -0.0548348214, -0.0000208333, 0.0005301339, -0.0000250000],
+                "COP_coeffs" : [0.6944181117, 0.0445926666, 0.0213188804, 0.0001172913, -0.0001387694, -0.0002365885]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_10_Oversized_C_MP" : {
+        "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode (Oversized Condenser)",
+        "pkl_prefix": "Colmac_CxA10_Oversized_Condenser_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_10_VFD_45_Hz_C_MP" : {
+        "name" : "Colmac CxA_10 external heat pump in Multi Pass Mode (VFD 45 Hz)",
+        "pkl_prefix": "Colmac_CxA10_VFD_45_Hz_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_15_C_MP" : {
+        "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode",
+        "pkl_prefix": "Colmac_CxA15_Multi_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [12.4908723958, 0.0073988095, -0.0411417411, 0.0000000000, 0.0005789621, 0.0000696429],
+                "COP_coeffs" : [1.2846349520, 0.0334658309, 0.0019121906, 0.0002840970, 0.0000497136, -0.0004401737]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_15_Oversized_C_MP" : {
+        "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode (Oversized Condenser)",
+        "pkl_prefix": "Colmac_CxA15_Oversized_Condenser_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_15_VFD_45_Hz_C_MP" : {
+        "name" : "Colmac CxA_15 external heat pump in Multi Pass Mode (VFD 45 Hz)",
+        "pkl_prefix": "Colmac_CxA15_VFD_45_Hz_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_15_R513a_C_MP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Multi Pass Mode",
+        "pkl_prefix": "Colmac_CxA15_R513a_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_15_R513a_VFD_45_Hz_C_MP" : {
+        "name" : "Colmac CxA_15 R513a external heat pump in Multi Pass Mode (VFD 45 Hz)",
+        "pkl_prefix": "Colmac_CxA15_R513a_VFD_45_Hz_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxV_15_VFD_45_Hz_C_MP" : {
+        "name" : "Colmac CxV_15 external heat pump in Multi Pass Mode (VFD 45 Hz)",
+        "pkl_prefix": "Colmac_CxV15_VFD_45_Hz_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxV_15_VFD_60_Hz_C_MP" : {
+        "name" : "Colmac CxV_15 external heat pump in Multi Pass Mode (VFD 60 Hz)",
+        "pkl_prefix": "Colmac_CxV15_VFD_60_Hz_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+
+    "MODELS_ColmacCxA_20_C_MP" : {
+        "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode",
+        "pkl_prefix": "Colmac_CxA20_Multi_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [14.4893345424, 0.0355357143, -0.0476593192, -0.0002916667, 0.0006120954, 0.0003607143],
+                "COP_coeffs" : [1.2421582831, 0.0450256569, 0.0051234755, 0.0001271296, -0.0000299981, -0.0002910606]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_20_Oversized_C_MP" : {
+        "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode (Oversized Condenser)",
+        "pkl_prefix": "Colmac_CxA20_Oversized_Condenser_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_20_VFD_35_Hz_C_MP" : {
+        "name" : "Colmac CxA_20 external heat pump in Multi Pass Mode (VFD 35 Hz)",
+        "pkl_prefix": "Colmac_CxA20_VFD_35_Hz_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_25_C_MP" : {
+        "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode",
+        "pkl_prefix": "Colmac_CxA25_Multi_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [14.5805808222, 0.0081934524, -0.0216169085, -0.0001979167, 0.0007376535, 0.0004955357],
+                "COP_coeffs" : [2.0013175767, 0.0576617432, -0.0130480870, 0.0000856818, 0.0000610760, -0.0003684106]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_25_Oversized_C_MP" : {
+        "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode (Oversized Condenser)",
+        "pkl_prefix": "Colmac_CxA25_Oversized_Condenser_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_25_VFD_35_Hz_C_MP" : {
+        "name" : "Colmac CxA_25 external heat pump in Multi Pass Mode (VFD 35 Hz)",
+        "pkl_prefix": "Colmac_CxA25_VFD_35_Hz_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_30_C_MP" : {
+        "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode",
+        "pkl_prefix": "Colmac_CxA30_Multi_Pass",
+        "perfmap": [
+            {
+                "T_F" : 100,
+                "inputPower_coeffs" : [14.5824911644, 0.0072083333, -0.0278055246, -0.0002916667, 0.0008841378, 0.0008125000],
+                "COP_coeffs" : [2.6996807527, 0.0617507969, -0.0220966420, 0.0000336149, 0.0000890989, -0.0003682431]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_ColmacCxA_30_Oversized_C_MP" : {
+        "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode (Oversized Condenser)",
+        "pkl_prefix": "Colmac_CxA30_Oversized_Condenser_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_30_VFD_35_Hz_C_MP" : {
+        "name" : "Colmac CxA_30 external heat pump in Multi Pass Mode (VFD 35 Hz)",
+        "pkl_prefix": "Colmac_CxA30_VFD_35_Hz_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_30_R513a_C_MP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Multi Pass Mode",
+        "pkl_prefix": "Colmac_CxA30_R513a_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_ColmacCxA_30_R513a_VFD_35_Hz_C_MP" : {
+        "name" : "Colmac CxA_30 R513a external heat pump in Multi Pass Mode (VFD 35 Hz)",
+        "pkl_prefix": "Colmac_CxA30_R513a_VFD_35_Hz_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_Colmac_HPA4_C_MP" : {
+        "name" : "Colmac HPA4 in Multi Pass Mode",
+        "pkl_prefix": "Colmac_HPA4_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_Colmac_HPA4_R513a_C_MP" : {
+        "name" : "Colmac HPA4 R513a in Multi Pass Mode",
+        "pkl_prefix": "Colmac_HPA4_R513a_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_COLMAC_R454B_C_SP" : {
+        "name" : "Colmac R454B",
+        "pkl_prefix": "COLMAC_R454B_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_Droplet_C_SP" : {
+        "name" : "Droplet",
+        "pkl_prefix": "Droplet_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_Galletti_460_C_MP" : {
+        "name" : "Galletti HTH-30-460-HS",
+        "pkl_prefix": "Galletti_460_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Galletti_778_C_MP" : {
+        "name" : "Galletti HTH-54-778-HS",
+        "pkl_prefix": "Galletti_778_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_GE2014_R_MP" : {
+        "name" : "GE 2014 model run in efficiency mode",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [187.064124, 1.939747, 0.0],
+                "COP_coeffs" : [5.4977772, -0.0243008, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [148.0418, 2.553291, 0.0],
+                "COP_coeffs" : [7.207307, -0.0335265, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_GE2014_80_R_MP" : {
+        "name" : "GE 2014 model run in efficiency mode, 80 gallon unit",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [187.064124, 1.939747, 0.0],
+                "COP_coeffs" : [5.4977772, -0.0243008, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [148.0418, 2.553291, 0.0],
+                "COP_coeffs" : [7.207307, -0.0335265, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_GE2014STDMode_R_MP" : {
+        "name" : "GE 2014 model run in standard mode",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [187.064124, 1.939747, 0.0],
+                "COP_coeffs" : [5.4977772, -0.0243008, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [148.0418, 2.553291, 0.0],
+                "COP_coeffs" : [7.207307, -0.0335265, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_GE2014STDMode_80_R_MP" : {
+        "name" : "GE 2014 model run in standard mode, 80 gallon unit",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [187.064124, 1.939747, 0.0],
+                "COP_coeffs" : [5.4977772, -0.0243008, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [148.0418, 2.553291, 0.0],
+                "COP_coeffs" : [7.207307, -0.0335265, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_Laars_eTherm_C_SP" : {
+        "name" : "Laars eTherm",
+        "pkl_prefix": "Laars_eTherm",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP60_C_SP" : {
+        "name" : "Lochinvar Veritus AHP60",
+        "pkl_prefix": "lochinvar_AHP60_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP60_C_MP" : {
+        "name" : "Lochinvar Veritus AHP60",
+        "pkl_prefix": "lochinvar_AHP60_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP140_C_SP" : {
+        "name" : "Lochinvar Veritus AHP140",
+        "pkl_prefix": "lochinvar_AHP140_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP140_C_MP" : {
+        "name" : "Lochinvar Veritus AHP140",
+        "pkl_prefix": "lochinvar_AHP140_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP200_C_SP" : {
+        "name" : "Lochinvar Veritus AHP200",
+        "pkl_prefix": "lochinvar_AHP200_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP200_C_MP" : {
+        "name" : "Lochinvar Veritus AHP200",
+        "pkl_prefix": "lochinvar_AHP200_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP280_C_SP" : {
+        "name" : "Lochinvar Veritus AHP280",
+        "pkl_prefix": "lochinvar_AHP280_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP280_C_MP" : {
+        "name" : "Lochinvar Veritus AHP280",
+        "pkl_prefix": "lochinvar_AHP280_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP350_C_SP" : {
+        "name" : "Lochinvar Veritus AHP350",
+        "pkl_prefix": "lochinvar_AHP350_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Lochinvar_AHP350_C_MP" : {
+        "name" : "Lochinvar Veritus AHP350",
+        "pkl_prefix": "lochinvar_AHP350_Multi_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_LYNC_AEGIS_250_SIMULATED_C_SP" : {
+        "name" : "Lync Aegis 250 Single Pass",
+        "pkl_prefix": "lync_a250_simulated",
+        "secondary_heat_exchanger" : true,
+        "hx_increase" : 10,
+        "SGIP_avail" : true
+    },
+    "MODELS_LYNC_AEGIS_350_SIMULATED_C_SP" : {
+        "name" : "Lync Aegis 350 Single Pass",
+        "pkl_prefix": "lync_a350_simulated",
+        "secondary_heat_exchanger" : true,
+        "hx_increase" : 10,
+        "SGIP_avail" : true
+    },
+    "MODELS_LYNC_AEGIS_500_SIMULATED_C_SP" : {
+        "name" : "Lync Aegis 500 Single Pass",
+        "pkl_prefix": "lync_a500_simulated",
+        "secondary_heat_exchanger" : true,
+        "hx_increase" : 10,
+        "SGIP_avail" : true
+    },
+    "MODELS_LYNC_AEGIS_500_TEST_C_SP" : {
+        "name" : "Lync Aegis 500 Single Pass (Lab Tested)",
+        "pkl_prefix": "Lync_Aegis_500_Single_Pass",
+        "secondary_heat_exchanger" : true,
+        "hx_increase" : 10,
+        "SGIP_avail" : false
+    },
+    "MODELS_Mitsubishi_QAHV_C_SP" : {
+        "name" : "Mitsubishi QAHV",
+        "pkl_prefix": "Mitsubishi_QAHV",
+        "secondary_heat_exchanger" : true,
+        "hx_increase" : 10,
+        "SGIP_avail" : true
+    },
+    "MODELS_NyleC25A_C_SP" : {
+        "name" : "Nyle C25A external heat pump in Single Pass Mode",
+        "pkl_prefix": "Nyle_C25A",
+        "perfmap": [
+            {
+                "T_F" : 90,
+                "inputPower_coeffs" : [4.060120364 ,-0.020584279,-0.024201054,-0.007023945,0.000017461,0.000110366,0.000060338,
+                0.000120015,0.000111068,0.000138907,-0.000001569],
+                "COP_coeffs" : [0.462979529,0.065656840,0.001077377,0.003428059,0.000243692,0.000021522,0.000005143,
+                -0.000384778,-0.000404744,-0.000036277, 0.000001900]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_NyleC60A_C_SP" : {
+        "name" : "Nyle C60A external heat pump in Single Pass Mode",
+        "pkl_prefix": "Nyle_C60A",
+        "perfmap": [
+            {
+                "T_F" : 90,
+                "inputPower_coeffs" : [-0.1180905709,0.0045354306,0.0314990479,-0.0406839757,0.0002355294,0.0000818684,0.0001943834,
+                -0.0002160871,0.0003053633,0.0003612413,-0.0000035912],
+                "COP_coeffs" : [6.8205043418,0.0860385185,-0.0748330699,-0.0172447955,0.0000510842,0.0002187441,-0.0000321036,
+                -0.0003311463,-0.0002154270,0.0001307922,0.0000005568]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_NyleC60A_CW_C_SP" : {
+        "name" : "Nyle C60A (Cold Weather Package) in Single Pass Mode",
+        "pkl_prefix": "Nyle_C60A",
+        "perfmap": [
+            {
+                "T_F" : 90,
+                "inputPower_coeffs" : [-0.1180905709,0.0045354306,0.0314990479,-0.0406839757,0.0002355294,0.0000818684,0.0001943834,
+                -0.0002160871,0.0003053633,0.0003612413,-0.0000035912],
+                "COP_coeffs" : [6.8205043418,0.0860385185,-0.0748330699,-0.0172447955,0.0000510842,0.0002187441,-0.0000321036,
+                -0.0003311463,-0.0002154270,0.0001307922,0.0000005568]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_NyleC90A_C_SP" : {
+        "name" : "Nyle C90A external heat pump in Single Pass Mode",
+        "pkl_prefix": "Nyle_C90A",
+        "perfmap": [
+            {
+                "T_F" : 90,
+                "inputPower_coeffs" : [13.27612215047,-0.01014009337,-0.13401028549,-0.02325705976,-0.00032515646,0.00040270625,
+                0.00001988733,0.00069451670,0.00069067890,0.00071091372,-0.00000854352],
+                "COP_coeffs" : [1.49112327987,0.06616282153,0.00715307252,-0.01269458185,0.00031448571,0.00001765313,
+                0.00006002498,-0.00045661397,-0.00034003896,-0.00004327766,0.00000176015]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_NyleC90A_CW_C_SP" : {
+        "name" : "Nyle C90A (Cold Weather Package) in Single Pass Mode",
+        "pkl_prefix": "Nyle_C90A",
+        "perfmap": [
+            {
+                "T_F" : 90,
+                "inputPower_coeffs" : [13.27612215047,-0.01014009337,-0.13401028549,-0.02325705976,-0.00032515646,0.00040270625,
+                0.00001988733,0.00069451670,0.00069067890,0.00071091372,-0.00000854352],
+                "COP_coeffs" : [1.49112327987,0.06616282153,0.00715307252,-0.01269458185,0.00031448571,0.00001765313,
+                0.00006002498,-0.00045661397,-0.00034003896,-0.00004327766,0.00000176015]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_NyleC125A_C_SP" : {
+        "name" : "Nyle C125A external heat pump in Single Pass Mode",
+        "pkl_prefix": "Nyle_C125A",
+        "perfmap": [
+            {
+                "T_F" : 90,
+                "inputPower_coeffs" : [-3.558277209, -0.038590968,	0.136307181, -0.016945699,0.000983753, -5.18201E-05,	
+                0.000476904, -0.000514211, -0.000359172,	0.000266509, -1.58646E-07],
+                "COP_coeffs" : [4.889555031,	0.117102769, -0.060005795, -0.011871234, -1.79926E-05,	0.000207293, 
+                -1.4452E-05, -0.000492486, -0.000376814, 7.85911E-05, 1.47884E-06]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_NyleC125A_CW_C_SP" : {
+        "name" : "Nyle C125A (Cold Weather Package) in Single Pass Mode",
+        "pkl_prefix": "Nyle_C125A",
+        "perfmap": [
+            {
+                "T_F" : 90,
+                "inputPower_coeffs" : [-3.558277209, -0.038590968,	0.136307181, -0.016945699,0.000983753, -5.18201E-05,	
+                0.000476904, -0.000514211, -0.000359172,	0.000266509, -1.58646E-07],
+                "COP_coeffs" : [4.889555031,	0.117102769, -0.060005795, -0.011871234, -1.79926E-05,	0.000207293, 
+                -1.4452E-05, -0.000492486, -0.000376814, 7.85911E-05, 1.47884E-06]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_NyleC185A_C_SP" : {
+        "name" : "Nyle C185A external heat pump in Single Pass Mode",
+        "pkl_prefix": "Nyle_C185A",
+        "perfmap": [
+            {
+                "T_F" : 90,
+                "inputPower_coeffs" : [18.58007733, -0.215324777, -0.089782421,	0.01503161,	0.000332503,	0.000274216,
+                2.70498E-05,	0.001387914,	0.000449199,	0.000829578, -5.28641E-06],
+                "COP_coeffs" : [-0.629432348,	0.181466663,	0.00044047,	0.012104957, -6.61515E-05,	9.29975E-05,	
+                9.78042E-05, -0.000872708,-0.001013945, -0.00021852,	5.55444E-06]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_NyleC185A_CW_C_SP" : {
+        "name" : "Nyle C185A (Cold Weather Package) in Single Pass Mode",
+        "pkl_prefix": "Nyle_C185A",
+        "perfmap": [
+            {
+                "T_F" : 90,
+                "inputPower_coeffs" : [18.58007733, -0.215324777, -0.089782421,	0.01503161,	0.000332503,	0.000274216,
+                2.70498E-05,	0.001387914,	0.000449199,	0.000829578, -5.28641E-06],
+                "COP_coeffs" : [-0.629432348,	0.181466663,	0.00044047,	0.012104957, -6.61515E-05,	9.29975E-05,	
+                9.78042E-05, -0.000872708,-0.001013945, -0.00021852,	5.55444E-06]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_NyleC250A_C_SP" : {
+        "name" : "Nyle C250A external heat pump in Single Pass Mode",
+        "pkl_prefix": "Nyle_C250A",
+        "perfmap": [
+            {
+                "T_F" : 90,
+                "inputPower_coeffs" : [-13.89057656,0.025902417,0.304250541,0.061695153,-0.001474249,-0.001126845,-0.000220192,
+                0.001241026,0.000571009,-0.000479282,9.04063E-06],
+                "COP_coeffs" : [7.443904067,0.185978755,-0.098481635,-0.002500073,0.000127658,0.000444321,0.000139547,
+                -0.001000195,-0.001140199,-8.77557E-05,4.87405E-06]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_NyleC250A_CW_C_SP" : {
+        "name" : "Nyle C250A (Cold Weather Package) in Single Pass Mode",
+        "pkl_prefix": "Nyle_C250A",
+        "perfmap": [
+                {
+                    "T_F" : 90,
+                    "inputPower_coeffs" : [18.58007733, -0.215324777, -0.089782421,	0.01503161,	0.000332503,	0.000274216,
+                    2.70498E-05,	0.001387914,	0.000449199,	0.000829578, -5.28641E-06],
+                    "COP_coeffs" : [-0.629432348,	0.181466663,	0.00044047,	0.012104957, -6.61515E-05,	9.29975E-05,	
+                    9.78042E-05, -0.000872708,-0.001013945, -0.00021852,	5.55444E-06]
+                }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_NyleE360_HT_C_SP" : {
+        "name" : "Nyle E360",
+        "pkl_prefix": "Nyle_e360_HT_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_NyleE360_LT_C_SP" : {
+        "name" : "Nyle E360 LT",
+        "pkl_prefix": "Nyle_e360_LT_Single_Pass",
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_RheemHB50_R_MP" : {
+        "name" : "Rheem 2014 Model",
+        "perfmap": [
+                {
+                    "T_F" : 47,
+                    "inputPower_coeffs" : [280, 4.97342, 0.0],
+                    "COP_coeffs" : [5.634009, -0.029485, 0.0]
+                },
+                {
+                    "T_F" : 67,
+                    "inputPower_coeffs" : [280, 5.35992, 0.0],
+                    "COP_coeffs" : [6.3, -0.03, 0.0]
+                }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemHBDR2250_R_MP" : {
+        "name" : "Rheem HB Duct Ready 50 gallon, 2250 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemHBDR4550_R_MP" : {
+        "name" : "Rheem HB Duct Ready 50 gallon, 4500 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemHBDR2265_R_MP" : {
+        "name" : "Rheem HB Duct Ready 65 gallon, 2250 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemHBDR4565_R_MP" : {
+        "name" : "Rheem HB Duct Ready 65 gallon, 4500 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemHBDR2280_R_MP" : {
+        "name" : "Rheem HB Duct Ready 80 gallon, 2250 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemHBDR4580_R_MP" : {
+        "name" : "Rheem HB Duct Ready 80 gallon, 4500 W resistance",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [170, 2.02, 0.0],
+                "COP_coeffs" : [5.93, -0.027, 0.0]
+            },
+            {
+                "T_F" : 70,
+                "inputPower_coeffs" : [144.5, 2.42, 0.0],
+                "COP_coeffs" : [7.67, -0.037, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [94.1, 3.15, 0.0],
+                "COP_coeffs" : [11.1, -0.056, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RHEEM_HPHD60HNU_201_C_MP" : {
+        "name" : "Rheem MP 60 kBtu HNU",
+        "pkl_prefix": "Rheem_HPHD_60HNU_201",
+        "perfmap": [
+            {
+                "T_F" : 110,
+                "inputPower_coeffs" : [1.8558438453, 0.0120796155, -0.0135443327, 0.0000059621, 0.0003010506, -0.0000463525],
+                "COP_coeffs" : [3.6840046360, 0.0995685071, -0.0398107723, -0.0001903160, 0.0000980361, -0.0003469814]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RHEEM_HPHD60VNU_201_C_MP" : {
+        "name" : "Rheem MP 60 kBtu VNU",
+        "pkl_prefix": "Rheem_HPHD_60VNU_201",
+        "perfmap": [
+            {
+                "T_F" : 110,
+                "inputPower_coeffs" : [1.8558438453, 0.0120796155, -0.0135443327, 0.0000059621, 0.0003010506, -0.0000463525],
+                "COP_coeffs" : [3.6840046360, 0.0995685071, -0.0398107723, -0.0001903160, 0.0000980361, -0.0003469814]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RHEEM_HPHD135HNU_483_C_MP" : {
+        "name" : "Rheem MP 135 kBtu HNU",
+        "pkl_prefix": "Rheem_HPHD_135HNU_483",
+        "perfmap": [
+            {
+                "T_F" : 110,
+                "inputPower_coeffs" : [5.1838201136, 0.0247312962, -0.0120766440, 0.0000493862, 0.0005422089, -0.0001385078],
+                "COP_coeffs" : [5.0207181209, 0.0442525790, -0.0418284882, 0.0000793531, 0.0001132421, -0.0002491563]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RHEEM_HPHD135VNU_483_C_MP" : {
+        "name" : "Rheem MP 135 kBtu VNU",
+        "pkl_prefix": "Rheem_HPHD_135VNU_483",
+        "perfmap": [
+            {
+                "T_F" : 110,
+                "inputPower_coeffs" : [5.1838201136, 0.0247312962, -0.0120766440, 0.0000493862, 0.0005422089, -0.0001385078],
+                "COP_coeffs" : [5.0207181209, 0.0442525790, -0.0418284882, 0.0000793531, 0.0001132421, -0.0002491563]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemPlugInDedicated40_R_MP" : {
+        "name" : "Rheem 120V Dedicated-Circuit, 40 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [528.91, 4.8988, 0.0],
+                "COP_coeffs" : [4.3943, -0.012443, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [494.03, 7.7266, 0.0],
+                "COP_coeffs" : [5.48189, -0.01604, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemPlugInDedicated50_R_MP" : {
+        "name" : "Rheem 120V Dedicated-Circuit, 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [528.91, 4.8988, 0.0],
+                "COP_coeffs" : [4.3943, -0.012443, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [494.03, 7.7266, 0.0],
+                "COP_coeffs" : [5.48189, -0.01604, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemPlugInShared40_R_MP" : {
+        "name" : "Rheem 120V Shared-Circuit, 40 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemPlugInShared50_R_MP" : {
+        "name" : "Rheem 120V Shared-Circuit, 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemPlugInShared65_R_MP" : {
+        "name" : "Rheem 120V Shared-Circuit, 65 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_RheemPlugInShared80_R_MP" : {
+        "name" : "Rheem 120V Shared-Circuit, 80 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Rheem2020Build40_R_MP" : {
+        "name" : "Rheem 2020 Builder, 40 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [220.0, 0.8743, 0.00454],
+                "COP_coeffs" : [7.96064, -0.0448, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [8.45936, -0.04539, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Rheem2020Build50_R_MP" : {
+        "name" : "Rheem 2020 Builder, 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [220.0, 0.8743, 0.00454],
+                "COP_coeffs" : [7.96064, -0.0448, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [8.45936, -0.04539, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Rheem2020Build65_R_MP" : {
+        "name" : "Rheem 2020 Builder, 65 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [220.0, 0.8743, 0.00454],
+                "COP_coeffs" : [7.96064, -0.0448, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [8.45936, -0.04539, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Rheem2020Build80_R_MP" : {
+        "name" : "Rheem 2020 Builder, 80 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [220.0, 0.8743, 0.00454],
+                "COP_coeffs" : [7.96064, -0.0448, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [8.45936, -0.04539, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Rheem2020Prem40_R_MP" : {
+        "name" : "Rheem 2020 Premium, 40 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Rheem2020Prem50_R_MP" : {
+        "name" : "Rheem 2020 Premium, 50 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Rheem2020Prem65_R_MP" : {
+        "name" : "Rheem 2020 Premium, 65 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_Rheem2020Prem80_R_MP" : {
+        "name" : "Rheem 2020 Premium, 80 gallon",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [250, -1.0883, 0.0176],
+                "COP_coeffs" : [6.7, -0.0087, -0.0002]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [275.0, -0.6631, 0.01571],
+                "COP_coeffs" : [7.0, -0.0168, -0.0001]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_SANCO2_43_R_SP" : {
+        "name" : "SANCO2 43 gallon CO2 external heat pump",
+        "perfmap": [
+            {
+                "T_F" : 17,
+                "inputPower_coeffs" : [1650, 5.5, 0.0],
+                "COP_coeffs" : [3.2, -0.015, 0.0]
+            },
+            {
+                "T_F" : 35,
+                "inputPower_coeffs" : [1100, 4.0, 0.0],
+                "COP_coeffs" : [3.7, -0.015, 0.0]
+            },
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [880, 3.1, 0.0],
+                "COP_coeffs" : [5.25, -0.025, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [740, 4.0, 0.0],
+                "COP_coeffs" : [6.2, -0.03, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [790, 2, 0.0],
+                "COP_coeffs" : [7.15, -0.04, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_SANCO2_C_SP" : {
+        "name" : "SANCO2 GS4",
+        "pkl_prefix": "SANCO2_GS4",
+        "perfmap": [
+            {
+                "T_F" : 17,
+                "inputPower_coeffs" : [1650, 5.5, 0.0],
+                "COP_coeffs" : [3.2, -0.015, 0.0]
+            },
+            {
+                "T_F" : 35,
+                "inputPower_coeffs" : [1100, 4.0, 0.0],
+                "COP_coeffs" : [3.7, -0.015, 0.0]
+            },
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [880, 3.1, 0.0],
+                "COP_coeffs" : [5.25, -0.025, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [740, 4.0, 0.0],
+                "COP_coeffs" : [6.2, -0.03, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [790, 2, 0.0],
+                "COP_coeffs" : [7.15, -0.04, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_SANCO2_83_R_SP" : {
+        "name" : "SANCO2 83 gallon CO2 external heat pump",
+        "perfmap": [
+            {
+                "T_F" : 17,
+                "inputPower_coeffs" : [1650, 5.5, 0.0],
+                "COP_coeffs" : [3.2, -0.015, 0.0]
+            },
+            {
+                "T_F" : 35,
+                "inputPower_coeffs" : [1100, 4.0, 0.0],
+                "COP_coeffs" : [3.7, -0.015, 0.0]
+            },
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [880, 3.1, 0.0],
+                "COP_coeffs" : [5.25, -0.025, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [740, 4.0, 0.0],
+                "COP_coeffs" : [6.2, -0.03, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [790, 2, 0.0],
+                "COP_coeffs" : [7.15, -0.04, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_SANCO2_119_C_SP" : {
+        "name" : "SANCO2 120 gallon CO2 external heat pump",
+        "perfmap": [
+            {
+                "T_F" : 17,
+                "inputPower_coeffs" : [1650, 5.5, 0.0],
+                "COP_coeffs" : [3.2, -0.015, 0.0]
+            },
+            {
+                "T_F" : 35,
+                "inputPower_coeffs" : [1100, 4.0, 0.0],
+                "COP_coeffs" : [3.7, -0.015, 0.0]
+            },
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [880, 3.1, 0.0],
+                "COP_coeffs" : [5.25, -0.025, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [740, 4.0, 0.0],
+                "COP_coeffs" : [6.2, -0.03, 0.0]
+            },
+            {
+                "T_F" : 95,
+                "inputPower_coeffs" : [790, 2, 0.0],
+                "COP_coeffs" : [7.15, -0.04, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : false
+    },
+    "MODELS_Stiebel220E_R_MP" : {
+        "name" : "Stiebel Eltron",
+        "perfmap": [
+            {
+                "T_F" : 50,
+                "inputPower_coeffs" : [295.55337, 2.28518, 0.0],
+                "COP_coeffs" : [5.744118, -0.025946, 0.0]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [282.2126, 2.82001, 0.0],
+                "COP_coeffs" : [8.012112, -0.039394, 0.0]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_VOLTEX60_R_MP" : {
+        "name" : "Voltex 60 gallon HPWH",
+        "perfmap": [
+            {
+                "T_F" : 47,
+                "inputPower_coeffs" : [467.0, 2.81, 0.0072],
+                "COP_coeffs" : [4.86, -0.0222, -0.00001]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [541.0, 1.47, 0.0176],
+                "COP_coeffs" : [6.58, -0.0392, 0.0000407]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    },
+    "MODELS_VOLTEX80_R_MP" : {
+        "name" : "Voltex 80 gallon HPWH",
+        "perfmap": [
+            {
+                "T_F" : 47,
+                "inputPower_coeffs" : [467.0, 2.81, 0.0072],
+                "COP_coeffs" : [4.86, -0.0222, -0.00001]
+            },
+            {
+                "T_F" : 67,
+                "inputPower_coeffs" : [541.0, 1.47, 0.0176],
+                "COP_coeffs" : [6.58, -0.0392, 0.0000407]
+            }
+        ],
+        "secondary_heat_exchanger" : false,
+        "SGIP_avail" : true
+    }
+}

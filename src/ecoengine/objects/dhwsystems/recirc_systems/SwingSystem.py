@@ -837,7 +837,7 @@ class SwingSystem(RecircSystem):
 
         # --- 3. Physical gallons drawn from primary → swing tank this timestep ---
         swing_t = self.tm_storage_tank.get_temperature_at_fraction(0.5)
-        if swing_t > inlet_temp_f: # TODO : shouldn't this be self.supply_temp_f instead of inlet_temp_f?
+        if swing_t > self.supply_temp_f:
             hw_swing_gal = (
                 demand_supplyT_gal
                 * (self.supply_temp_f - inlet_temp_f)
@@ -896,6 +896,7 @@ class SwingSystem(RecircSystem):
         else:
             total_kw = None
 
+        swing_mid_temp_f = self.tm_storage_tank.get_temperature_at_fraction(0.5)
         return {
             "demand_supplyT_gal":        demand_supplyT_gal,
             "usable_volume_supplyT_gal": usable_vol_gal,
@@ -905,7 +906,10 @@ class SwingSystem(RecircSystem):
             "inlet_water_temp_f":        inlet_temp_f,
             "tank_temps_f":              tank_temps_f,
             "mode":                      step_mode,
+            # Swing tank is the actual delivery point — use its temperature for
+            # the outlet-deficit stop condition instead of the primary tank top.
+            "delivery_temp_f":           swing_mid_temp_f,
             # TM panel data (consumed by SimulationRun for the swing-tank subplot)
-            "tm_tank_temp_f":            self.tm_storage_tank.get_temperature_at_fraction(0.5),
+            "tm_tank_temp_f":            swing_mid_temp_f,
             "tm_heater_output_kbtuh":    tm_kbtuh,
         }
