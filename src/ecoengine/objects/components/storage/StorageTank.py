@@ -75,6 +75,26 @@ class StorageTank(ABC):
     ) -> None:
         """Mix recirculation loop return flow into the tank."""
 
+    @abstractmethod
+    def get_average_draw_temp_f(self, draw_gal: float) -> float:
+        """
+        Return the volume-weighted average temperature of the top ``draw_gal``
+        physical gallons.
+
+        Used by SwingSystem to determine the effective feed temperature from the
+        primary storage tank when the hot zone may be partially depleted.
+        """
+
+    @abstractmethod
+    def draw_physical_gal(self, gal: float, inlet_temp_f: float) -> None:
+        """
+        Remove ``gal`` physical gallons from the top of the tank and replace
+        with cold make-up water at the bottom.
+
+        Unlike ``draw()``, no supply-temperature conversion is applied — the
+        caller provides physical gallons directly.
+        """
+
 
 # ---------------------------------------------------------------------------
 # Stratified tank
@@ -235,13 +255,21 @@ class StratifiedTank(StorageTank):
         Remove hot water from the top of the tank and replace with cold at the
         bottom, representing DHW delivery to building occupants.
 
-        Because storage temperature may exceed supply temperature, the actual
-        physical volume removed from the tank is smaller than the supply-temp
-        demand — the hot water is mixed with cold at the tap. The conversion is:
+        When the hot zone at ``outlet_temp_f`` is deep enough to cover the
+        entire draw, the standard conversion is used:
 
             physical_vol = volume_supplyT_gal
-                           * (supply_temp_f - cold_temp_f)
-                           / (outlet_temp_f - cold_temp_f)
+                           × (supply_temp_f − cold_temp_f)
+                           / (outlet_temp_f − cold_temp_f)
+
+        When the hot zone is partially depleted, the drawn block dips into the
+        transition zone and its average temperature falls below ``outlet_temp_f``.
+        In that case, ``get_average_draw_temp_f`` is used to binary-search for
+        the physical volume whose actual supply-temp yield equals the demand.
+
+        If even drawing the full tank cannot satisfy the demand (true outage),
+        the entire tank volume is drawn and the caller detects the shortfall via
+        ``get_usable_volume_supplyT_gal() == 0``.
 
         Decreases ``_delta_gal`` (thermocline rises → less hot water).
 
@@ -258,14 +286,44 @@ class StratifiedTank(StorageTank):
             Current maximum hot water temperature at the tank outlet [°F].
         """
         self._inlet_temp_f = cold_temp_f
+        self._outlet_temp_f = outlet_temp_f
         if outlet_temp_f <= cold_temp_f or volume_supplyT_gal <= 0.0:
             return
-        physical_vol_gal = (
-            volume_supplyT_gal
-            * (supply_temp_f - cold_temp_f)
-            / (outlet_temp_f - cold_temp_f)
-        )
-        self._delta_gal -= physical_vol_gal
+
+        supply_delta = supply_temp_f - cold_temp_f
+        outlet_delta = outlet_temp_f - cold_temp_f
+
+        # Standard estimate: all drawn water at outlet_temp_f
+        physical_vol = volume_supplyT_gal * supply_delta / outlet_delta
+
+        # Fast path: check whether the drawn block is entirely within the hot zone.
+        # If avg_temp ≈ outlet_temp_f the standard formula is exact.
+        avg_temp = self.get_average_draw_temp_f(physical_vol)
+        if avg_temp >= outlet_temp_f - 1e-6:
+            self._delta_gal -= physical_vol
+            return
+
+        # Slow path: draw dips into the transition / cold zone.
+        # Binary-search for draw_gal where supply-temp yield equals demand.
+        #   yield(draw_gal) = draw_gal × (avg_temp(draw_gal) − cold) / supply_delta
+        lo = physical_vol
+        hi = self.total_volume_gal
+
+        for _ in range(52):
+            mid = (lo + hi) * 0.5
+            avg_t = self.get_average_draw_temp_f(mid)
+            if avg_t > cold_temp_f:
+                yield_mid = mid * (avg_t - cold_temp_f) / supply_delta
+            else:
+                yield_mid = 0.0
+            if yield_mid < volume_supplyT_gal:
+                lo = mid
+            else:
+                hi = mid
+            if hi - lo < 1e-6:
+                break
+
+        self._delta_gal -= min((lo + hi) * 0.5, self.total_volume_gal)
 
     def heat(
         self,
@@ -344,6 +402,82 @@ class StratifiedTank(StorageTank):
             / (self._outlet_temp_f - self._inlet_temp_f)
         )
         self._delta_gal += net_delta_gal  # always negative
+
+    def get_average_draw_temp_f(self, draw_gal: float) -> float:
+        """
+        Return the volume-weighted average temperature of the top ``draw_gal``
+        physical gallons.
+
+        Analytically integrates the stratified temperature profile over the draw
+        zone (top of tank downward), splitting the zone into cold, transition,
+        and hot sub-regions.
+
+        Parameters
+        ----------
+        draw_gal : float
+            Physical gallons to draw from the top of the tank [gal].
+
+        Returns
+        -------
+        float
+            Volume-weighted average temperature [°F] of the drawn block.
+        """
+        draw_gal = min(draw_gal, self.total_volume_gal)
+        if draw_gal <= 0.0:
+            return self._outlet_temp_f
+
+        shift_pct  = self._delta_gal / self.total_volume_gal * 100.0
+        x_draw_pct = max(0.0, 100.0 - draw_gal / self.total_volume_gal * 100.0)
+
+        # Zone boundaries (percentage height, 0 = bottom, 100 = top)
+        x_cold_pct = max(0.0, min(100.0,
+            (self._inlet_temp_f  - self._strat_inter) / self.strat_slope - shift_pct))
+        x_hot_pct  = max(0.0, min(100.0,
+            (self._outlet_temp_f - self._strat_inter) / self.strat_slope - shift_pct))
+
+        # Cold zone: T = inlet_temp_f
+        lo, hi = max(x_draw_pct, 0.0), min(100.0, x_cold_pct)
+        cold_integral = self._inlet_temp_f * max(0.0, hi - lo)
+
+        # Transition zone: T = strat_slope * (x + shift_pct) + strat_inter
+        lo, hi = max(x_draw_pct, x_cold_pct), min(100.0, x_hot_pct)
+        if hi > lo:
+            a, b = lo, hi
+            trans_integral = (
+                self.strat_slope / 2.0 * ((b + shift_pct) ** 2 - (a + shift_pct) ** 2)
+                + self._strat_inter * (b - a)
+            )
+        else:
+            trans_integral = 0.0
+
+        # Hot zone: T = outlet_temp_f
+        lo, hi = max(x_draw_pct, x_hot_pct), 100.0
+        hot_integral = self._outlet_temp_f * max(0.0, hi - lo)
+
+        total_width = 100.0 - x_draw_pct
+        if total_width <= 0.0:
+            return self._outlet_temp_f
+        return (cold_integral + trans_integral + hot_integral) / total_width
+
+    def draw_physical_gal(self, gal: float, inlet_temp_f: float) -> None:
+        """
+        Remove ``gal`` physical gallons from the top of the tank and replace
+        with cold make-up water at the bottom.
+
+        Decreases ``_delta_gal`` directly by the physical volume (thermocline
+        rises). Unlike ``draw()``, no supply-temperature conversion is applied —
+        the caller provides physical gallons directly.
+
+        Parameters
+        ----------
+        gal : float
+            Physical gallons to remove [gal].
+        inlet_temp_f : float
+            Incoming cold water temperature [°F].
+        """
+        self._inlet_temp_f = inlet_temp_f
+        if gal > 0.0:
+            self._delta_gal -= gal
 
     # ------------------------------------------------------------------
     # Sizing support

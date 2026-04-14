@@ -148,7 +148,8 @@ class MixedStorageTank(StorageTank):
             return
         heat_kbtu = kbtuh * duration_min / 60.0   # kBTU
         delta_t   = heat_kbtu * 1000.0 / (self.total_volume_gal * _RHO_CP)
-        self._temperature_f = min(self._temperature_f + delta_t, outlet_temp_f)
+        self._temperature_f = self._temperature_f + delta_t
+        # self._temperature_f = min(self._temperature_f + delta_t, outlet_temp_f)
 
     def add_recirc_return(
         self,
@@ -184,3 +185,77 @@ class MixedStorageTank(StorageTank):
             / self.total_volume_gal
         )
         self._temperature_f += delta_t  # always negative when return < tank temp
+
+    def apply_fixed_heat_loss_kbtuh(self, kbtuh: float, duration_min: float) -> None:
+        """
+        Apply a fixed heat loss rate to the tank regardless of current temperature.
+
+        Used by the swing tank simulation to apply recirculation heat loss at the
+        same constant rate used during sizing (``RecircSystem.get_recirc_loss_kbtuh``),
+        so that sizing and runtime physics remain consistent.
+
+        Parameters
+        ----------
+        kbtuh : float
+            Heat loss rate [kBTU/hr].
+        duration_min : float
+            Timestep duration [minutes].
+        """
+        if kbtuh <= 0.0 or duration_min <= 0.0:
+            return
+        heat_kbtu = kbtuh * duration_min / 60.0
+        delta_t   = heat_kbtu * 1000.0 / (self.total_volume_gal * _RHO_CP)
+        self._temperature_f -= delta_t
+
+    def mix_primary_inflow(self, gal: float, primary_temp_f: float) -> None:
+        """
+        Model primary hot water flowing into the swing tank while the same volume
+        exits to the building.
+
+        The total tank volume is unchanged; the incoming primary water at
+        ``primary_temp_f`` displaces an equal volume of the existing tank contents,
+        raising or lowering the uniform temperature via an energy balance:
+
+            T_new = (gal × primary_temp + (V - gal) × T_curr) / V
+
+        Parameters
+        ----------
+        gal : float
+            Volume of primary hot water flowing into the tank this timestep [gal].
+        primary_temp_f : float
+            Temperature of water entering from the primary storage [°F].
+        """
+        if gal <= 0.0:
+            return
+        vol_remaining = self.total_volume_gal - gal
+        if vol_remaining <= 0.0:
+            self._temperature_f = primary_temp_f
+            return
+        total_energy = (
+            gal * _RHO_CP * primary_temp_f
+            + vol_remaining * _RHO_CP * self._temperature_f
+        )
+        self._temperature_f = total_energy / (self.total_volume_gal * _RHO_CP)
+
+    def get_average_draw_temp_f(self, draw_gal: float) -> float:
+        """Return the uniform tank temperature (fully mixed — no stratification)."""
+        return self._temperature_f
+
+    def draw_physical_gal(self, gal: float, inlet_temp_f: float) -> None:
+        """
+        Remove ``gal`` physical gallons and replace with cold make-up water.
+
+        For a fully-mixed tank this is an energy-balance mix: the removed hot
+        water is replaced by ``gal`` gallons of cold water at ``inlet_temp_f``.
+        """
+        if gal <= 0.0:
+            return
+        remaining_gal = self.total_volume_gal - gal
+        if remaining_gal <= 0.0:
+            self._temperature_f = inlet_temp_f
+            return
+        total_energy = (
+            remaining_gal * _RHO_CP * self._temperature_f
+            + gal * _RHO_CP * inlet_temp_f
+        )
+        self._temperature_f = total_energy / (self.total_volume_gal * _RHO_CP)

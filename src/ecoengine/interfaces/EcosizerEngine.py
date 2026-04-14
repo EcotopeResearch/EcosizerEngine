@@ -362,11 +362,27 @@ class EcosizerEngine:
                 )
 
         if self.schematic == "swing_tank":
-            raise NotImplementedError("'swing_tank' schematic is not yet implemented.")
+            from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem
+            self._require_recirc_params()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return SwingSystem.from_size(
+                    building                   = self._building,
+                    supply_temp_f              = self.supply_temp_f,
+                    storage_temp_f             = self.storage_temp_f,
+                    return_temp_f              = self.return_temp_f,
+                    return_flow_gpm            = self.return_flow_gpm,
+                    tm_safety_factor           = self.tm_safety_factor,
+                    max_daily_run_hr           = self.max_daily_run_hr,
+                    defrost_factor             = self.defrost_factor,
+                    control_schedule           = control_schedule,
+                    control_map                = control_map,
+                    load_shift_fract_total_vol = ls_fract,
+                )
 
         raise ValueError(
             f"Unknown schematic {self.schematic!r}. "
-            "Supported values: 'primary_no_recirc', 'parallel_loop'."
+            "Supported values: 'primary_no_recirc', 'parallel_loop', 'swing_tank'."
         )
 
     def _require_recirc_params(self) -> None:

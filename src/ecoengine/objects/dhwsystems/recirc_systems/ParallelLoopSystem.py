@@ -5,6 +5,7 @@ from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.StorageTank import StorageTank, StratifiedTank
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
 from .RecircSystem import RecircSystem, _RHO_CP
+from ecoengine.objects.building.Building import Building
 
 # Minimum recommended TM heater run time per cycle [hr].
 # Below this, short cycling risk is high (mirrors original constant).
@@ -49,7 +50,7 @@ class ParallelLoopSystem(RecircSystem):
         tm_off_time_hr: float = 0.5,
         tm_safety_factor: float = 1.2,
         tm_storage_tank=None,
-        tm_water_heaters=None,
+        tm_water_heater=None,
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
     ):
@@ -82,8 +83,8 @@ class ParallelLoopSystem(RecircSystem):
             Must be > 1.0. Default 1.2.
         tm_storage_tank : MixedStorageTank | None
             TM storage tank (populated by from_size() or size()).
-        tm_water_heaters : list[WaterHeater] | None
-            TM heater(s) (populated by from_size() or size()).
+        tm_water_heater : WaterHeater | None
+            TM heater (populated by from_size() or size()).
         max_daily_run_hr : float
             Maximum hours the primary heating system may run per day.
         defrost_factor : float
@@ -104,7 +105,7 @@ class ParallelLoopSystem(RecircSystem):
         self.tm_off_time_hr  = tm_off_time_hr
         self.tm_safety_factor = tm_safety_factor
         self.tm_storage_tank  = tm_storage_tank
-        self.tm_water_heaters = tm_water_heaters or []
+        self.tm_water_heater  = tm_water_heater
 
         # TM sizing results — populated by size_tm_system()
         self._minimum_tm_volume_gal:    float | None = None
@@ -209,11 +210,11 @@ class ParallelLoopSystem(RecircSystem):
             off_trigger_t_f  = tm_off_temp_f,
             outlet_temp_f    = tm_off_temp_f,
         )
-        system.tm_water_heaters = [WaterHeater.from_nominal_capacity(
+        system.tm_water_heater = WaterHeater.from_nominal_capacity(
             nominal_capacity_kbtuh=system._minimum_tm_capacity_kbtuh,
             control_schedule=["normal"] * 24,
             control_map={"normal": tm_controls},
-        )]
+        )
 
         return system
 
@@ -320,7 +321,7 @@ class ParallelLoopSystem(RecircSystem):
 
     def simulate_step(
         self,
-        building,
+        building : Building,
         timestep_interval: int,
         interval_min: int = 1,
         mode: str = "normal",
@@ -373,27 +374,28 @@ class ParallelLoopSystem(RecircSystem):
             self.return_flow_gpm, self.return_temp_f, interval_min
         )
 
-        for wh in self.tm_water_heaters:
-            wh.update_state(self.tm_storage_tank, hour_of_day)
+        self.tm_water_heater.update_state(self.tm_storage_tank, hour_of_day)
 
         tm_top_temp_f = self.tm_storage_tank.get_temperature_at_fraction(1.0)
-        tm_kbtuh      = sum(
-            wh.get_output_kbtuh(oat_f, tm_top_temp_f) for wh in self.tm_water_heaters
+        tm_kbtuh      = self.tm_water_heater.get_output_kbtuh(oat_f, tm_top_temp_f)
+        tm_kw         = (
+            self.tm_water_heater.get_power_in_kw(oat_f, tm_top_temp_f)
+            if self.tm_water_heater.is_active()
+            else None
         )
-        tm_active_kws = [
-            wh.get_power_in_kw(oat_f, tm_top_temp_f)
-            for wh in self.tm_water_heaters
-            if wh.is_active()
-        ]
         self.tm_storage_tank.heat(tm_kbtuh, interval_min, self.tm_off_temp_f)
 
         # ------------------------------------------------------------------
         # Merge TM outputs into primary step dict
         # ------------------------------------------------------------------
-        step["heater_output_kbtuh"] += tm_kbtuh
-        if any(kw is not None for kw in tm_active_kws):
-            step["heater_power_in_kw"] = (step["heater_power_in_kw"] or 0.0) + sum(
-                kw or 0.0 for kw in tm_active_kws
-            )
+        # heater_output_kbtuh stays PRIMARY-ONLY (used for gal/hr plot in top chart).
+        # TM thermal output is tracked separately in tm_heater_output_kbtuh.
+        # heater_power_in_kw merges both so get_total_energy_kwh() is accurate.
+        if tm_kw is not None:
+            step["heater_power_in_kw"] = (step["heater_power_in_kw"] or 0.0) + tm_kw
+
+        # TM panel data (consumed by SimulationRun for the TM subplot)
+        step["tm_tank_temp_f"]         = self.tm_storage_tank.get_temperature_at_fraction(0.5)
+        step["tm_heater_output_kbtuh"] = tm_kbtuh
 
         return step

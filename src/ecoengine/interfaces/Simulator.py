@@ -90,6 +90,8 @@ def simulate(dhw_system, building, duration="3day", **sim_run_kwargs) -> Simulat
             inlet_water_temp_f        = step["inlet_water_temp_f"],
             tank_temps_f              = step["tank_temps_f"],
             mode                      = step.get("mode", "normal"),
+            tm_tank_temp_f            = step.get("tm_tank_temp_f"),
+            tm_heater_output_kbtuh    = step.get("tm_heater_output_kbtuh"),
         )
 
         if step["usable_volume_supplyT_gal"] <= 0.0:

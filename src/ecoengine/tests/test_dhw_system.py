@@ -268,16 +268,18 @@ class TestCalcStorageVolume:
     def _sys(self):
         return DHWSystem(water_heaters=[], storage_tank=None, supply_temp_f=SUPPLY_T, storage_temp_f=STORAGE_T)
 
-    def test_temp_ratio_applied(self):
-        result = self._sys()._calc_storage_volume_storageT_gal(100.0, 1.0, INLET_T)
-        assert result == pytest.approx(100.0 * (SUPPLY_T - INLET_T) / (STORAGE_T - INLET_T), rel=1e-6)
+    def test_strat_factor_divides_running_vol(self):
+        # storage_vol = running_vol / strat_factor
+        result = self._sys()._calc_storage_volume_storageT_gal(100.0, 0.8)
+        assert result == pytest.approx(100.0 / 0.8, rel=1e-6)
 
     def test_strat_factor_increases_storage(self):
+        # Lower strat_factor → larger required storage volume
         sys = self._sys()
-        assert sys._calc_storage_volume_storageT_gal(100.0, 0.8, INLET_T) > sys._calc_storage_volume_storageT_gal(100.0, 1.0, INLET_T)
+        assert sys._calc_storage_volume_storageT_gal(100.0, 0.8) > sys._calc_storage_volume_storageT_gal(100.0, 1.0)
 
     def test_zero_running_volume(self):
-        assert self._sys()._calc_storage_volume_storageT_gal(0.0, 1.0, INLET_T) == 0.0
+        assert self._sys()._calc_storage_volume_storageT_gal(0.0, 1.0) == 0.0
 
 
 # ===========================================================================
@@ -288,43 +290,49 @@ class TestStratificationFactor:
     def _sys(self):
         return DHWSystem(water_heaters=[], storage_tank=None, supply_temp_f=SUPPLY_T, storage_temp_f=STORAGE_T)
 
-    def test_returns_between_zero_and_one(self):
+    def test_returns_positive(self):
+        # The factor accounts for temperature-mixing credit: 1 physical gallon at storage_temp
+        # can produce more than 1 supply-temp gallon when storage_temp >> supply_temp.
+        # So the factor can exceed 1.0 — only positivity is guaranteed.
         cmap = make_control_map((0.0, 0.0))
-        assert 0.0 < self._sys()._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE) <= 1.0
+        assert 0.0 < self._sys()._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE, INLET_T)
 
     def test_none_map_uses_defaults(self):
         """control_map=None gives same result as on_fract=0.0, on_temp=supply_temp."""
         sys = self._sys()
-        factor_none = sys._calc_stratification_factor(None, DEFAULT_STRAT_SLOPE)
+        factor_none = sys._calc_stratification_factor(None, DEFAULT_STRAT_SLOPE, INLET_T)
         cmap = make_control_map((0.0, 0.0))
-        factor_ctrl = sys._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE)
+        factor_ctrl = sys._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE, INLET_T)
         assert factor_none == pytest.approx(factor_ctrl)
 
     def test_lower_aquastat_gives_higher_factor(self):
         sys = self._sys()
         cmap_low  = make_control_map((0.0, 0.0))
         cmap_high = make_control_map((0.5, 0.0))
-        assert sys._calc_stratification_factor(cmap_low, DEFAULT_STRAT_SLOPE) >= sys._calc_stratification_factor(cmap_high, DEFAULT_STRAT_SLOPE)
+        assert sys._calc_stratification_factor(cmap_low, DEFAULT_STRAT_SLOPE, INLET_T) >= sys._calc_stratification_factor(cmap_high, DEFAULT_STRAT_SLOPE, INLET_T)
 
-    def test_on_temp_at_storage_gives_factor_one(self):
+    def test_on_temp_at_storage_gives_max_factor(self):
+        # on_trigger at storage_temp means the entire tank is at storage_temp.
+        # Each physical gallon yields (storage-inlet)/(supply-inlet) supply-temp gallons.
         ctrl = Controls(on_sensor_fract=0.0, on_trigger_t_f=STORAGE_T,
                         off_sensor_fract=0.0, off_trigger_t_f=STORAGE_T,
                         outlet_temp_f=STORAGE_T)
         cmap = {"normal": ctrl}
-        assert self._sys()._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE) == pytest.approx(1.0)
+        expected = (STORAGE_T - INLET_T) / (SUPPLY_T - INLET_T)
+        assert self._sys()._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE, INLET_T) == pytest.approx(expected, rel=1e-4)
 
     def test_higher_strat_slope_gives_higher_factor(self):
         cmap = make_control_map((0.0, 0.0))
         sys  = self._sys()
-        assert sys._calc_stratification_factor(cmap, 5.0) > sys._calc_stratification_factor(cmap, 1.0)
+        assert sys._calc_stratification_factor(cmap, 5.0, INLET_T) > sys._calc_stratification_factor(cmap, 1.0, INLET_T)
 
     def test_normal_key_used_for_normal_sizing(self):
         """_calc_stratification_factor uses only the 'normal' key, ignoring loadUp/shed."""
         sys = self._sys()
         # 'normal' has on_fract=0.1 (low aquastat), 'loadUp' has on_fract=0.8 (high)
         cmap = {"normal": make_controls(0.1, 0.0), "loadUp": make_controls(0.8, 0.0)}
-        factor_multi  = sys._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE)
-        factor_normal = sys._calc_stratification_factor({"normal": make_controls(0.1, 0.0)}, DEFAULT_STRAT_SLOPE)
+        factor_multi  = sys._calc_stratification_factor(cmap, DEFAULT_STRAT_SLOPE, INLET_T)
+        factor_normal = sys._calc_stratification_factor({"normal": make_controls(0.1, 0.0)}, DEFAULT_STRAT_SLOPE, INLET_T)
         # Should use only 'normal' — shed/loadUp aquastats are for the LS path
         assert factor_multi == pytest.approx(factor_normal)
 

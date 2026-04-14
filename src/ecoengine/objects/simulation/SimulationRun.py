@@ -56,6 +56,10 @@ class SimulationRun:
         # node_idx 0 = bottom (0%), 5 = top (100%)
         self.tank_temps_f: list[list[float]] = [[] for _ in _TANK_NODE_FRACTS]
 
+        # TM (swing tank) per-timestep data — only populated for SwingSystem runs
+        self.tm_tank_temp_f:           list[float] = []
+        self.tm_heater_output_kbtuh:   list[float] = []
+
         # Cumulative outage counter [minutes]
         self.outage_minutes: int = 0
 
@@ -78,6 +82,8 @@ class SimulationRun:
         inlet_water_temp_f: float,
         tank_temps_f: list[float],
         mode: str = "normal",
+        tm_tank_temp_f: float | None = None,
+        tm_heater_output_kbtuh: float | None = None,
     ) -> None:
         """
         Append one timestep's worth of data to the run record.
@@ -100,6 +106,12 @@ class SimulationRun:
         tank_temps_f : list[float]
             Temperatures at each tank node (6 values, bottom to top) [°F].
             Must have the same length as _TANK_NODE_FRACTS.
+        tm_tank_temp_f : float | None
+            Current temperature of the TM (swing) tank [°F]. Only provided
+            by SwingSystem; None for all other system types.
+        tm_heater_output_kbtuh : float | None
+            Heat output of the TM element this timestep [kBTU/hr]. None for
+            non-swing systems.
         """
         self.dhw_demand_supplyT_gal.append(dhw_demand_supplyT_gal)
         self.usable_volume_supplyT_gal.append(usable_volume_supplyT_gal)
@@ -110,6 +122,10 @@ class SimulationRun:
         self.heater_mode.append(mode)
         for node_idx, temp in enumerate(tank_temps_f):
             self.tank_temps_f[node_idx].append(temp)
+        if tm_tank_temp_f is not None:
+            self.tm_tank_temp_f.append(tm_tank_temp_f)
+        if tm_heater_output_kbtuh is not None:
+            self.tm_heater_output_kbtuh.append(tm_heater_output_kbtuh)
 
     def check_outlet_deficit(self, top_tank_temp_f: float, supply_temp_f: float) -> bool:
         """
@@ -304,22 +320,33 @@ class SimulationRun:
             )
 
         time_min = [i * self.timestep_min for i in range(len(self.dhw_demand_supplyT_gal))]
+        has_tm = bool(self.tm_tank_temp_f)
 
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        if has_tm:
+            fig = make_subplots(
+                rows=2, cols=1,
+                specs=[[{"secondary_y": True}], [{"secondary_y": True}]],
+                shared_xaxes=True,
+                vertical_spacing=0.08,
+                row_heights=[0.65, 0.35],
+                subplot_titles=["Primary System", "Temperature Maintenance (TM)"],
+            )
+        else:
+            fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         steps_per_hour = 60 / self.timestep_min
 
-        # --- Volume traces (Y1, left axis) ---
+        # --- Row 1: Volume traces (Y1, left axis) ---
         fig.add_trace(
             go.Scatter(x=time_min, y=self.usable_volume_supplyT_gal,
                        name="Usable Volume (gal)", line=dict(color="green", width=1.5)),
-            secondary_y=False,
+            secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
         )
         hourly_demand = [v * steps_per_hour for v in self.dhw_demand_supplyT_gal]
         fig.add_trace(
             go.Scatter(x=time_min, y=hourly_demand,
                        name="DHW Demand (gal/hr)", line=dict(color="blue", width=1)),
-            secondary_y=False,
+            secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
         )
 
         if self.storage_temp_f is not None:
@@ -334,20 +361,20 @@ class SimulationRun:
             fig.add_trace(
                 go.Scatter(x=time_min, y=heater_gph,
                            name="Heater Generation (gal/hr)", line=dict(color="red", width=1)),
-                secondary_y=False,
+                secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
             )
 
         if include_temperatures:
-            # --- Temperature traces (Y2, right axis) ---
+            # --- Temperature traces (Y2, right axis, row 1) ---
             fig.add_trace(
                 go.Scatter(x=time_min, y=self.oat_f,
                            name="OAT (°F)", line=dict(color="orange", width=1)),
-                secondary_y=True,
+                secondary_y=True, **({} if not has_tm else {"row": 1, "col": 1}),
             )
             fig.add_trace(
                 go.Scatter(x=time_min, y=self.inlet_water_temp_f,
                            name="Inlet Water (°F)", line=dict(color="steelblue", width=1)),
-                secondary_y=True,
+                secondary_y=True, **({} if not has_tm else {"row": 1, "col": 1}),
             )
 
             # --- Tank temperature traces (Y2, dashed, blue→red gradient) ---
@@ -361,8 +388,27 @@ class SimulationRun:
                         name=label,
                         line=dict(color=color, width=1, dash="dash"),
                     ),
-                    secondary_y=True,
+                    secondary_y=True, **({} if not has_tm else {"row": 1, "col": 1}),
                 )
+
+        # --- Row 2: TM (swing) tank panel ---
+        if has_tm:
+            tm_time = [i * self.timestep_min for i in range(len(self.tm_tank_temp_f))]
+            # Left Y2: TM heater output [kBTU/hr]
+            fig.add_trace(
+                go.Scatter(x=tm_time, y=self.tm_heater_output_kbtuh,
+                           name="TM Heater Output (kBTU/hr)",
+                           line=dict(color="darkorange", width=1),
+                           fill="tozeroy", fillcolor="rgba(255,165,0,0.15)"),
+                secondary_y=False, row=2, col=1,
+            )
+            # Right Y2: TM tank temperature [°F]
+            fig.add_trace(
+                go.Scatter(x=tm_time, y=self.tm_tank_temp_f,
+                           name="Swing Tank Temp (°F)",
+                           line=dict(color="purple", width=1.5)),
+                secondary_y=True, row=2, col=1,
+            )
 
         # --- Load-shift shading: blue=shed, green=loadUp ---
         if self.heater_mode:
@@ -394,13 +440,33 @@ class SimulationRun:
                 else:
                     i += 1
 
-        fig.update_xaxes(title_text="Time (minutes)")
-        fig.update_yaxes(title_text="Volume (gal) / Flow Rate (gal/hr)", secondary_y=False)
-        if include_temperatures:
-            fig.update_yaxes(title_text="Temperature (°F)", secondary_y=True)
+        fig.update_xaxes(title_text="Time (minutes)", row=2 if has_tm else 1)
+        if has_tm:
+            fig.update_yaxes(title_text="Volume (gal) / Flow Rate (gal/hr)",
+                             secondary_y=False, row=1, col=1)
+            if include_temperatures:
+                fig.update_yaxes(title_text="Temperature (°F)",
+                                 secondary_y=True, row=1, col=1)
+            fig.update_yaxes(title_text="TM Output (kBTU/hr)",
+                             secondary_y=False, row=2, col=1)
+            fig.update_yaxes(title_text="Swing Tank Temp (°F)",
+                             secondary_y=True, row=2, col=1)
+        else:
+            fig.update_yaxes(title_text="Volume (gal) / Flow Rate (gal/hr)", secondary_y=False)
+            if include_temperatures:
+                fig.update_yaxes(title_text="Temperature (°F)", secondary_y=True)
         fig.update_layout(
             title_text=title,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.08,
+                xanchor="center",
+                x=0.5,
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor="rgba(0,0,0,0.2)",
+                borderwidth=1,
+            ),
         )
 
         if filepath is not None:

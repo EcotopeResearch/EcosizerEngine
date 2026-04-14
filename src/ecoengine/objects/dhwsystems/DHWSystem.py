@@ -351,9 +351,9 @@ class DHWSystem:
             design_inlet_temp_f      = self._require_design_inlet_temp(building)
             capacity_kbtuh           = self._calc_required_capacity(building)
             running_vol_supplyT_gal  = self._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
-            strat_factor             = self._calc_stratification_factor(control_map, strat_slope)
+            strat_factor             = self._calc_stratification_factor(control_map, strat_slope, design_inlet_temp_f)
             storage_vol_storageT_gal = self._calc_storage_volume_storageT_gal(
-                running_vol_supplyT_gal, strat_factor, design_inlet_temp_f
+                running_vol_supplyT_gal, strat_factor
             )
 
             if control_schedule and self._is_load_shifting(control_map):
@@ -370,7 +370,7 @@ class DHWSystem:
                     fract_total_vol=load_shift_fract_total_vol,
                 )
                 ls_storage_vol_storageT_gal = self._calc_storage_volume_ls_storageT_gal(
-                    ls_running_vol_supplyT_gal, control_map, design_inlet_temp_f, strat_slope
+                    ls_running_vol_supplyT_gal, control_map, strat_slope, design_inlet_temp_f
                 )
                 capacity_kbtuh           = max(capacity_kbtuh, ls_capacity_kbtuh)
                 storage_vol_storageT_gal = max(storage_vol_storageT_gal, ls_storage_vol_storageT_gal)
@@ -515,94 +515,168 @@ class DHWSystem:
         self,
         running_volume_supplyT_gal: float,
         stratification_factor: float,
-        design_inlet_temp_f: float,
     ) -> float:
         """
         Convert running volume [gallons at supply temperature] to required
-        physical storage volume [gallons at storage temperature].
+        physical storage volume [gallons].
 
-        Two adjustments are applied:
+        The stratification factor is the fraction of a 100-gallon physical
+        tank that can be delivered as supply-temperature water (accounting for
+        temperature mixing — hot water above supply mixes with cold inlet water
+        to produce more than its physical volume at supply temperature).
 
-        1. **Temperature conversion** — storage is hotter than supply, so
-           fewer gallons of stored water hold the same thermal energy:
-           ``vol_storageT = vol_supplyT * (supply - inlet) / (storage - inlet)``
-
-        2. **Stratification factor** — the tank is not perfectly stratified;
-           only a fraction of the volume above the aquastat is usable at or
-           above supply temperature.  The volume is divided by this fraction
-           to find the required physical tank size.
+        ``tank_size = running_vol / stratification_factor``
 
         Parameters
         ----------
         running_volume_supplyT_gal : float
+            Cumulative deficit [gal at supply temperature].
         stratification_factor : float
-        design_inlet_temp_f : float
-            Design cold-water inlet temperature [°F].
+            Supply-temperature gallons producible from a 100-gallon tank,
+            expressed as a fraction (0–1+), from
+            ``_calc_supply_temp_gal_from_100gal_tank() / 100``.
 
         Returns
         -------
         float
-            Required storage volume [gallons at storage temperature].
+            Required physical storage volume [gallons].
         """
-        # Step 1 — temperature-equivalent volume at storage temperature
-        temp_ratio       = ((self.supply_temp_f  - design_inlet_temp_f) /
-                            (self.storage_temp_f - design_inlet_temp_f))
-        vol_at_storageT  = running_volume_supplyT_gal * temp_ratio
-
-        # Step 2 — account for imperfect stratification
-        return vol_at_storageT / stratification_factor
+        return running_volume_supplyT_gal / stratification_factor
 
     def _calc_stratification_factor(
         self,
         control_map: dict[str, Controls] | None,
         strat_slope: float,
+        inlet_temp_f: float,
     ) -> float:
         """
-        Calculate the worst-case stratification factor across all Controls in
-        the control_map.
+        Calculate the stratification factor for the normal operating mode.
 
-        Each Controls object produces a stratification factor based on its
-        on_sensor_fract and on_trigger_t_f. For conservative sizing the
-        minimum factor (least favorable stratification) is returned, since a
-        lower factor requires a larger storage volume.
+        Returns ``_calc_supply_temp_gal_from_100gal_tank() / 100`` for the
+        "normal" Controls entry (or a fallback if no controls are provided).
+        This fraction directly drives storage volume sizing:
 
-        When control_map is None or empty, sizing defaults of
-        on_sensor_fract=0.0 and on_trigger_t_f=supply_temp_f are used.
+            tank_size = running_vol / stratification_factor
+
+        When ``control_map`` is None or empty, sizing defaults to
+        ``on_sensor_fract=0.0`` and ``on_trigger_t_f=supply_temp_f``.
 
         Parameters
         ----------
         control_map : dict[str, Controls] | None
-            All Controls objects that may be active during operation.
         strat_slope : float
-            Temperature gradient [°F per percentage-point of tank height].
-            Taken from StorageTank.strat_slope.
+            Temperature gradient [°F per 1 % of tank height].
+        inlet_temp_f : float
+            Design cold-water inlet temperature [°F].
 
         Returns
         -------
         float
-            Effective tank fraction (0-1) for the normal operating mode.
-            This is the "percent of whole tank" form:
-            ``strat_factor * (1 - on_fract)``, matching the original sizing
-            formula which divides running volume by the fraction of the *total*
-            tank volume that is usable at or above supply temperature.
+            Supply-temperature gallons from a 100-gallon tank, divided by 100.
         """
         if not control_map:
-            return self._strat_pct_of_tank(0.0, self.supply_temp_f, strat_slope)
+            return self._calc_supply_temp_gal_from_100gal_tank(
+                0.0, self.supply_temp_f, strat_slope, inlet_temp_f
+            ) / 100.0
 
-        # Normal sizing uses the "normal" aquastat position only.
-        # "loadUp" and "shed" aquastats are handled exclusively in the LS path.
-        # For maps without a "normal" key (custom non-standard configs), fall
-        # back to worst-case across all entries.
         if "normal" in control_map:
             ctrl = control_map["normal"]
-            return self._strat_pct_of_tank(ctrl.on_sensor_fract, ctrl.on_trigger_t_f, strat_slope)
+            return self._calc_supply_temp_gal_from_100gal_tank(
+                ctrl.on_sensor_fract, ctrl.on_trigger_t_f, strat_slope, inlet_temp_f
+            ) / 100.0
 
+        # No "normal" key — use the worst-case (smallest factor) across all entries.
         return min(
-            self._strat_pct_of_tank(
-                ctrl.on_sensor_fract, ctrl.on_trigger_t_f, strat_slope
-            )
+            self._calc_supply_temp_gal_from_100gal_tank(
+                ctrl.on_sensor_fract, ctrl.on_trigger_t_f, strat_slope, inlet_temp_f
+            ) / 100.0
             for ctrl in control_map.values()
         )
+
+    def _calc_supply_temp_gal_from_100gal_tank(
+        self,
+        on_fract: float,
+        on_temp_f: float,
+        strat_slope: float,
+        inlet_temp_f: float,
+    ) -> float:
+        """
+        Compute how many supply-temperature gallons a 100-gallon stratified
+        tank can produce, given that the ON sensor reads ``on_temp_f`` at
+        fractional height ``on_fract``.
+
+        Hot water above supply temperature is mixed with cold inlet water, so
+        1 physical gallon at temperature T produces:
+
+            (T − inlet_temp_f) / (supply_temp_f − inlet_temp_f)
+
+        supply-temperature gallons.
+
+        Temperature profile assumed:
+        - Below ``on_fract``: cold, not usable.
+        - At ``on_fract``: exactly ``on_temp_f``.
+        - Above ``on_fract``: rises linearly at ``strat_slope``
+          [°F per 1 % of tank height], capping at ``storage_temp_f``.
+
+        The integration runs from the height where T = ``supply_temp_f`` up
+        to the top of the tank (100 %).  For a 100-gallon tank, 1 % = 1 gal.
+
+        Parameters
+        ----------
+        on_fract : float
+            Fractional height of the ON sensor (0 = bottom, 1 = top).
+        on_temp_f : float
+            Tank temperature at the ON sensor when the element fires [°F].
+        strat_slope : float
+            Temperature gradient above the sensor [°F per 1 % of tank height].
+        inlet_temp_f : float
+            Design cold-water inlet temperature [°F].
+
+        Returns
+        -------
+        float
+            Supply-temperature gallons producible from a 100-gallon tank.
+        """
+        on_pct       = on_fract * 100.0
+        supply_delta = self.supply_temp_f - inlet_temp_f
+
+        # Heights (% of tank) where the linear gradient crosses supply / storage.
+        # T(h_pct) = on_temp + (h_pct − on_pct) × strat_slope   for h_pct ≥ on_pct
+        supply_height_pct  = on_pct + (self.supply_temp_f  - on_temp_f) / strat_slope
+        storage_height_pct = min(
+            on_pct + (self.storage_temp_f - on_temp_f) / strat_slope,
+            100.0,
+        )
+
+        # If on_temp ≥ supply_temp, all water above the sensor is already hot;
+        # clamp so the full above-sensor zone is included.
+        supply_height_pct = max(supply_height_pct, on_pct)
+
+        if supply_height_pct >= 100.0:
+            return 0.0   # entire tank is below supply temperature
+
+        # Offsets from on_pct to the zone boundaries.
+        s1 = supply_height_pct  - on_pct   # ≥ 0; where T = supply_temp
+        s2 = storage_height_pct - on_pct   # where T = storage_temp (or top)
+
+        # Transition zone [supply_height_pct → storage_height_pct]:
+        # T(u) = on_temp + u × strat_slope   (u = h_pct − on_pct)
+        # supply-gal per physical gal = (T(u) − inlet) / supply_delta
+        # Integrate analytically (1 % height = 1 gallon in a 100-gal tank):
+        #
+        #   ∫ₛ₁ˢ² (a + u·s) / supply_delta du  where a = on_temp − inlet, s = strat_slope
+        #       = [a·(s2−s1) + s·(s2²−s1²)/2] / supply_delta
+        a = on_temp_f - inlet_temp_f
+        transition_supply_gal = (
+            a * (s2 - s1) + strat_slope * (s2 ** 2 - s1 ** 2) / 2.0
+        ) / supply_delta
+
+        # Fully-hot zone [storage_height_pct → 100 %]:
+        # All at storage_temp_f.
+        fully_hot_phys_gal   = max(0.0, 100.0 - storage_height_pct)
+        fully_hot_supply_gal = fully_hot_phys_gal * (self.storage_temp_f - inlet_temp_f) / supply_delta
+
+        return transition_supply_gal + fully_hot_supply_gal
 
     def _strat_factor_for_on_params(
         self,
@@ -639,19 +713,26 @@ class DHWSystem:
         supply_height_pct  = on_pct + (self.supply_temp_f  - on_temp_f) / strat_slope
         storage_height_pct = on_pct + (self.storage_temp_f - on_temp_f) / strat_slope
         storage_height_pct = min(storage_height_pct, 100.0)
+        # TODO : if storage_height_pct is 100, shouldn't we realculate 
+        #   delta_t based off of what temperature is actually at the top
 
         # Clamp supply_height_pct so the transition zone stays within [on_pct, 100].
         # If on_temp_f >= storage_temp_f the whole tank above the aquastat is fully
         # hot, which gives a factor of 1.0 — the clamp produces that naturally.
         supply_height_pct = max(supply_height_pct, on_pct)
+        # TODO: shouldn't supply_height_pct always just be where supply temp percentage height is on the tank?
+        #   If there is some water that is supply temp under on_pct, it is still usable water
 
         # Volume above supply temp = fully-hot zone + trapezoidal transition zone
         vol_fully_hot    = (100 - storage_height_pct) * delta_t
         vol_transition   = (storage_height_pct - supply_height_pct) * delta_t / 2
+        # TODO : delta T in the above two lines should, I am pretty sure, be the difference between supply temp (or lowest emp in tank if whole tank is above supply)
+        #   and true top of tank temperature
         vol_above_supply = vol_fully_hot + vol_transition
 
         # Ideal case: all volume above the aquastat is at full storage temp
         ideal_vol = (100 - on_pct) * delta_t
+        # TODO : delta_t in this case is actually the difference between storage and supply as this is a perfectly stratified tank
 
         return vol_above_supply / ideal_vol
 
@@ -944,44 +1025,44 @@ class DHWSystem:
         self,
         ls_running_vol_supplyT_gal: float,
         control_map: dict[str, Controls],
-        design_inlet_temp_f: float,
         strat_slope: float,
+        inlet_temp_f: float,
     ) -> float:
         """
         Convert the load-shift running volume [gal at supplyT] to required
-        physical storage [gal at storageT].
+        physical storage [gallons].
 
         The effective stratification denominator for load-shift sizing is the
-        band between the load-up and shed aquastat levels expressed as
-        fractions of the total tank (``lu_strat_pct - shed_strat_pct``).
-        This replaces the single strat factor used in normal sizing.
+        difference in supply-temperature capacity between the load-up and shed
+        aquastat positions (both expressed as fractions of a 100-gallon tank).
 
         Parameters
         ----------
         ls_running_vol_supplyT_gal : float
         control_map : dict[str, Controls]
-        design_inlet_temp_f : float
         strat_slope : float
+        inlet_temp_f : float
+            Design cold-water inlet temperature [°F].
 
         Returns
         -------
         float
-            Required storage volume [gal at storageT].
+            Required physical storage volume [gallons].
         """
         normal_ctrl = control_map["normal"]
         lu_ctrl     = control_map.get("loadUp", normal_ctrl)
         shed_ctrl   = control_map["shed"]
 
-        lu_strat_pct   = self._strat_pct_of_tank(
-            lu_ctrl.on_sensor_fract,   lu_ctrl.on_trigger_t_f,   strat_slope
+        lu_x   = self._calc_supply_temp_gal_from_100gal_tank(
+            lu_ctrl.on_sensor_fract,   lu_ctrl.on_trigger_t_f,   strat_slope, inlet_temp_f
         )
-        shed_strat_pct = self._strat_pct_of_tank(
-            shed_ctrl.on_sensor_fract, shed_ctrl.on_trigger_t_f, strat_slope
+        shed_x = self._calc_supply_temp_gal_from_100gal_tank(
+            shed_ctrl.on_sensor_fract, shed_ctrl.on_trigger_t_f, strat_slope, inlet_temp_f
         )
-        ls_band = lu_strat_pct - shed_strat_pct
+        ls_band = (lu_x - shed_x) / 100.0
 
         return self._calc_storage_volume_storageT_gal(
-            ls_running_vol_supplyT_gal, ls_band, design_inlet_temp_f
+            ls_running_vol_supplyT_gal, ls_band
         )
 
     def _require_design_inlet_temp(self, building: Building) -> float:
