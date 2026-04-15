@@ -289,6 +289,80 @@ PARALLEL_SCENARIOS = [
 
 
 # ---------------------------------------------------------------------------
+# Single Pass RTP scenarios
+# ---------------------------------------------------------------------------
+# Extra fields beyond the base scenario dict:
+#   return_temp_f   : recirc loop return temperature [°F]
+#   return_flow_gpm : recirc loop flow rate [GPM]
+
+SPRTP_SCENARIOS = [
+    dict(
+        label="SPRTP: 100-unit MF, 3 GPM recirc, 10F drop, 16hr run",
+        building_type="multi_family", magnitude=100, gpdpp=25,
+        supply_t_f=120.0, storage_t_f=150.0, inlet_t_f=50.0, design_oat_f=35.0,
+        max_run_hr=16.0, defrost_factor=1.0,
+        on_fract=0.4, off_fract=0.1,
+        return_temp_f=110.0, return_flow_gpm=3.0,
+        load_shift=False, shed_hours=[], lu_hours=0,
+        lu_on_fract=None, shed_on_fract=None,
+    ),
+    dict(
+        label="SPRTP: 200-unit MF, 5 GPM recirc, 10F drop, 16hr run",
+        building_type="multi_family", magnitude=200, gpdpp=25,
+        supply_t_f=120.0, storage_t_f=150.0, inlet_t_f=50.0, design_oat_f=35.0,
+        max_run_hr=16.0, defrost_factor=1.0,
+        on_fract=0.4, off_fract=0.1,
+        return_temp_f=110.0, return_flow_gpm=5.0,
+        load_shift=False, shed_hours=[], lu_hours=0,
+        lu_on_fract=None, shed_on_fract=None,
+    ),
+    dict(
+        label="SPRTP: 50-unit MF, 2 GPM recirc, 15F drop, 24hr run",
+        building_type="multi_family", magnitude=50, gpdpp=30,
+        supply_t_f=120.0, storage_t_f=150.0, inlet_t_f=50.0, design_oat_f=35.0,
+        max_run_hr=24.0, defrost_factor=1.0,
+        on_fract=0.4, off_fract=0.1,
+        return_temp_f=105.0, return_flow_gpm=2.0,
+        load_shift=False, shed_hours=[], lu_hours=0,
+        lu_on_fract=None, shed_on_fract=None,
+    ),
+    dict(
+        label="SPRTP: 300-unit MF, 8 GPM recirc, 8F drop",
+        building_type="multi_family", magnitude=300, gpdpp=25,
+        supply_t_f=125.0, storage_t_f=150.0, inlet_t_f=47.0, design_oat_f=47.0,
+        max_run_hr=16.0, defrost_factor=1.0,
+        on_fract=0.4, off_fract=0.1,
+        return_temp_f=117.0, return_flow_gpm=8.0,
+        load_shift=False, shed_hours=[], lu_hours=0,
+        lu_on_fract=None, shed_on_fract=None,
+    ),
+    # ----------------------------------------------------------------
+    # Load shift scenarios
+    # ----------------------------------------------------------------
+    dict(
+        label="SPRTP: 100-unit MF, 3 GPM, LS 5hr shed 16-20, 3hr LU",
+        building_type="multi_family", magnitude=100, gpdpp=25,
+        supply_t_f=120.0, storage_t_f=150.0, inlet_t_f=50.0, design_oat_f=35.0,
+        max_run_hr=16.0, defrost_factor=1.0,
+        on_fract=0.4, off_fract=0.1,
+        return_temp_f=110.0, return_flow_gpm=3.0,
+        load_shift=True, shed_hours=list(range(16, 21)), lu_hours=3,
+        lu_on_fract=0.2, shed_on_fract=0.8,
+    ),
+    dict(
+        label="SPRTP: 200-unit MF, 5 GPM, LS 8hr shed 7-14, 3hr LU",
+        building_type="multi_family", magnitude=200, gpdpp=25,
+        supply_t_f=120.0, storage_t_f=150.0, inlet_t_f=50.0, design_oat_f=35.0,
+        max_run_hr=16.0, defrost_factor=1.0,
+        on_fract=0.4, off_fract=0.1,
+        return_temp_f=110.0, return_flow_gpm=5.0,
+        load_shift=True, shed_hours=list(range(7, 15)), lu_hours=3,
+        lu_on_fract=0.2, shed_on_fract=0.8,
+    ),
+]
+
+
+# ---------------------------------------------------------------------------
 # Swing Tank scenarios
 # ---------------------------------------------------------------------------
 # Extra fields beyond the base scenario dict:
@@ -1037,6 +1111,217 @@ def run_new_swing_sizing(scenarios: list[dict]) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Single Pass RTP sizing — original codebase
+# ---------------------------------------------------------------------------
+
+ORIGINAL_SPRTP_SCRIPT = r"""
+import sys, json
+sys.path.insert(0, r"{src}")
+
+from ecoengine.engine.BuildingCreator import createBuilding
+from ecoengine.objects.systems.SPRTP import SPRTP
+
+scenarios = json.loads('{scenarios_json_escaped}')
+
+results = []
+for sc in scenarios:
+    try:
+        building = createBuilding(
+            incomingT_F=sc["inlet_t_f"],
+            magnitudeStat=sc["magnitude"],
+            supplyT_F=sc["supply_t_f"],
+            buildingType=sc["building_type"],
+            gpdpp=sc["gpdpp"],
+            designOAT_F=sc["design_oat_f"],
+            returnT_F=sc["return_temp_f"],
+            flowRate=sc["return_flow_gpm"],
+        )
+
+        supply_t  = sc["supply_t_f"]
+        storage_t = sc["storage_t_f"]
+
+        if sc.get("load_shift"):
+            ls_sched    = [0 if h in sc["shed_hours"] else 1 for h in range(24)]
+            lu_on_fract = sc["lu_on_fract"] if sc["lu_on_fract"] is not None else sc["on_fract"]
+            system = SPRTP(
+                storageT_F      = storage_t,
+                defrostFactor   = sc["defrost_factor"],
+                percentUseable  = 1.0,
+                compRuntime_hr  = sc["max_run_hr"],
+                onFract         = sc["on_fract"],
+                offFract        = sc["off_fract"],
+                onT             = supply_t,
+                offT            = storage_t,
+                building        = building,
+                onFractLoadUp   = lu_on_fract,
+                offFractLoadUp  = sc["off_fract"],
+                onFractShed     = sc["shed_on_fract"],
+                offFractShed    = sc["off_fract"],
+                doLoadShift     = True,
+                loadShiftSchedule = ls_sched,
+                loadUpHours     = sc["lu_hours"] if sc["lu_hours"] > 0 else 1,
+                loadShiftPercent= sc.get("load_shift_percent", 1),
+            )
+        else:
+            system = SPRTP(
+                storageT_F      = storage_t,
+                defrostFactor   = sc["defrost_factor"],
+                percentUseable  = 1.0,
+                compRuntime_hr  = sc["max_run_hr"],
+                onFract         = sc["on_fract"],
+                offFract        = sc["off_fract"],
+                onT             = supply_t,
+                offT            = storage_t,
+                building        = building,
+            )
+
+        sizing = system.getSizingResults()
+        results.append({{
+            "label":                    sc["label"],
+            "orig_capacity_kbtuh":      round(sizing[1],                               2),
+            "orig_storage_storageT_gal":round(sizing[0],                               2),
+            "orig_recirc_cap_kbtuh":    round(sizing[2], 2) if sizing[2] is not None else None,
+            "orig_error":               None,
+        }})
+    except Exception as e:
+        results.append({{
+            "label":                    sc["label"],
+            "orig_capacity_kbtuh":      None,
+            "orig_storage_storageT_gal":None,
+            "orig_recirc_cap_kbtuh":    None,
+            "orig_error":               str(e),
+        }})
+
+print(json.dumps(results))
+"""
+
+
+def run_original_sprtp_sizing(scenarios: list[dict]) -> list[dict]:
+    """Run SPRTP sizing against the original EcosizerEngine via subprocess."""
+    scenarios_json = json.dumps(scenarios)
+    scenarios_json_escaped = scenarios_json.replace("'", "\\'")
+    script = ORIGINAL_SPRTP_SCRIPT.format(
+        src=ORIGINAL_SRC.replace("\\", "\\\\"),
+        scenarios_json_escaped=scenarios_json_escaped,
+    )
+    proc = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+    json_line = next((l for l in proc.stdout.splitlines() if l.strip().startswith("[")), None)
+    if proc.returncode != 0 or not json_line:
+        print("ERROR running original SPRTP sizing script:")
+        print(proc.stderr[-800:])
+        return [{"label": sc["label"], "orig_capacity_kbtuh": None,
+                 "orig_storage_storageT_gal": None, "orig_recirc_cap_kbtuh": None,
+                 "orig_error": proc.stderr.strip()[-120:]}
+                for sc in scenarios]
+    return json.loads(json_line)
+
+
+# ---------------------------------------------------------------------------
+# Single Pass RTP sizing — new codebase
+# ---------------------------------------------------------------------------
+
+def run_new_sprtp_sizing(scenarios: list[dict]) -> list[dict]:
+    """Run SinglePassRTPSystem sizing against the new EcosizerEngine2 codebase."""
+    from ecoengine.objects.building.Building import Building
+    from ecoengine.objects.building.ClimateZone import ClimateZone
+    from ecoengine.objects.components.heating.Controls import Controls
+    from ecoengine.objects.dhwsystems.DHWSystem import _load_shift_fract_total_vol
+    from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import SinglePassRTPSystem
+
+    results = []
+    for sc in scenarios:
+        try:
+            zone = ClimateZone.from_design_conditions(
+                design_oat_f=sc["design_oat_f"],
+                design_inlet_water_temp_f=sc["inlet_t_f"],
+            )
+            building = Building.from_building_type(
+                building_type=sc["building_type"],
+                magnitude=sc["magnitude"],
+                climate_zone=zone,
+                gpdpp=sc["gpdpp"] if sc["gpdpp"] else None,
+            )
+
+            if sc.get("load_shift"):
+                schedule = ["normal"] * 24
+                for h in sc["shed_hours"]:
+                    schedule[h] = "shed"
+                first_shed = sc["shed_hours"][0]
+                for i in range(sc["lu_hours"]):
+                    schedule[first_shed - 1 - i] = "loadUp"
+                lu_on_fract = sc["lu_on_fract"] if sc["lu_on_fract"] is not None else sc["on_fract"]
+                cmap = {
+                    "normal": Controls(
+                        on_sensor_fract=sc["on_fract"],
+                        on_trigger_t_f=sc["supply_t_f"],
+                        off_sensor_fract=sc["off_fract"],
+                        off_trigger_t_f=sc["storage_t_f"],
+                        outlet_temp_f=sc["storage_t_f"],
+                    ),
+                    "shed": Controls(
+                        on_sensor_fract=sc["shed_on_fract"],
+                        on_trigger_t_f=sc["supply_t_f"],
+                        off_sensor_fract=sc["off_fract"],
+                        off_trigger_t_f=sc["storage_t_f"],
+                        outlet_temp_f=sc["storage_t_f"],
+                    ),
+                    "loadUp": Controls(
+                        on_sensor_fract=lu_on_fract,
+                        on_trigger_t_f=sc["supply_t_f"],
+                        off_sensor_fract=sc["off_fract"],
+                        off_trigger_t_f=sc["storage_t_f"],
+                        outlet_temp_f=sc["storage_t_f"],
+                    ),
+                }
+                ls_fract = _load_shift_fract_total_vol(sc.get("load_shift_percent", 1.0))
+            else:
+                schedule = None
+                cmap = {
+                    "normal": Controls(
+                        on_sensor_fract=sc["on_fract"],
+                        on_trigger_t_f=sc["supply_t_f"],
+                        off_sensor_fract=sc["off_fract"],
+                        off_trigger_t_f=sc["storage_t_f"],
+                        outlet_temp_f=sc["storage_t_f"],
+                    )
+                }
+                ls_fract = 1.0
+
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                system = SinglePassRTPSystem.from_size(
+                    building        = building,
+                    supply_temp_f   = sc["supply_t_f"],
+                    storage_temp_f  = sc["storage_t_f"],
+                    return_temp_f   = sc["return_temp_f"],
+                    return_flow_gpm = sc["return_flow_gpm"],
+                    max_daily_run_hr= sc["max_run_hr"],
+                    defrost_factor  = sc["defrost_factor"],
+                    control_schedule= schedule,
+                    control_map     = cmap,
+                    load_shift_fract_total_vol = ls_fract,
+                )
+
+            results.append({
+                "label":                    sc["label"],
+                "new_capacity_kbtuh":       round(system._minimum_capacity_kbtuh,      2),
+                "new_storage_storageT_gal": round(system._minimum_storage_storageT_gal,2),
+                "new_recirc_cap_kbtuh":     round(system._recirc_capacity_kbtuh,        2),
+                "new_error":                None,
+            })
+        except Exception as e:
+            results.append({
+                "label":                    sc["label"],
+                "new_capacity_kbtuh":       None,
+                "new_storage_storageT_gal": None,
+                "new_recirc_cap_kbtuh":     None,
+                "new_error":                str(e),
+            })
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Swing Tank ER sizing — original codebase
 # ---------------------------------------------------------------------------
 # Strategy: size a SwingTank normally, halve its primary capacity, then pass
@@ -1353,6 +1638,46 @@ def main():
         })
 
     # ------------------------------------------------------------------
+    # Single Pass RTP comparison
+    # ------------------------------------------------------------------
+    print("Running original codebase sizing (single pass RTP)...")
+    sprtp_orig_results = run_original_sprtp_sizing(SPRTP_SCENARIOS)
+
+    print("Running new codebase sizing (single pass RTP)...")
+    sprtp_new_results = run_new_sprtp_sizing(SPRTP_SCENARIOS)
+
+    sprtp_orig_by_label = {r["label"]: r for r in sprtp_orig_results}
+    sprtp_new_by_label  = {r["label"]: r for r in sprtp_new_results}
+
+    sprtp_fieldnames = [
+        "label",
+        "orig_capacity_kbtuh", "new_capacity_kbtuh", "cap_diff_kbtuh", "cap_pct_diff",
+        "orig_storage_storageT_gal", "new_storage_storageT_gal", "vol_diff_gal", "vol_pct_diff",
+        "orig_recirc_cap_kbtuh", "new_recirc_cap_kbtuh",
+        "orig_error", "new_error",
+    ]
+    sprtp_rows = []
+    for sc in SPRTP_SCENARIOS:
+        lbl   = sc["label"]
+        orig  = sprtp_orig_by_label.get(lbl, {})
+        new   = sprtp_new_by_label.get(lbl, {})
+        cap_o = orig.get("orig_capacity_kbtuh")
+        cap_n = new.get("new_capacity_kbtuh")
+        vol_o = orig.get("orig_storage_storageT_gal")
+        vol_n = new.get("new_storage_storageT_gal")
+        sprtp_rows.append({
+            "label": lbl,
+            "orig_capacity_kbtuh": cap_o, "new_capacity_kbtuh": cap_n,
+            "cap_diff_kbtuh": _diff(cap_o, cap_n), "cap_pct_diff": _pct_diff(cap_o, cap_n),
+            "orig_storage_storageT_gal": vol_o, "new_storage_storageT_gal": vol_n,
+            "vol_diff_gal": _diff(vol_o, vol_n), "vol_pct_diff": _pct_diff(vol_o, vol_n),
+            "orig_recirc_cap_kbtuh": orig.get("orig_recirc_cap_kbtuh"),
+            "new_recirc_cap_kbtuh":  new.get("new_recirc_cap_kbtuh"),
+            "orig_error": orig.get("orig_error"),
+            "new_error":  new.get("new_error"),
+        })
+
+    # ------------------------------------------------------------------
     # Swing Tank comparison
     # ------------------------------------------------------------------
     print("Running original codebase sizing (swing tank)...")
@@ -1478,6 +1803,11 @@ def main():
         dw2.writeheader()
         dw2.writerows(pl_rows)
         writer.writerow([])
+        writer.writerow(["=== SINGLE PASS RTP SIZING ==="])
+        dw_sprtp = csv.DictWriter(f, fieldnames=sprtp_fieldnames)
+        dw_sprtp.writeheader()
+        dw_sprtp.writerows(sprtp_rows)
+        writer.writerow([])
         writer.writerow(["=== SWING TANK SIZING ==="])
         dw3 = csv.DictWriter(f, fieldnames=st_fieldnames)
         dw3.writeheader()
@@ -1527,6 +1857,29 @@ def main():
             f"{_fmt(row['orig_storage_storageT_gal']):>8} {_fmt(row['new_storage_storageT_gal']):>8} {_fmt_pct(row['vol_pct_diff']):>7}  "
             f"{_fmt(row['orig_tm_volume_gal']):>8} {_fmt(row['new_tm_volume_gal']):>8} {_fmt_pct(row['tm_vol_pct_diff']):>7}  "
             f"{_fmt(row['orig_tm_capacity_kbtuh']):>8} {_fmt(row['new_tm_capacity_kbtuh']):>8} {_fmt_pct(row['tm_cap_pct_diff']):>7}"
+        )
+        if row["orig_error"]: print(f"  ORIG ERROR: {row['orig_error']}")
+        if row["new_error"]:  print(f"  NEW  ERROR: {row['new_error']}")
+
+    # ------------------------------------------------------------------
+    # Console output — single pass RTP
+    # ------------------------------------------------------------------
+    print()
+    sprtp_hdr = (
+        f"{'Scenario':<50} "
+        f"{'OCap':>8} {'NCap':>8} {'C%':>7}  "
+        f"{'OVol':>8} {'NVol':>8} {'V%':>7}  "
+        f"{'ORecircCap':>11} {'NRecircCap':>11}"
+    )
+    print("SINGLE PASS RTP SYSTEM")
+    print(sprtp_hdr)
+    print("-" * len(sprtp_hdr))
+    for row in sprtp_rows:
+        print(
+            f"{row['label']:<50} "
+            f"{_fmt(row['orig_capacity_kbtuh']):>8} {_fmt(row['new_capacity_kbtuh']):>8} {_fmt_pct(row['cap_pct_diff']):>7}  "
+            f"{_fmt(row['orig_storage_storageT_gal']):>8} {_fmt(row['new_storage_storageT_gal']):>8} {_fmt_pct(row['vol_pct_diff']):>7}  "
+            f"{_fmt(row['orig_recirc_cap_kbtuh']):>11} {_fmt(row['new_recirc_cap_kbtuh']):>11}"
         )
         if row["orig_error"]: print(f"  ORIG ERROR: {row['orig_error']}")
         if row["new_error"]:  print(f"  NEW  ERROR: {row['new_error']}")

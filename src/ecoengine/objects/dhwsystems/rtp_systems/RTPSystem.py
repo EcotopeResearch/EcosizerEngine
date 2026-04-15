@@ -1,4 +1,6 @@
-from ..DHWSystem import DHWSystem
+from __future__ import annotations
+
+from ..DHWSystem import DHWSystem, _RHO_CP
 
 
 class RTPSystem(DHWSystem):
@@ -14,10 +16,12 @@ class RTPSystem(DHWSystem):
         self,
         water_heaters,
         storage_tank,
-        supply_temp_f,
-        storage_temp_f,
-        return_temp_f,
-        return_flow_gpm,
+        supply_temp_f: float,
+        storage_temp_f: float,
+        return_temp_f: float,
+        return_flow_gpm: float,
+        max_daily_run_hr: float = 16.0,
+        defrost_factor: float = 1.0,
     ):
         """
         Parameters
@@ -30,15 +34,62 @@ class RTPSystem(DHWSystem):
             Temperature of recirculation return water [°F].
         return_flow_gpm : float
             Recirculation loop flow rate [GPM].
+        max_daily_run_hr : float
+            Maximum hours the heating system may run per day. Default 16.
+        defrost_factor : float
+            Fraction of rated capacity available after defrost (0-1). Default 1.0.
         """
-        super().__init__(water_heaters, storage_tank, supply_temp_f, storage_temp_f)
-        self.return_temp_f = return_temp_f
+        super().__init__(
+            water_heaters,
+            storage_tank,
+            supply_temp_f,
+            storage_temp_f,
+            max_daily_run_hr=max_daily_run_hr,
+            defrost_factor=defrost_factor,
+        )
+        self.return_temp_f   = return_temp_f
         self.return_flow_gpm = return_flow_gpm
 
-    def _calc_required_capacity(self, building):
+    # ------------------------------------------------------------------
+    # Recirc loss
+    # ------------------------------------------------------------------
+
+    def get_recirc_loss_kbtuh(self) -> float:
         """
-        Override: add daily recirc-loss BTUs to DHW-use BTUs before dividing
-        by daily run hours.
+        Return the steady-state recirculation heat loss rate [kBTU/hr].
+
+        Formula
+        -------
+        recirc_loss = return_flow_gpm × 60 × RHO_CP × (supply_temp - return_temp) / 1000
+
+        Returns
+        -------
+        float
+        """
+        return (
+            self.return_flow_gpm
+            * 60.0
+            * _RHO_CP
+            * (self.supply_temp_f - self.return_temp_f)
+            / 1000.0
+        )
+
+    # ------------------------------------------------------------------
+    # Sizing override
+    # ------------------------------------------------------------------
+
+    def _calc_required_capacity(self, building) -> float:
+        """
+        Add recirc-loss capacity to the base DHW heating capacity.
+
+        The heater must cover 24 hours of continuous recirc loss during its
+        allotted daily run time, so the required recirc contribution scales
+        with the run-time ratio (24 / max_daily_run_hr).
+
+        Formula
+        -------
+        recirc_cap = recirc_loss_kbtuh × (24 / max_daily_run_hr) / defrost_factor
+        total_cap  = dhw_cap + recirc_cap
 
         Parameters
         ----------
@@ -47,15 +98,13 @@ class RTPSystem(DHWSystem):
         Returns
         -------
         float
+            Total required capacity [kBTU/hr].
         """
-        pass
-
-    def get_recirc_loss_kbtuh(self):
-        """
-        Return the steady-state recirculation heat loss rate [kBTU/hr].
-
-        Returns
-        -------
-        float
-        """
-        pass
+        dhw_cap    = super()._calc_required_capacity(building)
+        recirc_cap = (
+            self.get_recirc_loss_kbtuh()
+            * 24.0
+            / self.max_daily_run_hr
+            / self.defrost_factor
+        )
+        return dhw_cap + recirc_cap

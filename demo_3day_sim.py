@@ -4,11 +4,13 @@
 Building: 400-person multi-family
 Temperatures: 47 F inlet / 125 F supply / 150 F storage
 
-Four scenarios are run and plotted:
+Six scenarios are run and plotted:
   1. Parallel loop — baseline (no load shifting)
   2. Parallel loop — load shift (shed 4PM–9PM, load-up 1PM–4PM)
   3. Swing tank — baseline (no load shifting)
   4. Swing tank — load shift (shed 4PM–9PM, load-up 1PM–4PM)
+  5. Single-pass RTP — baseline (no load shifting)
+  6. Single-pass RTP — load shift (shed 4PM–9PM, load-up 1PM–4PM)
 
 Run:
     python demo_3day_sim.py
@@ -18,6 +20,8 @@ Outputs:
     parallel_loop_ls.html          -- parallel loop load-shift chart
     swing_tank_baseline.html       -- swing tank baseline chart
     swing_tank_ls.html             -- swing tank load-shift chart
+    sprtp_baseline.html            -- single-pass RTP baseline chart
+    sprtp_ls.html                  -- single-pass RTP load-shift chart
 """
 
 from ecoengine.interfaces.EcosizerEngine import EcosizerEngine
@@ -43,6 +47,12 @@ RECIRC_KWARGS = dict(
     tm_off_temp_f   = 135,
     tm_on_temp_f    = 125,
     tm_off_time_hr  = 0.33,
+)
+
+# Single-pass RTP has no TM tank — no TM params needed
+SPRTP_RECIRC_KWARGS = dict(
+    return_flow_gpm = 6,
+    return_temp_f   = 105,
 )
 
 # ---------------------------------------------------------------------------
@@ -288,4 +298,106 @@ result_swing_ls.to_plotly(
     include_temperatures = True,
 )
 print(f"\nPlot saved: {OUTPUT_SWING_LS}")
+print("\nOpen any HTML file in a browser to view the interactive chart.")
+
+# ===========================================================================
+# Scenario 5 — Single-Pass RTP Baseline (no load shifting)
+# ===========================================================================
+print()
+print("=" * 60)
+print("SCENARIO 5: Single-Pass RTP — Baseline (no load shifting)")
+print("=" * 60)
+
+print("Sizing...", end=" ", flush=True)
+engine_sprtp = EcosizerEngine(
+    building_type            = "multi_family",
+    magnitude                = N_PEOPLE,
+    zip_code_or_climate_zone = CLIMATE,
+    supply_temp_f            = SUPPLY_T_F,
+    storage_temp_f           = STORAGE_T_F,
+    schematic                = "single_pass_rtp",
+    gpdpp                    = GPDPP,
+    max_daily_run_hr         = 16.0,
+    aquastat_fract           = 0.4,
+    off_sensor_fract         = 0.2,
+    on_trigger_t_f           = 120.0,
+    off_trigger_t_f          = 140.0,
+    **SPRTP_RECIRC_KWARGS,
+    load_shift_percent = 0.95,
+)
+print("done.")
+sizing_sprtp = print_sizing("Single-Pass RTP baseline sizing", engine_sprtp, STORAGE_T_F)
+
+print("Simulating...", end=" ", flush=True)
+result_sprtp = engine_sprtp.simulate_3day()
+print("done.")
+print_results(result_sprtp, engine_sprtp)
+
+cap_sprtp = sizing_sprtp["min_capacity_kbtuh"]
+vol_sprtp = sizing_sprtp["min_storage_storageT_gal"]
+OUTPUT_SPRTP = "sprtp_baseline.html"
+result_sprtp.to_plotly(
+    title = (
+        f"3-Day Simulation — Single-Pass RTP Baseline — {N_PEOPLE}-Person Multi-Family  |  "
+        f"{SUPPLY_T_F:.0f}°F supply / {STORAGE_T_F:.0f}°F storage  |  "
+        f"Cap {cap_sprtp:.0f} kBTU/hr, Storage {vol_sprtp:.0f} gal"
+    ),
+    filepath             = OUTPUT_SPRTP,
+    include_temperatures = True,
+)
+print(f"\nPlot saved: {OUTPUT_SPRTP}")
+
+# ===========================================================================
+# Scenario 6 — Single-Pass RTP Load Shift
+# ===========================================================================
+print()
+print("=" * 60)
+print("SCENARIO 6: Single-Pass RTP — Load shift  (shed 4PM–9PM, load-up 1PM–4PM)")
+print("=" * 60)
+
+print("Sizing...", end=" ", flush=True)
+engine_sprtp_ls = EcosizerEngine(
+    building_type            = "multi_family",
+    magnitude                = N_PEOPLE,
+    zip_code_or_climate_zone = CLIMATE,
+    supply_temp_f            = SUPPLY_T_F,
+    storage_temp_f           = STORAGE_T_F,
+    schematic                = "single_pass_rtp",
+    gpdpp                    = GPDPP,
+    max_daily_run_hr         = 16.0,
+    aquastat_fract           = 0.4,
+    off_sensor_fract         = 0.2,
+    on_trigger_t_f           = 120.0,
+    off_trigger_t_f          = 140.0,
+    load_shift_schedule      = LS_SCHEDULE,
+    load_up_hours            = 3,
+    shed_aquastat_fract      = 0.8,
+    shed_off_sensor_fract    = 0.4,
+    load_up_aquastat_fract   = 0.2,
+    load_up_off_sensor_fract = 0.15,
+    load_up_off_trigger_t_f  = 125.0,
+    **SPRTP_RECIRC_KWARGS,
+    load_shift_percent = 1.0,
+)
+print("done.")
+sizing_sprtp_ls = print_sizing("Single-Pass RTP load-shift sizing", engine_sprtp_ls, STORAGE_T_F)
+
+print("Simulating...", end=" ", flush=True)
+result_sprtp_ls = engine_sprtp_ls.simulate_3day()
+print("done.")
+print_results(result_sprtp_ls, engine_sprtp_ls)
+
+cap_sprtp_ls = sizing_sprtp_ls["min_capacity_kbtuh"]
+vol_sprtp_ls = sizing_sprtp_ls["min_storage_storageT_gal"]
+OUTPUT_SPRTP_LS = "sprtp_ls.html"
+result_sprtp_ls.to_plotly(
+    title = (
+        f"3-Day Simulation — Single-Pass RTP Load Shift (shed 4–9PM, load-up 1–4PM) — {N_PEOPLE}-Person Multi-Family  |  "
+        f"{SUPPLY_T_F:.0f}°F supply / {STORAGE_T_F:.0f}°F storage  |  "
+        f"Cap {cap_sprtp_ls:.0f} kBTU/hr, Storage {vol_sprtp_ls:.0f} gal"
+    ),
+    filepath             = OUTPUT_SPRTP_LS,
+    include_temperatures = True,
+)
+print(f"\nPlot saved: {OUTPUT_SPRTP_LS}")
 print("\nOpen any HTML file in a browser to view the interactive chart.")

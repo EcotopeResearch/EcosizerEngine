@@ -72,8 +72,27 @@ class StorageTank(ABC):
         flow_gpm: float,
         return_temp_f: float,
         duration_min: float,
+        supply_temp_f: float | None = None,
     ) -> None:
-        """Mix recirculation loop return flow into the tank."""
+        """
+        Apply recirculation loop heat loss to the tank.
+
+        Parameters
+        ----------
+        flow_gpm : float
+            Recirculation loop flow rate [GPM].
+        return_temp_f : float
+            Temperature of water returning from the recirc loop [°F].
+        duration_min : float
+            Length of the timestep [minutes].
+        supply_temp_f : float | None
+            DHW delivery temperature [°F].  This determines how much heat the
+            recirc loop actually loses: ``loss = flow × rho_cp × (supply_temp - return_temp)``.
+            If ``None``, defaults to ``outlet_temp_f`` (the tank's current hot-end
+            temperature), which gives the correct result for TM tanks where the
+            supply and storage temperatures are equal.  Pass explicitly for
+            primary storage tanks (SPRTP) where ``supply_temp_f < storage_temp_f``.
+        """
 
     @abstractmethod
     def get_average_draw_temp_f(self, draw_gal: float) -> float:
@@ -398,37 +417,38 @@ class StratifiedTank(StorageTank):
         flow_gpm: float,
         return_temp_f: float,
         duration_min: float,
+        supply_temp_f: float | None = None,
     ) -> None:
         """
-        Mix recirculation loop return flow into the bottom of the tank.
+        Apply recirculation loop heat loss to the tank.
 
-        The recirc loop takes hot water from the tank top at ``outlet_temp_f``,
-        circulates it through the building pipes, and returns it cooled to
-        ``return_temp_f`` at the tank bottom. The total tank volume is unchanged,
-        but the net energy loss reduces the hot zone.
-
-        Net effect on ``_delta_gal``:
-            vol * (return_temp_f - outlet_temp_f) / (outlet_temp_f - inlet_temp_f)
-        (always negative → thermocline rises → less hot water)
+        The recirc loop draws water from the supply line at ``supply_temp_f``,
+        circulates it through the building, and returns it at ``return_temp_f``.
+        The heat lost in the loop — ``flow × rho_cp × (supply_temp - return_temp)``
+        — is extracted from storage.  Total tank volume is unchanged; only the
+        energy content (and thus the hot-zone depth) decreases.
 
         Parameters
         ----------
         flow_gpm : float
             Recirculation loop flow rate [GPM].
         return_temp_f : float
-            Temperature of returning water [°F].
+            Temperature of water returning from the recirc loop [°F].
         duration_min : float
             Length of the timestep [minutes].
+        supply_temp_f : float | None
+            DHW delivery temperature [°F].  Defaults to ``outlet_temp_f``
+            (correct for TM tanks where supply == storage temperature).
+            Pass explicitly when ``supply_temp_f < storage_temp_f`` (e.g.
+            SPRTP primary storage) to avoid over-counting the heat loss.
         """
         if self._outlet_temp_f <= self._inlet_temp_f:
             return
-        vol_gal = flow_gpm * duration_min
-        net_delta_gal = (
-            vol_gal
-            * (return_temp_f - self._outlet_temp_f)
-            / (self._outlet_temp_f - self._inlet_temp_f)
-        )
-        self._delta_gal += net_delta_gal  # always negative
+        t_supply     = supply_temp_f if supply_temp_f is not None else self._outlet_temp_f
+        vol_gal      = flow_gpm * duration_min
+        recirc_loss_kbtu = vol_gal * _RHO_CP * (t_supply - return_temp_f) / 1000.0
+        net_delta_gal    = recirc_loss_kbtu * 1000.0 / (_RHO_CP * (self._outlet_temp_f - self._inlet_temp_f))
+        self._delta_gal -= net_delta_gal
 
     def get_average_draw_temp_f(self, draw_gal: float) -> float:
         """

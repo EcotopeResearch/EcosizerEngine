@@ -8,7 +8,7 @@ from .Simulator import simulate_3day as _simulate_3day, simulate_annual as _simu
 # Schematic → DHWSystem class registry
 # ---------------------------------------------------------------------------
 
-_RECIRC_SCHEMATICS = {"parallel_loop", "swing_tank"}
+_RECIRC_SCHEMATICS = {"parallel_loop", "swing_tank", "single_pass_rtp"}
 
 
 class EcosizerEngine:
@@ -380,9 +380,27 @@ class EcosizerEngine:
                     load_shift_fract_total_vol = ls_fract,
                 )
 
+        if self.schematic == "single_pass_rtp":
+            from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import SinglePassRTPSystem
+            self._require_recirc_params()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return SinglePassRTPSystem.from_size(
+                    building                   = self._building,
+                    supply_temp_f              = self.supply_temp_f,
+                    storage_temp_f             = self.storage_temp_f,
+                    return_temp_f              = self.return_temp_f,
+                    return_flow_gpm            = self.return_flow_gpm,
+                    max_daily_run_hr           = self.max_daily_run_hr,
+                    defrost_factor             = self.defrost_factor,
+                    control_schedule           = control_schedule,
+                    control_map                = control_map,
+                    load_shift_fract_total_vol = ls_fract,
+                )
+
         raise ValueError(
             f"Unknown schematic {self.schematic!r}. "
-            "Supported values: 'primary_no_recirc', 'parallel_loop', 'swing_tank'."
+            "Supported values: 'primary_no_recirc', 'parallel_loop', 'swing_tank', 'single_pass_rtp'."
         )
 
     def _require_recirc_params(self) -> None:

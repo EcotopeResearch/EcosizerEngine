@@ -131,8 +131,10 @@ class TestPklSinglePass:
         assert cap2 == pytest.approx(cap1 * 2, rel=1e-6)
 
     def test_is_within_bounds(self, sp):
-        assert sp.is_within_operating_bounds(47.0, 150.0) == True
-        assert sp.is_within_operating_bounds(sp.oat_min - 1, 150.0) == False
+        assert sp.is_within_operating_bounds(47.0) == True
+        assert sp.is_within_operating_bounds(60.0) == True
+        assert sp.is_within_operating_bounds(sp.oat_min) == True
+        assert sp.is_within_operating_bounds(sp.oat_min - 1) == False
 
 
 # ---------------------------------------------------------------------------

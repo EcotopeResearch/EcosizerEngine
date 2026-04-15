@@ -212,7 +212,7 @@ class PerformanceMap:
             return None
         return (cap_kbtuh / _W_TO_KBTUH) / pwr_kw
 
-    def is_within_operating_bounds(self, oat_f: float, outlet_temp_f: float) -> bool:
+    def is_within_operating_bounds(self, oat_f: float) -> bool:
         """Return True if the conditions are within the map's valid operating range."""
         pass
 
@@ -478,7 +478,7 @@ class PklPerformanceMap(PerformanceMap):
         _, inp_kw     = self._get_per_unit_kw(oat_f, inlet, outlet)
         return inp_kw * self.num_units
 
-    def is_within_operating_bounds(self, oat_f: float, outlet_temp_f: float) -> bool:
+    def is_within_operating_bounds(self, oat_f: float) -> bool:
         return oat_f >= self.oat_min
 
 
@@ -502,7 +502,7 @@ class HPWHsimPerformanceMap(PerformanceMap):
     Single-entry maps (rare)
     -------------------------
     * Single-pass: 11-term full quadratic in (OAT, outlet_T, inlet_T).
-    * Multipass: 6-term quadratic in (OAT, condenser_T).
+    * Multipass: 6-term quadratic in (OAT, inlet_temp_f).
 
     OAT below the minimum bracket → Electric Resistance fallback (COP = 1).
     """
@@ -566,7 +566,7 @@ class HPWHsimPerformanceMap(PerformanceMap):
         return 0.0
 
     def _get_per_unit_kbtuh(
-        self, oat_f: float, condenser_t: float, outlet_t: float
+        self, oat_f: float, inlet_temp_f: float, outlet_t: float
     ) -> tuple[float, float]:
         """Returns (output_kbtuh, input_kbtuh) for a single unit."""
         if oat_f is None:
@@ -581,7 +581,7 @@ class HPWHsimPerformanceMap(PerformanceMap):
             return er, er
 
         if len(perfmap) > 1:
-            # --- Multi-entry: bracket OAT and quadratic in condenser_t ---
+            # --- Multi-entry: bracket OAT and quadratic in inlet_temp_f ---
             i_prev, i_next = None, None
             for i in range(len(perfmap)):
                 if oat_f < perfmap[i]["T_F"]:
@@ -595,10 +595,10 @@ class HPWHsimPerformanceMap(PerformanceMap):
                     # Above maximum OAT → extrapolate from last bracket pair
                     i_prev, i_next = i - 1, i
 
-            COP_T1  = self._quad(perfmap[i_prev]["COP_coeffs"],          condenser_t)
-            COP_T2  = self._quad(perfmap[i_next]["COP_coeffs"],          condenser_t)
-            pwr_T1_W = self._quad(perfmap[i_prev]["inputPower_coeffs"],   condenser_t)
-            pwr_T2_W = self._quad(perfmap[i_next]["inputPower_coeffs"],   condenser_t)
+            COP_T1  = self._quad(perfmap[i_prev]["COP_coeffs"],          inlet_temp_f)
+            COP_T2  = self._quad(perfmap[i_next]["COP_coeffs"],          inlet_temp_f)
+            pwr_T1_W = self._quad(perfmap[i_prev]["inputPower_coeffs"],   inlet_temp_f)
+            pwr_T2_W = self._quad(perfmap[i_next]["inputPower_coeffs"],   inlet_temp_f)
 
             T1, T2   = perfmap[i_prev]["T_F"], perfmap[i_next]["T_F"]
             cop      = self._linear_interp(oat_f, T1, T2, COP_T1, COP_T2)
@@ -607,11 +607,11 @@ class HPWHsimPerformanceMap(PerformanceMap):
         else:
             # --- Single-entry: full regressed polynomial ---
             if self._is_multipass:
-                input_kw = self._poly6(perfmap[0]["inputPower_coeffs"], oat_f, condenser_t)
-                cop      = self._poly6(perfmap[0]["COP_coeffs"],        oat_f, condenser_t)
+                input_kw = self._poly6(perfmap[0]["inputPower_coeffs"], oat_f, inlet_temp_f)
+                cop      = self._poly6(perfmap[0]["COP_coeffs"],        oat_f, inlet_temp_f)
             else:
-                input_kw = self._poly11(perfmap[0]["inputPower_coeffs"], oat_f, outlet_t, condenser_t)
-                cop      = self._poly11(perfmap[0]["COP_coeffs"],        oat_f, outlet_t, condenser_t)
+                input_kw = self._poly11(perfmap[0]["inputPower_coeffs"], oat_f, outlet_t, inlet_temp_f)
+                cop      = self._poly11(perfmap[0]["COP_coeffs"],        oat_f, outlet_t, inlet_temp_f)
 
         output_kw = cop * input_kw
         # Convert kW to kBTU/hr
@@ -627,8 +627,8 @@ class HPWHsimPerformanceMap(PerformanceMap):
         outlet_temp_f: float,
         inlet_temp_f: float | None = None,
     ) -> float:
-        condenser_t = inlet_temp_f if inlet_temp_f is not None else self._design_inlet_f
-        out_kbtuh, _ = self._get_per_unit_kbtuh(oat_f, condenser_t, outlet_temp_f)
+        inlet_temp_f = inlet_temp_f if inlet_temp_f is not None else self._design_inlet_f
+        out_kbtuh, _ = self._get_per_unit_kbtuh(oat_f, inlet_temp_f, outlet_temp_f)
         return out_kbtuh * self.num_units
 
     def get_power_in_kw(
@@ -637,9 +637,9 @@ class HPWHsimPerformanceMap(PerformanceMap):
         outlet_temp_f: float,
         inlet_temp_f: float | None = None,
     ) -> float:
-        condenser_t  = inlet_temp_f if inlet_temp_f is not None else self._design_inlet_f
-        _, inp_kbtuh = self._get_per_unit_kbtuh(oat_f, condenser_t, outlet_temp_f)
+        inlet_temp_f  = inlet_temp_f if inlet_temp_f is not None else self._design_inlet_f
+        _, inp_kbtuh = self._get_per_unit_kbtuh(oat_f, inlet_temp_f, outlet_temp_f)
         return inp_kbtuh / _W_TO_KBTUH * self.num_units
 
-    def is_within_operating_bounds(self, oat_f: float, outlet_temp_f: float) -> bool:
+    def is_within_operating_bounds(self, oat_f: float) -> bool:
         return oat_f >= self.oat_min
