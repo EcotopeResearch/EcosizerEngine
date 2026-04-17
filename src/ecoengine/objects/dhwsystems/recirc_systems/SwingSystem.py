@@ -256,12 +256,86 @@ class SwingSystem(RecircSystem):
 
             self._minimum_capacity_kbtuh       = capacity_kbtuh
             self._minimum_storage_storageT_gal = storage_vol_storageT_gal
+            self._sizing_strat_slope           = strat_slope
 
         finally:
             self.max_daily_run_hr = original_max_run_hr
 
         if was_annual:
             building.set_to_annual_load_shape()
+
+    # ------------------------------------------------------------------
+    # Sizing curve — override to enforce correct call order
+    # ------------------------------------------------------------------
+
+    def get_sizing_curve(
+        self,
+        building: "Building",
+        strat_slope: float = 2.8,
+        step: float = 0.25,
+    ) -> dict:
+        """
+        Override to enforce volume-before-capacity order required by SwingSystem.
+
+        ``_calc_required_capacity()`` uses ``_eff_mix_fraction``, which is set
+        as a side-effect of ``_calc_running_volume_supplyT_gal()``.  The base
+        class loop calls capacity first, which leaves ``_eff_mix_fraction`` at
+        its previous value.  This override swaps the order.
+        """
+        was_annual = building.is_annual_load_shape()
+        if was_annual:
+            building.set_to_daily_load_shape()
+
+        _strat_slope = getattr(self, "_sizing_strat_slope", strat_slope)
+
+        try:
+            design_inlet = self._require_design_inlet_temp(building)
+            _cmap = self.water_heaters[0].control_map if self.water_heaters else None
+            strat_factor = self._calc_stratification_factor(_cmap, _strat_slope, design_inlet)
+
+            min_run_hr = 1.0 / float(np.max(building.peak_load_shape)) * 1.001
+
+            arr1       = np.arange(24.0, self.max_daily_run_hr, -step)
+            arr2       = np.arange(self.max_daily_run_hr, min_run_hr, -step)
+            heat_hours = np.concatenate([arr1, arr2])
+            rec_index  = len(arr1)
+
+            heat_hours_out: list[float] = []
+            capacity_out:   list[float] = []
+            storage_out:    list[float] = []
+
+            original_run_hr = self.max_daily_run_hr
+            try:
+                for h in heat_hours:
+                    self.max_daily_run_hr = float(h)
+                    try:
+                        # Volume must come first — sets _eff_mix_fraction used by capacity.
+                        running_vol = self._calc_running_volume_supplyT_gal(building, None)
+                        if running_vol == 0.0:
+                            break
+                        cap         = self._calc_required_capacity(building)
+                        storage_vol = self._calc_storage_volume_storageT_gal(
+                            running_vol, strat_factor
+                        )
+                    except (ValueError, RuntimeError):
+                        break
+                    heat_hours_out.append(float(h))
+                    capacity_out.append(cap)
+                    storage_out.append(storage_vol)
+            finally:
+                self.max_daily_run_hr = original_run_hr
+
+            rec_index = min(rec_index, max(0, len(heat_hours_out) - 1))
+
+            return {
+                "heat_hours":           heat_hours_out,
+                "capacity_kbtuh":       capacity_out,
+                "storage_storageT_gal": storage_out,
+                "recommended_index":    rec_index,
+            }
+        finally:
+            if was_annual:
+                building.set_to_annual_load_shape()
 
     # ------------------------------------------------------------------
     # TM sizing
@@ -521,6 +595,26 @@ class SwingSystem(RecircSystem):
     # ------------------------------------------------------------------
     # LS running volume — swing-aware
     # ------------------------------------------------------------------
+
+    def _calc_running_volume_ls_supplyT_gal(
+        self,
+        control_schedule: list[str],
+        building: "Building",
+        gen_rate_ls_gph: float,
+        fract_total_vol: float = 1.0,
+    ) -> float:
+        """
+        Override: delegate to the swing-aware implementation.
+
+        The base class uses a generic deficit algorithm that ignores the swing
+        tank's thermal mass contribution.  This override routes calls from
+        ``get_ls_sizing_curve()`` through ``_calc_running_volume_ls_swing()``,
+        so the LS sizing curve is consistent with ``size()``.
+        """
+        vol, _ = self._calc_running_volume_ls_swing(
+            control_schedule, building, gen_rate_ls_gph, fract_total_vol
+        )
+        return vol
 
     def _calc_running_volume_ls_swing(
         self,

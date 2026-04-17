@@ -377,6 +377,7 @@ class DHWSystem:
 
             self._minimum_capacity_kbtuh       = capacity_kbtuh
             self._minimum_storage_storageT_gal = storage_vol_storageT_gal
+            self._sizing_strat_slope           = strat_slope
 
             if control_map:
                 self._warn_if_short_cycling(control_map, capacity_kbtuh, storage_vol_storageT_gal)
@@ -414,16 +415,424 @@ class DHWSystem:
             raise RuntimeError("size() must be called before get_minimum_storage_storageT_gal().")
         return self._minimum_storage_storageT_gal
 
-    def get_sizing_curve(self) -> list[tuple[float, float]]:
+    def get_sizing_curve(
+        self,
+        building: Building,
+        strat_slope: float = 2.8,
+        step: float = 0.25,
+    ) -> dict:
         """
-        Return the Primary Sizing Curve — pairs of (capacity_kbtuh, storage_storageT_gal)
-        representing the capacity-vs-storage tradeoff across different run-hour assumptions.
+        Compute the primary sizing curve — capacity vs. storage for varying run hours.
+
+        Sweeps ``max_daily_run_hr`` from 24 down to the physical minimum
+        (where the hourly generation rate equals peak hourly demand), sizing
+        without load-shift at each point.  The resulting curve shows the
+        full capacity-vs-storage tradeoff available to the designer.
+
+        Because this calls the same internal sizing methods as ``size()``,
+        subclass overrides (e.g. ``RTPSystem`` adding recirc capacity) are
+        reflected automatically.
+
+        The sweep is split into two segments:
+
+        * ``[24, max_daily_run_hr)`` — the "over-designed" region to the left
+          of the recommended point.
+        * ``[max_daily_run_hr, min_run_hr)`` — the recommended point and
+          everything to the right.
+
+        ``recommended_index`` is the length of the first segment, i.e. the
+        index in the returned lists that corresponds to ``max_daily_run_hr``.
+
+        Parameters
+        ----------
+        building : Building
+            The building whose DHW load drives the sizing.
+        strat_slope : float
+            Temperature gradient [°F per %-height] for the stratification
+            factor calculation.  Should match the value used for sizing.
+            Default 2.8.
+        step : float
+            Run-hour step size for the sweep.  Default 0.25 hr.
 
         Returns
         -------
-        list[tuple[float, float]]
+        dict
+            ``"heat_hours"``           : list[float] — run hrs at each point
+            ``"capacity_kbtuh"``       : list[float] — capacity [kBTU/hr]
+            ``"storage_storageT_gal"`` : list[float] — storage [gal at storageT]
+            ``"recommended_index"``    : int — index of ``max_daily_run_hr``
         """
-        pass
+        was_annual = building.is_annual_load_shape()
+        if was_annual:
+            building.set_to_daily_load_shape()
+
+        # Prefer the strat_slope that was actually used during size(), so the
+        # curve is self-consistent with sizing results.
+        _strat_slope = getattr(self, "_sizing_strat_slope", strat_slope)
+
+        try:
+            design_inlet = self._require_design_inlet_temp(building)
+            # Stratification factor is independent of run hours — compute once.
+            # Use the system's own control_map so the on-sensor fraction matches
+            # what size() uses. Falls back to None (conservative ~3.0 factor) if
+            # no water heaters have been attached yet.
+            _cmap = self.water_heaters[0].control_map if self.water_heaters else None
+            strat_factor = self._calc_stratification_factor(_cmap, _strat_slope, design_inlet)
+
+            # Physical minimum: one hour of generation equals the peak demand hour.
+            min_run_hr = 1.0 / float(np.max(building.peak_load_shape)) * 1.001
+
+            # Build sweep: [24 → max_daily_run_hr) ++ [max_daily_run_hr → min_run_hr)
+            arr1       = np.arange(24.0, self.max_daily_run_hr, -step)
+            arr2       = np.arange(self.max_daily_run_hr, min_run_hr, -step)
+            heat_hours = np.concatenate([arr1, arr2])
+            rec_index  = len(arr1)   # index of the recommended point
+
+            heat_hours_out: list[float] = []
+            capacity_out:   list[float] = []
+            storage_out:    list[float] = []
+
+            original_run_hr = self.max_daily_run_hr
+            try:
+                for h in heat_hours:
+                    self.max_daily_run_hr = float(h)
+                    try:
+                        cap         = self._calc_required_capacity(building)
+                        running_vol = self._calc_running_volume_supplyT_gal(building, cap)
+                        if running_vol == 0.0:
+                            break   # generation exceeds peak demand — physical minimum reached
+                        storage_vol = self._calc_storage_volume_storageT_gal(
+                            running_vol, strat_factor
+                        )
+                    except (ValueError, RuntimeError):
+                        break       # aquastat fraction or other sizing failure
+                    heat_hours_out.append(float(h))
+                    capacity_out.append(cap)
+                    storage_out.append(storage_vol)
+            finally:
+                self.max_daily_run_hr = original_run_hr
+
+            # If the sweep terminated before reaching the recommended point,
+            # clamp so rec_index always points at a valid entry.
+            rec_index = min(rec_index, max(0, len(heat_hours_out) - 1))
+
+            return {
+                "heat_hours":           heat_hours_out,
+                "capacity_kbtuh":       capacity_out,
+                "storage_storageT_gal": storage_out,
+                "recommended_index":    rec_index,
+            }
+        finally:
+            if was_annual:
+                building.set_to_annual_load_shape()
+
+    def get_ls_sizing_curve(
+        self,
+        building: Building,
+        control_schedule: list[str],
+        control_map: dict[str, Controls],
+        strat_slope: float = 2.8,
+        load_shift_percent: float = 1.0,
+    ) -> dict:
+        """
+        Compute the load-shift sizing curve — capacity and storage as a function
+        of demand-coverage percentile.
+
+        Sweeps ``load_shift_percent`` from 0.25 to 1.00 in 0.01 steps (76
+        points).  At each step the demand fraction ``fract_total_vol`` is
+        derived from the normal-distribution model, and both normal and LS
+        sizing are run; the maximum of each is stored.  This matches exactly
+        what ``size()`` does at a given ``load_shift_fract_total_vol``.
+
+        The x-axis of the resulting curve is the coverage percentile: at 1.00
+        the system is sized to handle the most demanding day (largest storage /
+        capacity); at 0.25 it accepts that 75 % of days will breach the shed
+        window (smallest system).
+
+        Parameters
+        ----------
+        building : Building
+        control_schedule : list[str]
+            24-element schedule with ``"normal"``, ``"loadUp"``, ``"shed"``
+            keys.
+        control_map : dict[str, Controls]
+            Must include at least ``"normal"`` and ``"shed"`` entries.
+        strat_slope : float
+            Temperature gradient [°F per %-height] for stratification factor.
+            Default 2.8.
+        load_shift_percent : float
+            The system's configured coverage percentile (0.25–1.0).  Used only
+            to locate ``recommended_index`` in the returned arrays.
+            Default 1.0.
+
+        Returns
+        -------
+        dict
+            ``"load_shift_percent"``   : list[float] — 0.25 → 1.00
+            ``"capacity_kbtuh"``       : list[float]
+            ``"storage_storageT_gal"`` : list[float]
+            ``"recommended_index"``    : int
+
+        Raises
+        ------
+        ValueError
+            If ``control_map`` has no ``"shed"`` key (load-shift not configured).
+        """
+        if not self._is_load_shifting(control_map):
+            raise ValueError(
+                "get_ls_sizing_curve() requires a control_map with a 'shed' key. "
+                "Use get_sizing_curve() for systems without load shifting."
+            )
+
+        was_annual = building.is_annual_load_shape()
+        if was_annual:
+            building.set_to_daily_load_shape()
+
+        # Prefer the strat_slope that was actually used during size().
+        _strat_slope = getattr(self, "_sizing_strat_slope", strat_slope)
+
+        # Mirror size(): cap max_daily_run_hr to non-shed hours so the normal
+        # pre-computation uses the same effective run time as size() does.
+        original_max_run_hr = self.max_daily_run_hr
+        non_shed_hours_hr   = float(sum(1 for h in control_schedule if h != "shed"))
+        self.max_daily_run_hr = min(self.max_daily_run_hr, non_shed_hours_hr)
+
+        try:
+            design_inlet = self._require_design_inlet_temp(building)
+
+            # Pre-compute quantities that don't vary with fract_total_vol.
+            cap_normal     = self._calc_required_capacity(building)
+            run_vol_normal = self._calc_running_volume_supplyT_gal(building, cap_normal)
+            strat_normal   = self._calc_stratification_factor(
+                control_map, _strat_slope, design_inlet
+            )
+            stor_normal    = self._calc_storage_volume_storageT_gal(
+                run_vol_normal, strat_normal
+            )
+
+            # Sweep load_shift_percent from 0.25 to 1.00 in integer percentile steps.
+            ls_percents: list[float] = [i / 100.0 for i in range(25, 101)]
+            capacity_out: list[float] = []
+            storage_out:  list[float] = []
+
+            for ls_pct in ls_percents:
+                fract = _load_shift_fract_total_vol(ls_pct)
+
+                cap_ls = self._calc_required_capacity_ls_kbtuh(
+                    control_schedule, control_map, building, _strat_slope, fract
+                )
+                gen_rate = self._calc_gen_rate_ls_gph(
+                    control_schedule, control_map, building, _strat_slope, fract
+                )
+                run_vol_ls = self._calc_running_volume_ls_supplyT_gal(
+                    control_schedule, building, gen_rate, fract
+                )
+                stor_ls = self._calc_storage_volume_ls_storageT_gal(
+                    run_vol_ls, control_map, _strat_slope, design_inlet
+                )
+
+                capacity_out.append(max(cap_normal, cap_ls))
+                storage_out.append(max(stor_normal, stor_ls))
+
+            # Clamp load_shift_percent to the sweep range, then locate its index.
+            ls_pct_clamped = max(0.25, min(1.0, load_shift_percent))
+            rec_index      = round((ls_pct_clamped - 0.25) * 100)
+            rec_index      = max(0, min(rec_index, len(ls_percents) - 1))
+
+            return {
+                "load_shift_percent":   ls_percents,
+                "capacity_kbtuh":       capacity_out,
+                "storage_storageT_gal": storage_out,
+                "recommended_index":    rec_index,
+            }
+        finally:
+            self.max_daily_run_hr = original_max_run_hr
+            if was_annual:
+                building.set_to_annual_load_shape()
+
+    def plot_sizing_curve(
+        self,
+        building: Building,
+        control_schedule: list[str] | None = None,
+        control_map: dict[str, Controls] | None = None,
+        load_shift_percent: float = 1.0,
+        strat_slope: float = 2.8,
+        title: str = "Primary Sizing Curve",
+        filepath: str | None = None,
+    ) -> "plotly.graph_objects.Figure":
+        """
+        Return a Plotly figure of the primary sizing curve with an interactive
+        slider that moves a diamond marker along the curve.
+
+        **Normal sizing** (no load-shift):
+
+        * X-axis: primary tank volume [gal at storage temperature]
+        * Y-axis: heating capacity [kBTU/hr]
+        * Slider label: storage volume and run hours per day
+
+        **Load-shift sizing** (control_map contains a ``"shed"`` key):
+
+        * X-axis: load-shift coverage percentile [%]
+        * Y-axis: primary tank volume [gal at storage temperature]
+        * Slider label: % load-shift days covered and storage volume
+
+        In both cases the recommended point (at ``max_daily_run_hr`` or the
+        configured ``load_shift_percent``) is highlighted with a blue diamond
+        at page load.
+
+        Parameters
+        ----------
+        building : Building
+        control_schedule : list[str] | None
+            Required for load-shift plots; ignored otherwise.
+        control_map : dict[str, Controls] | None
+            If it contains a ``"shed"`` key the load-shift curve is produced;
+            otherwise the normal sizing curve is used.
+        load_shift_percent : float
+            Configured load-shift coverage percentile (0.25–1.0).  Only used
+            when producing the load-shift curve to position the recommended
+            marker.  Default 1.0.
+        strat_slope : float
+            Temperature gradient [°F per %-height].  Default 2.8.
+        title : str
+            Figure title.  Default ``"Primary Sizing Curve"``.
+        filepath : str | None
+            If provided, write the figure to this path as a self-contained
+            HTML file.  The figure is also returned regardless.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+
+        Raises
+        ------
+        ImportError
+            If ``plotly`` is not installed.
+        """
+        try:
+            import plotly.graph_objects as go
+        except ImportError:
+            raise ImportError(
+                "plotly is required for plot_sizing_curve(). "
+                "Install it with: pip install plotly"
+            )
+
+        is_ls = self._is_load_shifting(control_map)
+
+        if is_ls:
+            curve = self.get_ls_sizing_curve(
+                building,
+                control_schedule=control_schedule,
+                control_map=control_map,
+                strat_slope=strat_slope,
+                load_shift_percent=load_shift_percent,
+            )
+            # X = coverage % (multiply fraction by 100 for readability)
+            x_vals  = [p * 100.0 for p in curve["load_shift_percent"]]
+            y_vals  = curve["storage_storageT_gal"]
+            x_label = "Load-Shift Days Covered (%)"
+            y_label = "Primary Tank Volume (gal at Storage Temperature)"
+            hover   = (
+                "Load-shift coverage: <b>%{x:.0f}%</b><br>"
+                "Storage: <b>%{y:.1f} gal</b>"
+                "<extra></extra>"
+            )
+            def _slider_label(i: int) -> str:
+                return (
+                    f"Coverage: <b>{x_vals[i]:.0f}%</b>, "
+                    f"Storage: <b>{y_vals[i]:.1f} gal</b>"
+                )
+        else:
+            curve = self.get_sizing_curve(
+                building,
+                strat_slope=strat_slope,
+            )
+            x_vals     = curve["storage_storageT_gal"]
+            y_vals     = curve["capacity_kbtuh"]
+            heat_hours = curve["heat_hours"]
+            x_label    = "Primary Tank Volume (gal at Storage Temperature)"
+            y_label    = "Heating Capacity (kBTU/hr)"
+            hover      = (
+                "Storage: <b>%{x:.1f} gal</b><br>"
+                "Capacity: <b>%{y:.1f} kBTU/hr</b>"
+                "<extra></extra>"
+            )
+            # The raw curve is ordered high→low storage (high heat hours first).
+            # Reverse so that the slider moves left-to-right in the same direction
+            # as the diamond moves along the x-axis (low storage → high storage).
+            _rec_raw = curve["recommended_index"]
+            x_vals     = x_vals[::-1]
+            y_vals     = y_vals[::-1]
+            heat_hours = heat_hours[::-1]
+            rec        = len(x_vals) - 1 - _rec_raw
+
+            def _slider_label(i: int) -> str:
+                return (
+                    f"Storage: <b>{x_vals[i]:.1f} gal</b>, "
+                    f"Capacity: <b>{y_vals[i]:.1f} kBTU/hr</b>, "
+                    f"Run hours: <b>{heat_hours[i]:.2f} hr/day</b>"
+                )
+
+        if is_ls:
+            rec = curve["recommended_index"]
+        fig = go.Figure()
+
+        # Trace 0: the full sizing curve (always visible)
+        fig.add_trace(go.Scatter(
+            x=x_vals, y=y_vals,
+            mode="lines",
+            line=dict(color="#28a745", width=3),
+            hovertemplate=hover,
+            showlegend=False,
+        ))
+
+        # Traces 1…n: one diamond marker per slider step (hidden by default)
+        for i in range(len(x_vals)):
+            fig.add_trace(go.Scatter(
+                x=[x_vals[i]], y=[y_vals[i]],
+                mode="markers",
+                marker=dict(symbol="diamond", color="#2EA3F2", size=12),
+                hovertemplate=hover,
+                showlegend=False,
+                visible=(i == rec),   # only the recommended point starts visible
+            ))
+
+        # Build slider steps — each reveals one diamond trace
+        steps = []
+        for i in range(len(x_vals)):
+            visibility = [True] + [j == i for j in range(len(x_vals))]
+            steps.append(dict(
+                label=_slider_label(i),
+                method="update",
+                args=[{"visible": visibility}],
+            ))
+
+        fig.update_layout(
+            title=title,
+            xaxis_title=x_label,
+            yaxis_title=y_label,
+            showlegend=False,
+            sliders=[dict(
+                steps=steps,
+                active=rec,
+                currentvalue=dict(
+                    prefix="<b>Selected size</b>: ",
+                    visible=True,
+                    font=dict(size=14),
+                    xanchor="left",
+                ),
+                pad={"t": 60},
+                ticklen=0,
+                minorticklen=0,
+                bgcolor="#CCD9DB",
+                borderwidth=0,
+            )],
+        )
+
+        if filepath is not None:
+            fig.write_html(filepath)
+
+        return fig
 
     # ------------------------------------------------------------------
     # Sizing — internal helpers
@@ -498,8 +907,8 @@ class DHWSystem:
         # Deficit accumulation starts at each transition from surplus to deficit.
         peak_indices = _get_peak_indices(hourly_diff_gph)
         if not peak_indices:
-            print("Warning: The HPWH capacity has been sized greater than the largest peak in the building's load. This system will function as an instantaneous water heater.")
-            print("Please use a more 'peaky' load shape or raise the number of hours in a day the HPWH should run.")
+            # Generation rate exceeds peak hourly demand — no storage required.
+            # This is the physical lower bound for max_daily_run_hr on the sizing curve.
             return 0.0
 
         running_vol = 0.0

@@ -510,3 +510,54 @@ class EcosizerEngine:
             Monthly energy breakdown (kWh) by month.
         """
         return {"monthly_energy_kwh": simulation_run.get_monthly_energy_kwh()}
+
+    def plot_sizing_curve(
+        self,
+        title: str = "Primary Sizing Curve",
+        filepath: str | None = None,
+        strat_slope: float = 2.8,
+    ) -> "plotly.graph_objects.Figure":
+        """
+        Return a Plotly figure of the sizing curve for the built system.
+
+        For systems without load shifting, produces the primary sizing curve
+        (storage volume vs. heating capacity as a function of daily run hours).
+
+        For systems with load shifting (``load_shift_schedule`` was provided),
+        produces the load-shift sizing curve (storage volume vs. coverage
+        percentile), with a slider to explore the capacity/storage trade-off.
+
+        The recommended point — corresponding to the ``max_daily_run_hr`` or
+        ``load_shift_percent`` passed to the engine — is highlighted on the
+        curve at page load.
+
+        Parameters
+        ----------
+        title : str
+            Figure title.  Default ``"Primary Sizing Curve"``.
+        filepath : str, optional
+            If provided, write the figure to this path as a self-contained
+            HTML file.  The figure is also returned regardless.
+        strat_slope : float
+            Temperature gradient [°F / %-height] for stratification factor
+            calculation.  Default 2.8.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+
+        Raises
+        ------
+        ImportError
+            If ``plotly`` is not installed.
+        """
+        control_schedule, control_map = self._build_control_map()
+        return self._dhw_system.plot_sizing_curve(
+            building          = self._building,
+            control_schedule  = control_schedule,
+            control_map       = control_map,
+            load_shift_percent= self.load_shift_percent,
+            strat_slope       = strat_slope,
+            title             = title,
+            filepath          = filepath,
+        )

@@ -1,6 +1,21 @@
 _ANNUAL_DURATION_MIN = 365 * 24 * 60   # 525600
 _DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
+# Cumulative hour at the start of each month (matches UtilityCostTracker._MONTH_HOUR_START).
+_MONTH_HOUR_START_SR: list[int] = [0]
+for _d in _DAYS_IN_MONTH:
+    _MONTH_HOUR_START_SR.append(_MONTH_HOUR_START_SR[-1] + _d * 24)
+del _d
+
+
+def _step_to_month(step: int, timestep_min: int) -> int:
+    """Return 0-based calendar month for simulation step *step*."""
+    hour = step * timestep_min // 60
+    for m in range(11, -1, -1):
+        if hour >= _MONTH_HOUR_START_SR[m]:
+            return m
+    return 0
+
 # Tank temperature nodes: fractional heights from bottom (0) to top (1)
 _TANK_NODE_FRACTS = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 _TANK_NODE_LABELS = ["Tank 0% (bottom)", "Tank 20%", "Tank 40%", "Tank 60%", "Tank 80%", "Tank 100% (top)"]
@@ -473,6 +488,85 @@ class SimulationRun:
             fig.write_html(filepath)
 
         return fig
+
+    def get_annual_utility_cost(self, uc) -> float:
+        """
+        Compute total annual utility cost from this simulation run.
+
+        Cost = energy charges + demand charges (max kW per period) + yearly base.
+
+        Parameters
+        ----------
+        uc : UtilityCostTracker
+            Rate structure to apply.
+
+        Returns
+        -------
+        float
+            Total annual cost [$].
+        """
+        hours_per_step = self.timestep_min / 60.0
+        energy_cost = 0.0
+        max_kw_by_period: dict[int, float] = {}
+
+        for i, kw_raw in enumerate(self.heater_power_in_kw):
+            kw   = kw_raw or 0.0
+            rate = uc.get_energy_charge_at_step(i, self.timestep_min)
+            energy_cost += kw * hours_per_step * rate
+
+            period = uc.get_demand_period_at_step(i, self.timestep_min)
+            if period not in max_kw_by_period or kw > max_kw_by_period[period]:
+                max_kw_by_period[period] = kw
+
+        demand_cost = sum(
+            uc.get_demand_charge_for_period(p, max_kw)
+            for p, max_kw in max_kw_by_period.items()
+        )
+        return energy_cost + demand_cost + uc.get_yearly_base_charge()
+
+    def get_monthly_cost_breakdown(self, uc) -> dict:
+        """
+        Break down annual utility costs by month and charge type.
+
+        Parameters
+        ----------
+        uc : UtilityCostTracker
+
+        Returns
+        -------
+        dict
+            ``{'energy': [12 floats], 'demand': [12 floats], 'base': float}``
+            Indices 0–11 correspond to January–December.
+            ``'base'`` is the per-month base charge (same for all months).
+        """
+        hours_per_step  = self.timestep_min / 60.0
+        energy_by_month = [0.0] * 12
+        max_kw_by_period: dict[int, float] = {}
+
+        for i, kw_raw in enumerate(self.heater_power_in_kw):
+            kw   = kw_raw or 0.0
+            rate = uc.get_energy_charge_at_step(i, self.timestep_min)
+            energy_by_month[_step_to_month(i, self.timestep_min)] += (
+                kw * hours_per_step * rate
+            )
+            period = uc.get_demand_period_at_step(i, self.timestep_min)
+            if period not in max_kw_by_period or kw > max_kw_by_period[period]:
+                max_kw_by_period[period] = kw
+
+        # Assign each period's demand charge to its calendar month.
+        # Period key = month * num_periods + offset → month = key // num_periods.
+        num_periods     = 3 if uc.include_discount else 2
+        demand_by_month = [0.0] * 12
+        for period, max_kw in max_kw_by_period.items():
+            m = period // num_periods
+            if 0 <= m < 12:
+                demand_by_month[m] += uc.get_demand_charge_for_period(period, max_kw)
+
+        return {
+            "energy": energy_by_month,
+            "demand": demand_by_month,
+            "base":   uc.monthly_base_charge,
+        }
 
     def get_monthly_energy_kwh(self) -> list[float]:
         """

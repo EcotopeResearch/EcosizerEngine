@@ -25,6 +25,7 @@ from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.heating.PerformanceMap import NominalPerformanceMap
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.storage.StorageTank import StorageTank, StratifiedTank
+from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import SinglePassRTPSystem
 
 
 # ===========================================================================
@@ -714,3 +715,427 @@ class TestLoadShiftSizing:
         assert sys_no_sched._minimum_capacity_kbtuh == pytest.approx(
             norm_sys._minimum_capacity_kbtuh, rel=1e-6
         )
+
+
+# ===========================================================================
+# get_sizing_curve
+# ===========================================================================
+
+MAX_RUN_HR = 16.0
+STRAT_SLOPE = 2.8
+
+
+class TestSizingCurve:
+    """Tests for DHWSystem.get_sizing_curve()."""
+
+    @pytest.fixture
+    def system(self, building_with_zone):
+        """Sized DHWSystem with default max_daily_run_hr=16."""
+        return DHWSystem.from_size(
+            building=building_with_zone,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+            max_daily_run_hr=MAX_RUN_HR,
+        )
+
+    @pytest.fixture
+    def curve(self, system, building_with_zone):
+        return system.get_sizing_curve(building_with_zone, strat_slope=STRAT_SLOPE)
+
+    # ------------------------------------------------------------------
+    # Structure
+    # ------------------------------------------------------------------
+
+    def test_returns_dict_with_required_keys(self, curve):
+        assert set(curve.keys()) == {
+            "heat_hours", "capacity_kbtuh", "storage_storageT_gal", "recommended_index"
+        }
+
+    def test_all_lists_same_length(self, curve):
+        n = len(curve["heat_hours"])
+        assert n > 0
+        assert len(curve["capacity_kbtuh"])       == n
+        assert len(curve["storage_storageT_gal"]) == n
+
+    def test_recommended_index_in_bounds(self, curve):
+        rec = curve["recommended_index"]
+        assert 0 <= rec < len(curve["heat_hours"])
+
+    # ------------------------------------------------------------------
+    # Sweep content
+    # ------------------------------------------------------------------
+
+    def test_recommended_heat_hours_equals_max_daily_run_hr(self, curve):
+        rec = curve["recommended_index"]
+        assert curve["heat_hours"][rec] == pytest.approx(MAX_RUN_HR)
+
+    def test_heat_hours_decrease_monotonically(self, curve):
+        hrs = curve["heat_hours"]
+        for i in range(1, len(hrs)):
+            assert hrs[i] < hrs[i - 1], f"heat_hours not decreasing at index {i}"
+
+    def test_capacity_increases_as_run_hours_decrease(self, curve):
+        """Lower run hours → higher capacity required."""
+        caps = curve["capacity_kbtuh"]
+        for i in range(1, len(caps)):
+            assert caps[i] >= caps[i - 1] - 1e-9, (
+                f"capacity not non-decreasing at index {i}: {caps[i-1]:.3f} → {caps[i]:.3f}"
+            )
+
+    def test_storage_decreases_as_run_hours_decrease(self, curve):
+        """Lower run hours → less storage required (smaller deficit window)."""
+        stor = curve["storage_storageT_gal"]
+        for i in range(1, len(stor)):
+            assert stor[i] <= stor[i - 1] + 1e-9, (
+                f"storage not non-increasing at index {i}: {stor[i-1]:.1f} → {stor[i]:.1f}"
+            )
+
+    def test_sweep_covers_range_above_max_run_hr(self, curve):
+        """Part of the curve should be at run hours > max_daily_run_hr (left of recommended)."""
+        rec  = curve["recommended_index"]
+        assert rec > 0, "Expected at least one point to the left of the recommended index"
+        assert curve["heat_hours"][0] > MAX_RUN_HR
+
+    def test_curve_terminates_before_physical_minimum(self, curve, building_with_zone):
+        """The last heat-hour value must be > 1/max(loadshape)."""
+        min_run_hr = 1.0 / float(np.max(building_with_zone.peak_load_shape))
+        assert curve["heat_hours"][-1] > min_run_hr
+
+    # ------------------------------------------------------------------
+    # Recommended point matches size() output
+    # ------------------------------------------------------------------
+
+    def test_recommended_capacity_matches_sized_value(self, system, building_with_zone):
+        """
+        The capacity at rec_index should match what size() produces with no
+        control_map, since both use the same internal methods and strat_factor.
+        """
+        # Re-size without controls to get a clean baseline
+        system.size(building_with_zone)
+        sized_cap = system._minimum_capacity_kbtuh
+
+        curve = system.get_sizing_curve(building_with_zone, strat_slope=STRAT_SLOPE)
+        rec   = curve["recommended_index"]
+        assert curve["capacity_kbtuh"][rec] == pytest.approx(sized_cap, rel=1e-6)
+
+    def test_recommended_storage_matches_sized_value(self, system, building_with_zone):
+        system.size(building_with_zone)
+        sized_stor = system._minimum_storage_storageT_gal
+
+        curve = system.get_sizing_curve(building_with_zone, strat_slope=STRAT_SLOPE)
+        rec   = curve["recommended_index"]
+        assert curve["storage_storageT_gal"][rec] == pytest.approx(sized_stor, rel=1e-6)
+
+    # ------------------------------------------------------------------
+    # State is restored after the call
+    # ------------------------------------------------------------------
+
+    def test_max_daily_run_hr_unchanged_after_curve(self, system, building_with_zone):
+        before = system.max_daily_run_hr
+        system.get_sizing_curve(building_with_zone)
+        assert system.max_daily_run_hr == before
+
+    def test_building_load_shape_unchanged_after_curve(self, system, building_with_zone):
+        before = building_with_zone.daily_dhw_use_supplyT_gal
+        system.get_sizing_curve(building_with_zone)
+        assert building_with_zone.daily_dhw_use_supplyT_gal == pytest.approx(before)
+
+    # ------------------------------------------------------------------
+    # Subclass: SinglePassRTPSystem
+    # ------------------------------------------------------------------
+
+    def test_sprtp_curve_capacity_higher_than_base(self, building_with_zone):
+        """
+        SPRTP adds recirc-loss capacity on top of the DHW capacity.
+        Every curve point for SPRTP should have higher capacity than the
+        equivalent base-DHWSystem point (same building and temperatures).
+        """
+        base = DHWSystem.from_size(
+            building=building_with_zone,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+            max_daily_run_hr=MAX_RUN_HR,
+        )
+        sprtp = SinglePassRTPSystem.from_size(
+            building=building_with_zone,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+            return_temp_f=110.0,
+            return_flow_gpm=3.0,
+            max_daily_run_hr=MAX_RUN_HR,
+        )
+
+        base_curve  = base.get_sizing_curve(building_with_zone,  strat_slope=STRAT_SLOPE)
+        sprtp_curve = sprtp.get_sizing_curve(building_with_zone, strat_slope=STRAT_SLOPE)
+
+        n = min(len(base_curve["capacity_kbtuh"]), len(sprtp_curve["capacity_kbtuh"]))
+        assert n > 0
+        for i in range(n):
+            assert sprtp_curve["capacity_kbtuh"][i] > base_curve["capacity_kbtuh"][i], (
+                f"SPRTP capacity should exceed base at index {i}"
+            )
+
+
+# ===========================================================================
+# get_ls_sizing_curve
+# ===========================================================================
+
+_LS_SHED_HOURS   = [10, 11, 12, 13, 14]
+_LS_LOAD_UP_HRS  = 2
+_LS_NORMAL_ON    = 0.5
+_LS_LOAD_UP_ON   = 0.2
+_LS_SHED_ON      = 0.8
+_LS_PERCENT      = 1.0
+
+
+class TestLSSizingCurve:
+    """Tests for DHWSystem.get_ls_sizing_curve()."""
+
+    @pytest.fixture
+    def ls_schedule(self):
+        return make_ls_schedule(_LS_SHED_HOURS, _LS_LOAD_UP_HRS)
+
+    @pytest.fixture
+    def ls_control_map(self):
+        return make_ls_control_map(_LS_NORMAL_ON, _LS_LOAD_UP_ON, _LS_SHED_ON)
+
+    @pytest.fixture
+    def ls_system(self, building_with_zone, ls_schedule, ls_control_map):
+        return DHWSystem.from_size(
+            building=building_with_zone,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+            control_schedule=ls_schedule,
+            control_map=ls_control_map,
+        )
+
+    @pytest.fixture
+    def ls_curve(self, ls_system, building_with_zone, ls_schedule, ls_control_map):
+        return ls_system.get_ls_sizing_curve(
+            building_with_zone,
+            control_schedule=ls_schedule,
+            control_map=ls_control_map,
+            strat_slope=STRAT_SLOPE,
+            load_shift_percent=_LS_PERCENT,
+        )
+
+    # ------------------------------------------------------------------
+    # ValueError: no shed key
+    # ------------------------------------------------------------------
+
+    def test_raises_without_shed_key(self, ls_system, building_with_zone, ls_schedule):
+        normal_only_map = {"normal": make_controls(0.5, 0.0)}
+        with pytest.raises(ValueError, match="shed"):
+            ls_system.get_ls_sizing_curve(
+                building_with_zone,
+                control_schedule=ls_schedule,
+                control_map=normal_only_map,
+            )
+
+    # ------------------------------------------------------------------
+    # Structure
+    # ------------------------------------------------------------------
+
+    def test_returns_dict_with_required_keys(self, ls_curve):
+        assert set(ls_curve.keys()) == {
+            "load_shift_percent", "capacity_kbtuh",
+            "storage_storageT_gal", "recommended_index",
+        }
+
+    def test_exactly_76_points(self, ls_curve):
+        """Sweep is 0.25, 0.26, …, 1.00 → 76 values."""
+        assert len(ls_curve["load_shift_percent"])   == 76
+        assert len(ls_curve["capacity_kbtuh"])       == 76
+        assert len(ls_curve["storage_storageT_gal"]) == 76
+
+    def test_load_shift_percent_range(self, ls_curve):
+        pcts = ls_curve["load_shift_percent"]
+        assert pcts[0]  == pytest.approx(0.25)
+        assert pcts[-1] == pytest.approx(1.00)
+
+    def test_recommended_index_in_bounds(self, ls_curve):
+        rec = ls_curve["recommended_index"]
+        assert 0 <= rec < 76
+
+    def test_recommended_index_for_percent_1(self, ls_curve):
+        """load_shift_percent=1.0 → rec_index=75 (last element)."""
+        assert ls_curve["recommended_index"] == 75
+
+    def test_recommended_index_for_percent_025(
+        self, ls_system, building_with_zone, ls_schedule, ls_control_map
+    ):
+        """load_shift_percent=0.25 → rec_index=0 (first element)."""
+        curve = ls_system.get_ls_sizing_curve(
+            building_with_zone,
+            control_schedule=ls_schedule,
+            control_map=ls_control_map,
+            load_shift_percent=0.25,
+        )
+        assert curve["recommended_index"] == 0
+
+    def test_recommended_index_midpoint(
+        self, ls_system, building_with_zone, ls_schedule, ls_control_map
+    ):
+        """load_shift_percent=0.50 → rec_index=25."""
+        curve = ls_system.get_ls_sizing_curve(
+            building_with_zone,
+            control_schedule=ls_schedule,
+            control_map=ls_control_map,
+            load_shift_percent=0.50,
+        )
+        assert curve["recommended_index"] == 25
+
+    # ------------------------------------------------------------------
+    # Monotonicity / physics
+    # ------------------------------------------------------------------
+
+    def test_storage_increases_with_coverage(self, ls_curve):
+        """Higher coverage → more storage required."""
+        stor = ls_curve["storage_storageT_gal"]
+        for i in range(1, len(stor)):
+            assert stor[i] >= stor[i - 1] - 1e-9, (
+                f"storage not non-decreasing at index {i}: {stor[i-1]:.1f} → {stor[i]:.1f}"
+            )
+
+    def test_all_capacity_positive(self, ls_curve):
+        for cap in ls_curve["capacity_kbtuh"]:
+            assert cap > 0
+
+    def test_all_storage_positive(self, ls_curve):
+        for stor in ls_curve["storage_storageT_gal"]:
+            assert stor > 0
+
+    # ------------------------------------------------------------------
+    # Recommended point matches size() output
+    # ------------------------------------------------------------------
+
+    def test_recommended_capacity_matches_sized_value(
+        self, ls_system, building_with_zone, ls_schedule, ls_control_map
+    ):
+        """
+        Capacity at rec_index should match the system's already-sized capacity,
+        since both use the same building, schedule, and control_map.
+        """
+        # size() was already run by from_size() — grab the result
+        sized_cap = ls_system._minimum_capacity_kbtuh
+
+        curve = ls_system.get_ls_sizing_curve(
+            building_with_zone,
+            control_schedule=ls_schedule,
+            control_map=ls_control_map,
+            strat_slope=STRAT_SLOPE,
+            load_shift_percent=_LS_PERCENT,
+        )
+        rec = curve["recommended_index"]
+        assert curve["capacity_kbtuh"][rec] == pytest.approx(sized_cap, rel=1e-4)
+
+    def test_recommended_storage_matches_sized_value(
+        self, ls_system, building_with_zone, ls_schedule, ls_control_map
+    ):
+        sized_stor = ls_system._minimum_storage_storageT_gal
+
+        curve = ls_system.get_ls_sizing_curve(
+            building_with_zone,
+            control_schedule=ls_schedule,
+            control_map=ls_control_map,
+            strat_slope=STRAT_SLOPE,
+            load_shift_percent=_LS_PERCENT,
+        )
+        rec = curve["recommended_index"]
+        assert curve["storage_storageT_gal"][rec] == pytest.approx(sized_stor, rel=1e-4)
+
+    # ------------------------------------------------------------------
+    # LS curve vs normal curve
+    # ------------------------------------------------------------------
+
+    def test_ls_storage_at_high_coverage_exceeds_normal_curve(
+        self, building_with_zone, ls_schedule, ls_control_map
+    ):
+        """
+        At high load-shift coverage the LS system needs more storage than the
+        normal sizing curve's recommended point.
+        """
+        ls_sys = DHWSystem.from_size(
+            building=building_with_zone,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+            control_schedule=ls_schedule,
+            control_map=ls_control_map,
+        )
+        normal_sys = DHWSystem.from_size(
+            building=building_with_zone,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+        )
+        ls_curve     = ls_sys.get_ls_sizing_curve(
+            building_with_zone,
+            control_schedule=ls_schedule,
+            control_map=ls_control_map,
+            strat_slope=STRAT_SLOPE,
+            load_shift_percent=_LS_PERCENT,
+        )
+        normal_curve = normal_sys.get_sizing_curve(building_with_zone, strat_slope=STRAT_SLOPE)
+
+        ls_rec   = ls_curve["recommended_index"]
+        norm_rec = normal_curve["recommended_index"]
+        assert (
+            ls_curve["storage_storageT_gal"][ls_rec]
+            >= normal_curve["storage_storageT_gal"][norm_rec]
+        )
+
+    # ------------------------------------------------------------------
+    # SPRTP subclass
+    # ------------------------------------------------------------------
+
+    def test_sprtp_ls_curve_capacity_higher_than_base(
+        self, building_with_zone, ls_control_map
+    ):
+        """
+        SPRTP recirc-loss overhead raises the normal sizing path above base.
+
+        With no load-up hours the LS gen rate equals the normal gen rate, so
+        _calc_required_capacity_ls_kbtuh == _calc_required_capacity(base).
+        SPRTP's override adds recirc overhead to cap_normal, pushing
+        max(cap_normal, cap_ls) above the base value at every point.
+        """
+        # No load-up: LS gen rate == normal gen rate so SPRTP recirc always shows
+        schedule_no_lu = make_ls_schedule(_LS_SHED_HOURS, load_up_hours=0)
+        ctrl_map_no_lu = {"normal": make_controls(_LS_NORMAL_ON, 0.0),
+                          "shed":   make_controls(_LS_SHED_ON,   0.0)}
+
+        base = DHWSystem.from_size(
+            building=building_with_zone,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+            control_schedule=schedule_no_lu,
+            control_map=ctrl_map_no_lu,
+        )
+        sprtp = SinglePassRTPSystem.from_size(
+            building=building_with_zone,
+            supply_temp_f=SUPPLY_T,
+            storage_temp_f=STORAGE_T,
+            return_temp_f=110.0,
+            return_flow_gpm=3.0,
+            control_schedule=schedule_no_lu,
+            control_map=ctrl_map_no_lu,
+        )
+
+        base_curve  = base.get_ls_sizing_curve(
+            building_with_zone,
+            control_schedule=schedule_no_lu,
+            control_map=ctrl_map_no_lu,
+            strat_slope=STRAT_SLOPE,
+        )
+        sprtp_curve = sprtp.get_ls_sizing_curve(
+            building_with_zone,
+            control_schedule=schedule_no_lu,
+            control_map=ctrl_map_no_lu,
+            strat_slope=STRAT_SLOPE,
+        )
+
+        # With no load-up, the normal path dominates and SPRTP's recirc adds
+        # overhead at every point.
+        for i in range(76):
+            assert sprtp_curve["capacity_kbtuh"][i] > base_curve["capacity_kbtuh"][i], (
+                f"SPRTP LS capacity should exceed base at index {i}"
+            )

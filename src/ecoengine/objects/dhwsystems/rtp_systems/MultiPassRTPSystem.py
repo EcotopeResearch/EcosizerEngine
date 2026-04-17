@@ -34,8 +34,16 @@ class MultiPassRTPSystem(RTPSystem):
         float
             Running volume [gallons at supply temperature].
         """
+
+        ################
+        # Algorithm idea:
+        # 0) size capacity for high like 9 hr or as high as you can
+        # 1) find peak and simulate on that peak, assume incoming water = amount of supply water used (at supply temp) + recirc (at return temp)
+        # 2) applying heat to it SHOULD NOT be able to keep up because its a peak
+        # 3) deficit not met is running vol at supply temp
+        ################
         pass
 
     def simulate_step(self, building, timestep_min, mode="normal"):
-        """Run one timestep for a multi-pass RTP system."""
+        """Run one timestep for a multi-pass RTP system.""" 
         pass
