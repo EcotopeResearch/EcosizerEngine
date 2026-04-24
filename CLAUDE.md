@@ -61,7 +61,7 @@ data/
 
 ### Key Classes
 
-**`EcosizerEngine`** (`interfaces/EcosizerEngine.py`) — Top-level orchestrator. Accepts all user-facing parameters and drives the pipeline: `build()` → `size()` → `simulate_3day()` / `simulate_annual()`. Also exposes `get_sizing_results()`, `get_simulation_summary()`, `get_annual_cost_estimate()`, and `plot_sizing_curve()`. Module-level `get_oat_buckets(zip_code, zone_id, weather_station)` convenience function also lives here.
+**`EcosizerEngine`** (`interfaces/EcosizerEngine.py`) — Top-level orchestrator. Accepts all user-facing parameters and drives the pipeline: `build()` → `size()` → `simulate_3day()` / `simulate_annual()`. Also exposes `get_sizing_results()`, `get_simulation_summary()`, `get_annual_cost_estimate()`, and `plot_sizing_curve()`. Module-level `get_oat_buckets(zip_code, zone_id, weather_station)` convenience function also lives here and is re-exported from the top-level `ecoengine` package (`from ecoengine import get_oat_buckets`).
 
 **`Building`** (`objects/building/Building.py`) — Encapsulates occupancy type, daily DHW demand, 24-hr load shape, and climate data. Key factory: `Building.from_building_type()` supports named types (`multi_family`, `apartment`, `office`, `mens_dorm`, `womens_dorm`, `nursing_home`, `motel`, `food_service_a/b`, `elementary_school`, `junior_high`, `senior_high`) and multi-use blending (weighted mix of types). For `multi_family` with `standard_gpd='ca'`, uses California bedroom-count-based GPD profiles from `multi_family.json`.
 
@@ -71,7 +71,7 @@ data/
 - `InstantWHSystem` — tankless, no storage
 - `MPNoRecircSystem` — multi-pass, no recirculation
 - `RecircSystem` → `ParallelLoopSystem`, `SwingSystem` — systems with recirc loops
-  - `SwingSystem` → `SwingERTrdOffSystem` — ER trade-off variant
+  - `SwingSystem` → `SwingERTrdOffSystem` — ER trade-off variant; adds `get_er_sized_points(building)` and `get_er_sizing_curve(building)` which iterate building load from 120%→0% to produce a Plotly slider figure of ER element size vs. percent coverage
 - `RTPSystem` → `SinglePassRTPSystem`, `MultiPassRTPSystem`, `SP_RTPInParallelSystem`, `SP_RTPInSeriesSystem`, `MP_RTPInSeriesSystem` — Return-to-Primary systems
 
 **`StorageTank`** (`objects/components/storage/StorageTank.py`) — Abstract base class. `StratifiedTank` subclass implements a 12-node model. `MixedStorageTank` subclass uses a single fully-mixed node. Key methods: `initialize()`, `draw()`, `heat()`, `add_recirc_return()`, `get_usable_volume_supplyT_gal()`, `get_stratification_factor()`.
@@ -98,6 +98,12 @@ data/
 **`SwingSystem` call order** — In `SwingSystem`, `_calc_running_volume_supplyT_gal()` must be called *before* `_calc_required_capacity()` because the former sets `self._eff_mix_fraction` which the latter uses. The base class `get_sizing_curve()` calls them in the wrong order for Swing, so `SwingSystem` overrides `get_sizing_curve()` to enforce the correct order.
 
 **`_calc_running_volume_ls_supplyT_gal()` override in `SwingSystem`** — The base class LS volume method is generic. `SwingSystem` overrides it to delegate to `_calc_running_volume_ls_swing()` (which accounts for swing tank thermal mass). The override returns just the volume from the `(volume, eff_mix_fraction)` tuple.
+
+**`SwingSystem` CA TM volume** — After `size()`, `get_minimum_tm_ca_volume_gal()` returns the TM volume snapped to the CA commercially-available tank size table `[80, 96, 168, 288, 480]` gal (capped at 480 when standard sizing exceeds it). The standard sizing table is `_SWING_SIZING_TABLE`; the CA table is `_SWING_SIZING_TABLE_CA`, both in `SwingSystem.py`.
+
+**`RTPSystem` LS recirc capacity** — `RTPSystem` overrides `_calc_required_capacity_ls_kbtuh()` to add the same recirc loss contribution (`recirc_loss × 24 / max_daily_run_hr / defrost`) that `_calc_required_capacity()` adds for the non-LS path. Without this override, LS sizing underestimates capacity for all RTP system variants.
+
+**`SwingERTrdOffSystem` ER curve — `daily_dhw_use_supplyT_gal` scaling** — `get_er_sized_points()` temporarily scales `building.daily_dhw_use_supplyT_gal` (not a `magnitude` attribute, which does not exist on `Building`) to simulate different load fractions, then restores it. The same pattern should be used if any other method needs to probe the system at a fraction of the building load.
 
 **`get_oat_buckets()` skips header** — The old codebase had a bug where the CSV header row was not skipped, shifting one day's bucket assignment. The new implementation correctly skips the header. Do not try to replicate the old behavior.
 
