@@ -7,9 +7,10 @@ from typing import TYPE_CHECKING
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
-from ecoengine.objects.components.storage.StorageTank import StratifiedTank
+from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices
-from .SwingSystem import SwingSystem, _ELEMENT_DEADBAND_F, _RHO_CP, _W_TO_BTUHR, _hr_to_min
+from .SwingSystem import SwingSystem, _ELEMENT_DEADBAND_F, _hr_to_min
+from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
 
 if TYPE_CHECKING:
     from ecoengine.objects.building.Building import Building
@@ -519,7 +520,7 @@ class SwingERTrdOffSystem(SwingSystem):
 
     def get_er_capacity_kw(self) -> float:
         """Return the additional ER capacity added to the TM element [kW]."""
-        return self.get_er_capacity_kbtuh() / _W_TO_BTUHR
+        return self.get_er_capacity_kbtuh() / _W_TO_KBTUH
 
     # ------------------------------------------------------------------
     # ER sizing curve (trade-off plot)
@@ -590,7 +591,7 @@ class SwingERTrdOffSystem(SwingSystem):
                 total_tm_i = self._minimum_tm_capacity_kbtuh
                 er_needed  = bool(self._er_capacity_kbtuh and self._er_capacity_kbtuh > 0)
 
-            er_cap_kw.append(round(total_tm_i / _W_TO_BTUHR, 0))
+            er_cap_kw.append(round(total_tm_i / _W_TO_KBTUH, 0))
             fract_covered.append(i)
             i -= 10.0
 

@@ -20,11 +20,13 @@ import numpy as np
 
 from ecoengine.objects.building.Building import Building
 from ecoengine.objects.building.ClimateZone import ClimateZone
-from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem, _RHO_CP, _get_peak_indices
+from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem, _get_peak_indices
+from ecoengine.constants.constants import _RHO_CP
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.heating.PerformanceMap import NominalPerformanceMap
 from ecoengine.objects.components.heating.Controls import Controls
-from ecoengine.objects.components.storage.StorageTank import StorageTank, StratifiedTank
+from ecoengine.objects.components.storage.StorageTank import StorageTank
+from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import SinglePassRTPSystem
 
 

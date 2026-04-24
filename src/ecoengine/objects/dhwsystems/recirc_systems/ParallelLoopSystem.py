@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
-from ecoengine.objects.components.storage.StorageTank import StorageTank, StratifiedTank
+from ecoengine.objects.components.storage.StorageTank import StorageTank
+from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
-from .RecircSystem import RecircSystem, _RHO_CP
+from .RecircSystem import RecircSystem
+from ecoengine.constants.constants import _RHO_CP
 from ecoengine.objects.building.Building import Building
 
 # Minimum recommended TM heater run time per cycle [hr].

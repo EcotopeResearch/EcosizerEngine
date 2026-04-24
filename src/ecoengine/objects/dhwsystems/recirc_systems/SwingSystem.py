@@ -5,10 +5,11 @@ from typing import TYPE_CHECKING
 
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
-from ecoengine.objects.components.storage.StorageTank import StratifiedTank
+from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
 from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices
-from .RecircSystem import RecircSystem, _RHO_CP
+from .RecircSystem import RecircSystem
+from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
 
 if TYPE_CHECKING:
     from ecoengine.objects.building.Building import Building
@@ -24,7 +25,6 @@ _SWING_SIZING_TABLE: list[int] = [
 # Used to snap the required TM volume to the nearest CA-approved size.
 _SWING_SIZING_TABLE_CA: list[int] = [80, 96, 168, 288, 480]
 _WATTS_PER_GAL: float = 100.0
-_W_TO_BTUHR:   float = 3.412142
 
 # TM element deadband: fires at supply_temp_f, shuts off at supply_temp_f + 8 °F.
 _ELEMENT_DEADBAND_F: float = 8.0
@@ -358,7 +358,7 @@ class SwingSystem(RecircSystem):
             tm_safety_factor × recirc_loss_kbtuh
         """
         recirc_loss_btuhr = self.get_recirc_loss_kbtuh() * 1000.0
-        vol_required = recirc_loss_btuhr / (_WATTS_PER_GAL * _W_TO_BTUHR)
+        vol_required = recirc_loss_btuhr / (_WATTS_PER_GAL * _W_TO_KBTUH)
         if vol_required > max(_SWING_SIZING_TABLE):
             raise ValueError(
                 f"Recirculation losses ({recirc_loss_btuhr:.0f} BTU/hr) require a swing "

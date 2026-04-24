@@ -7,17 +7,12 @@ from typing import TYPE_CHECKING
 
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.heating.Controls import Controls
-from ecoengine.objects.components.storage.StorageTank import StorageTank, StratifiedTank
+from ecoengine.objects.components.storage.StorageTank import StorageTank
+from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
+from ecoengine.constants.constants import _RHO_CP
 
 if TYPE_CHECKING:
     from ecoengine.objects.building.Building import Building
-
-# ---------------------------------------------------------------------------
-# Physical constants
-# ---------------------------------------------------------------------------
-
-# Volumetric heat capacity of water [BTU / (gallon * °F)]
-_RHO_CP: float = 8.353535
 
 # Normal distribution parameters for multi-family daily DHW demand variability.
 # Used to compute fract_total_vol from load_shift_percent (percentile of days covered).
@@ -1297,7 +1292,7 @@ class DHWSystem:
             Generation rate [gal/hr at supplyT].
         """
         daily_gal           = building.daily_dhw_use_supplyT_gal
-        normal_gen_rate_gph = daily_gal / self.max_daily_run_hr
+        normal_gen_rate_gph = daily_gal / self.max_daily_run_hr #TODO min of this and number of non-shed hours?
 
         _, load_up_hours = self._get_first_shed_block_and_load_up_hours(control_schedule)
         if load_up_hours == 0:

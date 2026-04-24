@@ -1,7 +1,5 @@
 from ..DHWSystem import DHWSystem
-
-# Volumetric heat capacity of water [BTU / (gallon · °F)]
-_RHO_CP: float = 8.353535
+from ecoengine.constants.constants import _RHO_CP
 
 
 class RecircSystem(DHWSystem):

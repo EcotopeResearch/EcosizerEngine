@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from ..DHWSystem import DHWSystem, _RHO_CP
+from ..DHWSystem import DHWSystem
+from ecoengine.constants.constants import _RHO_CP
 
 
 class RTPSystem(DHWSystem):
@@ -122,7 +123,7 @@ class RTPSystem(DHWSystem):
 
         Mirrors _calc_required_capacity: the recirc loop runs 24 h/day
         regardless of the shed schedule, so the same steady-state recirc
-        contribution (recirc_loss × 24 / max_daily_run_hr / defrost) is
+        contribution (recirc_loss x 24 / max_daily_run_hr / defrost) is
         added on top of whatever DHW-only LS capacity the base class returns.
 
         Parameters

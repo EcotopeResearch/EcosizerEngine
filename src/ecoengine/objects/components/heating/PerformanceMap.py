@@ -5,8 +5,7 @@ import math
 import os
 import pickle
 
-# 1 kW = 3.412142 kBTU/hr  (same ratio holds for W→BTU/hr and kW→kBTU/hr)
-_W_TO_KBTUH: float = 3.412142
+from ecoengine.constants.constants import _W_TO_KBTUH
 
 # Absolute path to the performance maps data directory
 _DATA_DIR = os.path.normpath(

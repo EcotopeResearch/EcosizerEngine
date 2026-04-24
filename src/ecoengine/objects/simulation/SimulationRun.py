@@ -1,3 +1,5 @@
+from ecoengine.constants.constants import _RHO_CP
+
 _ANNUAL_DURATION_MIN = 365 * 24 * 60   # 525600
 _DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
@@ -365,7 +367,6 @@ class SimulationRun:
         )
 
         if self.supply_temp_f is not None:
-            _RHO_CP = 8.353535  # BTU / (gal·°F)
             heater_gph = [
                 kbtuh * 1000.0
                 / (_RHO_CP * max(1.0, self.supply_temp_f - inlet_t))

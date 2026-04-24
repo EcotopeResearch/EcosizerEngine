@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
-from ecoengine.objects.components.storage.StorageTank import StratifiedTank
-from ecoengine.objects.dhwsystems.DHWSystem import _RHO_CP
+from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
+from ecoengine.constants.constants import _RHO_CP
 from .RTPSystem import RTPSystem
 
 

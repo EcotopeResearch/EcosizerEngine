@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from .StorageTank import StorageTank, _RHO_CP
+from .StorageTank import StorageTank
+from ecoengine.constants.constants import _RHO_CP
 
 
 class MixedStorageTank(StorageTank):
