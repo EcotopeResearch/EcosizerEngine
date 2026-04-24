@@ -475,13 +475,14 @@ class SimulationRun:
             legend=dict(
                 orientation="h",
                 yanchor="top",
-                y=-0.08,
+                y=-0.25,
                 xanchor="center",
                 x=0.5,
                 bgcolor="rgba(255,255,255,0.8)",
                 bordercolor="rgba(0,0,0,0.2)",
                 borderwidth=1,
             ),
+            margin=dict(b=160),
         )
 
         if filepath is not None:

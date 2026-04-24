@@ -2,6 +2,58 @@ from __future__ import annotations
 
 import warnings
 from .Simulator import simulate_3day as _simulate_3day, simulate_annual as _simulate_annual
+from ecoengine.objects.building.ClimateZone import ClimateZone as _ClimateZone
+
+
+def get_oat_buckets(
+    zip_code: str | int | None = None,
+    zone_id: int | None = None,
+    weather_station: str | None = None,
+) -> dict[float, int]:
+    """
+    Return the distribution of daily average outdoor air temperatures across
+    5°F buckets for a given location's typical meteorological year.
+
+    Exactly one of ``zip_code``, ``zone_id``, or ``weather_station`` must be
+    provided to identify the climate zone.
+
+    Parameters
+    ----------
+    zip_code : str | int | None
+        A California 5-digit zip code.
+    zone_id : int | None
+        A numeric climate zone ID (1-96).
+    weather_station : str | None
+        A weather station name as it appears in the lookup table.
+
+    Returns
+    -------
+    dict[float, int]
+        Mapping of bucket temperature [°F] → number of days per year with
+        a daily average OAT in that 5°F bucket.  Only populated buckets
+        are included.
+
+    Examples
+    --------
+    >>> get_oat_buckets(zip_code=90210)
+    {50.0: 46, 55.0: 83, ...}
+    >>> get_oat_buckets(zone_id=19)
+    {65.0: 25, ...}
+    """
+    provided = sum(x is not None for x in (zip_code, zone_id, weather_station))
+    if provided != 1:
+        raise ValueError(
+            "Provide exactly one of zip_code, zone_id, or weather_station."
+        )
+
+    if zip_code is not None:
+        cz = _ClimateZone.from_zip_code(zip_code)
+    elif zone_id is not None:
+        cz = _ClimateZone.from_zone_id(zone_id)
+    else:
+        cz = _ClimateZone.from_weather_station(weather_station)
+
+    return cz.get_oat_buckets()
 
 
 # ---------------------------------------------------------------------------

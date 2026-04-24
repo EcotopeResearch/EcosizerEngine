@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import plotly.graph_objects as go
 from typing import TYPE_CHECKING
 
 from ecoengine.objects.components.heating.Controls import Controls
@@ -519,3 +520,193 @@ class SwingERTrdOffSystem(SwingSystem):
     def get_er_capacity_kw(self) -> float:
         """Return the additional ER capacity added to the TM element [kW]."""
         return self.get_er_capacity_kbtuh() / _W_TO_BTUHR
+
+    # ------------------------------------------------------------------
+    # ER sizing curve (trade-off plot)
+    # ------------------------------------------------------------------
+
+    def get_er_sized_points(
+        self,
+        building: Building,
+        additional_er_safety: float = 1.0,
+    ) -> tuple[list[float], list[float], int]:
+        """
+        Compute ER element size vs. percent-of-peak-load-covered trade-off points.
+
+        Iterates building magnitude from 120% down to the fraction where no ER
+        is needed, sizing the ER element at each step.  At 100% the already-
+        computed sizing result is used directly.
+
+        Parameters
+        ----------
+        building : Building
+            Building used during sizing.  ``magnitude`` is temporarily mutated
+            and restored before the method returns.
+        additional_er_safety : float
+            Safety factor applied to ER sizing for all fractions except 100%
+            (which uses the value from the original ``size()`` call).
+
+        Returns
+        -------
+        er_cap_kw : list[float]
+            Total TM element capacity (base + ER) [kW] at each fraction,
+            ordered from lowest to highest coverage.
+        fract_covered : list[float]
+            Percent-of-building values (e.g. 60.0, 70.0, … 120.0), same order.
+        startind : int
+            Index in the returned lists corresponding to 100% coverage (the
+            actual sized system).
+        """
+        if self._er_capacity_kbtuh is None or self._er_capacity_kbtuh <= 0:
+            raise RuntimeError(
+                "get_er_sized_points() requires a system where ER sizing was "
+                "needed.  No ER addition was found — check that size() has been "
+                "called and that peak demand exceeds primary HPWH capacity."
+            )
+
+        original_daily_gal   = building.daily_dhw_use_supplyT_gal
+        base_tm_kbtuh        = self._minimum_tm_capacity_kbtuh - self._er_capacity_kbtuh
+        original_total_tm    = self._minimum_tm_capacity_kbtuh
+        original_er_kbtuh    = self._er_capacity_kbtuh
+        original_er_safety   = self.er_safety_factor
+
+        er_cap_kw: list[float]    = []
+        fract_covered: list[float] = []
+        startind = 0
+
+        i = 120.0
+        while i > 0:
+            if i == 100.0:
+                startind   = len(fract_covered)
+                total_tm_i = original_total_tm
+                er_needed  = True
+            else:
+                building.daily_dhw_use_supplyT_gal = original_daily_gal * (i / 100.0)
+                self._minimum_tm_capacity_kbtuh    = base_tm_kbtuh
+                self._er_capacity_kbtuh            = None
+                self.er_safety_factor              = additional_er_safety
+                self._size_er_element(building)
+                self.er_safety_factor              = original_er_safety
+                total_tm_i = self._minimum_tm_capacity_kbtuh
+                er_needed  = bool(self._er_capacity_kbtuh and self._er_capacity_kbtuh > 0)
+
+            er_cap_kw.append(round(total_tm_i / _W_TO_BTUHR, 0))
+            fract_covered.append(i)
+            i -= 10.0
+
+            if not er_needed:
+                break  # no ER at this fraction; lower fractions won't need it either
+
+        # Restore mutated state
+        building.daily_dhw_use_supplyT_gal = original_daily_gal
+        self._minimum_tm_capacity_kbtuh    = original_total_tm
+        self._er_capacity_kbtuh            = original_er_kbtuh
+
+        # Lists were built high-to-low; reverse so x is ascending
+        fract_covered.reverse()
+        er_cap_kw.reverse()
+        startind = (len(fract_covered) - 1) - startind
+
+        return er_cap_kw, fract_covered, startind
+
+    def get_er_sizing_curve(
+        self,
+        building: Building,
+        additional_er_safety: float = 1.0,
+    ) -> go.Figure:
+        """
+        Return a Plotly figure showing the ER element size vs. percent coverage
+        trade-off curve, with a slider to select the operating point.
+
+        The curve traces total TM element capacity (base + ER) [kW] against the
+        fraction of peak building load covered by the primary HPWH (%).  A
+        diamond marker and slider indicate the 100%-coverage (actual sized) point.
+
+        Parameters
+        ----------
+        building : Building
+        additional_er_safety : float
+            Safety factor for the re-sizing iterations (default 1.0).
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+        """
+        er_cap_kw, fract_covered, startind = self.get_er_sized_points(
+            building, additional_er_safety
+        )
+
+        fig = go.Figure()
+
+        # --- main curve ---
+        fig.add_trace(go.Scatter(
+            x=fract_covered,
+            y=er_cap_kw,
+            visible=True,
+            line=dict(color="#28a745", width=4),
+            hovertemplate=(
+                "Percent Coverage: %{x:.1f}%<br>"
+                "ER Heating Capacity: %{y:.1f} kW"
+            ),
+            opacity=0.8,
+        ))
+
+        # --- one hidden marker per point (revealed by slider) ---
+        for ii in range(len(fract_covered)):
+            fig.add_trace(go.Scatter(
+                x=[fract_covered[ii]],
+                y=[er_cap_kw[ii]],
+                visible=False,
+                mode="markers",
+                marker_symbol="diamond",
+                opacity=1,
+                marker_color="#2EA3F2",
+                marker_size=10,
+                name="System Size",
+                hoverlabel=dict(font=dict(color="white"), bordercolor="white"),
+            ))
+
+        # Make the starting marker visible
+        fig.data[startind + 1].visible = True
+
+        fig.update_layout(
+            title="Electric Resistance Sizing Curve",
+            xaxis_title="Percent Coverage (%)",
+            yaxis_title="Electric Resistance Heating Capacity (kW)",
+            showlegend=False,
+        )
+
+        # --- slider ---
+        steps = []
+        for ii in range(1, len(fig.data)):
+            label = (
+                f"Percent Coverage: <b>{fract_covered[ii - 1]:.0f}</b> %, "
+                f"Electric Resistance Heating Capacity: "
+                f"<b>{er_cap_kw[ii - 1]:.1f}</b> kW"
+            )
+            step = dict(
+                label=label,
+                method="update",
+                args=[{"visible": [False] * len(fig.data)}],
+            )
+            step["args"][0]["visible"][0]  = True   # curve always visible
+            step["args"][0]["visible"][ii] = True   # this marker
+            steps.append(step)
+
+        fig.update_layout(sliders=[dict(
+            steps=steps,
+            active=startind,
+            currentvalue=dict(
+                font={"size": 16},
+                prefix="<b>Electric Resistance Size</b> ",
+                visible=True,
+                xanchor="left",
+            ),
+            pad={"t": 50},
+            minorticklen=0,
+            ticklen=0,
+            bgcolor="#CCD9DB",
+            borderwidth=0,
+        )])
+
+        return fig

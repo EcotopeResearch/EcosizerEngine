@@ -108,3 +108,43 @@ class RTPSystem(DHWSystem):
             / self.defrost_factor
         )
         return dhw_cap + recirc_cap
+
+    def _calc_required_capacity_ls_kbtuh(
+        self,
+        control_schedule,
+        control_map,
+        building,
+        strat_slope: float,
+        fract_total_vol: float = 1.0,
+    ) -> float:
+        """
+        Add recirc-loss capacity to the base DHW load-shift capacity.
+
+        Mirrors _calc_required_capacity: the recirc loop runs 24 h/day
+        regardless of the shed schedule, so the same steady-state recirc
+        contribution (recirc_loss × 24 / max_daily_run_hr / defrost) is
+        added on top of whatever DHW-only LS capacity the base class returns.
+
+        Parameters
+        ----------
+        control_schedule : list[str]
+        control_map : dict[str, Controls]
+        building : Building
+        strat_slope : float
+        fract_total_vol : float
+
+        Returns
+        -------
+        float
+            Total required LS capacity [kBTU/hr].
+        """
+        dhw_ls_cap = super()._calc_required_capacity_ls_kbtuh(
+            control_schedule, control_map, building, strat_slope, fract_total_vol
+        )
+        recirc_cap = (
+            self.get_recirc_loss_kbtuh()
+            * 24.0
+            / self.max_daily_run_hr
+            / self.defrost_factor
+        )
+        return dhw_ls_cap + recirc_cap

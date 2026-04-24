@@ -18,6 +18,11 @@ if TYPE_CHECKING:
 _SWING_SIZING_TABLE: list[int] = [
     40, 50, 80, 100, 120, 160, 175, 240, 350, 400, 500, 600, 800, 1000, 1250
 ]
+
+# CA-specific swing tank sizing table [gallons].
+# Subset of commercially available tank sizes recognised by California programs.
+# Used to snap the required TM volume to the nearest CA-approved size.
+_SWING_SIZING_TABLE_CA: list[int] = [80, 96, 168, 288, 480]
 _WATTS_PER_GAL: float = 100.0
 _W_TO_BTUHR:   float = 3.412142
 
@@ -93,6 +98,7 @@ class SwingSystem(RecircSystem):
 
         # TM sizing results — populated by _size_tm_system()
         self._minimum_tm_volume_gal:     float | None = None
+        self._minimum_tm_ca_volume_gal:  float | None = None
         self._minimum_tm_capacity_kbtuh: float | None = None
 
         # Effective mix fraction — populated by _calc_running_volume_supplyT_gal()
@@ -362,6 +368,14 @@ class SwingSystem(RecircSystem):
         self._minimum_tm_volume_gal = min(
             v for v in _SWING_SIZING_TABLE if v >= vol_required
         )
+        # CA-approved tank size: smallest entry in the CA table >= vol_required,
+        # capped at 480 gal (the largest CA table entry) when standard sizing exceeds it.
+        if self._minimum_tm_volume_gal < 480:
+            self._minimum_tm_ca_volume_gal = min(
+                v for v in _SWING_SIZING_TABLE_CA if v >= vol_required
+            )
+        else:
+            self._minimum_tm_ca_volume_gal = 480.0
         self._minimum_tm_capacity_kbtuh = self.tm_safety_factor * recirc_loss_btuhr / 1000.0
 
     # ------------------------------------------------------------------
@@ -826,6 +840,18 @@ class SwingSystem(RecircSystem):
         if self._minimum_tm_volume_gal is None:
             raise RuntimeError("size() must be called before get_minimum_tm_volume_gal().")
         return self._minimum_tm_volume_gal
+
+    def get_minimum_tm_ca_volume_gal(self) -> float:
+        """
+        Return the minimum CA-approved swing tank volume [gal].
+
+        Snaps the required TM volume to the nearest (next-largest) entry in the
+        CA commercially-available tank size table ``[80, 96, 168, 288, 480]``.
+        Capped at 480 gal when the standard sizing table drives a larger result.
+        """
+        if self._minimum_tm_ca_volume_gal is None:
+            raise RuntimeError("size() must be called before get_minimum_tm_ca_volume_gal().")
+        return self._minimum_tm_ca_volume_gal
 
     def get_minimum_tm_capacity_kbtuh(self) -> float:
         if self._minimum_tm_capacity_kbtuh is None:

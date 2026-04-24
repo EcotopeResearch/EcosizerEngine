@@ -1527,6 +1527,815 @@ def run_new_swing_er_sizing(scenarios: list[dict]) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Sizing curve comparison — HTML output
+# ---------------------------------------------------------------------------
+
+# ---- Generic subprocess runner -----------------------------------------
+
+def _run_curve_script(script_template: str, scenarios: list[dict], label: str) -> list[dict]:
+    """Run a curve script in a subprocess and parse the JSON results."""
+    scenarios_json = json.dumps(scenarios)
+    scenarios_json_escaped = scenarios_json.replace("'", "\\'")
+    script = script_template.format(
+        src=ORIGINAL_SRC.replace("\\", "\\\\"),
+        scenarios_json_escaped=scenarios_json_escaped,
+    )
+    proc = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+    json_line = next((l for l in proc.stdout.splitlines() if l.strip().startswith("[")), None)
+    if proc.returncode != 0 or not json_line:
+        print(f"ERROR running {label} curve script:")
+        print(proc.stderr[-800:])
+        return [{"label": sc["label"], "is_ls": sc.get("load_shift", False),
+                 "x": [], "y": [], "cap": [], "hrs": [], "rec": 0,
+                 "error": proc.stderr.strip()[-120:]}
+                for sc in scenarios]
+    return json.loads(json_line)
+
+
+# ---- Normalization helpers ---------------------------------------------
+
+def _norm_curve(raw: dict, is_old: bool) -> dict:
+    """
+    Normalize raw curve data to a unified ascending-x dict.
+
+    For primary (non-LS) curves both codebases return storage high→low.
+    After normalization x = storage_gal ascending, y = cap_kbtuh ascending,
+    hrs = heat_hours ascending (low run-hours → high run-hours).
+
+    For LS curves:
+      * Old codebase returns N = 100→25 (descending); rec is already indexed
+        into the ascending 25→100 order.
+      * New codebase already returns N = 25→100 ascending.
+    After normalization x = LS-percent ascending (25→100), y = storage_gal.
+    """
+    is_ls = raw.get("is_ls", False)
+    err   = raw.get("error")
+    if err or not raw.get("x"):
+        return {"x": [], "y": [], "hrs": [], "rec_index": 0, "is_ls": is_ls,
+                "label": raw.get("label", ""), "error": err or "No data"}
+
+    x   = list(raw["x"])
+    y   = list(raw["y"])
+    hrs = list(raw.get("hrs", []))
+    rec = int(raw["rec"])
+
+    if not is_ls:
+        # Primary: x = storage (high→low), y = cap (high→low); rec in high→low order
+        x   = x[::-1]
+        y   = y[::-1]
+        hrs = hrs[::-1]
+        rec = len(x) - 1 - rec
+    elif is_old:
+        # Old LS: x = N (100→25), y = vol (100→25); rec already for ascending order
+        x   = x[::-1]
+        y   = y[::-1]
+        # rec stays as-is (designed for ascending); hrs not applicable for LS
+    # else: new LS — x/y already ascending; rec correct
+
+    rec = max(0, min(rec, len(x) - 1)) if x else 0
+    return {"x": x, "y": y, "hrs": hrs, "rec_index": rec, "is_ls": is_ls,
+            "label": raw.get("label", ""), "error": None}
+
+
+# ---- Old codebase curve scripts ----------------------------------------
+
+ORIGINAL_PRIMARY_CURVE_SCRIPT = r"""
+import sys, json
+sys.path.insert(0, r"{src}")
+from ecoengine.engine.BuildingCreator import createBuilding
+from ecoengine.objects.SystemConfig import Primary
+
+scenarios = json.loads('{scenarios_json_escaped}')
+results = []
+for sc in scenarios:
+    try:
+        building = createBuilding(
+            incomingT_F=sc["inlet_t_f"], magnitudeStat=sc["magnitude"],
+            supplyT_F=sc["supply_t_f"], buildingType=sc["building_type"],
+            gpdpp=sc["gpdpp"], designOAT_F=sc["design_oat_f"],
+        )
+        supply_t, storage_t = sc["supply_t_f"], sc["storage_t_f"]
+        if sc["load_shift"]:
+            ls_sched = [0 if h in sc["shed_hours"] else 1 for h in range(24)]
+            lu_on = sc["lu_on_fract"] if sc["lu_on_fract"] is not None else sc["on_fract"]
+            system = Primary(
+                storageT_F=storage_t, defrostFactor=sc["defrost_factor"],
+                percentUseable=1.0, compRuntime_hr=sc["max_run_hr"],
+                onFract=sc["on_fract"], offFract=sc["off_fract"],
+                onT=supply_t, offT=storage_t, building=building,
+                outletLoadUpT=None, onFractLoadUp=lu_on,
+                offFractLoadUp=sc["off_fract"], onLoadUpT=None, offLoadUpT=None,
+                onFractShed=sc["shed_on_fract"], offFractShed=sc["off_fract"],
+                onShedT=None, offShedT=None, doLoadShift=True,
+                loadShiftSchedule=ls_sched,
+                loadUpHours=max(1, sc["lu_hours"]),
+                loadShiftPercent=sc.get("load_shift_percent", 1),
+            )
+            pts = system.lsSizedPoints(building)
+            results.append({{"label": sc["label"], "is_ls": True,
+                "x": list(pts[2]), "y": list(pts[0]), "cap": list(pts[1]),
+                "rec": pts[3], "error": None}})
+        else:
+            system = Primary(
+                storageT_F=storage_t, defrostFactor=sc["defrost_factor"],
+                percentUseable=1.0, compRuntime_hr=sc["max_run_hr"],
+                onFract=sc["on_fract"], offFract=sc["off_fract"],
+                onT=supply_t, offT=storage_t, building=building,
+                outletLoadUpT=None, onFractLoadUp=None, offFractLoadUp=None,
+                onLoadUpT=None, offLoadUpT=None,
+                onFractShed=None, offFractShed=None, onShedT=None, offShedT=None,
+            )
+            pts = system.primaryCurve(building)
+            results.append({{"label": sc["label"], "is_ls": False,
+                "x": pts[0].tolist(), "y": pts[1].tolist(), "hrs": pts[2].tolist(),
+                "rec": pts[3], "error": None}})
+    except Exception as e:
+        results.append({{"label": sc["label"], "is_ls": sc["load_shift"],
+            "x": [], "y": [], "cap": [], "hrs": [], "rec": 0, "error": str(e)}})
+print(json.dumps(results))
+"""
+
+
+ORIGINAL_PARALLEL_CURVE_SCRIPT = r"""
+import sys, json
+sys.path.insert(0, r"{src}")
+from ecoengine.engine.BuildingCreator import createBuilding
+from ecoengine.objects.systems.ParallelLoopTank import ParallelLoopTank
+
+scenarios = json.loads('{scenarios_json_escaped}')
+results = []
+for sc in scenarios:
+    try:
+        building = createBuilding(
+            incomingT_F=sc["inlet_t_f"], magnitudeStat=sc["magnitude"],
+            supplyT_F=sc["supply_t_f"], buildingType=sc["building_type"],
+            gpdpp=sc["gpdpp"], designOAT_F=sc["design_oat_f"],
+        )
+        building.recirc_loss = (
+            sc["return_flow_gpm"] * (sc["supply_t_f"] - sc["return_temp_f"]) * 8.353535 * 60.0
+        )
+        supply_t, storage_t = sc["supply_t_f"], sc["storage_t_f"]
+        if sc.get("load_shift"):
+            ls_sched = [0 if h in sc["shed_hours"] else 1 for h in range(24)]
+            lu_on = sc["lu_on_fract"] if sc["lu_on_fract"] is not None else sc["on_fract"]
+            system = ParallelLoopTank(
+                safetyTM=sc["tm_safety_factor"], setpointTM_F=sc["tm_off_temp_f"],
+                TMonTemp_F=sc["tm_on_temp_f"], offTime_hr=sc["tm_off_time_hr"],
+                storageT_F=storage_t, defrostFactor=sc["defrost_factor"],
+                percentUseable=1.0, compRuntime_hr=sc["max_run_hr"],
+                onFract=sc["on_fract"], offFract=sc["off_fract"],
+                onT=supply_t, offT=storage_t, building=building,
+                onFractLoadUp=lu_on, offFractLoadUp=sc["off_fract"],
+                onFractShed=sc["shed_on_fract"], offFractShed=sc["off_fract"],
+                doLoadShift=True, loadShiftSchedule=ls_sched,
+                loadUpHours=max(1, sc["lu_hours"]),
+                loadShiftPercent=sc.get("load_shift_percent", 1),
+            )
+            pts = system.lsSizedPoints(building)
+            results.append({{"label": sc["label"], "is_ls": True,
+                "x": list(pts[2]), "y": list(pts[0]), "cap": list(pts[1]),
+                "rec": pts[3], "error": None}})
+        else:
+            system = ParallelLoopTank(
+                safetyTM=sc["tm_safety_factor"], setpointTM_F=sc["tm_off_temp_f"],
+                TMonTemp_F=sc["tm_on_temp_f"], offTime_hr=sc["tm_off_time_hr"],
+                storageT_F=storage_t, defrostFactor=sc["defrost_factor"],
+                percentUseable=1.0, compRuntime_hr=sc["max_run_hr"],
+                onFract=sc["on_fract"], offFract=sc["off_fract"],
+                onT=supply_t, offT=storage_t, building=building,
+            )
+            pts = system.primaryCurve(building)
+            results.append({{"label": sc["label"], "is_ls": False,
+                "x": pts[0].tolist(), "y": pts[1].tolist(), "hrs": pts[2].tolist(),
+                "rec": pts[3], "error": None}})
+    except Exception as e:
+        results.append({{"label": sc["label"], "is_ls": sc.get("load_shift", False),
+            "x": [], "y": [], "cap": [], "hrs": [], "rec": 0, "error": str(e)}})
+print(json.dumps(results))
+"""
+
+
+ORIGINAL_SPRTP_CURVE_SCRIPT = r"""
+import sys, json
+sys.path.insert(0, r"{src}")
+from ecoengine.engine.BuildingCreator import createBuilding
+from ecoengine.objects.systems.SPRTP import SPRTP
+
+scenarios = json.loads('{scenarios_json_escaped}')
+results = []
+for sc in scenarios:
+    try:
+        building = createBuilding(
+            incomingT_F=sc["inlet_t_f"], magnitudeStat=sc["magnitude"],
+            supplyT_F=sc["supply_t_f"], buildingType=sc["building_type"],
+            gpdpp=sc["gpdpp"], designOAT_F=sc["design_oat_f"],
+            returnT_F=sc["return_temp_f"], flowRate=sc["return_flow_gpm"],
+        )
+        supply_t, storage_t = sc["supply_t_f"], sc["storage_t_f"]
+        if sc.get("load_shift"):
+            ls_sched = [0 if h in sc["shed_hours"] else 1 for h in range(24)]
+            lu_on = sc["lu_on_fract"] if sc["lu_on_fract"] is not None else sc["on_fract"]
+            system = SPRTP(
+                storageT_F=storage_t, defrostFactor=sc["defrost_factor"],
+                percentUseable=1.0, compRuntime_hr=sc["max_run_hr"],
+                onFract=sc["on_fract"], offFract=sc["off_fract"],
+                onT=supply_t, offT=storage_t, building=building,
+                onFractLoadUp=lu_on, offFractLoadUp=sc["off_fract"],
+                onFractShed=sc["shed_on_fract"], offFractShed=sc["off_fract"],
+                doLoadShift=True, loadShiftSchedule=ls_sched,
+                loadUpHours=max(1, sc["lu_hours"]),
+                loadShiftPercent=sc.get("load_shift_percent", 1),
+            )
+            pts = system.lsSizedPoints(building)
+            results.append({{"label": sc["label"], "is_ls": True,
+                "x": list(pts[2]), "y": list(pts[0]), "cap": list(pts[1]),
+                "rec": pts[3], "error": None}})
+        else:
+            system = SPRTP(
+                storageT_F=storage_t, defrostFactor=sc["defrost_factor"],
+                percentUseable=1.0, compRuntime_hr=sc["max_run_hr"],
+                onFract=sc["on_fract"], offFract=sc["off_fract"],
+                onT=supply_t, offT=storage_t, building=building,
+            )
+            pts = system.primaryCurve(building)
+            results.append({{"label": sc["label"], "is_ls": False,
+                "x": pts[0].tolist(), "y": pts[1].tolist(), "hrs": pts[2].tolist(),
+                "rec": pts[3], "error": None}})
+    except Exception as e:
+        results.append({{"label": sc["label"], "is_ls": sc.get("load_shift", False),
+            "x": [], "y": [], "cap": [], "hrs": [], "rec": 0, "error": str(e)}})
+print(json.dumps(results))
+"""
+
+
+ORIGINAL_SWING_CURVE_SCRIPT = r"""
+import sys, json
+sys.path.insert(0, r"{src}")
+from ecoengine.engine.BuildingCreator import createBuilding
+from ecoengine.objects.systems.SwingTank import SwingTank
+
+scenarios = json.loads('{scenarios_json_escaped}')
+results = []
+for sc in scenarios:
+    try:
+        building = createBuilding(
+            incomingT_F=sc["inlet_t_f"], magnitudeStat=sc["magnitude"],
+            supplyT_F=sc["supply_t_f"], buildingType=sc["building_type"],
+            gpdpp=sc["gpdpp"], designOAT_F=sc["design_oat_f"],
+        )
+        building.recirc_loss = (
+            sc["return_flow_gpm"] * (sc["supply_t_f"] - sc["return_temp_f"]) * 8.353535 * 60.0
+        )
+        supply_t, storage_t = sc["supply_t_f"], sc["storage_t_f"]
+        if sc.get("load_shift"):
+            ls_sched = [0 if h in sc["shed_hours"] else 1 for h in range(24)]
+            lu_on = sc["lu_on_fract"] if sc["lu_on_fract"] is not None else sc["on_fract"]
+            system = SwingTank(
+                safetyTM=sc["tm_safety_factor"], storageT_F=storage_t,
+                defrostFactor=sc["defrost_factor"], percentUseable=1.0,
+                compRuntime_hr=sc["max_run_hr"], onFract=sc["on_fract"],
+                offFract=sc["off_fract"], onT=supply_t, offT=storage_t,
+                building=building, onFractLoadUp=lu_on,
+                offFractLoadUp=sc["off_fract"], onFractShed=sc["shed_on_fract"],
+                offFractShed=sc["off_fract"], doLoadShift=True,
+                loadShiftSchedule=ls_sched, loadUpHours=max(1, sc["lu_hours"]),
+            )
+            pts = system.lsSizedPoints(building)
+            results.append({{"label": sc["label"], "is_ls": True,
+                "x": list(pts[2]), "y": list(pts[0]), "cap": list(pts[1]),
+                "rec": pts[3], "error": None}})
+        else:
+            system = SwingTank(
+                safetyTM=sc["tm_safety_factor"], storageT_F=storage_t,
+                defrostFactor=sc["defrost_factor"], percentUseable=1.0,
+                compRuntime_hr=sc["max_run_hr"], onFract=sc["on_fract"],
+                offFract=sc["off_fract"], onT=supply_t, offT=storage_t,
+                building=building,
+            )
+            pts = system.primaryCurve(building)
+            results.append({{"label": sc["label"], "is_ls": False,
+                "x": pts[0].tolist(), "y": pts[1].tolist(), "hrs": pts[2].tolist(),
+                "rec": pts[3], "error": None}})
+    except Exception as e:
+        results.append({{"label": sc["label"], "is_ls": sc.get("load_shift", False),
+            "x": [], "y": [], "cap": [], "hrs": [], "rec": 0, "error": str(e)}})
+print(json.dumps(results))
+"""
+
+
+# ---- Old codebase curve runners ----------------------------------------
+
+def run_old_primary_curves(scenarios: list[dict]) -> list[dict]:
+    print("  Getting old primary curves...")
+    return _run_curve_script(ORIGINAL_PRIMARY_CURVE_SCRIPT, scenarios, "old primary")
+
+
+def run_old_parallel_curves(scenarios: list[dict]) -> list[dict]:
+    print("  Getting old parallel loop curves...")
+    return _run_curve_script(ORIGINAL_PARALLEL_CURVE_SCRIPT, scenarios, "old parallel")
+
+
+def run_old_sprtp_curves(scenarios: list[dict]) -> list[dict]:
+    print("  Getting old SPRTP curves...")
+    return _run_curve_script(ORIGINAL_SPRTP_CURVE_SCRIPT, scenarios, "old SPRTP")
+
+
+def run_old_swing_curves(scenarios: list[dict]) -> list[dict]:
+    print("  Getting old swing tank curves...")
+    return _run_curve_script(ORIGINAL_SWING_CURVE_SCRIPT, scenarios, "old swing")
+
+
+# ---- New codebase curve runners ----------------------------------------
+
+def _make_controls(sc: dict, key: str = "normal"):
+    from ecoengine.objects.components.heating.Controls import Controls
+    if key == "normal":
+        return Controls(
+            on_sensor_fract=sc["on_fract"], on_trigger_t_f=sc["supply_t_f"],
+            off_sensor_fract=sc["off_fract"], off_trigger_t_f=sc["storage_t_f"],
+            outlet_temp_f=sc["storage_t_f"],
+        )
+    if key == "shed":
+        return Controls(
+            on_sensor_fract=sc["shed_on_fract"], on_trigger_t_f=sc["supply_t_f"],
+            off_sensor_fract=sc["off_fract"], off_trigger_t_f=sc["storage_t_f"],
+            outlet_temp_f=sc["storage_t_f"],
+        )
+    if key == "loadUp":
+        lu_on = sc["lu_on_fract"] if sc["lu_on_fract"] is not None else sc["on_fract"]
+        return Controls(
+            on_sensor_fract=lu_on, on_trigger_t_f=sc["supply_t_f"],
+            off_sensor_fract=sc["off_fract"], off_trigger_t_f=sc["storage_t_f"],
+            outlet_temp_f=sc["storage_t_f"],
+        )
+    raise ValueError(f"Unknown control key: {key!r}")
+
+
+def _build_schedule_and_cmap(sc: dict):
+    """Build (schedule, cmap) for a load-shift scenario."""
+    schedule = ["normal"] * 24
+    for h in sc["shed_hours"]:
+        schedule[h] = "shed"
+    first_shed = sc["shed_hours"][0]
+    for i in range(sc["lu_hours"]):
+        schedule[first_shed - 1 - i] = "loadUp"
+
+    cmap = {
+        "normal": _make_controls(sc, "normal"),
+        "shed":   _make_controls(sc, "shed"),
+    }
+    if sc["lu_hours"] > 0 and sc["lu_on_fract"] is not None:
+        cmap["loadUp"] = _make_controls(sc, "loadUp")
+    return schedule, cmap
+
+
+def run_new_primary_curves(scenarios: list[dict]) -> list[dict]:
+    """Get sizing curves for primary (no-recirc) systems from the new codebase."""
+    from ecoengine.objects.building.Building import Building
+    from ecoengine.objects.building.ClimateZone import ClimateZone
+    from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem, _load_shift_fract_total_vol
+    import warnings
+
+    results = []
+    for sc in scenarios:
+        try:
+            zone = ClimateZone.from_design_conditions(
+                design_oat_f=sc["design_oat_f"],
+                design_inlet_water_temp_f=sc["inlet_t_f"],
+            )
+            building = Building.from_building_type(
+                building_type=sc["building_type"], magnitude=sc["magnitude"],
+                climate_zone=zone, gpdpp=sc["gpdpp"] if sc["gpdpp"] else None,
+            )
+            if sc["load_shift"]:
+                schedule, cmap = _build_schedule_and_cmap(sc)
+                ls_fract = _load_shift_fract_total_vol(sc.get("load_shift_percent", 1.0))
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    system = DHWSystem.from_size(
+                        building=building, supply_temp_f=sc["supply_t_f"],
+                        storage_temp_f=sc["storage_t_f"], max_daily_run_hr=sc["max_run_hr"],
+                        defrost_factor=sc["defrost_factor"],
+                        control_schedule=schedule, control_map=cmap,
+                        load_shift_fract_total_vol=ls_fract,
+                    )
+                curve = system.get_ls_sizing_curve(
+                    building, control_schedule=schedule, control_map=cmap,
+                    load_shift_percent=sc.get("load_shift_percent", 1.0),
+                )
+                results.append({"label": sc["label"], "is_ls": True,
+                    "x": [p * 100.0 for p in curve["load_shift_percent"]],
+                    "y": curve["storage_storageT_gal"],
+                    "cap": curve["capacity_kbtuh"],
+                    "rec": curve["recommended_index"], "error": None})
+            else:
+                cmap = {"normal": _make_controls(sc, "normal")}
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    system = DHWSystem.from_size(
+                        building=building, supply_temp_f=sc["supply_t_f"],
+                        storage_temp_f=sc["storage_t_f"], max_daily_run_hr=sc["max_run_hr"],
+                        defrost_factor=sc["defrost_factor"], control_map=cmap,
+                    )
+                curve = system.get_sizing_curve(building)
+                results.append({"label": sc["label"], "is_ls": False,
+                    "x": curve["storage_storageT_gal"], "y": curve["capacity_kbtuh"],
+                    "hrs": curve["heat_hours"], "rec": curve["recommended_index"],
+                    "error": None})
+        except Exception as e:
+            results.append({"label": sc["label"], "is_ls": sc.get("load_shift", False),
+                "x": [], "y": [], "cap": [], "hrs": [], "rec": 0, "error": str(e)})
+    return results
+
+
+def run_new_parallel_curves(scenarios: list[dict]) -> list[dict]:
+    """Get sizing curves for ParallelLoopSystem from the new codebase."""
+    from ecoengine.objects.building.Building import Building
+    from ecoengine.objects.building.ClimateZone import ClimateZone
+    from ecoengine.objects.dhwsystems.DHWSystem import _load_shift_fract_total_vol
+    from ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem import ParallelLoopSystem
+    import warnings
+
+    results = []
+    for sc in scenarios:
+        try:
+            zone = ClimateZone.from_design_conditions(
+                design_oat_f=sc["design_oat_f"],
+                design_inlet_water_temp_f=sc["inlet_t_f"],
+            )
+            building = Building.from_building_type(
+                building_type=sc["building_type"], magnitude=sc["magnitude"],
+                climate_zone=zone, gpdpp=sc["gpdpp"] if sc["gpdpp"] else None,
+            )
+            if sc.get("load_shift"):
+                schedule, cmap = _build_schedule_and_cmap(sc)
+                ls_fract = _load_shift_fract_total_vol(sc.get("load_shift_percent", 1.0))
+            else:
+                schedule, ls_fract = None, 1.0
+                cmap = {"normal": _make_controls(sc, "normal")}
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                system = ParallelLoopSystem.from_size(
+                    building=building, supply_temp_f=sc["supply_t_f"],
+                    storage_temp_f=sc["storage_t_f"],
+                    return_temp_f=sc["return_temp_f"], return_flow_gpm=sc["return_flow_gpm"],
+                    tm_on_temp_f=sc["tm_on_temp_f"], tm_off_temp_f=sc["tm_off_temp_f"],
+                    tm_off_time_hr=sc["tm_off_time_hr"], tm_safety_factor=sc["tm_safety_factor"],
+                    max_daily_run_hr=sc["max_run_hr"], defrost_factor=sc["defrost_factor"],
+                    control_schedule=schedule, control_map=cmap,
+                    load_shift_fract_total_vol=ls_fract,
+                )
+
+            if sc.get("load_shift"):
+                curve = system.get_ls_sizing_curve(
+                    building, control_schedule=schedule, control_map=cmap,
+                    load_shift_percent=sc.get("load_shift_percent", 1.0),
+                )
+                results.append({"label": sc["label"], "is_ls": True,
+                    "x": [p * 100.0 for p in curve["load_shift_percent"]],
+                    "y": curve["storage_storageT_gal"],
+                    "cap": curve["capacity_kbtuh"],
+                    "rec": curve["recommended_index"], "error": None})
+            else:
+                curve = system.get_sizing_curve(building)
+                results.append({"label": sc["label"], "is_ls": False,
+                    "x": curve["storage_storageT_gal"], "y": curve["capacity_kbtuh"],
+                    "hrs": curve["heat_hours"], "rec": curve["recommended_index"],
+                    "error": None})
+        except Exception as e:
+            results.append({"label": sc["label"], "is_ls": sc.get("load_shift", False),
+                "x": [], "y": [], "cap": [], "hrs": [], "rec": 0, "error": str(e)})
+    return results
+
+
+def run_new_sprtp_curves(scenarios: list[dict]) -> list[dict]:
+    """Get sizing curves for SinglePassRTPSystem from the new codebase."""
+    from ecoengine.objects.building.Building import Building
+    from ecoengine.objects.building.ClimateZone import ClimateZone
+    from ecoengine.objects.dhwsystems.DHWSystem import _load_shift_fract_total_vol
+    from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import SinglePassRTPSystem
+    import warnings
+
+    results = []
+    for sc in scenarios:
+        try:
+            zone = ClimateZone.from_design_conditions(
+                design_oat_f=sc["design_oat_f"],
+                design_inlet_water_temp_f=sc["inlet_t_f"],
+            )
+            building = Building.from_building_type(
+                building_type=sc["building_type"], magnitude=sc["magnitude"],
+                climate_zone=zone, gpdpp=sc["gpdpp"] if sc["gpdpp"] else None,
+            )
+            if sc.get("load_shift"):
+                schedule, cmap = _build_schedule_and_cmap(sc)
+                ls_fract = _load_shift_fract_total_vol(sc.get("load_shift_percent", 1.0))
+            else:
+                schedule, ls_fract = None, 1.0
+                cmap = {"normal": _make_controls(sc, "normal")}
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                system = SinglePassRTPSystem.from_size(
+                    building=building, supply_temp_f=sc["supply_t_f"],
+                    storage_temp_f=sc["storage_t_f"],
+                    return_temp_f=sc["return_temp_f"], return_flow_gpm=sc["return_flow_gpm"],
+                    max_daily_run_hr=sc["max_run_hr"], defrost_factor=sc["defrost_factor"],
+                    control_schedule=schedule, control_map=cmap,
+                    load_shift_fract_total_vol=ls_fract,
+                )
+
+            if sc.get("load_shift"):
+                curve = system.get_ls_sizing_curve(
+                    building, control_schedule=schedule, control_map=cmap,
+                    load_shift_percent=sc.get("load_shift_percent", 1.0),
+                )
+                results.append({"label": sc["label"], "is_ls": True,
+                    "x": [p * 100.0 for p in curve["load_shift_percent"]],
+                    "y": curve["storage_storageT_gal"],
+                    "cap": curve["capacity_kbtuh"],
+                    "rec": curve["recommended_index"], "error": None})
+            else:
+                curve = system.get_sizing_curve(building)
+                results.append({"label": sc["label"], "is_ls": False,
+                    "x": curve["storage_storageT_gal"], "y": curve["capacity_kbtuh"],
+                    "hrs": curve["heat_hours"], "rec": curve["recommended_index"],
+                    "error": None})
+        except Exception as e:
+            results.append({"label": sc["label"], "is_ls": sc.get("load_shift", False),
+                "x": [], "y": [], "cap": [], "hrs": [], "rec": 0, "error": str(e)})
+    return results
+
+
+def run_new_swing_curves(scenarios: list[dict]) -> list[dict]:
+    """Get sizing curves for SwingSystem from the new codebase."""
+    from ecoengine.objects.building.Building import Building
+    from ecoengine.objects.building.ClimateZone import ClimateZone
+    from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem
+    import warnings
+
+    results = []
+    for sc in scenarios:
+        try:
+            zone = ClimateZone.from_design_conditions(
+                design_oat_f=sc["design_oat_f"],
+                design_inlet_water_temp_f=sc["inlet_t_f"],
+            )
+            building = Building.from_building_type(
+                building_type=sc["building_type"], magnitude=sc["magnitude"],
+                climate_zone=zone, gpdpp=sc["gpdpp"] if sc["gpdpp"] else None,
+            )
+            if sc.get("load_shift"):
+                schedule, cmap = _build_schedule_and_cmap(sc)
+            else:
+                schedule = None
+                cmap = {"normal": _make_controls(sc, "normal")}
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                system = SwingSystem.from_size(
+                    building=building, supply_temp_f=sc["supply_t_f"],
+                    storage_temp_f=sc["storage_t_f"],
+                    return_temp_f=sc["return_temp_f"], return_flow_gpm=sc["return_flow_gpm"],
+                    tm_safety_factor=sc["tm_safety_factor"],
+                    max_daily_run_hr=sc["max_run_hr"], defrost_factor=sc["defrost_factor"],
+                    control_schedule=schedule, control_map=cmap,
+                )
+
+            if sc.get("load_shift"):
+                curve = system.get_ls_sizing_curve(
+                    building, control_schedule=schedule, control_map=cmap,
+                    load_shift_percent=sc.get("load_shift_percent", 1.0),
+                )
+                results.append({"label": sc["label"], "is_ls": True,
+                    "x": [p * 100.0 for p in curve["load_shift_percent"]],
+                    "y": curve["storage_storageT_gal"],
+                    "cap": curve["capacity_kbtuh"],
+                    "rec": curve["recommended_index"], "error": None})
+            else:
+                curve = system.get_sizing_curve(building)
+                results.append({"label": sc["label"], "is_ls": False,
+                    "x": curve["storage_storageT_gal"], "y": curve["capacity_kbtuh"],
+                    "hrs": curve["heat_hours"], "rec": curve["recommended_index"],
+                    "error": None})
+        except Exception as e:
+            results.append({"label": sc["label"], "is_ls": sc.get("load_shift", False),
+                "x": [], "y": [], "cap": [], "hrs": [], "rec": 0, "error": str(e)})
+    return results
+
+
+# ---- Figure generation -------------------------------------------------
+
+def _make_comparison_figure(label: str, old_norm: dict, new_norm: dict):
+    """
+    Build a side-by-side Plotly subplot comparing old (left) and new (right)
+    sizing curves, with an interactive slider.
+
+    Trace layout in fig.data:
+      [0] old curve line (col=1)
+      [1] new curve line (col=2)
+      [2 .. 2+N-1]     old diamonds, one per slider step
+      [2+N .. 2+2N-1]  new diamonds, one per slider step
+
+    where N = min(len(old_x), len(new_x)).  The slider advances both diamonds
+    simultaneously.  For primary curves the label shows daily run hours; for
+    LS curves it shows the coverage percentage.
+    """
+    try:
+        import plotly.graph_objects as go
+        from plotly.subplots import make_subplots
+    except ImportError:
+        raise ImportError("plotly is required. Install with: pip install plotly")
+
+    is_ls = old_norm.get("is_ls", new_norm.get("is_ls", False))
+
+    if is_ls:
+        x_title = "Load-Shift Days Covered (%)"
+        y_title = "Primary Tank Volume (gal at Storage Temp)"
+    else:
+        x_title = "Primary Tank Volume (gal at Storage Temp)"
+        y_title = "Heating Capacity (kBTU/hr)"
+
+    fig = make_subplots(
+        rows=1, cols=2,
+        shared_yaxes=True,
+        subplot_titles=["Original Codebase", "New Codebase"],
+        horizontal_spacing=0.04,
+    )
+    fig.update_layout(title_text=label, title_font_size=13)
+
+    old_x   = old_norm.get("x", [])
+    new_x   = new_norm.get("x", [])
+    old_y   = old_norm.get("y", [])
+    new_y   = new_norm.get("y", [])
+    old_hrs = old_norm.get("hrs", [])
+    new_hrs = new_norm.get("hrs", [])
+    old_err = old_norm.get("error")
+    new_err = new_norm.get("error")
+
+    # Build hover templates (include run hours for primary curves)
+    def _hover(side_hrs, is_line=True):
+        if is_ls:
+            return "Coverage: <b>%{x:.0f}%</b><br>Storage: <b>%{y:.1f} gal</b><extra></extra>"
+        base = "Storage: <b>%{x:.1f} gal</b><br>Capacity: <b>%{y:.1f} kBTU/hr</b>"
+        if side_hrs:
+            base += "<br>Run hours: <b>%{customdata:.2f} hr/day</b>"
+        return base + "<extra></extra>"
+
+    # Trace 0 — old curve line
+    if old_err or not old_x:
+        fig.add_annotation(
+            text=f"<b>ERROR</b><br>{(old_err or 'No data')[:120]}",
+            xref="x1", yref="y1", x=0.5, y=0.5,
+            xanchor="center", showarrow=False, font=dict(color="red", size=11),
+        )
+        fig.add_trace(go.Scatter(x=[], y=[], showlegend=False), row=1, col=1)
+    else:
+        fig.add_trace(go.Scatter(
+            x=old_x, y=old_y, mode="lines",
+            line=dict(color="#28a745", width=2), showlegend=False,
+            hovertemplate=_hover(old_hrs),
+            customdata=old_hrs if old_hrs and not is_ls else None,
+        ), row=1, col=1)
+
+    # Trace 1 — new curve line
+    if new_err or not new_x:
+        fig.add_annotation(
+            text=f"<b>ERROR</b><br>{(new_err or 'No data')[:120]}",
+            xref="x2", yref="y2", x=0.5, y=0.5,
+            xanchor="center", showarrow=False, font=dict(color="red", size=11),
+        )
+        fig.add_trace(go.Scatter(x=[], y=[], showlegend=False), row=1, col=2)
+    else:
+        fig.add_trace(go.Scatter(
+            x=new_x, y=new_y, mode="lines",
+            line=dict(color="#28a745", width=2), showlegend=False,
+            hovertemplate=_hover(new_hrs),
+            customdata=new_hrs if new_hrs and not is_ls else None,
+        ), row=1, col=2)
+
+    # Determine slider range and recommended step
+    N_old = len(old_x)
+    N_new = len(new_x)
+    N_steps = min(N_old, N_new) if (N_old > 0 and N_new > 0) else max(N_old, N_new)
+
+    old_rec = min(old_norm.get("rec_index", 0), N_steps - 1) if N_steps > 0 else 0
+    # Use old rec as the initial active slider step
+    initial = max(0, old_rec)
+
+    # Traces 2 .. 2+N_steps-1: old diamonds (col=1)
+    for i in range(N_steps):
+        xi = old_x[i] if i < N_old else None
+        yi = old_y[i] if i < N_old else None
+        fig.add_trace(go.Scatter(
+            x=[xi] if xi is not None else [],
+            y=[yi] if yi is not None else [],
+            mode="markers",
+            marker=dict(symbol="diamond", color="#2EA3F2", size=12),
+            showlegend=False, visible=(i == initial),
+            hoverinfo="skip",
+        ), row=1, col=1)
+
+    # Traces 2+N_steps .. 2+2*N_steps-1: new diamonds (col=2)
+    for i in range(N_steps):
+        xi = new_x[i] if i < N_new else None
+        yi = new_y[i] if i < N_new else None
+        fig.add_trace(go.Scatter(
+            x=[xi] if xi is not None else [],
+            y=[yi] if yi is not None else [],
+            mode="markers",
+            marker=dict(symbol="diamond", color="#2EA3F2", size=12),
+            showlegend=False, visible=(i == initial),
+            hoverinfo="skip",
+        ), row=1, col=2)
+
+    # Build slider steps
+    if N_steps > 0:
+        def _step_label(i: int) -> str:
+            if is_ls:
+                x_val = old_x[i] if i < N_old else (new_x[i] if i < N_new else 0)
+                return f"Coverage: <b>{x_val:.0f}%</b>"
+            # Non-LS: show run hours
+            h = (old_hrs[i] if (old_hrs and i < len(old_hrs)) else
+                 (new_hrs[i] if (new_hrs and i < len(new_hrs)) else None))
+            return f"Run hours: <b>{h:.2f} hr/day</b>" if h is not None else f"Step {i}"
+
+        steps = []
+        for i in range(N_steps):
+            # vis[0]=old line, vis[1]=new line, then old diamonds, then new diamonds
+            vis = [True, True]
+            vis += [j == i for j in range(N_steps)]   # old diamonds
+            vis += [j == i for j in range(N_steps)]   # new diamonds
+            steps.append(dict(
+                label=_step_label(i),
+                method="update",
+                args=[{"visible": vis}],
+            ))
+
+        fig.update_layout(
+            sliders=[dict(
+                steps=steps,
+                active=initial,
+                currentvalue=dict(
+                    prefix="<b>Selected</b>: ",
+                    visible=True,
+                    font=dict(size=13),
+                    xanchor="left",
+                ),
+                pad={"t": 60},
+                ticklen=0, minorticklen=0,
+                bgcolor="#CCD9DB", borderwidth=0,
+            )],
+        )
+
+    fig.update_xaxes(title_text=x_title, row=1, col=1)
+    fig.update_xaxes(title_text=x_title, row=1, col=2)
+    fig.update_yaxes(title_text=y_title, row=1, col=1)
+    fig.update_layout(height=500, margin=dict(t=70, b=80, l=60, r=20))
+    return fig
+
+
+def write_curve_comparison_html(sections: list[dict], output_path: str) -> None:
+    """
+    Write one HTML file containing all sizing curve comparisons.
+
+    Parameters
+    ----------
+    sections : list of dicts, each with:
+        "title"    : str — section heading (e.g. "PRIMARY SYSTEM")
+        "figures"  : list of plotly.graph_objects.Figure
+    output_path : str
+    """
+    first_plotly_loaded = False
+    html_parts = [
+        "<!DOCTYPE html>\n<html>\n<head><meta charset='utf-8'>\n",
+        "<style>h2{font-family:sans-serif;margin-top:40px;border-bottom:2px solid #aaa;padding-bottom:6px;}"
+        "h3{font-family:sans-serif;color:#444;margin-top:24px;margin-bottom:4px;font-size:13px;}</style>\n",
+        "</head>\n<body>\n",
+        "<h1 style='font-family:sans-serif'>Sizing Curve Comparison: Original vs New Codebase</h1>\n",
+    ]
+
+    for section in sections:
+        html_parts.append(f"<h2>{section['title']}</h2>\n")
+        for fig_info in section["figures"]:
+            html_parts.append(f"<h3>{fig_info['label']}</h3>\n")
+            include_js = "cdn" if not first_plotly_loaded else False
+            first_plotly_loaded = True
+            html_parts.append(
+                fig_info["fig"].to_html(full_html=False, include_plotlyjs=include_js)
+            )
+            html_parts.append("\n")
+
+    html_parts.append("</body>\n</html>\n")
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write("".join(html_parts))
+
+    print(f"Saved curve comparison HTML: {output_path}")
+
+
+# ---------------------------------------------------------------------------
 # Main — combine and write CSV
 # ---------------------------------------------------------------------------
 
@@ -1931,6 +2740,85 @@ def main():
         )
         if row["orig_error"]: print(f"  ORIG ERROR: {row['orig_error']}")
         if row["new_error"]:  print(f"  NEW  ERROR: {row['new_error']}")
+
+    # ------------------------------------------------------------------
+    # Sizing curve comparison HTML
+    # ------------------------------------------------------------------
+    curve_html_path = os.path.join(os.path.dirname(__file__), "compare_sizing_curves.html")
+    print("\nGenerating sizing curve comparison HTML...")
+
+    # --- Primary system ---
+    print("Primary system curves...")
+    old_primary = run_old_primary_curves(SCENARIOS)
+    new_primary = run_new_primary_curves(SCENARIOS)
+    old_by_lbl  = {r["label"]: r for r in old_primary}
+    new_by_lbl  = {r["label"]: r for r in new_primary}
+    primary_figs = []
+    for sc in SCENARIOS:
+        lbl = sc["label"]
+        old_n = _norm_curve(old_by_lbl.get(lbl, {"label": lbl, "is_ls": sc["load_shift"],
+                            "x": [], "y": [], "rec": 0, "error": "missing"}), is_old=True)
+        new_n = _norm_curve(new_by_lbl.get(lbl, {"label": lbl, "is_ls": sc["load_shift"],
+                            "x": [], "y": [], "rec": 0, "error": "missing"}), is_old=False)
+        primary_figs.append({"label": lbl, "fig": _make_comparison_figure(lbl, old_n, new_n)})
+
+    # --- Parallel Loop ---
+    print("Parallel loop curves...")
+    old_pl = run_old_parallel_curves(PARALLEL_SCENARIOS)
+    new_pl = run_new_parallel_curves(PARALLEL_SCENARIOS)
+    old_pl_lbl = {r["label"]: r for r in old_pl}
+    new_pl_lbl = {r["label"]: r for r in new_pl}
+    pl_figs = []
+    for sc in PARALLEL_SCENARIOS:
+        lbl = sc["label"]
+        is_ls = sc.get("load_shift", False)
+        old_n = _norm_curve(old_pl_lbl.get(lbl, {"label": lbl, "is_ls": is_ls,
+                            "x": [], "y": [], "rec": 0, "error": "missing"}), is_old=True)
+        new_n = _norm_curve(new_pl_lbl.get(lbl, {"label": lbl, "is_ls": is_ls,
+                            "x": [], "y": [], "rec": 0, "error": "missing"}), is_old=False)
+        pl_figs.append({"label": lbl, "fig": _make_comparison_figure(lbl, old_n, new_n)})
+
+    # --- Single Pass RTP ---
+    print("SPRTP curves...")
+    old_sprtp = run_old_sprtp_curves(SPRTP_SCENARIOS)
+    new_sprtp = run_new_sprtp_curves(SPRTP_SCENARIOS)
+    old_sprtp_lbl = {r["label"]: r for r in old_sprtp}
+    new_sprtp_lbl = {r["label"]: r for r in new_sprtp}
+    sprtp_figs = []
+    for sc in SPRTP_SCENARIOS:
+        lbl = sc["label"]
+        is_ls = sc.get("load_shift", False)
+        old_n = _norm_curve(old_sprtp_lbl.get(lbl, {"label": lbl, "is_ls": is_ls,
+                            "x": [], "y": [], "rec": 0, "error": "missing"}), is_old=True)
+        new_n = _norm_curve(new_sprtp_lbl.get(lbl, {"label": lbl, "is_ls": is_ls,
+                            "x": [], "y": [], "rec": 0, "error": "missing"}), is_old=False)
+        sprtp_figs.append({"label": lbl, "fig": _make_comparison_figure(lbl, old_n, new_n)})
+
+    # --- Swing Tank ---
+    print("Swing tank curves...")
+    old_swing = run_old_swing_curves(SWING_SCENARIOS)
+    new_swing = run_new_swing_curves(SWING_SCENARIOS)
+    old_swing_lbl = {r["label"]: r for r in old_swing}
+    new_swing_lbl = {r["label"]: r for r in new_swing}
+    swing_figs = []
+    for sc in SWING_SCENARIOS:
+        lbl = sc["label"]
+        is_ls = sc.get("load_shift", False)
+        old_n = _norm_curve(old_swing_lbl.get(lbl, {"label": lbl, "is_ls": is_ls,
+                            "x": [], "y": [], "rec": 0, "error": "missing"}), is_old=True)
+        new_n = _norm_curve(new_swing_lbl.get(lbl, {"label": lbl, "is_ls": is_ls,
+                            "x": [], "y": [], "rec": 0, "error": "missing"}), is_old=False)
+        swing_figs.append({"label": lbl, "fig": _make_comparison_figure(lbl, old_n, new_n)})
+
+    write_curve_comparison_html(
+        sections=[
+            {"title": "PRIMARY SYSTEM",        "figures": primary_figs},
+            {"title": "PARALLEL LOOP SYSTEM",  "figures": pl_figs},
+            {"title": "SINGLE PASS RTP SYSTEM","figures": sprtp_figs},
+            {"title": "SWING TANK SYSTEM",     "figures": swing_figs},
+        ],
+        output_path=curve_html_path,
+    )
 
 
 if __name__ == "__main__":

@@ -467,6 +467,48 @@ def test_climate_zone_oat(climate_zone, h0_oat, h100_oat, h4380_oat):
 
 
 # ===========================================================================
+# OAT bucket distribution
+# ===========================================================================
+
+def test_get_oat_buckets_sums_to_365():
+    """Every zone's buckets should cover exactly 365 days."""
+    for zone_id in (1, 9, 12, 19):
+        cz = ClimateZone.from_zone_id(zone_id)
+        buckets = cz.get_oat_buckets()
+        assert sum(buckets.values()) == 365, f"CZ {zone_id}: total days != 365"
+
+
+def test_get_oat_buckets_known_values():
+    """Spot-check bucket counts for two climate zones."""
+    # CZ 9 (zip 90210 → Beverly Hills, mild coastal climate)
+    cz9 = ClimateZone.from_zone_id(9)
+    b9 = cz9.get_oat_buckets()
+    assert b9[45.0] == 12
+    assert b9[50.0] == 47
+    assert b9[55.0] == 83
+    assert b9[65.0] == 51
+
+    # CZ 19 (desert/mountain zone)
+    cz19 = ClimateZone.from_zone_id(19)
+    b19 = cz19.get_oat_buckets()
+    assert b19[65.0] == 25
+
+
+def test_get_oat_buckets_raises_for_design_conditions():
+    """get_oat_buckets() must raise when no real hourly data is available."""
+    cz = ClimateZone.from_design_conditions(design_oat_f=50.0)
+    with pytest.raises(ValueError, match="design conditions"):
+        cz.get_oat_buckets()
+
+
+def test_get_oat_buckets_via_zip_code():
+    """Convenience: buckets via zip code should match direct zone lookup."""
+    cz_zip  = ClimateZone.from_zip_code(90210)
+    cz_zone = ClimateZone.from_zone_id(9)
+    assert cz_zip.get_oat_buckets() == cz_zone.get_oat_buckets()
+
+
+# ===========================================================================
 # DHW load per timestep
 # ===========================================================================
 

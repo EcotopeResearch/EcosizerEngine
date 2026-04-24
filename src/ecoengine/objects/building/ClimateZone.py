@@ -272,6 +272,43 @@ class ClimateZone:
             return self._constant_inlet_water_temp_f
         return min(self._inlet_water_temp_f_by_month)
 
+    def get_oat_buckets(self) -> dict[float, int]:
+        """
+        Return the distribution of daily average outdoor air temperatures
+        across 5°F buckets for the full typical meteorological year.
+
+        For each of the 365 days in the year the 24 hourly OAT values are
+        averaged to produce a daily mean, which is then assigned to the
+        nearest lower multiple of 5°F (e.g. 62.4°F → 60.0°F bucket).
+
+        Returns
+        -------
+        dict[float, int]
+            Mapping of bucket temperature [°F] → number of days in that
+            bucket.  Only buckets with at least one day are included.
+
+        Raises
+        ------
+        ValueError
+            If this ClimateZone was created with
+            ``from_design_conditions()`` and has no real hourly OAT data.
+        """
+        if self._oat_f_by_hour is None:
+            raise ValueError(
+                "get_oat_buckets() requires real hourly OAT data. "
+                "This ClimateZone was constructed from design conditions "
+                "and has no annual weather data to bucket."
+            )
+
+        buckets: dict[float, int] = {}
+        for day in range(365):
+            start = day * 24
+            daily_avg = sum(self._oat_f_by_hour[start : start + 24]) / 24.0
+            bucket = float((daily_avg // 5) * 5)
+            buckets[bucket] = buckets.get(bucket, 0) + 1
+
+        return buckets
+
     # ------------------------------------------------------------------
     # CSV loading helpers (private)
     # ------------------------------------------------------------------

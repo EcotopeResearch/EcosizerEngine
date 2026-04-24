@@ -15,16 +15,29 @@ Six scenarios are run and plotted:
 Run:
     python demo_3day_sim.py
 
-Outputs:
-    parallel_loop_baseline.html    -- parallel loop baseline chart
-    parallel_loop_ls.html          -- parallel loop load-shift chart
-    swing_tank_baseline.html       -- swing tank baseline chart
-    swing_tank_ls.html             -- swing tank load-shift chart
-    sprtp_baseline.html            -- single-pass RTP baseline chart
-    sprtp_ls.html                  -- single-pass RTP load-shift chart
+Outputs (one file per scenario — simulation on top, sizing curve below):
+    parallel_loop_baseline.html    -- parallel loop baseline
+    parallel_loop_ls.html          -- parallel loop load-shift
+    swing_tank_baseline.html       -- swing tank baseline
+    swing_tank_ls.html             -- swing tank load-shift
+    sprtp_baseline.html            -- single-pass RTP baseline
+    sprtp_ls.html                  -- single-pass RTP load-shift
 """
 
 from ecoengine.interfaces.EcosizerEngine import EcosizerEngine
+
+
+def write_combined_html(filepath: str, fig_top, fig_bottom) -> None:
+    """Write two Plotly figures stacked vertically into a single HTML file."""
+    top_div    = fig_top.to_html(full_html=False, include_plotlyjs="cdn")
+    bottom_div = fig_bottom.to_html(full_html=False, include_plotlyjs=False)
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write("<!DOCTYPE html>\n<html>\n<head><meta charset='utf-8'></head>\n<body>\n")
+        f.write(top_div)
+        f.write("\n<hr style='margin:40px 0;border:1px solid #ccc;'>\n")
+        f.write(bottom_div)
+        f.write("\n</body>\n</html>\n")
+
 
 # ---------------------------------------------------------------------------
 # Shared configuration
@@ -119,16 +132,19 @@ print_results(result_base, engine_base)
 cap_base = sizing_base["min_capacity_kbtuh"]
 vol_base = sizing_base["min_storage_storageT_gal"]
 OUTPUT_BASE = "parallel_loop_baseline.html"
-result_base.to_plotly(
+fig_sim_base = result_base.to_plotly(
     title = (
         f"3-Day Simulation — Parallel Loop Baseline — {N_PEOPLE}-Person Multi-Family  |  "
         f"{SUPPLY_T_F:.0f}°F supply / {STORAGE_T_F:.0f}°F storage  |  "
         f"Cap {cap_base:.0f} kBTU/hr, Storage {vol_base:.0f} gal"
     ),
-    filepath             = OUTPUT_BASE,
     include_temperatures = True,
 )
-print(f"\nPlot saved: {OUTPUT_BASE}")
+fig_curve_base = engine_base.plot_sizing_curve(
+    title = f"Sizing Curve — Parallel Loop Baseline — {N_PEOPLE}-Person Multi-Family",
+)
+write_combined_html(OUTPUT_BASE, fig_sim_base, fig_curve_base)
+print(f"\nSaved: {OUTPUT_BASE}")
 
 # ===========================================================================
 # Scenario 2 — Load shift: shed 4PM–9PM, load-up 1PM–4PM
@@ -186,16 +202,19 @@ print_results(result_ls, engine_ls)
 cap_ls = sizing_ls["min_capacity_kbtuh"]
 vol_ls = sizing_ls["min_storage_storageT_gal"]
 OUTPUT_LS = "parallel_loop_ls.html"
-result_ls.to_plotly(
+fig_sim_ls = result_ls.to_plotly(
     title = (
         f"3-Day Simulation — Parallel Loop Load Shift (shed 4–9PM, load-up 1–4PM) — {N_PEOPLE}-Person Multi-Family  |  "
         f"{SUPPLY_T_F:.0f}°F supply / {STORAGE_T_F:.0f}°F storage  |  "
         f"Cap {cap_ls:.0f} kBTU/hr, Storage {vol_ls:.0f} gal"
     ),
-    filepath             = OUTPUT_LS,
     include_temperatures = True,
 )
-print(f"\nPlot saved: {OUTPUT_LS}")
+fig_curve_ls = engine_ls.plot_sizing_curve(
+    title = f"Sizing Curve — Parallel Loop Load Shift (shed 4–9PM) — {N_PEOPLE}-Person Multi-Family",
+)
+write_combined_html(OUTPUT_LS, fig_sim_ls, fig_curve_ls)
+print(f"\nSaved: {OUTPUT_LS}")
 
 # ===========================================================================
 # Scenario 3 — Swing Tank Baseline (no load shifting)
@@ -233,16 +252,19 @@ cap_swing = sizing_swing["min_capacity_kbtuh"]
 vol_swing = sizing_swing["min_storage_storageT_gal"]
 tm_vol_swing = sizing_swing.get("min_tm_volume_gal", 0)
 OUTPUT_SWING = "swing_tank_baseline.html"
-result_swing.to_plotly(
+fig_sim_swing = result_swing.to_plotly(
     title = (
         f"3-Day Simulation — Swing Tank Baseline — {N_PEOPLE}-Person Multi-Family  |  "
         f"{SUPPLY_T_F:.0f}°F supply / {STORAGE_T_F:.0f}°F storage  |  "
         f"Cap {cap_swing:.0f} kBTU/hr, Primary {vol_swing:.0f} gal, Swing {tm_vol_swing:.0f} gal"
     ),
-    filepath             = OUTPUT_SWING,
     include_temperatures = True,
 )
-print(f"\nPlot saved: {OUTPUT_SWING}")
+fig_curve_swing = engine_swing.plot_sizing_curve(
+    title = f"Sizing Curve — Swing Tank Baseline — {N_PEOPLE}-Person Multi-Family",
+)
+write_combined_html(OUTPUT_SWING, fig_sim_swing, fig_curve_swing)
+print(f"\nSaved: {OUTPUT_SWING}")
 
 # ===========================================================================
 # Scenario 4 — Swing Tank Load Shift
@@ -288,17 +310,19 @@ cap_swing_ls = sizing_swing_ls["min_capacity_kbtuh"]
 vol_swing_ls = sizing_swing_ls["min_storage_storageT_gal"]
 tm_vol_swing_ls = sizing_swing_ls.get("min_tm_volume_gal", 0)
 OUTPUT_SWING_LS = "swing_tank_ls.html"
-result_swing_ls.to_plotly(
+fig_sim_swing_ls = result_swing_ls.to_plotly(
     title = (
         f"3-Day Simulation — Swing Tank Load Shift (shed 4–9PM, load-up 1–4PM) — {N_PEOPLE}-Person Multi-Family  |  "
         f"{SUPPLY_T_F:.0f}°F supply / {STORAGE_T_F:.0f}°F storage  |  "
         f"Cap {cap_swing_ls:.0f} kBTU/hr, Primary {vol_swing_ls:.0f} gal, Swing {tm_vol_swing_ls:.0f} gal"
     ),
-    filepath             = OUTPUT_SWING_LS,
     include_temperatures = True,
 )
-print(f"\nPlot saved: {OUTPUT_SWING_LS}")
-print("\nOpen any HTML file in a browser to view the interactive chart.")
+fig_curve_swing_ls = engine_swing_ls.plot_sizing_curve(
+    title = f"Sizing Curve — Swing Tank Load Shift (shed 4–9PM) — {N_PEOPLE}-Person Multi-Family",
+)
+write_combined_html(OUTPUT_SWING_LS, fig_sim_swing_ls, fig_curve_swing_ls)
+print(f"\nSaved: {OUTPUT_SWING_LS}")
 
 # ===========================================================================
 # Scenario 5 — Single-Pass RTP Baseline (no load shifting)
@@ -336,16 +360,19 @@ print_results(result_sprtp, engine_sprtp)
 cap_sprtp = sizing_sprtp["min_capacity_kbtuh"]
 vol_sprtp = sizing_sprtp["min_storage_storageT_gal"]
 OUTPUT_SPRTP = "sprtp_baseline.html"
-result_sprtp.to_plotly(
+fig_sim_sprtp = result_sprtp.to_plotly(
     title = (
         f"3-Day Simulation — Single-Pass RTP Baseline — {N_PEOPLE}-Person Multi-Family  |  "
         f"{SUPPLY_T_F:.0f}°F supply / {STORAGE_T_F:.0f}°F storage  |  "
         f"Cap {cap_sprtp:.0f} kBTU/hr, Storage {vol_sprtp:.0f} gal"
     ),
-    filepath             = OUTPUT_SPRTP,
     include_temperatures = True,
 )
-print(f"\nPlot saved: {OUTPUT_SPRTP}")
+fig_curve_sprtp = engine_sprtp.plot_sizing_curve(
+    title = f"Sizing Curve — Single-Pass RTP Baseline — {N_PEOPLE}-Person Multi-Family",
+)
+write_combined_html(OUTPUT_SPRTP, fig_sim_sprtp, fig_curve_sprtp)
+print(f"\nSaved: {OUTPUT_SPRTP}")
 
 # ===========================================================================
 # Scenario 6 — Single-Pass RTP Load Shift
@@ -390,14 +417,17 @@ print_results(result_sprtp_ls, engine_sprtp_ls)
 cap_sprtp_ls = sizing_sprtp_ls["min_capacity_kbtuh"]
 vol_sprtp_ls = sizing_sprtp_ls["min_storage_storageT_gal"]
 OUTPUT_SPRTP_LS = "sprtp_ls.html"
-result_sprtp_ls.to_plotly(
+fig_sim_sprtp_ls = result_sprtp_ls.to_plotly(
     title = (
         f"3-Day Simulation — Single-Pass RTP Load Shift (shed 4–9PM, load-up 1–4PM) — {N_PEOPLE}-Person Multi-Family  |  "
         f"{SUPPLY_T_F:.0f}°F supply / {STORAGE_T_F:.0f}°F storage  |  "
         f"Cap {cap_sprtp_ls:.0f} kBTU/hr, Storage {vol_sprtp_ls:.0f} gal"
     ),
-    filepath             = OUTPUT_SPRTP_LS,
     include_temperatures = True,
 )
-print(f"\nPlot saved: {OUTPUT_SPRTP_LS}")
-print("\nOpen any HTML file in a browser to view the interactive chart.")
+fig_curve_sprtp_ls = engine_sprtp_ls.plot_sizing_curve(
+    title = f"Sizing Curve — Single-Pass RTP Load Shift (shed 4–9PM) — {N_PEOPLE}-Person Multi-Family",
+)
+write_combined_html(OUTPUT_SPRTP_LS, fig_sim_sprtp_ls, fig_curve_sprtp_ls)
+print(f"\nSaved: {OUTPUT_SPRTP_LS}")
+print("\nOpen any HTML file in a browser to view the interactive charts.")
