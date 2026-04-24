@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from ecoengine.objects.components.heating.PerformanceMap import NominalPerformanceMap, PerformanceMap
 
@@ -11,8 +11,9 @@ if TYPE_CHECKING:
 
 class WaterHeater:
     """
-    Represents a single heat pump water heater unit. Owns a PerformanceMap,
+    Represents a water heater. And owns a PerformanceMap,
     a control schedule, and a control map. Tracks its own active/inactive state.
+    The Performance map can be used to simulate heat pump, gas fired, or electric resitance. 
 
     Control schedule and map
     ------------------------
@@ -48,6 +49,7 @@ class WaterHeater:
         performance_map: PerformanceMap | None,
         control_schedule: list[str] | None,
         control_map: dict[str, Controls] | None,
+        fuel_type: Literal["electric", "gas"] = "electric",
     ) -> None:
         """
         Parameters
@@ -61,10 +63,13 @@ class WaterHeater:
         control_map : dict[str, Controls] | None
             Maps schedule strings to Controls objects.
             None when no control logic is configured.
+        fuel_type : "electric" | "gas"
+            Fuel source for this heater. Default is "electric".
         """
         self.performance_map  = performance_map
         self.control_schedule = control_schedule
         self.control_map      = control_map
+        self.fuel_type        = fuel_type
         self._active          = False
 
     # ------------------------------------------------------------------
@@ -77,6 +82,7 @@ class WaterHeater:
         nominal_capacity_kbtuh: float,
         control_schedule: list[str] | None,
         control_map: dict[str, Controls] | None,
+        fuel_type: Literal["electric", "gas"] = "electric",
     ) -> WaterHeater:
         """
         Create a WaterHeater with a constant-capacity placeholder performance map.
@@ -93,6 +99,8 @@ class WaterHeater:
             24-element list mapping each hour to a key in control_map.
         control_map : dict[str, Controls] | None
             Maps schedule strings to Controls objects.
+        fuel_type : "electric" | "gas"
+            Fuel source for this heater. Default is "electric".
 
         Returns
         -------
@@ -102,6 +110,7 @@ class WaterHeater:
             performance_map=NominalPerformanceMap(nominal_capacity_kbtuh),
             control_schedule=control_schedule,
             control_map=control_map,
+            fuel_type=fuel_type,
         )
 
     @classmethod
@@ -113,6 +122,7 @@ class WaterHeater:
         num_units: int = 1,
         design_inlet_temp_f: float = 50.0,
         nominal_capacity_kbtuh: float | None = None,
+        fuel_type: Literal["electric", "gas"] = "electric",
     ) -> WaterHeater:
         """
         Create a WaterHeater by loading its PerformanceMap from the equipment
@@ -133,6 +143,8 @@ class WaterHeater:
             Cold-water inlet temperature used when not supplied per-call. Default 50 °F.
         nominal_capacity_kbtuh : float | None
             Total system capacity for ER fallback sizing. Default None.
+        fuel_type : "electric" | "gas"
+            Fuel source for this heater. Default is "electric".
 
         Returns
         -------
@@ -147,6 +159,7 @@ class WaterHeater:
             ),
             control_schedule=control_schedule,
             control_map=control_map,
+            fuel_type=fuel_type,
         )
 
     # ------------------------------------------------------------------
@@ -276,7 +289,6 @@ class WaterHeater:
 
         If the heater is currently ON, check should_turn_off().
         If the heater is currently OFF, check should_turn_on().
-        If no Controls are configured for this hour, state is unchanged.
 
         Parameters
         ----------
@@ -284,10 +296,15 @@ class WaterHeater:
         hour_of_day : int
             Hour of the day (0-23), used to select the active Controls from
             the control schedule.
+
+        Raises
+        ------
+        ValueError
+            If no Controls are configured for the given hour.
         """
         controls = self.get_controls_for_hour(hour_of_day)
         if controls is None:
-            return
+            raise ValueError(f"No Controls configured for hour {hour_of_day}.")
         if self._active:
             if controls.should_turn_off(storage_tank):
                 self.turn_off()
