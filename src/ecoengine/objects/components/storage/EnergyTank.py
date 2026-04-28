@@ -203,6 +203,11 @@ class EnergyTank(StorageTank):
         energy_requested = volume_supplyT_gal * _RHO_CP * (supply_temp_f - cold_temp_f)
         self._energy_btu = max(0.0, self._energy_btu - energy_requested)
 
+    def add_energy_btu(self, btu: float) -> None:
+        """Add ``btu`` BTU to storage, capped at the fully-charged energy level."""
+        if btu > 0.0:
+            self._energy_btu = min(self._energy_btu + btu, self._max_energy_btu())
+
     def heat(
         self,
         kbtuh: float,
@@ -245,6 +250,43 @@ class EnergyTank(StorageTank):
         recirc_loss_btu = flow_gpm * duration_min * _RHO_CP * (t_supply - return_temp_f)
         self._energy_btu = max(0.0, self._energy_btu - recirc_loss_btu)
 
+    def _zone_average_temp_f(self, lo_pct: float, hi_pct: float) -> float:
+        """
+        Return the volume-weighted average temperature over the vertical zone
+        [``lo_pct``, ``hi_pct``] (both in 0–100 percentage-height units).
+
+        Uses the same back-calculated stratified profile as
+        ``get_temperature_at_fraction`` and ``get_average_draw_temp_f``.
+        Returns ``cold_temp_f`` if the zone has zero width.
+        """
+        if hi_pct <= lo_pct:
+            return self._cold_temp_f
+        shift_pct  = self._shift_pct_from_energy()
+        dT         = self._storage_temp_f - self._cold_temp_f
+        x_ramp     = dT / self.strat_slope if dT > 0.0 else 0.0
+        x_cold_pct = max(0.0, min(100.0, -shift_pct))
+        x_hot_pct  = max(0.0, min(100.0, x_ramp - shift_pct))
+
+        lo_c, hi_c = max(lo_pct, 0.0), min(hi_pct, x_cold_pct)
+        cold_integral = self._cold_temp_f * max(0.0, hi_c - lo_c)
+
+        lo_t = max(lo_pct, x_cold_pct)
+        hi_t = min(hi_pct, x_hot_pct)
+        if hi_t > lo_t:
+            a, b = lo_t, hi_t
+            trans_integral = (
+                self.strat_slope / 2.0 * ((b + shift_pct) ** 2 - (a + shift_pct) ** 2)
+                + self._cold_temp_f * (b - a)
+            )
+        else:
+            trans_integral = 0.0
+
+        lo_h = max(lo_pct, x_hot_pct)
+        hi_h = min(hi_pct, 100.0)
+        hot_integral = self._storage_temp_f * max(0.0, hi_h - lo_h)
+
+        return (cold_integral + trans_integral + hot_integral) / (hi_pct - lo_pct)
+
     def get_average_draw_temp_f(self, draw_gal: float) -> float:
         """
         Return the volume-weighted average temperature of the top ``draw_gal``
@@ -256,55 +298,39 @@ class EnergyTank(StorageTank):
         draw_gal = min(draw_gal, self.total_volume_gal)
         if draw_gal <= 0.0:
             return self._storage_temp_f
-
-        shift_pct  = self._shift_pct_from_energy()
-        dT         = self._storage_temp_f - self._cold_temp_f
-        x_ramp     = dT / self.strat_slope if dT > 0.0 else 0.0
         x_draw_pct = max(0.0, 100.0 - draw_gal / self.total_volume_gal * 100.0)
-
-        x_cold_pct = max(0.0, min(100.0, -shift_pct))
-        x_hot_pct  = max(0.0, min(100.0, x_ramp - shift_pct))
-
-        # Cold zone: T = cold_temp_f
-        lo_c, hi_c = max(x_draw_pct, 0.0), min(100.0, x_cold_pct)
-        cold_integral = self._cold_temp_f * max(0.0, hi_c - lo_c)
-
-        # Transition zone: T = strat_slope * (x + shift_pct) + cold_temp_f
-        lo_t, hi_t = max(x_draw_pct, x_cold_pct), min(100.0, x_hot_pct)
-        if hi_t > lo_t:
-            a, b = lo_t, hi_t
-            trans_integral = (
-                self.strat_slope / 2.0 * ((b + shift_pct) ** 2 - (a + shift_pct) ** 2)
-                + self._cold_temp_f * (b - a)
-            )
-        else:
-            trans_integral = 0.0
-
-        # Hot zone: T = storage_temp_f
-        lo_h, hi_h = max(x_draw_pct, x_hot_pct), 100.0
-        hot_integral = self._storage_temp_f * max(0.0, hi_h - lo_h)
-
-        total_width = 100.0 - x_draw_pct
-        if total_width <= 0.0:
-            return self._storage_temp_f
-        return (cold_integral + trans_integral + hot_integral) / total_width
+        return self._zone_average_temp_f(x_draw_pct, 100.0)
 
     def draw_physical_gal(
         self,
         gal: float,
         inlet_temp_f: float,
         supply_temp_f: float | None = None,
+        update_internal_cold_temp: bool = True,
     ) -> None:
         """
         Remove ``gal`` physical gallons from the top of the tank and replace
-        with cold make-up water at the bottom.
+        with make-up water at the bottom.
 
         The energy removed equals ``gal × _RHO_CP × (avg_top_temp − inlet_temp_f)``
         where ``avg_top_temp`` is from ``get_average_draw_temp_f(gal)``.
+
+        Parameters
+        ----------
+        gal : float
+        inlet_temp_f : float
+            Temperature of make-up water entering the bottom.
+        supply_temp_f : float | None
+            Unused; kept for interface compatibility.
+        update_internal_cold_temp : bool
+            When ``True`` (default) ``_cold_temp_f`` is updated to
+            ``inlet_temp_f``.  Pass ``False`` when the inlet is a warm
+            mixing-valve return (to avoid corrupting the cold baseline).
         """
-        self._cold_temp_f = inlet_temp_f
+        if update_internal_cold_temp:
+            self._cold_temp_f = inlet_temp_f
         if gal <= 0.0:
             return
-        avg_temp      = self.get_average_draw_temp_f(gal)
+        avg_temp       = self.get_average_draw_temp_f(gal)
         energy_removed = gal * _RHO_CP * max(0.0, avg_temp - inlet_temp_f)
         self._energy_btu = max(0.0, self._energy_btu - energy_removed)
