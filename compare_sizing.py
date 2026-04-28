@@ -363,6 +363,46 @@ SPRTP_SCENARIOS = [
 
 
 # ---------------------------------------------------------------------------
+# Multi-pass RTP scenarios  (no load-shift — not supported by MPRTP)
+# ---------------------------------------------------------------------------
+
+MPRTP_SCENARIOS = [
+    dict(
+        label="MPRTP: 100-unit MF, 3 GPM recirc, 10F drop, 14hr run",
+        building_type="multi_family", magnitude=100, gpdpp=25,
+        supply_t_f=120.0, storage_t_f=150.0, inlet_t_f=50.0, design_oat_f=35.0,
+        max_run_hr=14.0, defrost_factor=1.0,
+        on_fract=0.4, off_fract=0.1,
+        return_temp_f=110.0, return_flow_gpm=3.0,
+    ),
+    dict(
+        label="MPRTP: 200-unit MF, 5 GPM recirc, 10F drop, 14hr run",
+        building_type="multi_family", magnitude=200, gpdpp=25,
+        supply_t_f=120.0, storage_t_f=150.0, inlet_t_f=50.0, design_oat_f=35.0,
+        max_run_hr=14.0, defrost_factor=1.0,
+        on_fract=0.4, off_fract=0.1,
+        return_temp_f=110.0, return_flow_gpm=5.0,
+    ),
+    dict(
+        label="MPRTP: 50-unit MF, 2 GPM recirc, 15F drop, 14hr run",
+        building_type="multi_family", magnitude=50, gpdpp=30,
+        supply_t_f=120.0, storage_t_f=150.0, inlet_t_f=50.0, design_oat_f=35.0,
+        max_run_hr=14.0, defrost_factor=1.0,
+        on_fract=0.4, off_fract=0.1,
+        return_temp_f=105.0, return_flow_gpm=2.0,
+    ),
+    dict(
+        label="MPRTP: 300-unit MF, 8 GPM recirc, 8F drop, 14hr run",
+        building_type="multi_family", magnitude=300, gpdpp=25,
+        supply_t_f=125.0, storage_t_f=150.0, inlet_t_f=47.0, design_oat_f=47.0,
+        max_run_hr=14.0, defrost_factor=1.0,
+        on_fract=0.4, off_fract=0.1,
+        return_temp_f=117.0, return_flow_gpm=8.0,
+    ),
+]
+
+
+# ---------------------------------------------------------------------------
 # Swing Tank scenarios
 # ---------------------------------------------------------------------------
 # Extra fields beyond the base scenario dict:
@@ -888,6 +928,150 @@ def run_new_parallel_sizing(scenarios: list[dict]) -> list[dict]:
                 "new_storage_storageT_gal": None,
                 "new_tm_volume_gal":        None,
                 "new_tm_capacity_kbtuh":    None,
+                "new_error":                str(e),
+            })
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Multi-pass RTP sizing — original codebase
+# ---------------------------------------------------------------------------
+
+ORIGINAL_MPRTP_SCRIPT = r"""
+import sys, json
+sys.path.insert(0, r"{src}")
+
+from ecoengine.engine.BuildingCreator import createBuilding
+from ecoengine.objects.systems.MPRTP import MPRTP
+
+scenarios = json.loads('{scenarios_json_escaped}')
+
+results = []
+for sc in scenarios:
+    try:
+        building = createBuilding(
+            incomingT_F=sc["inlet_t_f"],
+            magnitudeStat=sc["magnitude"],
+            supplyT_F=sc["supply_t_f"],
+            buildingType=sc["building_type"],
+            gpdpp=sc["gpdpp"],
+            designOAT_F=sc["design_oat_f"],
+            returnT_F=sc["return_temp_f"],
+            flowRate=sc["return_flow_gpm"],
+        )
+
+        supply_t  = sc["supply_t_f"]
+        storage_t = sc["storage_t_f"]
+
+        system = MPRTP(
+            storageT_F      = storage_t,
+            defrostFactor   = sc["defrost_factor"],
+            percentUseable  = 1.0,
+            compRuntime_hr  = sc["max_run_hr"],
+            onFract         = sc["on_fract"],
+            offFract        = sc["off_fract"],
+            onT             = supply_t,
+            offT            = storage_t,
+            building        = building,
+        )
+
+        sizing = system.getSizingResults()
+        results.append({{
+            "label":                    sc["label"],
+            "orig_capacity_kbtuh":      round(sizing[1], 2),
+            "orig_storage_storageT_gal":round(sizing[0], 2),
+            "orig_error":               None,
+        }})
+    except Exception as e:
+        results.append({{
+            "label":                    sc["label"],
+            "orig_capacity_kbtuh":      None,
+            "orig_storage_storageT_gal":None,
+            "orig_error":               str(e),
+        }})
+
+print(json.dumps(results))
+"""
+
+
+def run_original_mprtp_sizing(scenarios: list[dict]) -> list[dict]:
+    """Run MPRTP sizing against the original EcosizerEngine via subprocess."""
+    scenarios_json = json.dumps(scenarios)
+    scenarios_json_escaped = scenarios_json.replace("'", "\\'")
+    script = ORIGINAL_MPRTP_SCRIPT.format(
+        src=ORIGINAL_SRC.replace("\\", "\\\\"),
+        scenarios_json_escaped=scenarios_json_escaped,
+    )
+    proc = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+    json_line = next((l for l in proc.stdout.splitlines() if l.strip().startswith("[")), None)
+    if proc.returncode != 0 or not json_line:
+        print("ERROR running original MPRTP sizing script:")
+        print(proc.stderr[-800:])
+        return [{"label": sc["label"], "orig_capacity_kbtuh": None,
+                 "orig_storage_storageT_gal": None, "orig_error": proc.stderr.strip()[-120:]}
+                for sc in scenarios]
+    return json.loads(json_line)
+
+
+# ---------------------------------------------------------------------------
+# Multi-pass RTP sizing — new codebase
+# ---------------------------------------------------------------------------
+
+def run_new_mprtp_sizing(scenarios: list[dict]) -> list[dict]:
+    """Run MultiPassRTPSystem sizing against the new EcosizerEngine2 codebase."""
+    from ecoengine.objects.building.Building import Building
+    from ecoengine.objects.building.ClimateZone import ClimateZone
+    from ecoengine.objects.components.heating.Controls import Controls
+    from ecoengine.objects.dhwsystems.rtp_systems.MultiPassRTPSystem import MultiPassRTPSystem
+
+    results = []
+    for sc in scenarios:
+        try:
+            zone = ClimateZone.from_design_conditions(
+                design_oat_f=sc["design_oat_f"],
+                design_inlet_water_temp_f=sc["inlet_t_f"],
+            )
+            building = Building.from_building_type(
+                building_type=sc["building_type"],
+                magnitude=sc["magnitude"],
+                climate_zone=zone,
+                gpdpp=sc["gpdpp"] if sc["gpdpp"] else None,
+            )
+            cmap = {
+                "normal": Controls(
+                    on_sensor_fract=sc["on_fract"],
+                    on_trigger_t_f=sc["supply_t_f"],
+                    off_sensor_fract=sc["off_fract"],
+                    off_trigger_t_f=sc["storage_t_f"],
+                    outlet_temp_f=sc["storage_t_f"],
+                )
+            }
+
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                system = MultiPassRTPSystem.from_size(
+                    building        = building,
+                    supply_temp_f   = sc["supply_t_f"],
+                    storage_temp_f  = sc["storage_t_f"],
+                    return_temp_f   = sc["return_temp_f"],
+                    return_flow_gpm = sc["return_flow_gpm"],
+                    max_daily_run_hr= sc["max_run_hr"],
+                    defrost_factor  = sc["defrost_factor"],
+                    control_map     = cmap,
+                )
+
+            results.append({
+                "label":                    sc["label"],
+                "new_capacity_kbtuh":       round(system._minimum_capacity_kbtuh,       2),
+                "new_storage_storageT_gal": round(system._minimum_storage_storageT_gal, 2),
+                "new_error":                None,
+            })
+        except Exception as e:
+            results.append({
+                "label":                    sc["label"],
+                "new_capacity_kbtuh":       None,
+                "new_storage_storageT_gal": None,
                 "new_error":                str(e),
             })
     return results
@@ -2487,6 +2671,43 @@ def main():
         })
 
     # ------------------------------------------------------------------
+    # Multi-pass RTP comparison
+    # ------------------------------------------------------------------
+    print("Running original codebase sizing (multi-pass RTP)...")
+    mprtp_orig_results = run_original_mprtp_sizing(MPRTP_SCENARIOS)
+
+    print("Running new codebase sizing (multi-pass RTP)...")
+    mprtp_new_results = run_new_mprtp_sizing(MPRTP_SCENARIOS)
+
+    mprtp_orig_by_label = {r["label"]: r for r in mprtp_orig_results}
+    mprtp_new_by_label  = {r["label"]: r for r in mprtp_new_results}
+
+    mprtp_fieldnames = [
+        "label",
+        "orig_capacity_kbtuh", "new_capacity_kbtuh", "cap_diff_kbtuh", "cap_pct_diff",
+        "orig_storage_storageT_gal", "new_storage_storageT_gal", "vol_diff_gal", "vol_pct_diff",
+        "orig_error", "new_error",
+    ]
+    mprtp_rows = []
+    for sc in MPRTP_SCENARIOS:
+        lbl   = sc["label"]
+        orig  = mprtp_orig_by_label.get(lbl, {})
+        new   = mprtp_new_by_label.get(lbl, {})
+        cap_o = orig.get("orig_capacity_kbtuh")
+        cap_n = new.get("new_capacity_kbtuh")
+        vol_o = orig.get("orig_storage_storageT_gal")
+        vol_n = new.get("new_storage_storageT_gal")
+        mprtp_rows.append({
+            "label": lbl,
+            "orig_capacity_kbtuh": cap_o, "new_capacity_kbtuh": cap_n,
+            "cap_diff_kbtuh": _diff(cap_o, cap_n), "cap_pct_diff": _pct_diff(cap_o, cap_n),
+            "orig_storage_storageT_gal": vol_o, "new_storage_storageT_gal": vol_n,
+            "vol_diff_gal": _diff(vol_o, vol_n), "vol_pct_diff": _pct_diff(vol_o, vol_n),
+            "orig_error": orig.get("orig_error"),
+            "new_error":  new.get("new_error"),
+        })
+
+    # ------------------------------------------------------------------
     # Swing Tank comparison
     # ------------------------------------------------------------------
     print("Running original codebase sizing (swing tank)...")
@@ -2617,6 +2838,11 @@ def main():
         dw_sprtp.writeheader()
         dw_sprtp.writerows(sprtp_rows)
         writer.writerow([])
+        writer.writerow(["=== MULTI-PASS RTP SIZING ==="])
+        dw_mprtp = csv.DictWriter(f, fieldnames=mprtp_fieldnames)
+        dw_mprtp.writeheader()
+        dw_mprtp.writerows(mprtp_rows)
+        writer.writerow([])
         writer.writerow(["=== SWING TANK SIZING ==="])
         dw3 = csv.DictWriter(f, fieldnames=st_fieldnames)
         dw3.writeheader()
@@ -2689,6 +2915,27 @@ def main():
             f"{_fmt(row['orig_capacity_kbtuh']):>8} {_fmt(row['new_capacity_kbtuh']):>8} {_fmt_pct(row['cap_pct_diff']):>7}  "
             f"{_fmt(row['orig_storage_storageT_gal']):>8} {_fmt(row['new_storage_storageT_gal']):>8} {_fmt_pct(row['vol_pct_diff']):>7}  "
             f"{_fmt(row['orig_recirc_cap_kbtuh']):>11} {_fmt(row['new_recirc_cap_kbtuh']):>11}"
+        )
+        if row["orig_error"]: print(f"  ORIG ERROR: {row['orig_error']}")
+        if row["new_error"]:  print(f"  NEW  ERROR: {row['new_error']}")
+
+    # ------------------------------------------------------------------
+    # Console output — multi-pass RTP
+    # ------------------------------------------------------------------
+    print()
+    mprtp_hdr = (
+        f"{'Scenario':<55} "
+        f"{'OCap':>8} {'NCap':>8} {'C%':>7}  "
+        f"{'OVol':>8} {'NVol':>8} {'V%':>7}"
+    )
+    print("MULTI-PASS RTP SYSTEM")
+    print(mprtp_hdr)
+    print("-" * len(mprtp_hdr))
+    for row in mprtp_rows:
+        print(
+            f"{row['label']:<55} "
+            f"{_fmt(row['orig_capacity_kbtuh']):>8} {_fmt(row['new_capacity_kbtuh']):>8} {_fmt_pct(row['cap_pct_diff']):>7}  "
+            f"{_fmt(row['orig_storage_storageT_gal']):>8} {_fmt(row['new_storage_storageT_gal']):>8} {_fmt_pct(row['vol_pct_diff']):>7}"
         )
         if row["orig_error"]: print(f"  ORIG ERROR: {row['orig_error']}")
         if row["new_error"]:  print(f"  NEW  ERROR: {row['new_error']}")
