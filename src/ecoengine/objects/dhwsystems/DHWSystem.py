@@ -1616,12 +1616,12 @@ class DHWSystem:
             # Apply heating from all active heaters to the tank
             top_temp_f     = self.storage_tank.get_temperature_at_fraction(1.0)
             total_kbtuh    = sum(
-                wh.get_output_kbtuh(oat_f, top_temp_f)
+                wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
                 for wh in self.water_heaters
             )
             total_kw: float | None = None
             active_kws = [
-                wh.get_power_in_kw(oat_f, top_temp_f)
+                wh.get_power_in_kw(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
                 for wh in self.water_heaters
                 if wh.is_active()
             ]

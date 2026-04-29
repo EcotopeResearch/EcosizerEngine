@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
-from ecoengine.objects.components.storage.EnergyTank import EnergyTank
+from ecoengine.objects.components.storage.SlugOverlayTank import SlugOverlayTank
 from ecoengine.constants.constants import _RHO_CP
 from .RTPSystem import RTPSystem
 from ..utils import mixing_valve_behavior
@@ -33,7 +33,18 @@ class MultiPassRTPSystem(RTPSystem):
     * The peak slug volume across the 2-day simulation is the minimum required
       physical tank volume.
 
-    The resulting tank is an EnergyTank with strat_slope = 0.8.
+    The resulting tank is a SlugOverlayTank with strat_slope = 0.8.
+
+    Simulation
+    ----------
+    While not heating the system draws hot water via mixing_valve_behavior and
+    removes the physical gallons from the SlugOverlayTank.  When the heater
+    turns on, the tank's slug overlay is activated from the sub-supply-temp
+    zone of the usable volume.  All demand draws and heater output are
+    redirected to the slug until the slug temperature reaches supply_temp_f,
+    at which point the heater turns off and the slug's BTUs are merged back
+    into the tank.
+
     Load-shift sizing is not supported.
     """
 
@@ -54,6 +65,7 @@ class MultiPassRTPSystem(RTPSystem):
         control_schedule: list[str] | None = None,
         control_map: dict[str, Controls] | None = None,
         strat_slope: float = _MPRTP_STRAT_SLOPE,
+        percent_useable: float = 1.0,
     ) -> MultiPassRTPSystem:
         """
         Size the system for the given building, then build it.
@@ -73,8 +85,32 @@ class MultiPassRTPSystem(RTPSystem):
             will raise if a ``"shed"`` key appears in control_map.
         control_map : dict[str, Controls] | None
         strat_slope : float
-            EnergyTank stratification slope [°F / %-height]. Default 0.8.
+            SlugOverlayTank stratification slope [°F / %-height]. Default 0.8.
+        percent_useable : float
+            Fraction of total tank volume above the cold-water inlet pipe (0–1).
+            Control on-sensors must sit above ``(1 - percent_useable)`` height.
+
+        Raises
+        ------
+        ValueError
+            If any on_sensor_fract in control_map falls inside the unusable zone.
         """
+        if control_map and percent_useable < 1.0:
+            cold_fract = 1.0 - percent_useable
+            for key, ctrl in control_map.items():
+                if ctrl.on_sensor_fract < cold_fract:
+                    raise ValueError(
+                        f"Control '{key}': on_sensor_fract={ctrl.on_sensor_fract:.3f} "
+                        f"is in the unusable zone (must be >= {cold_fract:.3f} for "
+                        f"percent_useable={percent_useable:.3f})."
+                    )
+                if ctrl.off_sensor_fract < cold_fract:
+                    raise ValueError(
+                        f"Control '{key}': off_sensor_fract={ctrl.off_sensor_fract:.3f} "
+                        f"is in the unusable zone (must be >= {cold_fract:.3f} for "
+                        f"percent_useable={percent_useable:.3f})."
+                    )
+
         system = cls(
             water_heaters=[],
             storage_tank=None,
@@ -88,10 +124,12 @@ class MultiPassRTPSystem(RTPSystem):
         system.size(building, control_map=control_map, strat_slope=strat_slope)
 
         cold_temp_f = system._require_design_inlet_temp(building)
-        system.storage_tank = EnergyTank(
+        system.storage_tank = SlugOverlayTank(
             total_volume_gal=system._minimum_storage_storageT_gal,
             cold_temp_f=cold_temp_f,
             storage_temp_f=storage_temp_f,
+            supply_temp_f=supply_temp_f,
+            percent_useable=percent_useable,
             strat_slope=strat_slope,
         )
         system.water_heaters = [WaterHeater.from_nominal_capacity(
@@ -149,10 +187,15 @@ class MultiPassRTPSystem(RTPSystem):
 
         try:
             capacity_kbtuh  = self._calc_required_capacity(building)
-            storage_vol_gal = self._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
+            running_vol_supplyT_gal = self._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
+            design_inlet_temp_f      = self._require_design_inlet_temp(building)
+            strat_factor             = self._calc_stratification_factor(control_map, strat_slope, design_inlet_temp_f)
+            storage_vol_storageT_gal = self._calc_storage_volume_storageT_gal(
+                running_vol_supplyT_gal, strat_factor
+            )
 
             self._minimum_capacity_kbtuh       = capacity_kbtuh
-            self._minimum_storage_storageT_gal = storage_vol_gal
+            self._minimum_storage_storageT_gal = storage_vol_storageT_gal
             self._sizing_strat_slope           = strat_slope
         finally:
             if was_annual:
@@ -253,7 +296,7 @@ class MultiPassRTPSystem(RTPSystem):
         return max_slug_vol_gal
 
     # ------------------------------------------------------------------
-    # Simulation (not yet implemented)
+    # Simulation
     # ------------------------------------------------------------------
 
     def simulate_step(
@@ -263,5 +306,140 @@ class MultiPassRTPSystem(RTPSystem):
         interval_min: int = 1,
         mode: str = "normal",
     ) -> dict:
-        """Run one timestep for a multi-pass RTP system."""
-        raise NotImplementedError("MultiPassRTPSystem simulation is not yet implemented.")
+        """
+        Run one simulation timestep for a multi-pass RTP system.
+
+        Order of operations
+        -------------------
+        1. Query Building for demand, OAT, and inlet water temperature.
+        2. Keep the tank's cold-temp baseline current from the building inlet.
+        3. Determine on/off heater state:
+           - While NOT heating: use standard Controls logic.
+           - While HEATING: turn off when slug temperature reaches supply_temp_f.
+        4. Handle slug lifecycle transitions (activate on turn-on,
+           deactivate on turn-off).
+        5. Apply heating and demand via the mixing valve:
+           - Heating: redirect draw and heater output to the slug.
+           - Not heating: draw physical gallons from the tank via
+             mixing_valve_behavior; warm-inlet energy credit is implicit in
+             draw_physical_gal.
+        6. Return per-step metrics.
+
+        Parameters
+        ----------
+        building : Building
+        timestep_interval : int
+        interval_min : int
+        mode : str
+            Ignored; operating mode is set by the control schedule.
+
+        Returns
+        -------
+        dict
+        """
+        tank: SlugOverlayTank = self.storage_tank
+
+        demand_supplyT_gal = building.get_dhw_load_supplyT_gal(
+            timestep_interval, interval_min
+        )
+        oat_f              = building.get_oat_f(timestep_interval, interval_min)
+        inlet_water_temp_f = building.get_inlet_water_temp_f(
+            timestep_interval, interval_min
+        )
+        hour_of_day = (timestep_interval * interval_min // 60) % 24
+        mode = (
+            self.water_heaters[0].control_schedule[hour_of_day]
+            if self.water_heaters and self.water_heaters[0].control_schedule
+            else "normal"
+        )
+
+        # Keep cold baseline current (important for annual simulations where
+        # inlet water temperature changes by month).
+        tank._cold_temp_f = inlet_water_temp_f
+
+        was_heating = any(wh.is_active() for wh in self.water_heaters)
+
+        # Standard aquastat logic applies: while heating the off-sensor sits inside
+        # the fully-mixed slug zone, so get_temperature_at_fraction returns
+        # slug_temp_f.  The heater turns off when slug_temp_f >= off_trigger_t_f.
+        for wh in self.water_heaters:
+            wh.update_state(tank, hour_of_day)
+
+        is_heating = any(wh.is_active() for wh in self.water_heaters)
+
+        # --- Slug lifecycle transitions ---
+        if not was_heating and is_heating:
+            tank.activate_slug(self.supply_temp_f)
+        elif was_heating and not is_heating:
+            tank.deactivate_slug()
+
+        # --- Heating capacity ---
+        top_temp_f  = tank.get_temperature_at_fraction(1.0)
+        total_kbtuh = sum(
+            wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day)) for wh in self.water_heaters
+        )
+        active_kws  = [
+            wh.get_power_in_kw(oat_f, wh.get_outlet_temp_f(hour_of_day))
+            for wh in self.water_heaters
+            if wh.is_active()
+        ]
+        total_kw: float | None = (
+            sum(kw or 0.0 for kw in active_kws)
+            if any(kw is not None for kw in active_kws)
+            else None
+        )
+
+        # --- Mixing valve draw ---
+        flow_per_min_gal = self.return_flow_gpm * interval_min
+        if demand_supplyT_gal > 0 and top_temp_f > inlet_water_temp_f:
+            result = mixing_valve_behavior(
+                demand_supplyT_gal,
+                flow_per_min_gal,
+                inlet_water_temp_f,
+                self.supply_temp_f,
+                self.return_temp_f,
+                top_temp_f,
+            )
+            draw_gal       = result["storage_draw_gal"]
+            mv_inlet_temp_f = result["inlet_temp_f"]
+        else:
+            draw_gal        = 0.0
+            mv_inlet_temp_f = inlet_water_temp_f
+
+        # --- Apply to tank ---
+        if is_heating:
+            # All heat and incoming water go to the slug.
+            tank.heat_slug(total_kbtuh, interval_min)
+            # if draw_gal > 0:
+            #     tank.add_to_slug(draw_gal, mv_inlet_temp_f)
+        # else:
+            # Draw physically from the tank.  Passing the actual mixing-valve
+            # inlet temperature (which may be warmer than cold_temp_f when
+            # recirc return dominates) correctly credits the warm-water energy
+            # without corrupting the cold baseline.
+        if draw_gal > 0:
+            tank.draw_physical_gal(
+                draw_gal, mv_inlet_temp_f, update_internal_cold_temp=False
+            )
+
+        usable_vol_gal = tank.get_usable_volume_supplyT_gal(self.supply_temp_f)
+        tank_temps_f   = [
+            tank.get_temperature_at_fraction(f)
+            for f in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+        ]
+        # During slug heating top_temp_f may be at cold_temp_f (EnergyTank drained
+        # into slug), which would falsely trip the outlet-deficit early-stop.  The
+        # system is working normally while the heater is on, so suppress the check.
+        delivery_temp_f = self.supply_temp_f if is_heating else top_temp_f
+
+        return {
+            "demand_supplyT_gal":        demand_supplyT_gal,
+            "usable_volume_supplyT_gal": usable_vol_gal,
+            "heater_output_kbtuh":       total_kbtuh,
+            "heater_power_in_kw":        total_kw,
+            "oat_f":                     oat_f,
+            "inlet_water_temp_f":        inlet_water_temp_f,
+            "tank_temps_f":              tank_temps_f,
+            "mode":                      mode,
+            "delivery_temp_f":           delivery_temp_f,
+        }

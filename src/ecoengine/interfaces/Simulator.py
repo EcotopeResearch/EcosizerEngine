@@ -61,7 +61,7 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
         dhw_system.storage_tank.initialize(
             storage_temp_f  = dhw_system.storage_temp_f,
             cold_temp_f     = inlet_temp_f,
-            percent_useable = percent_useable,
+            percent_useable = percent_useable, # TODO I don't think this is right
         )
     # Initialize TM tank if present (ParallelLoopSystem, SwingSystem)
     tm_tank = getattr(dhw_system, "tm_storage_tank", None)

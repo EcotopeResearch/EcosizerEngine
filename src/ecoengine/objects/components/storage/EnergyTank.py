@@ -148,7 +148,7 @@ class EnergyTank(StorageTank):
         cold_temp_f : float
             Cold / inlet water temperature [°F].
         percent_useable : float
-            Fraction of tank volume that starts at storage temperature (0–1).
+            Fraction of tank volume that is above the cold inlet water inlet (0–1).
         """
         self._cold_temp_f    = cold_temp_f
         self._storage_temp_f = storage_temp_f

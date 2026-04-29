@@ -928,10 +928,10 @@ class SwingSystem(RecircSystem):
 
         top_temp_f    = self.storage_tank.get_temperature_at_fraction(1.0)
         primary_kbtuh = sum(
-            wh.get_output_kbtuh(oat_f, top_temp_f) for wh in self.water_heaters
+            wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f) for wh in self.water_heaters
         )
         primary_kw_list = [
-            wh.get_power_in_kw(oat_f, top_temp_f)
+            wh.get_power_in_kw(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
             for wh in self.water_heaters
             if wh.is_active()
         ]

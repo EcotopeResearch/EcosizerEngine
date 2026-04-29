@@ -90,7 +90,7 @@ class StratifiedTank(StorageTank):
         cold_temp_f : float
             Cold/incoming water temperature [°F].
         percent_useable : float
-            Fraction of tank volume that starts hot (0–1).
+            Fraction of tank volume that is above the cold inlet water inlet (0–1).
         """
         self._inlet_temp_f  = cold_temp_f
         self._outlet_temp_f = storage_temp_f

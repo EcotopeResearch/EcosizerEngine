@@ -281,6 +281,26 @@ class WaterHeater:
             return 0.0
         cap = self.get_capacity_kbtuh(oat_f, outlet_temp_f, inlet_temp_f)
         return cap if cap is not None else 0.0
+    
+    def get_outlet_temp_f(self, hour_of_day: int) -> float:
+        """
+        Look up the active Outlet Temperature for Controls for the given hour
+
+        Parameters
+        ----------
+        hour_of_day : int
+            Hour of the day (0-23), used to select the active Controls from
+            the control schedule.
+
+        Raises
+        ------
+        ValueError
+            If no Controls are configured for the given hour.
+        """
+        controls = self.get_controls_for_hour(hour_of_day)
+        if controls is None:
+            raise ValueError(f"No Controls configured for hour {hour_of_day}.")
+        return controls.outlet_temp_f
 
     def update_state(self, storage_tank: StorageTank, hour_of_day: int) -> None:
         """
