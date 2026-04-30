@@ -148,16 +148,15 @@ class SlugOverlayTank(EnergyTank):
         shift_pct    = self._shift_pct_from_energy()
         x_supply_pct = (supply_temp_f - self._cold_temp_f) / self.strat_slope - shift_pct
         x_supply_pct = max(self._cold_pct, min(100.0, x_supply_pct))
-
         slug_vol_gal = max(
             0.0,
             (x_supply_pct - self._cold_pct) / 100.0 * self.total_volume_gal,
         )
-
+        print(f"POINT OF CREATION : {x_supply_pct}")
         if slug_vol_gal > 0.0:
             slug_temp_f  = self._zone_average_temp_f(self._cold_pct, x_supply_pct)
-            slug_btu     = slug_vol_gal * _RHO_CP * max(0.0, slug_temp_f - self._cold_temp_f)
-            self._energy_btu = max(0.0, self._energy_btu - slug_btu)
+            # slug_btu     = slug_vol_gal * _RHO_CP * max(0.0, slug_temp_f - self._cold_temp_f)
+            # self._energy_btu = max(0.0, self._energy_btu - slug_btu)
         else:
             slug_temp_f = self._cold_temp_f
 
@@ -168,6 +167,14 @@ class SlugOverlayTank(EnergyTank):
             self._cold_pct + slug_vol_gal / self.total_volume_gal * 100.0
             if self.total_volume_gal > 0.0 else self._cold_pct
         )
+        self._original_slug_vol_gal = self._slug_vol_gal
+
+        # No kbtu left behind - get KBTUs from bottom of the tank and apply them to the slug
+        below_slug_temp_f = self._zone_average_temp_f(0.0, self._cold_pct)
+        if below_slug_temp_f > self._cold_temp_f:
+            cold_vol_gal = self._cold_pct/100.0 * self.total_volume_gal
+            below_slug_btu = cold_vol_gal * _RHO_CP * (below_slug_temp_f - self._cold_temp_f)
+            self._slug_temp_f += below_slug_btu / (self._slug_vol_gal * _RHO_CP)
 
     def add_to_slug(self, draw_gal: float, inlet_temp_f: float) -> None:
         """
@@ -183,25 +190,14 @@ class SlugOverlayTank(EnergyTank):
         """
         if not self._slug_active or draw_gal <= 0.0:
             return
-        available   = self._max_usable_vol_gal - self._slug_vol_gal
-        if available < draw_gal:
-            remove_from_slug_gal = draw_gal - available
-            self._slug_vol_gal = self._slug_vol_gal - remove_from_slug_gal
-            self._slug_top_pct = (
-                self._cold_pct + self._slug_vol_gal / self.total_volume_gal * 100.0
-                if self.total_volume_gal > 0.0 else self._cold_pct
-            )
-        actual_draw = min(draw_gal, max(0.0, available))
-        if actual_draw <= 0.0:
-            return
         if self._slug_vol_gal <= 0.0:
             self._slug_temp_f  = inlet_temp_f
-            self._slug_vol_gal = actual_draw
+            self._slug_vol_gal = draw_gal
         else:
             self._slug_temp_f = (
-                self._slug_vol_gal * self._slug_temp_f + actual_draw * inlet_temp_f
-            ) / (self._slug_vol_gal + actual_draw)
-            self._slug_vol_gal += actual_draw
+                self._slug_vol_gal * self._slug_temp_f + draw_gal * inlet_temp_f
+            ) / (self._slug_vol_gal + draw_gal)
+            self._slug_vol_gal += draw_gal
         self._slug_top_pct = (
             self._cold_pct + self._slug_vol_gal / self.total_volume_gal * 100.0
             if self.total_volume_gal > 0.0 else self._cold_pct
@@ -237,9 +233,24 @@ class SlugOverlayTank(EnergyTank):
             0.0,
             self._slug_vol_gal * _RHO_CP * (self._slug_temp_f - self._cold_temp_f),
         )
-        self._energy_btu   = min(self._energy_btu + slug_btu, self._max_energy_btu())
+        if self._slug_top_pct >= 100.0:
+            self._energy_btu = slug_btu
+        else:
+            total_slug_growth_gal = self._slug_vol_gal - self._original_slug_vol_gal 
+            above_slug_gal = max(0.0, self._max_usable_vol_gal - self._slug_vol_gal)
+            above_slug_pct = 100.0 - self._slug_top_pct
+            slug_growth_vol_pct = (total_slug_growth_gal/self.total_volume_gal) * 100.0
+            top_of_tank_pct = 100.0 - slug_growth_vol_pct
+            print(f"POINT OF CONTENTION: {top_of_tank_pct - above_slug_pct} .... {slug_growth_vol_pct}")
+            above_slug_temp_f = self._zone_average_temp_f(top_of_tank_pct - above_slug_pct, top_of_tank_pct)
+            above_slug_btu = max(
+                0.0,
+                above_slug_gal * _RHO_CP * (above_slug_temp_f - self._cold_temp_f),
+            )
+            self._energy_btu = above_slug_btu + slug_btu
         self._slug_active  = False
         self._slug_vol_gal = 0.0
+        self._original_slug_vol_gal = 0.0
         self._slug_temp_f  = self._cold_temp_f
         self._slug_top_pct = self._cold_pct
 
@@ -277,11 +288,13 @@ class SlugOverlayTank(EnergyTank):
         if not self._slug_active:
             return super().get_temperature_at_fraction(fract)
         x_pct = fract * 100.0
-        if x_pct < self._cold_pct:
+        if x_pct <= self._cold_pct:
             return self._cold_temp_f
-        if x_pct < self._slug_top_pct:
+        if x_pct <= self._slug_top_pct:
             return max(self._cold_temp_f, min(self._storage_temp_f, self._slug_temp_f))
-        return super().get_temperature_at_fraction(fract)
+        total_slug_growth_gal = self._slug_vol_gal - self._original_slug_vol_gal
+        fract_minus_slug_vol = fract - (total_slug_growth_gal/self.total_volume_gal)
+        return super().get_temperature_at_fraction(fract_minus_slug_vol)
 
     def get_usable_volume_supplyT_gal(self, supply_temp_f: float) -> float:
         """
@@ -292,7 +305,8 @@ class SlugOverlayTank(EnergyTank):
         """
         if not self._slug_active:
             return super().get_usable_volume_supplyT_gal(supply_temp_f)
-        hot_usable  = super().get_usable_volume_supplyT_gal(supply_temp_f)
+        # hot_usable  = super().get_usable_volume_supplyT_gal(supply_temp_f)
+        hot_usable = self._max_usable_vol_gal - self._slug_vol_gal # should all be aupply or above
         slug_usable = self._slug_vol_gal if self._slug_temp_f >= supply_temp_f else 0.0
         return hot_usable + slug_usable
     
@@ -324,12 +338,10 @@ class SlugOverlayTank(EnergyTank):
         """
         if not self._slug_active:
             return super().draw_physical_gal(gal, inlet_temp_f, supply_temp_f, update_internal_cold_temp)
-        draw_gal_pct = gal/self.total_volume_gal * 100.0
-        if 100.0 - draw_gal_pct >= self._slug_top_pct:
-            super().draw_physical_gal(gal, self._cold_temp_f, supply_temp_f, update_internal_cold_temp) # draw energy from non-slug region
-            self.add_to_slug(gal, inlet_temp_f) # incoming energy goes to slug
-            return
-        non_slug_draw_pct = 100.0 - self._slug_top_pct
-        super().draw_physical_gal((non_slug_draw_pct/100.0) * self.total_volume_gal, self._cold_temp_f, supply_temp_f, update_internal_cold_temp) # draw energy from non-slug region
+        
+        # available_gal   = self._max_usable_vol_gal - self._slug_vol_gal
+        available_gal = max(0.0, self._max_usable_vol_gal - self._slug_vol_gal)
+        if available_gal < gal:
+            remove_from_slug_gal = gal - available_gal # draw gallons from slug
+            self._slug_vol_gal = self._slug_vol_gal - remove_from_slug_gal
         self.add_to_slug(gal, inlet_temp_f)
-        return

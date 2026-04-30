@@ -254,20 +254,20 @@ class MultiPassRTPSystem(RTPSystem):
         for t in range(n_timesteps):
             demand_supplyT_gal = building.get_dhw_load_supplyT_gal(t, interval_min)
 
-            if demand_supplyT_gal > 0:
-                result     = mixing_valve_behavior(
-                    demand_supplyT_gal,
-                    flow_per_min_gal,
-                    cold_temp_f,
-                    self.supply_temp_f,
-                    self.return_temp_f,
-                    self.storage_temp_f,
-                )
-                draw_gal   = result["storage_draw_gal"]
-                inlet_temp = result["inlet_temp_f"]
-            else:
-                draw_gal   = 0.0
-                inlet_temp = cold_temp_f
+            # if demand_supplyT_gal > 0:
+            result     = mixing_valve_behavior(
+                demand_supplyT_gal,
+                flow_per_min_gal,
+                cold_temp_f,
+                self.supply_temp_f,
+                self.return_temp_f,
+                self.storage_temp_f,
+            )
+            draw_gal   = result["storage_draw_gal"]
+            inlet_temp = result["inlet_temp_f"]
+            # else:
+            #     draw_gal   = 0.0
+            #     inlet_temp = cold_temp_f
 
             # Mix drawn volume into slug (weighted-average energy balance)
             if draw_gal > 0:
@@ -286,7 +286,7 @@ class MultiPassRTPSystem(RTPSystem):
                 slug_temp_f += heat_kbtu_per_min * 1000.0 / (slug_vol_gal * _RHO_CP)
 
             # Reset slug when it reaches supply temperature
-            if slug_vol_gal > 0.0 and slug_temp_f >= self.supply_temp_f:
+            if slug_vol_gal > 0.0 and slug_temp_f >= self.storage_temp_f: # Heres a place I messed with TODO
                 slug_vol_gal = 0.0
                 slug_temp_f  = cold_temp_f
 
@@ -391,33 +391,28 @@ class MultiPassRTPSystem(RTPSystem):
 
         # --- Mixing valve draw ---
         flow_per_min_gal = self.return_flow_gpm * interval_min
-        if demand_supplyT_gal > 0 and top_temp_f > inlet_water_temp_f:
-            result = mixing_valve_behavior(
-                demand_supplyT_gal,
-                flow_per_min_gal,
-                inlet_water_temp_f,
-                self.supply_temp_f,
-                self.return_temp_f,
-                top_temp_f,
-            )
-            draw_gal       = result["storage_draw_gal"]
-            mv_inlet_temp_f = result["inlet_temp_f"]
-        else:
-            draw_gal        = 0.0
-            mv_inlet_temp_f = inlet_water_temp_f
+        # if demand_supplyT_gal > 0 and top_temp_f > inlet_water_temp_f:
+        result = mixing_valve_behavior(
+            demand_supplyT_gal,
+            flow_per_min_gal,
+            inlet_water_temp_f,
+            self.supply_temp_f,
+            self.return_temp_f,
+            top_temp_f,
+        )
+        draw_gal       = result["storage_draw_gal"]
+        mv_inlet_temp_f = result["inlet_temp_f"]
+        # else:
+        #     draw_gal        = 0.0
+        #     mv_inlet_temp_f = inlet_water_temp_f
 
         # --- Apply to tank ---
         if is_heating:
             # All heat and incoming water go to the slug.
             tank.heat_slug(total_kbtuh, interval_min)
-            # if draw_gal > 0:
-            #     tank.add_to_slug(draw_gal, mv_inlet_temp_f)
-        # else:
-            # Draw physically from the tank.  Passing the actual mixing-valve
-            # inlet temperature (which may be warmer than cold_temp_f when
-            # recirc return dominates) correctly credits the warm-water energy
-            # without corrupting the cold baseline.
         if draw_gal > 0:
+            if timestep_interval > 200 and timestep_interval < 250:
+                print(f"draw_gal: {demand_supplyT_gal}, {draw_gal}, {mv_inlet_temp_f}")
             tank.draw_physical_gal(
                 draw_gal, mv_inlet_temp_f, update_internal_cold_temp=False
             )

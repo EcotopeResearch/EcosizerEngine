@@ -36,7 +36,7 @@ CTRL = Controls(
     outlet_temp_f    = STORAGE_T_F,
 )
 
-MAGNITUDES = [25, 50, 100, 200, 400]
+MAGNITUDES = [50, 100, 200, 400]
 
 # ---------------------------------------------------------------------------
 # HTML info block rendered before each chart
