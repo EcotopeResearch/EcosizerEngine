@@ -145,6 +145,8 @@ class SlugOverlayTank(EnergyTank):
         supply_temp_f : float
             Hot-water delivery temperature [°F].
         """
+        if self._slug_active:
+            return
         shift_pct    = self._shift_pct_from_energy()
         x_supply_pct = (supply_temp_f - self._cold_temp_f) / self.strat_slope - shift_pct
         x_supply_pct = max(self._cold_pct, min(100.0, x_supply_pct))
@@ -152,7 +154,6 @@ class SlugOverlayTank(EnergyTank):
             0.0,
             (x_supply_pct - self._cold_pct) / 100.0 * self.total_volume_gal,
         )
-        print(f"POINT OF CREATION : {x_supply_pct}")
         if slug_vol_gal > 0.0:
             slug_temp_f  = self._zone_average_temp_f(self._cold_pct, x_supply_pct)
             # slug_btu     = slug_vol_gal * _RHO_CP * max(0.0, slug_temp_f - self._cold_temp_f)
@@ -241,7 +242,6 @@ class SlugOverlayTank(EnergyTank):
             above_slug_pct = 100.0 - self._slug_top_pct
             slug_growth_vol_pct = (total_slug_growth_gal/self.total_volume_gal) * 100.0
             top_of_tank_pct = 100.0 - slug_growth_vol_pct
-            print(f"POINT OF CONTENTION: {top_of_tank_pct - above_slug_pct} .... {slug_growth_vol_pct}")
             above_slug_temp_f = self._zone_average_temp_f(top_of_tank_pct - above_slug_pct, top_of_tank_pct)
             above_slug_btu = max(
                 0.0,

@@ -186,6 +186,10 @@ class MultiPassRTPSystem(RTPSystem):
             building.set_to_daily_load_shape()
 
         try:
+            self._avg_storage_outlet_temp_f = min([self._calc_avg_hot_temp_at_on_trigger(control.on_sensor_fract, 
+                                                                                         control.on_trigger_t_f,
+                                                                                         strat_slope) 
+                                                   for control in control_map.values()])
             capacity_kbtuh  = self._calc_required_capacity(building)
             running_vol_supplyT_gal = self._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
             design_inlet_temp_f      = self._require_design_inlet_temp(building)
@@ -261,7 +265,7 @@ class MultiPassRTPSystem(RTPSystem):
                 cold_temp_f,
                 self.supply_temp_f,
                 self.return_temp_f,
-                self.storage_temp_f,
+                self._avg_storage_outlet_temp_f,
             )
             draw_gal   = result["storage_draw_gal"]
             inlet_temp = result["inlet_temp_f"]
@@ -286,7 +290,7 @@ class MultiPassRTPSystem(RTPSystem):
                 slug_temp_f += heat_kbtu_per_min * 1000.0 / (slug_vol_gal * _RHO_CP)
 
             # Reset slug when it reaches supply temperature
-            if slug_vol_gal > 0.0 and slug_temp_f >= self.storage_temp_f: # Heres a place I messed with TODO
+            if slug_vol_gal > 0.0 and slug_temp_f >= self.supply_temp_f: # Heres a place I messed with TODO
                 slug_vol_gal = 0.0
                 slug_temp_f  = cold_temp_f
 
@@ -368,7 +372,8 @@ class MultiPassRTPSystem(RTPSystem):
         is_heating = any(wh.is_active() for wh in self.water_heaters)
 
         # --- Slug lifecycle transitions ---
-        if not was_heating and is_heating:
+        # if not was_heating and is_heating:
+        if is_heating:
             tank.activate_slug(self.supply_temp_f)
         elif was_heating and not is_heating:
             tank.deactivate_slug()
@@ -410,9 +415,11 @@ class MultiPassRTPSystem(RTPSystem):
         if is_heating:
             # All heat and incoming water go to the slug.
             tank.heat_slug(total_kbtuh, interval_min)
+            if tank.slug_temp_f >= self.supply_temp_f:
+                tank.deactivate_slug()
         if draw_gal > 0:
-            if timestep_interval > 200 and timestep_interval < 250:
-                print(f"draw_gal: {demand_supplyT_gal}, {draw_gal}, {mv_inlet_temp_f}")
+            # if timestep_interval > 200 and timestep_interval < 250:
+            #     print(f"draw_gal: {demand_supplyT_gal}, {draw_gal}, {mv_inlet_temp_f}")
             tank.draw_physical_gal(
                 draw_gal, mv_inlet_temp_f, update_internal_cold_temp=False
             )

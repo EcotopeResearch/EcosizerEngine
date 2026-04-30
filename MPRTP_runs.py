@@ -23,7 +23,7 @@ OUTPUT = "MPRTP_runs.html"
 SUPPLY_T_F   = 120.0
 STORAGE_T_F  = 150.0
 RETURN_T_F   = 110.0
-RETURN_GPM   = 3.0
+RETURN_GPM   = 7.0
 GPDPP        = 25.0
 DESIGN_OAT   = 35.0
 DESIGN_INLET = 50.0
@@ -36,7 +36,7 @@ CTRL = Controls(
     outlet_temp_f    = STORAGE_T_F,
 )
 
-MAGNITUDES = [50, 100, 200, 400]
+MAGNITUDES = [50, 100, 200, 6000]
 
 # ---------------------------------------------------------------------------
 # HTML info block rendered before each chart

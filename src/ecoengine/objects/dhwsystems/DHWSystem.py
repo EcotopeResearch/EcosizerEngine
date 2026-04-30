@@ -1082,6 +1082,70 @@ class DHWSystem:
 
         return transition_supply_gal + fully_hot_supply_gal
 
+    def _calc_avg_hot_temp_at_on_trigger(
+        self,
+        on_fract: float,
+        on_temp_f: float,
+        strat_slope: float,
+    ) -> float:
+        """
+        Compute the volume-weighted average temperature of all water at or
+        above ``supply_temp_f`` at the moment the ON sensor would trigger.
+
+        Uses the same linear profile as ``_calc_supply_temp_gal_from_100gal_tank``:
+        - Below ``on_fract``: cold, excluded.
+        - From ``on_fract`` upward: T(h_pct) = on_temp_f + (h_pct − on_pct) × strat_slope,
+          capped at ``storage_temp_f``.
+
+        The average is computed over physical gallons (not supply-temp-equivalent
+        gallons), so it reflects the actual mean temperature of the hot zone.
+
+        Returns ``supply_temp_f`` when there is no water above supply temperature
+        (i.e., the entire zone is at or below supply temp).
+
+        Parameters
+        ----------
+        on_fract : float
+            Fractional height of the ON sensor (0 = bottom, 1 = top).
+        on_temp_f : float
+            Tank temperature at the ON sensor when the element fires [°F].
+        strat_slope : float
+            Temperature gradient above the sensor [°F per 1 % of tank height].
+
+        Returns
+        -------
+        float
+            Average temperature [°F] of all water at or above ``supply_temp_f``.
+        """
+        on_pct = on_fract * 100.0
+
+        supply_height_pct = on_pct + (self.supply_temp_f - on_temp_f) / strat_slope
+        storage_height_pct = on_pct + (self.storage_temp_f - on_temp_f) / strat_slope
+        top_of_transition_temp_f = self.storage_temp_f
+        if storage_height_pct > 100.0:
+            top_of_transition_temp_f = on_temp_f + (100.0 - on_pct) * strat_slope
+
+        if supply_height_pct >= 100.0:
+            return self.supply_temp_f  # no water above supply temperature
+        
+        bottom_of_transition_temp_f = self.supply_temp_f
+        if supply_height_pct < 0:
+            bottom_of_transition_temp_f = on_temp_f - on_pct * strat_slope
+
+        # transitional average
+        transition_avg_temp_f = (top_of_transition_temp_f + bottom_of_transition_temp_f) / 2
+        transition_phys_gal = min(100.0, storage_height_pct) - max(0.0, supply_height_pct)
+        transition_temp_sum = transition_phys_gal * transition_avg_temp_f
+        # Fully-hot zone: all water above storage_height_pct is at storage_temp_f.
+        fully_hot_phys_gal  = max(0.0, 100.0 - storage_height_pct)
+        fully_hot_temp_sum  = self.storage_temp_f * fully_hot_phys_gal
+
+        total_phys_gal = transition_phys_gal + fully_hot_phys_gal
+        if total_phys_gal <= 0.0:
+            return self.supply_temp_f
+
+        return (transition_temp_sum + fully_hot_temp_sum) / total_phys_gal
+
     def _strat_factor_for_on_params(
         self,
         on_fract: float,

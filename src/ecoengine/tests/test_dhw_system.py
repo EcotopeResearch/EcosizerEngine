@@ -1141,3 +1141,102 @@ class TestLSSizingCurve:
             assert sprtp_curve["capacity_kbtuh"][i] > base_curve["capacity_kbtuh"][i], (
                 f"SPRTP LS capacity should exceed base at index {i}"
             )
+
+
+# ===========================================================================
+# _calc_avg_hot_temp_at_on_trigger
+# ===========================================================================
+
+def _make_system(supply_temp_f: float, storage_temp_f: float) -> DHWSystem:
+    return DHWSystem(
+        water_heaters=[],
+        storage_tank=None,
+        supply_temp_f=supply_temp_f,
+        storage_temp_f=storage_temp_f,
+    )
+
+
+class TestCalcAvgHotTempAtOnTrigger:
+    """
+    Volume-weighted average temperature of water at or above supply_temp_f
+    at the moment the ON sensor triggers.
+
+    Profile: T(h_pct) = on_temp_f + (h_pct − on_pct) × strat_slope, capped
+    at storage_temp_f.  Below on_pct: cold (excluded).
+    """
+
+    def test_only_transition_zone_linear_mean(self):
+        # strat_slope=0.5, on_temp=50, supply=60, storage=100
+        # supply_height_pct = (60-50)/0.5 = 20
+        # storage_height_pct = (100-50)/0.5 = 100  → no fully-hot zone
+        # Profile: T goes linearly 60→100 over 80 gal → mean = midpoint = 80°F
+        system = _make_system(supply_temp_f=60.0, storage_temp_f=100.0)
+        avg = system._calc_avg_hot_temp_at_on_trigger(
+            on_fract=0.0, on_temp_f=50.0, strat_slope=0.5
+        )
+        assert avg == pytest.approx(80.0, rel=1e-6)
+
+    def test_transition_and_fully_hot_zones(self):
+        # strat_slope=1.0, on_temp=60, supply=80, storage=100, on_fract=0.0
+        # supply_height_pct=20, storage_height_pct=40
+        # Transition [20→40]: mean = (80+100)/2 = 90°F, 20 gal
+        # Fully-hot [40→100]: 100°F, 60 gal
+        # Weighted avg = (90×20 + 100×60) / 80 = 97.5°F
+        system = _make_system(supply_temp_f=80.0, storage_temp_f=100.0)
+        avg = system._calc_avg_hot_temp_at_on_trigger(
+            on_fract=0.0, on_temp_f=60.0, strat_slope=1.0
+        )
+        assert avg == pytest.approx(97.5, rel=1e-6)
+
+    def test_fully_hot_tank_returns_storage_temp(self):
+        # on_temp == storage_temp → entire zone above sensor is at storage_temp_f
+        system = _make_system(supply_temp_f=120.0, storage_temp_f=150.0)
+        avg = system._calc_avg_hot_temp_at_on_trigger(
+            on_fract=0.0, on_temp_f=150.0, strat_slope=2.8
+        )
+        assert avg == pytest.approx(150.0, rel=1e-6)
+
+    def test_no_water_above_supply_temp_returns_supply_temp(self):
+        # Sensor high enough that profile never reaches supply_temp before the top
+        # on_fract=0.9, on_pct=90, on_temp=50 → supply_height_pct=90+25=115 ≥ 100
+        system = _make_system(supply_temp_f=120.0, storage_temp_f=150.0)
+        avg = system._calc_avg_hot_temp_at_on_trigger(
+            on_fract=0.9, on_temp_f=50.0, strat_slope=2.8
+        )
+        assert avg == pytest.approx(120.0, rel=1e-6)
+
+    def test_sensor_at_supply_temp_includes_full_hot_zone(self):
+        # on_temp == supply_temp → supply_height_pct == on_pct, full above-sensor
+        # zone counts.  strat_slope=1.0, on_temp=80, supply=80, storage=100, on_fract=0.3
+        # supply_height_pct=30, storage_height_pct=50
+        # Transition [30→50]: T from 80→100, mean=90, 20 gal
+        # Fully-hot [50→100]: 100°F, 50 gal
+        # Weighted avg = (90×20 + 100×50) / 70 = 6800/70 ≈ 97.143°F
+        system = _make_system(supply_temp_f=80.0, storage_temp_f=100.0)
+        avg = system._calc_avg_hot_temp_at_on_trigger(
+            on_fract=0.3, on_temp_f=80.0, strat_slope=1.0
+        )
+        expected = (90.0 * 20.0 + 100.0 * 50.0) / 70.0
+        assert avg == pytest.approx(expected, rel=1e-6)
+
+    def test_sensor_above_supply_temp_includes_full_hot_zone(self):
+        # on_temp == supply_temp → supply_height_pct == on_pct, full above-sensor
+        # zone counts.  strat_slope=1.0, on_temp=80, supply=80, storage=100, on_fract=0.3
+        # supply_height_pct=30, storage_height_pct=50
+        # Transition [30→50]: T from 80→100, mean=90, 20 gal
+        # Fully-hot [50→100]: 100°F, 50 gal
+        # Weighted avg = (90×20 + 100×50) / 70 = 6800/70 ≈ 97.143°F
+        system = _make_system(supply_temp_f=80.0, storage_temp_f=100.0)
+        avg = system._calc_avg_hot_temp_at_on_trigger(
+            on_fract=0.5, on_temp_f=100.0, strat_slope=1.0
+        )
+        expected = (90.0 * 20.0 + 100.0 * 50.0) / 70.0
+        assert avg == pytest.approx(expected, rel=1e-6)
+
+    def test_result_is_between_supply_and_storage_temp(self):
+        # Sanity check: result always in [supply_temp_f, storage_temp_f]
+        system = _make_system(supply_temp_f=120.0, storage_temp_f=150.0)
+        avg = system._calc_avg_hot_temp_at_on_trigger(
+            on_fract=0.0, on_temp_f=50.0, strat_slope=2.8
+        )
+        assert system.supply_temp_f <= avg <= system.storage_temp_f

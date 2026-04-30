@@ -370,33 +370,33 @@ MPRTP_SCENARIOS = [
     dict(
         label="MPRTP: 100-unit MF, 3 GPM recirc, 10F drop, 14hr run",
         building_type="multi_family", magnitude=100, gpdpp=25,
-        supply_t_f=120.0, storage_t_f=150.0, inlet_t_f=50.0, design_oat_f=35.0,
+        supply_t_f=125.0, storage_t_f=140.0, inlet_t_f=50.0, design_oat_f=35.0,
         max_run_hr=14.0, defrost_factor=1.0,
-        on_fract=0.4, off_fract=0.1,
-        return_temp_f=110.0, return_flow_gpm=3.0,
+        on_fract=0.2, off_fract=0.2, percent_useable=0.85,
+        return_temp_f=115.0, return_flow_gpm=3.0,
     ),
     dict(
         label="MPRTP: 200-unit MF, 5 GPM recirc, 10F drop, 14hr run",
         building_type="multi_family", magnitude=200, gpdpp=25,
-        supply_t_f=120.0, storage_t_f=150.0, inlet_t_f=50.0, design_oat_f=35.0,
+        supply_t_f=125.0, storage_t_f=140.0, inlet_t_f=50.0, design_oat_f=35.0,
         max_run_hr=14.0, defrost_factor=1.0,
-        on_fract=0.4, off_fract=0.1,
-        return_temp_f=110.0, return_flow_gpm=5.0,
+        on_fract=0.2, off_fract=0.2, percent_useable=0.85,
+        return_temp_f=115.0, return_flow_gpm=5.0,
     ),
     dict(
         label="MPRTP: 50-unit MF, 2 GPM recirc, 15F drop, 14hr run",
         building_type="multi_family", magnitude=50, gpdpp=30,
-        supply_t_f=120.0, storage_t_f=150.0, inlet_t_f=50.0, design_oat_f=35.0,
+        supply_t_f=125.0, storage_t_f=140.0, inlet_t_f=50.0, design_oat_f=35.0,
         max_run_hr=14.0, defrost_factor=1.0,
-        on_fract=0.4, off_fract=0.1,
-        return_temp_f=105.0, return_flow_gpm=2.0,
+        on_fract=0.2, off_fract=0.2, percent_useable=0.85,
+        return_temp_f=110.0, return_flow_gpm=2.0,
     ),
     dict(
         label="MPRTP: 300-unit MF, 8 GPM recirc, 8F drop, 14hr run",
         building_type="multi_family", magnitude=300, gpdpp=25,
-        supply_t_f=125.0, storage_t_f=150.0, inlet_t_f=47.0, design_oat_f=47.0,
+        supply_t_f=125.0, storage_t_f=140.0, inlet_t_f=50.0, design_oat_f=47.0,
         max_run_hr=14.0, defrost_factor=1.0,
-        on_fract=0.4, off_fract=0.1,
+        on_fract=0.2, off_fract=0.2, percent_useable=0.85,
         return_temp_f=117.0, return_flow_gpm=8.0,
     ),
 ]
@@ -1059,6 +1059,7 @@ def run_new_mprtp_sizing(scenarios: list[dict]) -> list[dict]:
                     max_daily_run_hr= sc["max_run_hr"],
                     defrost_factor  = sc["defrost_factor"],
                     control_map     = cmap,
+                    percent_useable = sc.get("percent_useable", 1.0),
                 )
 
             results.append({
