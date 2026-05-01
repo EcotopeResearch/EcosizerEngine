@@ -155,9 +155,7 @@ class SlugOverlayTank(EnergyTank):
             (x_supply_pct - self._cold_pct) / 100.0 * self.total_volume_gal,
         )
         if slug_vol_gal > 0.0:
-            slug_temp_f  = self._zone_average_temp_f(self._cold_pct, x_supply_pct)
-            # slug_btu     = slug_vol_gal * _RHO_CP * max(0.0, slug_temp_f - self._cold_temp_f)
-            # self._energy_btu = max(0.0, self._energy_btu - slug_btu)
+            slug_temp_f = self._zone_average_temp_f(self._cold_pct, x_supply_pct)
         else:
             slug_temp_f = self._cold_temp_f
 
@@ -169,13 +167,6 @@ class SlugOverlayTank(EnergyTank):
             if self.total_volume_gal > 0.0 else self._cold_pct
         )
         self._original_slug_vol_gal = self._slug_vol_gal
-
-        # No kbtu left behind - get KBTUs from bottom of the tank and apply them to the slug
-        below_slug_temp_f = self._zone_average_temp_f(0.0, self._cold_pct)
-        if below_slug_temp_f > self._cold_temp_f:
-            cold_vol_gal = self._cold_pct/100.0 * self.total_volume_gal
-            below_slug_btu = cold_vol_gal * _RHO_CP * (below_slug_temp_f - self._cold_temp_f)
-            self._slug_temp_f += below_slug_btu / (self._slug_vol_gal * _RHO_CP)
 
     def add_to_slug(self, draw_gal: float, inlet_temp_f: float) -> None:
         """
@@ -227,6 +218,12 @@ class SlugOverlayTank(EnergyTank):
     def deactivate_slug(self) -> None:
         """
         Transfer all slug BTUs back into the EnergyTank and destroy the slug.
+
+        ``_energy_btu`` is intentionally frozen at the pre-activation value
+        throughout the slug lifetime (draws do not update it).  It acts as a
+        snapshot of the hot-zone profile so that ``_zone_average_temp_f`` can
+        read the temperature of whatever portion of that hot zone remains above
+        the (possibly grown) slug at deactivation time.
         """
         if not self._slug_active:
             return
@@ -235,21 +232,8 @@ class SlugOverlayTank(EnergyTank):
             self._slug_vol_gal * _RHO_CP * (self._slug_temp_f - self._cold_temp_f),
         )
 
-        # Energy in the below-inlet zone (0% → _cold_pct%) is never touched by
-        # slug operations but must be preserved when _energy_btu is reassigned.
-        # Computed now while _energy_btu still reflects the full pre-deactivation
-        # profile, then added to both assignment branches below.
-        below_inlet_btu = 0.0
-        if self._cold_pct > 0.0:
-            below_inlet_gal = self._cold_pct / 100.0 * self.total_volume_gal
-            below_avg_temp  = self._zone_average_temp_f(0.0, self._cold_pct)
-            below_inlet_btu = max(
-                0.0,
-                below_inlet_gal * _RHO_CP * (below_avg_temp - self._cold_temp_f),
-            )
-
         if self._slug_top_pct >= 100.0:
-            self._energy_btu = slug_btu #+ below_inlet_btu
+            self._energy_btu = slug_btu
         else:
             total_slug_growth_gal = self._slug_vol_gal - self._original_slug_vol_gal
             above_slug_gal = max(0.0, self._max_usable_vol_gal - self._slug_vol_gal)
@@ -261,7 +245,8 @@ class SlugOverlayTank(EnergyTank):
                 0.0,
                 above_slug_gal * _RHO_CP * (above_slug_temp_f - self._cold_temp_f),
             )
-            self._energy_btu = above_slug_btu + slug_btu # + below_inlet_btu
+            self._energy_btu = above_slug_btu + slug_btu
+
         self._slug_active  = False
         self._slug_vol_gal = 0.0
         self._original_slug_vol_gal = 0.0

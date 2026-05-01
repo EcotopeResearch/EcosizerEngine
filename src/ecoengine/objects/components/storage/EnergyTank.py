@@ -64,14 +64,19 @@ class EnergyTank(StorageTank):
         self._storage_temp_f  = storage_temp_f
         self.strat_slope      = strat_slope
         self._energy_btu: float = 0.0
+        # Subclasses (e.g. SlugOverlayTank) set this to exclude the zone below
+        # the cold-water inlet pipe from all energy integrals.  Default 0.0
+        # means the full tank height is usable.
+        self._cold_pct: float = 0.0
 
     # ------------------------------------------------------------------
     # Energy ↔ shift_pct helpers
     # ------------------------------------------------------------------
 
     def _max_energy_btu(self) -> float:
-        """Energy [BTU] when the tank is fully charged to storage_temp_f."""
-        return self.total_volume_gal * _RHO_CP * (self._storage_temp_f - self._cold_temp_f)
+        """Energy [BTU] when the usable zone is fully charged to storage_temp_f."""
+        usable_vol_gal = (1.0 - self._cold_pct / 100.0) * self.total_volume_gal
+        return usable_vol_gal * _RHO_CP * (self._storage_temp_f - self._cold_temp_f)
 
     def _energy_at_shift_pct(self, s: float) -> float:
         """
@@ -89,8 +94,10 @@ class EnergyTank(StorageTank):
         if dT <= 0.0:
             return 0.0
         x_ramp = dT / self.strat_slope
-        a = max(0.0, min(100.0, -s))
-        b = max(0.0, min(100.0, x_ramp - s))
+        # Clamp both boundaries to _cold_pct so the below-inlet zone is
+        # excluded from the energy integral.
+        a = max(self._cold_pct, min(100.0, -s))
+        b = max(self._cold_pct, min(100.0, x_ramp - s))
         I = self.strat_slope / 2.0 * ((b + s) ** 2 - (a + s) ** 2) + dT * (100.0 - b)
         return _RHO_CP * self.total_volume_gal / 100.0 * I
 
@@ -164,10 +171,13 @@ class EnergyTank(StorageTank):
         Return water temperature at fractional tank height (0=bottom, 1=top).
 
         Back-calculates the virtual StratifiedTank profile from the current
-        stored energy, then evaluates it at ``fract``.
+        stored energy, then evaluates it at ``fract``.  Anything below
+        ``_cold_pct`` is permanently at ``cold_temp_f``.
         """
+        x_pct = fract * 100.0
+        if x_pct < self._cold_pct:
+            return self._cold_temp_f
         shift_pct = self._shift_pct_from_energy()
-        x_pct     = fract * 100.0
         temp      = self.strat_slope * (x_pct + shift_pct) + self._cold_temp_f
         return max(self._cold_temp_f, min(self._storage_temp_f, temp))
 
