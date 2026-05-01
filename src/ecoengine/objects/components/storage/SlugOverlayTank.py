@@ -234,20 +234,34 @@ class SlugOverlayTank(EnergyTank):
             0.0,
             self._slug_vol_gal * _RHO_CP * (self._slug_temp_f - self._cold_temp_f),
         )
+
+        # Energy in the below-inlet zone (0% → _cold_pct%) is never touched by
+        # slug operations but must be preserved when _energy_btu is reassigned.
+        # Computed now while _energy_btu still reflects the full pre-deactivation
+        # profile, then added to both assignment branches below.
+        below_inlet_btu = 0.0
+        if self._cold_pct > 0.0:
+            below_inlet_gal = self._cold_pct / 100.0 * self.total_volume_gal
+            below_avg_temp  = self._zone_average_temp_f(0.0, self._cold_pct)
+            below_inlet_btu = max(
+                0.0,
+                below_inlet_gal * _RHO_CP * (below_avg_temp - self._cold_temp_f),
+            )
+
         if self._slug_top_pct >= 100.0:
-            self._energy_btu = slug_btu
+            self._energy_btu = slug_btu #+ below_inlet_btu
         else:
-            total_slug_growth_gal = self._slug_vol_gal - self._original_slug_vol_gal 
+            total_slug_growth_gal = self._slug_vol_gal - self._original_slug_vol_gal
             above_slug_gal = max(0.0, self._max_usable_vol_gal - self._slug_vol_gal)
             above_slug_pct = 100.0 - self._slug_top_pct
-            slug_growth_vol_pct = (total_slug_growth_gal/self.total_volume_gal) * 100.0
+            slug_growth_vol_pct = (total_slug_growth_gal / self.total_volume_gal) * 100.0
             top_of_tank_pct = 100.0 - slug_growth_vol_pct
             above_slug_temp_f = self._zone_average_temp_f(top_of_tank_pct - above_slug_pct, top_of_tank_pct)
             above_slug_btu = max(
                 0.0,
                 above_slug_gal * _RHO_CP * (above_slug_temp_f - self._cold_temp_f),
             )
-            self._energy_btu = above_slug_btu + slug_btu
+            self._energy_btu = above_slug_btu + slug_btu # + below_inlet_btu
         self._slug_active  = False
         self._slug_vol_gal = 0.0
         self._original_slug_vol_gal = 0.0
@@ -288,7 +302,7 @@ class SlugOverlayTank(EnergyTank):
         if not self._slug_active:
             return super().get_temperature_at_fraction(fract)
         x_pct = fract * 100.0
-        if x_pct <= self._cold_pct:
+        if x_pct < self._cold_pct:
             return self._cold_temp_f
         if x_pct <= self._slug_top_pct:
             return max(self._cold_temp_f, min(self._storage_temp_f, self._slug_temp_f))

@@ -16,6 +16,8 @@ meaningful agreement.
 import pytest
 from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 from ecoengine.objects.components.storage.EnergyTank import EnergyTank
+from ecoengine.objects.components.storage.SlugOverlayTank import SlugOverlayTank
+from ecoengine.constants.constants import _RHO_CP
 
 _FRACTIONS = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 _TOL = 1e-3  # °F
@@ -234,3 +236,176 @@ class TestStorageTankEquivalence:
                 et.add_recirc_return(*args)
 
         _assert_temps_match(st, et)
+
+
+# ===========================================================================
+# SlugOverlayTank — slug energy conservation
+# ===========================================================================
+
+def _make_slug_tank(percent_useable: float = 1.0) -> SlugOverlayTank:
+    """100-gal tank with MPRTP-typical temperatures and strat_slope."""
+    return SlugOverlayTank(
+        total_volume_gal=100.0,
+        cold_temp_f=50.0,
+        storage_temp_f=140.0,
+        supply_temp_f=125.0,
+        percent_useable=percent_useable,
+        strat_slope=0.8,
+    )
+
+
+class TestSlugEnergyConservation:
+    """
+    After activate → heat_slug → deactivate, the tank's stored energy must
+    equal the energy before activation plus the heat added to the slug.
+
+    Expected: tank._energy_btu_after == E0 + Q
+    where Q = kbtuh × 1000 × duration_min / 60
+    """
+
+    def test_energy_conserved_no_unusable_zone(self):
+        # percent_useable=1.0: cold inlet at the very bottom, no unusable zone.
+        # Initialize to 70% usable so there is a 30-gal sub-supply slug zone.
+        # Slug spans 0–30 % of tank height, avg temp ≈ 113 °F.
+        # Q=500 BTU is well below the storage-temp cap (~6765 BTU available).
+        tank = _make_slug_tank(percent_useable=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+
+        E0 = tank._energy_btu
+
+        tank.activate_slug(125.0)
+
+        kbtuh, duration_min = 3.0, 10.0
+        Q = kbtuh * 1000.0 * duration_min / 60.0
+        tank.heat_slug(kbtuh, duration_min)
+
+        tank.deactivate_slug()
+
+        assert tank._energy_btu == pytest.approx(E0 + Q, rel=1e-4)
+
+    def test_energy_conserved_larger_heat_addition(self):
+        # Same setup but more heat added — still below the storage-temp cap.
+        tank = _make_slug_tank(percent_useable=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+
+        E0 = tank._energy_btu
+
+        tank.activate_slug(125.0)
+
+        kbtuh, duration_min = 10.0, 10.0   # Q ≈ 1667 BTU, cap ≈ 6765 BTU
+        Q = kbtuh * 1000.0 * duration_min / 60.0
+        tank.heat_slug(kbtuh, duration_min)
+
+        tank.deactivate_slug()
+
+        assert tank._energy_btu == pytest.approx(E0 + Q, rel=1e-4)
+
+    def test_energy_conserved_with_unusable_zone(self):
+        # percent_useable=0.85: 15 % of tank is below the cold inlet pipe.
+        # The unusable zone contains real BTUs that must survive deactivation.
+        # Slug spans 15–30 % of tank height, avg temp ≈ 119 °F.
+        tank = _make_slug_tank(percent_useable=0.85)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+
+        E0 = tank._energy_btu
+
+        tank.activate_slug(125.0)
+
+        kbtuh, duration_min = 3.0, 10.0
+        Q = kbtuh * 1000.0 * duration_min / 60.0
+        tank.heat_slug(kbtuh, duration_min)
+
+        tank.deactivate_slug()
+
+        assert tank._energy_btu == pytest.approx(E0 + Q, rel=1e-4)
+
+
+# ===========================================================================
+# SlugOverlayTank — energy conservation with draws during slug active
+# ===========================================================================
+
+class TestSlugEnergyConservationWithDraw:
+    """
+    After activate → [heat_slug + draw_physical_gal] → deactivate, the tank's
+    stored energy must equal:
+
+        E_after == E0 + Q - E_removed
+
+    where Q = kbtuh × 1000 × duration_min / 60
+    and   E_removed = draw_gal × _RHO_CP × max(0, avg_draw_temp - inlet_temp_f)
+    with  avg_draw_temp captured via get_average_draw_temp_f() BEFORE the draw.
+    """
+
+    def test_draw_from_above_slug_no_unusable_zone(self):
+        # percent_useable=1.0; draw 20 gal from the hot zone above the slug.
+        tank = _make_slug_tank(percent_useable=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+
+        E0 = tank._energy_btu
+
+        tank.activate_slug(125.0)
+
+        kbtuh, duration_min = 3.0, 10.0
+        Q = kbtuh * 1000.0 * duration_min / 60.0
+        tank.heat_slug(kbtuh, duration_min)
+
+        draw_gal = 20.0
+        inlet_temp_f = 50.0
+        avg_draw_temp = tank.get_average_draw_temp_f(draw_gal)
+        E_removed = draw_gal * _RHO_CP * max(0.0, avg_draw_temp - inlet_temp_f)
+        tank.draw_physical_gal(draw_gal, inlet_temp_f)
+
+        tank.deactivate_slug()
+
+        assert tank._energy_btu == pytest.approx(E0 + Q - E_removed, rel=1e-4)
+
+    def test_draw_from_above_slug_with_unusable_zone(self):
+        # percent_useable=0.85; 15 % below inlet; draw 20 gal from hot zone.
+        tank = _make_slug_tank(percent_useable=0.85)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+
+        E0 = tank._energy_btu
+
+        tank.activate_slug(125.0)
+
+        kbtuh, duration_min = 3.0, 10.0
+        Q = kbtuh * 1000.0 * duration_min / 60.0
+        tank.heat_slug(kbtuh, duration_min)
+
+        draw_gal = 20.0
+        inlet_temp_f = 50.0
+        avg_draw_temp = tank.get_average_draw_temp_f(draw_gal)
+        E_removed = draw_gal * _RHO_CP * max(0.0, avg_draw_temp - inlet_temp_f)
+        tank.draw_physical_gal(draw_gal, inlet_temp_f)
+
+        tank.deactivate_slug()
+
+        assert tank._energy_btu == pytest.approx(E0 + Q - E_removed, rel=1e-4)
+
+    def test_multiple_draws_no_unusable_zone(self):
+        # Three interleaved heat + draw cycles; cumulative accounting must balance.
+        tank = _make_slug_tank(percent_useable=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+
+        E0 = tank._energy_btu
+        inlet_temp_f = 50.0
+
+        tank.activate_slug(125.0)
+
+        Q_total = 0.0
+        E_removed_total = 0.0
+
+        for kbtuh, duration_min, draw_gal in [
+            (3.0, 5.0, 10.0),
+            (3.0, 5.0, 8.0),
+            (3.0, 5.0, 12.0),
+        ]:
+            Q_total += kbtuh * 1000.0 * duration_min / 60.0
+            tank.heat_slug(kbtuh, duration_min)
+            avg_draw_temp = tank.get_average_draw_temp_f(draw_gal)
+            E_removed_total += draw_gal * _RHO_CP * max(0.0, avg_draw_temp - inlet_temp_f)
+            tank.draw_physical_gal(draw_gal, inlet_temp_f)
+
+        tank.deactivate_slug()
+
+        assert tank._energy_btu == pytest.approx(E0 + Q_total - E_removed_total, rel=1e-4)

@@ -20,19 +20,19 @@ OUTPUT = "MPRTP_runs.html"
 # ---------------------------------------------------------------------------
 # Shared configuration
 # ---------------------------------------------------------------------------
-SUPPLY_T_F   = 120.0
-STORAGE_T_F  = 150.0
-RETURN_T_F   = 110.0
-RETURN_GPM   = 7.0
+SUPPLY_T_F   = 125.0
+STORAGE_T_F  = 140.0
+RETURN_T_F   = 115.0
+RETURN_GPM   = 3.0
 GPDPP        = 25.0
 DESIGN_OAT   = 35.0
 DESIGN_INLET = 50.0
 
 CTRL = Controls(
-    on_sensor_fract  = 0.4,
-    on_trigger_t_f   = 115.0,
-    off_sensor_fract = 0.1,
-    off_trigger_t_f  = 135.0,
+    on_sensor_fract  = 0.2,
+    on_trigger_t_f   = 125.0,
+    off_sensor_fract = 0.2,
+    off_trigger_t_f  = 140.0,
     outlet_temp_f    = STORAGE_T_F,
 )
 

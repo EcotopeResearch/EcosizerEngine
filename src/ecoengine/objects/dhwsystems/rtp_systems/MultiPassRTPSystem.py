@@ -290,7 +290,7 @@ class MultiPassRTPSystem(RTPSystem):
                 slug_temp_f += heat_kbtu_per_min * 1000.0 / (slug_vol_gal * _RHO_CP)
 
             # Reset slug when it reaches supply temperature
-            if slug_vol_gal > 0.0 and slug_temp_f >= self.supply_temp_f: # Heres a place I messed with TODO
+            if slug_vol_gal > 0.0 and slug_temp_f >= self.storage_temp_f: # Heres a place I messed with TODO
                 slug_vol_gal = 0.0
                 slug_temp_f  = cold_temp_f
 
