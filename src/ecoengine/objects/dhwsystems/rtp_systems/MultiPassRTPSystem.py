@@ -137,6 +137,52 @@ class MultiPassRTPSystem(RTPSystem):
             control_schedule=control_schedule,
             control_map=control_map,
         )]
+        # Capacity Boost
+        inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
+        ctrl = control_map.get("normal") or next(iter(control_map.values()), None)
+        starting_percent_usable = max(0.0, min(1.0, 1.0 - ctrl.on_sensor_fract))
+        for _ in range(3):
+            system.storage_tank.initialize(
+                storage_temp_f  = system.storage_temp_f,
+                cold_temp_f     = inlet_temp_f,
+                percent_useable = starting_percent_usable
+            )
+            minutes = 24 * 60 * 3
+            deficit_minutes = 0
+            min_tank_outlet_f = supply_temp_f
+            heater_on = False
+            start_heat_min = 0
+            for i in range(minutes):
+                step = system.simulate_step(
+                    building          = building,
+                    timestep_interval = i,
+                    interval_min      = 1,
+                )
+                if step["heater_output_kbtuh"] > 0 and not heater_on:
+                    heater_on = True
+                    start_heat_min = i
+                elif step["heater_output_kbtuh"] <= 0 and heater_on:
+                    heater_on = False
+
+                if step["usable_volume_supplyT_gal"] <= 0.0:
+                    # Outage
+                    tank_outlet_f = step["tank_temps_f"][-1]
+                    if tank_outlet_f < min_tank_outlet_f:
+                        deficit_minutes = i - start_heat_min
+                        min_tank_outlet_f = tank_outlet_f
+            
+            if deficit_minutes > 0:
+                capacity_increase_kbtu = ((system.storage_tank.total_volume_gal * percent_useable) * _RHO_CP * (supply_temp_f - min_tank_outlet_f))/1000
+                print(f"capacity increase of {capacity_increase_kbtu / (deficit_minutes/60)}")
+                if capacity_increase_kbtu > 0:
+                    system._minimum_capacity_kbtuh = system._minimum_capacity_kbtuh + (capacity_increase_kbtu / (deficit_minutes/60))
+                    system.water_heaters = [WaterHeater.from_nominal_capacity(
+                        nominal_capacity_kbtuh=system._minimum_capacity_kbtuh,
+                        control_schedule=control_schedule,
+                        control_map=control_map,
+                    )]
+            else:
+                break
         return system
 
     # ------------------------------------------------------------------
@@ -201,6 +247,7 @@ class MultiPassRTPSystem(RTPSystem):
             self._minimum_capacity_kbtuh       = capacity_kbtuh
             self._minimum_storage_storageT_gal = storage_vol_storageT_gal
             self._sizing_strat_slope           = strat_slope
+
         finally:
             if was_annual:
                 building.set_to_annual_load_shape()
@@ -412,11 +459,12 @@ class MultiPassRTPSystem(RTPSystem):
         #     mv_inlet_temp_f = inlet_water_temp_f
 
         # --- Apply to tank ---
+        slug_vol = 0
         if is_heating:
-            # All heat and incoming water go to the slug.
-            tank.heat_slug(total_kbtuh, interval_min)
-            if tank.slug_temp_f >= self.supply_temp_f:
-                tank.deactivate_slug()
+            if tank.is_slug_active() and tank._slug_vol_gal > 0:
+                # Sub-supply water exists: heat it via the slug.
+                tank.heat_slug(total_kbtuh, interval_min)
+                slug_vol = tank.slug_temp_f
         if draw_gal > 0:
             # if timestep_interval > 200 and timestep_interval < 250:
             #     print(f"draw_gal: {demand_supplyT_gal}, {draw_gal}, {mv_inlet_temp_f}")

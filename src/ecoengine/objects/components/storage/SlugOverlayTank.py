@@ -208,7 +208,7 @@ class SlugOverlayTank(EnergyTank):
             return
         heat_btu          = kbtuh * 1000.0 * duration_min / 60.0
         self._slug_temp_f += heat_btu / (self._slug_vol_gal * _RHO_CP)
-        self._slug_temp_f  = min(self._slug_temp_f, self._storage_temp_f)
+        self._slug_temp_f  = self._slug_temp_f
 
     @property
     def slug_temp_f(self) -> float:
@@ -303,7 +303,7 @@ class SlugOverlayTank(EnergyTank):
         when the slug temperature meets or exceeds ``supply_temp_f``.
         """
         if not self._slug_active:
-            return super().get_usable_volume_supplyT_gal(supply_temp_f)
+            return min(super().get_usable_volume_supplyT_gal(supply_temp_f), self.total_volume_gal * self.percent_useable)
         # hot_usable  = super().get_usable_volume_supplyT_gal(supply_temp_f)
         hot_usable = self._max_usable_vol_gal - self._slug_vol_gal # should all be aupply or above
         slug_usable = self._slug_vol_gal if self._slug_temp_f >= supply_temp_f else 0.0
