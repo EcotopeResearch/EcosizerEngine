@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import numpy as np
+
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.SlugOverlayTank import SlugOverlayTank
@@ -141,7 +143,6 @@ class MultiPassRTPSystem(RTPSystem):
         inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
         ctrl = control_map.get("normal") or next(iter(control_map.values()), None)
         starting_percent_usable = max(0.0, min(1.0, 1.0 - ctrl.on_sensor_fract))
-        print("here")
         for _ in range(3):
             system.storage_tank.initialize(
                 storage_temp_f  = system.storage_temp_f,
@@ -249,6 +250,109 @@ class MultiPassRTPSystem(RTPSystem):
             self._minimum_storage_storageT_gal = storage_vol_storageT_gal
             self._sizing_strat_slope           = strat_slope
 
+        finally:
+            if was_annual:
+                building.set_to_annual_load_shape()
+
+    # ------------------------------------------------------------------
+    # Sizing curve
+    # ------------------------------------------------------------------
+
+    def get_sizing_curve(
+        self,
+        building,
+        strat_slope: float = _MPRTP_STRAT_SLOPE,
+        step: float = 0.5,
+    ) -> dict:
+        """
+        Compute the MPRTP sizing curve — capacity vs. storage for decreasing
+        run hours.
+
+        Unlike other DHW systems, MPRTP does not model an "over-designed" region
+        above the default ``max_daily_run_hr``.  The curve only sweeps downward
+        from the system's ``max_daily_run_hr`` to the physical minimum.
+
+        Each point is produced by a full ``from_size()`` call so that the
+        capacity-boost simulation loop (which may increase capacity beyond the
+        analytic estimate) is applied at every run-hour value, not just the
+        recommended point.
+
+        ``recommended_index`` is always 0 — the first point corresponds to the
+        configured ``max_daily_run_hr`` and is the recommended design.
+
+        Parameters
+        ----------
+        building : Building
+        strat_slope : float
+            Stratification slope [°F per %-height].  Defaults to 0.8.
+        step : float
+            Run-hour step size for the sweep.  Default 0.5 hr.
+
+        Returns
+        -------
+        dict
+            ``"heat_hours"``           : list[float] — run hrs at each point
+            ``"capacity_kbtuh"``       : list[float] — capacity [kBTU/hr]
+            ``"storage_storageT_gal"`` : list[float] — storage [gal at storageT]
+            ``"recommended_index"``    : int — always 0 for MPRTP
+        """
+        was_annual = building.is_annual_load_shape()
+        if was_annual:
+            building.set_to_daily_load_shape()
+
+        _strat_slope = getattr(self, "_sizing_strat_slope", strat_slope)
+
+        # Pull parameters from the already-sized system so every curve point
+        # uses identical inputs to the recommended design.
+        _cmap    = self.water_heaters[0].control_map     if self.water_heaters else None
+        _sched   = self.water_heaters[0].control_schedule if self.water_heaters else None
+        _pct_use = (
+            self.storage_tank.percent_useable
+            if self.storage_tank and hasattr(self.storage_tank, "percent_useable")
+            else 1.0
+        )
+
+        try:
+            # Physical minimum: one hour of generation equals the peak demand hour.
+            min_run_hr = 1.0 / float(np.max(building.peak_load_shape)) * 1.001
+
+            # Sweep only downward from the recommended max_daily_run_hr.
+            heat_hours = np.arange(self.max_daily_run_hr, min_run_hr, -step)
+
+            heat_hours_out: list[float] = []
+            capacity_out:   list[float] = []
+            storage_out:    list[float] = []
+
+            for h in heat_hours:
+                try:
+                    pt = MultiPassRTPSystem.from_size(
+                        building         = building,
+                        supply_temp_f    = self.supply_temp_f,
+                        storage_temp_f   = self.storage_temp_f,
+                        return_temp_f    = self.return_temp_f,
+                        return_flow_gpm  = self.return_flow_gpm,
+                        max_daily_run_hr = float(h),
+                        defrost_factor   = self.defrost_factor,
+                        control_schedule = _sched,
+                        control_map      = _cmap,
+                        strat_slope      = _strat_slope,
+                        percent_useable  = _pct_use,
+                    )
+                except (ValueError, RuntimeError, ZeroDivisionError):
+                    break
+                vol = pt._minimum_storage_storageT_gal
+                if vol == 0.0:
+                    break
+                heat_hours_out.append(float(h))
+                capacity_out.append(pt._minimum_capacity_kbtuh)
+                storage_out.append(vol)
+
+            return {
+                "heat_hours":           heat_hours_out,
+                "capacity_kbtuh":       capacity_out,
+                "storage_storageT_gal": storage_out,
+                "recommended_index":    0,
+            }
         finally:
             if was_annual:
                 building.set_to_annual_load_shape()
