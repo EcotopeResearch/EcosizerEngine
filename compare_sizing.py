@@ -1051,15 +1051,16 @@ def run_new_mprtp_sizing(scenarios: list[dict]) -> list[dict]:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 system = MultiPassRTPSystem.from_size(
-                    building        = building,
-                    supply_temp_f   = sc["supply_t_f"],
-                    storage_temp_f  = sc["storage_t_f"],
-                    return_temp_f   = sc["return_temp_f"],
-                    return_flow_gpm = sc["return_flow_gpm"],
-                    max_daily_run_hr= sc["max_run_hr"],
-                    defrost_factor  = sc["defrost_factor"],
-                    control_map     = cmap,
-                    percent_useable = sc.get("percent_useable", 1.0),
+                    building         = building,
+                    supply_temp_f    = sc["supply_t_f"],
+                    storage_temp_f   = sc["storage_t_f"],
+                    return_temp_f    = sc["return_temp_f"],
+                    return_flow_gpm  = sc["return_flow_gpm"],
+                    max_daily_run_hr = sc["max_run_hr"],
+                    defrost_factor   = sc["defrost_factor"],
+                    control_schedule = ["normal"] * 24,
+                    control_map      = cmap,
+                    percent_useable  = sc.get("percent_useable", 1.0),
                 )
 
             results.append({

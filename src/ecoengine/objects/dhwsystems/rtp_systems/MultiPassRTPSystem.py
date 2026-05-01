@@ -141,6 +141,7 @@ class MultiPassRTPSystem(RTPSystem):
         inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
         ctrl = control_map.get("normal") or next(iter(control_map.values()), None)
         starting_percent_usable = max(0.0, min(1.0, 1.0 - ctrl.on_sensor_fract))
+        print("here")
         for _ in range(3):
             system.storage_tank.initialize(
                 storage_temp_f  = system.storage_temp_f,
@@ -427,6 +428,9 @@ class MultiPassRTPSystem(RTPSystem):
 
         # --- Heating capacity ---
         top_temp_f  = tank.get_temperature_at_fraction(1.0)
+        # if tank._slug_top_pct >= 99 and top_temp_f != tank.slug_temp_f:
+        #     print(f"what gives? {tank._slug_top_pct}, {top_temp_f}, {tank.slug_temp_f}")
+        #     tank.get_temperature_at_fraction(1.0, verbose = True)
         total_kbtuh = sum(
             wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day)) for wh in self.water_heaters
         )
@@ -454,20 +458,13 @@ class MultiPassRTPSystem(RTPSystem):
         )
         draw_gal       = result["storage_draw_gal"]
         mv_inlet_temp_f = result["inlet_temp_f"]
-        # else:
-        #     draw_gal        = 0.0
-        #     mv_inlet_temp_f = inlet_water_temp_f
 
         # --- Apply to tank ---
-        slug_vol = 0
         if is_heating:
             if tank.is_slug_active() and tank._slug_vol_gal > 0:
                 # Sub-supply water exists: heat it via the slug.
                 tank.heat_slug(total_kbtuh, interval_min)
-                slug_vol = tank.slug_temp_f
         if draw_gal > 0:
-            # if timestep_interval > 200 and timestep_interval < 250:
-            #     print(f"draw_gal: {demand_supplyT_gal}, {draw_gal}, {mv_inlet_temp_f}")
             tank.draw_physical_gal(
                 draw_gal, mv_inlet_temp_f, update_internal_cold_temp=False
             )
@@ -487,7 +484,7 @@ class MultiPassRTPSystem(RTPSystem):
             "usable_volume_supplyT_gal": usable_vol_gal,
             "heater_output_kbtuh":       total_kbtuh,
             "heater_power_in_kw":        total_kw,
-            "oat_f":                     oat_f,
+            "oat_f":                     top_temp_f,
             "inlet_water_temp_f":        inlet_water_temp_f,
             "tank_temps_f":              tank_temps_f,
             "mode":                      mode,

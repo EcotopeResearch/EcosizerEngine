@@ -275,7 +275,7 @@ class SlugOverlayTank(EnergyTank):
         slug_draw_pct = draw_gal_pct - non_slug_draw_pct
         return ((super().get_average_draw_temp_f(self.total_volume_gal * (non_slug_draw_pct/100.0)) * non_slug_draw_pct) + (self._slug_temp_f * slug_draw_pct)) / draw_gal_pct
     
-    def get_temperature_at_fraction(self, fract: float) -> float:
+    def get_temperature_at_fraction(self, fract: float, verbose = False) -> float:
         """
         Return water temperature at fractional tank height (0=bottom, 1=top).
 
@@ -284,6 +284,8 @@ class SlugOverlayTank(EnergyTank):
         * inside the slug → uniform ``slug_temp_f``
         * above the slug → base EnergyTank profile
         """
+        if verbose:
+            print(f"{self._slug_active}, {fract * 100.0}, {self._slug_top_pct}")
         if not self._slug_active:
             return super().get_temperature_at_fraction(fract)
         x_pct = fract * 100.0
@@ -344,3 +346,7 @@ class SlugOverlayTank(EnergyTank):
             remove_from_slug_gal = gal - available_gal # draw gallons from slug
             self._slug_vol_gal = self._slug_vol_gal - remove_from_slug_gal
         self.add_to_slug(gal, inlet_temp_f)
+        if available_gal < gal:
+            # bugfix for rounding error
+            self._slug_top_pct = 100.0
+            self._slug_vol_gal = self._max_usable_vol_gal

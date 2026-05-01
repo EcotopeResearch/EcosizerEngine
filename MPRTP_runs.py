@@ -1,9 +1,9 @@
 """
-Size and simulate a MultiPassRTPSystem across a range of building magnitudes.
+Size and simulate a MultiPassRTPSystem across a range of building magnitudes
+and control configurations.
 
-Outputs all simulation graphs (successful or not) to MPRTP_runs.html.
-Each graph is preceded by a summary block showing building specs, sizing
-results, and control setpoints.
+Each scenario defines a Controls object, a label, and the magnitudes to test.
+Outputs all simulation graphs to MPRTP_runs.html.
 
 Run:
     python MPRTP_runs.py
@@ -27,20 +27,92 @@ RETURN_GPM   = 3.0
 GPDPP        = 25.0
 DESIGN_OAT   = 35.0
 DESIGN_INLET = 50.0
-
-CTRL = Controls(
-    on_sensor_fract  = 0.2,
-    on_trigger_t_f   = 125.0,
-    off_sensor_fract = 0.2,
-    off_trigger_t_f  = 140.0,
-    outlet_temp_f    = STORAGE_T_F,
-)
-
-MAGNITUDES = [50, 100, 200, 6000]
+PCT_USEABLE  = 0.9
 
 # ---------------------------------------------------------------------------
-# HTML info block rendered before each chart
+# Control scenarios
 # ---------------------------------------------------------------------------
+# percent_useable=0.9 → unusable zone is 0–10% height; sensors must be ≥ 0.10.
+SCENARIOS = [
+    {
+        "label": "Bottom sensor — tight deadband",
+        "desc":  "on 20 % @ 125 °F · off 20 % @ 140 °F  (baseline)",
+        "ctrl": Controls(
+            on_sensor_fract  = 0.20,
+            on_trigger_t_f   = 125.0,
+            off_sensor_fract = 0.20,
+            off_trigger_t_f  = 140.0,
+            outlet_temp_f    = STORAGE_T_F,
+        ),
+        "magnitudes": [50, 100, 200, 6000],
+    },
+    {
+        "label": "Bottom sensor — low on-trigger",
+        "desc":  "on 20 % @ 120 °F · off 20 % @ 140 °F  (heater waits longer)",
+        "ctrl": Controls(
+            on_sensor_fract  = 0.20,
+            on_trigger_t_f   = 120.0,
+            off_sensor_fract = 0.20,
+            off_trigger_t_f  = 140.0,
+            outlet_temp_f    = STORAGE_T_F,
+        ),
+        "magnitudes": [50, 100, 200],
+    },
+    {
+        "label": "Mid-tank sensor — symmetric",
+        "desc":  "on 50 % @ 125 °F · off 50 % @ 140 °F  (sensor in middle)",
+        "ctrl": Controls(
+            on_sensor_fract  = 0.50,
+            on_trigger_t_f   = 125.0,
+            off_sensor_fract = 0.50,
+            off_trigger_t_f  = 140.0,
+            outlet_temp_f    = STORAGE_T_F,
+        ),
+        "magnitudes": [50, 100, 200],
+    },
+    {
+        "label": "Split sensors — bottom on / top off",
+        "desc":  "on 20 % @ 125 °F · off 80 % @ 140 °F  (off only when top is fully hot)",
+        "ctrl": Controls(
+            on_sensor_fract  = 0.20,
+            on_trigger_t_f   = 125.0,
+            off_sensor_fract = 0.80,
+            off_trigger_t_f  = 140.0,
+            outlet_temp_f    = STORAGE_T_F,
+        ),
+        "magnitudes": [50, 100, 200],
+    },
+    {
+        "label": "High sensor — deep discharge",
+        "desc":  "on 70 % @ 125 °F · off 70 % @ 140 °F  (heater on only when tank mostly cold)",
+        "ctrl": Controls(
+            on_sensor_fract  = 0.70,
+            on_trigger_t_f   = 125.0,
+            off_sensor_fract = 0.70,
+            off_trigger_t_f  = 140.0,
+            outlet_temp_f    = STORAGE_T_F,
+        ),
+        "magnitudes": [50, 100, 200],
+    },
+]
+
+# ---------------------------------------------------------------------------
+# HTML helpers
+# ---------------------------------------------------------------------------
+
+def _scenario_header_html(scenario: dict) -> str:
+    return f"""
+<div style="font-family: Arial, sans-serif; margin: 56px 0 0 0;
+            border-bottom: 3px solid #1a5fa8; padding-bottom: 6px;">
+  <h2 style="margin: 0; color: #1a5fa8; font-size: 1.2em;">
+    {scenario['label']}
+  </h2>
+  <p style="margin: 4px 0 0 0; color: #555; font-size: 0.88em;">
+    {scenario['desc']}
+  </p>
+</div>
+"""
+
 
 def _info_block_html(magnitude: int, daily_gal: float, cap_kbtuh: float,
                      vol_gal: float, summary: dict, ctrl: Controls) -> str:
@@ -60,7 +132,7 @@ def _info_block_html(magnitude: int, daily_gal: float, cap_kbtuh: float,
     return f"""
 <div style="font-family: Arial, sans-serif; background: #f8f8f8;
             border-left: 5px solid {accent}; padding: 14px 20px;
-            margin: 48px 0 6px 0; border-radius: 0 4px 4px 0;">
+            margin: 16px 0 6px 0; border-radius: 0 4px 4px 0;">
   <h3 style="margin: 0 0 10px 0; font-size: 1.05em; color: #222;">
     {magnitude}-Person Multi-Family&nbsp;&nbsp;
     <span style="color:{accent}; font-weight:bold;">{status_text}</span>
@@ -114,61 +186,66 @@ cz = ClimateZone.from_design_conditions(
     design_oat_f              = DESIGN_OAT,
     design_inlet_water_temp_f = DESIGN_INLET,
 )
-ctrl_map = {"normal": CTRL}
 
 html_parts: list[str] = []
+first_plotly = True
 
-for mag in MAGNITUDES:
-    print(f"Building {mag:>4} people  sizing...", end=" ", flush=True)
+for scenario in SCENARIOS:
+    ctrl      = scenario["ctrl"]
+    ctrl_map  = {"normal": ctrl}
+    html_parts.append(_scenario_header_html(scenario))
 
-    building = Building.from_building_type(
-        "multi_family",
-        magnitude    = mag,
-        gpdpp        = GPDPP,
-        climate_zone = cz,
-    )
+    for mag in scenario["magnitudes"]:
+        print(f"[{scenario['label']}]  {mag:>4} people  sizing...", end=" ", flush=True)
 
-    system = MultiPassRTPSystem.from_size(
-        building         = building,
-        supply_temp_f    = SUPPLY_T_F,
-        storage_temp_f   = STORAGE_T_F,
-        return_temp_f    = RETURN_T_F,
-        return_flow_gpm  = RETURN_GPM,
-        control_schedule = ["normal"] * 24,
-        control_map      = ctrl_map,
-        percent_useable= 0.9
-    )
+        building = Building.from_building_type(
+            "multi_family",
+            magnitude    = mag,
+            gpdpp        = GPDPP,
+            climate_zone = cz,
+        )
 
-    cap = system._minimum_capacity_kbtuh
-    vol = system._minimum_storage_storageT_gal
-    daily_gal = building.daily_dhw_use_supplyT_gal
+        system = MultiPassRTPSystem.from_size(
+            building         = building,
+            supply_temp_f    = SUPPLY_T_F,
+            storage_temp_f   = STORAGE_T_F,
+            return_temp_f    = RETURN_T_F,
+            return_flow_gpm  = RETURN_GPM,
+            control_schedule = ["normal"] * 24,
+            control_map      = ctrl_map,
+            percent_useable  = PCT_USEABLE,
+        )
 
-    print(f"cap={cap:.0f} kBTU/hr  vol={vol:.0f} gal  simulating...", end=" ", flush=True)
+        cap       = system._minimum_capacity_kbtuh
+        vol       = system._minimum_storage_storageT_gal
+        daily_gal = building.daily_dhw_use_supplyT_gal
 
-    sim     = simulate_3day(system, building)
-    summary = sim.get_summary()
+        print(f"cap={cap:.0f} kBTU/hr  vol={vol:.0f} gal  simulating...", end=" ", flush=True)
 
-    status  = "SUCCESS" if summary["successful"] else (
-        f"FAILED (outage={summary['total_outage_min']} min"
-        + (", stopped early" if summary["stopped_early"] else "")
-        + ")"
-    )
-    print(status)
+        sim     = simulate_3day(system, building)
+        summary = sim.get_summary()
 
-    title = (
-        f"MPRTP 3-Day Simulation — {mag}-Person Multi-Family  |  "
-        f"{SUPPLY_T_F:.0f}°F supply / {STORAGE_T_F:.0f}°F storage  |  "
-        f"{cap:.0f} kBTU/hr · {vol:.0f} gal"
-        + ("  [FAILED]" if not summary["successful"] else "")
-    )
+        status = "SUCCESS" if summary["successful"] else (
+            f"FAILED (outage={summary['total_outage_min']} min"
+            + (", stopped early" if summary["stopped_early"] else "")
+            + ")"
+        )
+        print(status)
 
-    fig = sim.to_plotly(title=title, include_temperatures=True)
+        title = (
+            f"MPRTP 3-Day — {mag}-Person  |  "
+            f"{scenario['label']}  |  "
+            f"{cap:.0f} kBTU/hr · {vol:.0f} gal"
+            + ("  [FAILED]" if not summary["successful"] else "")
+        )
 
-    include_js = "cdn" if not html_parts else False
-    fig_html   = fig.to_html(full_html=False, include_plotlyjs=include_js)
+        fig      = sim.to_plotly(title=title, include_temperatures=True)
+        inc_js   = "cdn" if first_plotly else False
+        fig_html = fig.to_html(full_html=False, include_plotlyjs=inc_js)
+        first_plotly = False
 
-    html_parts.append(_info_block_html(mag, daily_gal, cap, vol, summary, CTRL))
-    html_parts.append(fig_html)
+        html_parts.append(_info_block_html(mag, daily_gal, cap, vol, summary, ctrl))
+        html_parts.append(fig_html)
 
 
 # ---------------------------------------------------------------------------
@@ -177,18 +254,20 @@ for mag in MAGNITUDES:
 with open(OUTPUT, "w", encoding="utf-8") as f:
     f.write("<!DOCTYPE html>\n<html>\n<head>\n")
     f.write("  <meta charset='utf-8'>\n")
-    f.write("  <title>Multi-Pass RTP — Sizing &amp; Simulation Runs</title>\n")
+    f.write("  <title>Multi-Pass RTP — Control Scenario Comparison</title>\n")
     f.write("  <style>body{margin:24px 48px;background:#fff;}</style>\n")
     f.write("</head>\n<body>\n")
     f.write("<h1 style='font-family:Arial;color:#222;margin-bottom:4px;'>"
-            "Multi-Pass RTP System — Sizing &amp; Simulation</h1>\n")
-    f.write(f"<p style='font-family:Arial;color:#666;font-size:0.9em;margin-top:0;'>"
-            f"Building type: multi_family &nbsp;·&nbsp; "
-            f"{GPDPP:.0f} GPD/person &nbsp;·&nbsp; "
-            f"Supply {SUPPLY_T_F:.0f}°F / Storage {STORAGE_T_F:.0f}°F &nbsp;·&nbsp; "
-            f"Recirc {RETURN_GPM:.0f} GPM @ {RETURN_T_F:.0f}°F return &nbsp;·&nbsp; "
-            f"Design OAT {DESIGN_OAT:.0f}°F / Inlet {DESIGN_INLET:.0f}°F"
-            f"</p>\n")
+            "Multi-Pass RTP — Control Scenario Comparison</h1>\n")
+    f.write(
+        f"<p style='font-family:Arial;color:#666;font-size:0.9em;margin-top:0;'>"
+        f"Building type: multi_family &nbsp;·&nbsp; {GPDPP:.0f} GPD/person &nbsp;·&nbsp; "
+        f"Supply {SUPPLY_T_F:.0f}°F / Storage {STORAGE_T_F:.0f}°F &nbsp;·&nbsp; "
+        f"Recirc {RETURN_GPM:.0f} GPM @ {RETURN_T_F:.0f}°F &nbsp;·&nbsp; "
+        f"Useable fraction {PCT_USEABLE:.0%} &nbsp;·&nbsp; "
+        f"Design OAT {DESIGN_OAT:.0f}°F / Inlet {DESIGN_INLET:.0f}°F"
+        f"</p>\n"
+    )
     f.write("\n".join(html_parts))
     f.write("\n</body>\n</html>\n")
 
