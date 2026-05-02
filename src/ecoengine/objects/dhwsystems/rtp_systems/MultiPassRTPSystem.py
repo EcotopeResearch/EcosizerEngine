@@ -175,7 +175,6 @@ class MultiPassRTPSystem(RTPSystem):
             
             if deficit_minutes > 0:
                 capacity_increase_kbtu = ((system.storage_tank.total_volume_gal * percent_useable) * _RHO_CP * (supply_temp_f - min_tank_outlet_f))/1000
-                print(f"capacity increase of {capacity_increase_kbtu / (deficit_minutes/60)}")
                 if capacity_increase_kbtu > 0:
                     system._minimum_capacity_kbtuh = system._minimum_capacity_kbtuh + (capacity_increase_kbtu / (deficit_minutes/60))
                     system.water_heaters = [WaterHeater.from_nominal_capacity(
@@ -313,6 +312,17 @@ class MultiPassRTPSystem(RTPSystem):
         )
 
         try:
+            # Numerator of the run-hour back-calculation (constant across all points):
+            #   cap = numerator / (run_hr × defrost)
+            #   → run_hr = numerator / (cap × defrost)
+            design_inlet    = self._require_design_inlet_temp(building)
+            delta_t         = self.supply_temp_f - design_inlet
+            recirc_loss     = self.get_recirc_loss_kbtuh()
+            _numerator      = (
+                building.daily_dhw_use_supplyT_gal * _RHO_CP * delta_t / 1000.0
+                + recirc_loss * 24.0
+            )
+
             # Physical minimum: one hour of generation equals the peak demand hour.
             min_run_hr = 1.0 / float(np.max(building.peak_load_shape)) * 1.001
 
@@ -322,6 +332,7 @@ class MultiPassRTPSystem(RTPSystem):
             heat_hours_out: list[float] = []
             capacity_out:   list[float] = []
             storage_out:    list[float] = []
+            rec_back_hr:    float | None = None   # back-calc hr for the recommended point
 
             for h in heat_hours:
                 try:
@@ -343,15 +354,51 @@ class MultiPassRTPSystem(RTPSystem):
                 vol = pt._minimum_storage_storageT_gal
                 if vol == 0.0:
                     break
-                heat_hours_out.append(float(h))
+
+                # Back-calculate effective run hours; round to nearest 0.1 hr.
+                back_hr = round(
+                    _numerator / (pt._minimum_capacity_kbtuh * self.defrost_factor), 1
+                )
+
+                if rec_back_hr is None:
+                    rec_back_hr = back_hr   # first sweep point = recommended design
+
+                # Skip points whose back-calculated hours are within 0.3 hr of an
+                # existing entry (avoids crowding from capacity-boost quantisation).
+                if any(abs(back_hr - existing) < 0.3 for existing in heat_hours_out):
+                    continue
+
+                heat_hours_out.append(back_hr)
                 capacity_out.append(pt._minimum_capacity_kbtuh)
                 storage_out.append(vol)
+
+            # Sort descending by back-calculated run hours so that the base-class
+            # reversal (x_vals[::-1]) produces ascending storage on the x-axis and
+            # the slider moves in the same direction as the dot on the chart.
+            if heat_hours_out:
+                order = sorted(
+                    range(len(heat_hours_out)),
+                    key=lambda i: heat_hours_out[i],
+                    reverse=True,
+                )
+                heat_hours_out = [heat_hours_out[i] for i in order]
+                capacity_out   = [capacity_out[i]   for i in order]
+                storage_out    = [storage_out[i]    for i in order]
+
+                # Recommended point lands at index 0 after descending sort (highest
+                # back-calculated run hours = least-boosted = original design).
+                rec_index = min(
+                    range(len(heat_hours_out)),
+                    key=lambda i: abs(heat_hours_out[i] - (rec_back_hr or 0.0)),
+                )
+            else:
+                rec_index = 0
 
             return {
                 "heat_hours":           heat_hours_out,
                 "capacity_kbtuh":       capacity_out,
                 "storage_storageT_gal": storage_out,
-                "recommended_index":    0,
+                "recommended_index":    rec_index,
             }
         finally:
             if was_annual:
