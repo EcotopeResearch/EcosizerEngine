@@ -68,6 +68,8 @@ class MultiPassRTPSystem(RTPSystem):
         control_map: dict[str, Controls] | None = None,
         strat_slope: float = _MPRTP_STRAT_SLOPE,
         percent_useable: float = 1.0,
+        capacity_boost_trial_days: int = 3,
+        capacity_boost_iterations: int = 3
     ) -> MultiPassRTPSystem:
         """
         Size the system for the given building, then build it.
@@ -143,13 +145,13 @@ class MultiPassRTPSystem(RTPSystem):
         inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
         ctrl = control_map.get("normal") or next(iter(control_map.values()), None)
         starting_percent_usable = max(0.0, min(1.0, 1.0 - ctrl.on_sensor_fract))
-        for _ in range(3):
+        for _ in range(capacity_boost_iterations):
             system.storage_tank.initialize(
                 storage_temp_f  = system.storage_temp_f,
                 cold_temp_f     = inlet_temp_f,
                 percent_useable = starting_percent_usable
             )
-            minutes = 24 * 60 * 3
+            minutes = 24 * 60 * capacity_boost_trial_days
             deficit_minutes = 0
             min_tank_outlet_f = supply_temp_f
             heater_on = False
@@ -335,22 +337,29 @@ class MultiPassRTPSystem(RTPSystem):
             rec_back_hr:    float | None = None   # back-calc hr for the recommended point
 
             for h in heat_hours:
-                try:
-                    pt = MultiPassRTPSystem.from_size(
-                        building         = building,
-                        supply_temp_f    = self.supply_temp_f,
-                        storage_temp_f   = self.storage_temp_f,
-                        return_temp_f    = self.return_temp_f,
-                        return_flow_gpm  = self.return_flow_gpm,
-                        max_daily_run_hr = float(h),
-                        defrost_factor   = self.defrost_factor,
-                        control_schedule = _sched,
-                        control_map      = _cmap,
-                        strat_slope      = _strat_slope,
-                        percent_useable  = _pct_use,
-                    )
-                except (ValueError, RuntimeError, ZeroDivisionError):
+                if h == self.max_daily_run_hr:
+                    pt = self
+                elif h < 9:
                     break
+                else:
+                    try:
+                        pt = MultiPassRTPSystem.from_size(
+                            building         = building,
+                            supply_temp_f    = self.supply_temp_f,
+                            storage_temp_f   = self.storage_temp_f,
+                            return_temp_f    = self.return_temp_f,
+                            return_flow_gpm  = self.return_flow_gpm,
+                            max_daily_run_hr = float(h),
+                            defrost_factor   = self.defrost_factor,
+                            control_schedule = _sched,
+                            control_map      = _cmap,
+                            strat_slope      = _strat_slope,
+                            percent_useable  = _pct_use,
+                            capacity_boost_trial_days= 2,
+                            capacity_boost_iterations= 1
+                        )
+                    except (ValueError, RuntimeError, ZeroDivisionError):
+                        break
                 vol = pt._minimum_storage_storageT_gal
                 if vol == 0.0:
                     break
@@ -363,9 +372,9 @@ class MultiPassRTPSystem(RTPSystem):
                 if rec_back_hr is None:
                     rec_back_hr = back_hr   # first sweep point = recommended design
 
-                # Skip points whose back-calculated hours are within 0.3 hr of an
-                # existing entry (avoids crowding from capacity-boost quantisation).
-                if any(abs(back_hr - existing) < 0.3 for existing in heat_hours_out):
+                # Stop if back-calculated hours are no longer strictly decreasing
+                # (capacity boost has stalled; further points are not meaningful).
+                if any(back_hr >= existing for existing in heat_hours_out):
                     continue
 
                 heat_hours_out.append(back_hr)
@@ -579,9 +588,6 @@ class MultiPassRTPSystem(RTPSystem):
 
         # --- Heating capacity ---
         top_temp_f  = tank.get_temperature_at_fraction(1.0)
-        # if tank._slug_top_pct >= 99 and top_temp_f != tank.slug_temp_f:
-        #     print(f"what gives? {tank._slug_top_pct}, {top_temp_f}, {tank.slug_temp_f}")
-        #     tank.get_temperature_at_fraction(1.0, verbose = True)
         total_kbtuh = sum(
             wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day)) for wh in self.water_heaters
         )

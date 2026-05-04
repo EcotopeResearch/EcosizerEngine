@@ -9,6 +9,8 @@ Run:
     python MPRTP_runs.py
 """
 
+import time
+
 from ecoengine.objects.building.Building import Building
 from ecoengine.objects.building.ClimateZone import ClimateZone
 from ecoengine.objects.components.heating.Controls import Controls
@@ -248,8 +250,10 @@ for scenario in SCENARIOS:
             f"Sizing Curve — {mag}-Person  |  {scenario['label']}  |  "
             f"Recommended: {cap:.0f} kBTU/hr · {vol:.0f} gal"
         )
+        _curve_t0  = time.perf_counter()
         curve_fig  = system.plot_sizing_curve(building, title=curve_title)
         curve_html = curve_fig.to_html(full_html=False, include_plotlyjs=False)
+        print(f"  sizing curve: {time.perf_counter() - _curve_t0:.1f}s")
 
         html_parts.append(_info_block_html(mag, daily_gal, cap, vol, summary, ctrl))
         html_parts.append(fig_html)
