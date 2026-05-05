@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import json
+import os
 import warnings
 from .Simulator import simulate_3day as _simulate_3day, simulate_annual as _simulate_annual
 from ecoengine.objects.building.ClimateZone import ClimateZone as _ClimateZone
+
+_MAPS_PATH = os.path.join(os.path.dirname(__file__), "../data/preformanceMaps/maps.json")
 
 
 def get_oat_buckets(
@@ -56,11 +60,62 @@ def get_oat_buckets(
     return cz.get_oat_buckets()
 
 
+def get_list_of_models(
+    multi_pass: bool = False,
+    include_residential: bool = True,
+    exclude_models: list[str] | None = None,
+    sgip_models_only: bool = True,
+) -> list[list[str]]:
+    """
+    Return available HPWH model codes and display names.
+
+    Parameters
+    ----------
+    multi_pass : bool
+        ``True`` → return only multi-pass (``_MP``) models.
+        ``False`` → return only single-pass (``_SP``) models.
+    include_residential : bool
+        ``True`` → include residential (``_R_``) models.
+        ``False`` → commercial (``_C_``) models only.
+    exclude_models : list[str] | None
+        Model codes to omit from the result.  Defaults to no exclusions.
+    sgip_models_only : bool
+        ``True`` (default) → restrict to models flagged ``SGIP_avail`` in
+        the performance-map database.
+
+    Returns
+    -------
+    list[list[str]]
+        Each element is ``[model_code, display_name]`` where ``model_code``
+        is the string accepted by ``WaterHeater.from_model_name()`` and
+        ``display_name`` is the human-readable label.
+    """
+    exclude = set(exclude_models or [])
+    result: list[list[str]] = []
+    with open(_MAPS_PATH) as f:
+        data: dict = json.load(f)
+    for model_code, meta in data.items():
+        if model_code in exclude:
+            continue
+        if sgip_models_only and not meta.get("SGIP_avail", False):
+            continue
+        is_commercial = model_code[-4] == "C"   # e.g. MODELS_Foo_C_MP → [-4]='C'
+        if not include_residential and not is_commercial:
+            continue
+        is_mp = model_code.endswith("_MP")
+        if multi_pass and not is_mp:
+            continue
+        if not multi_pass and is_mp:
+            continue
+        result.append([model_code, meta["name"]])
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Schematic → DHWSystem class registry
 # ---------------------------------------------------------------------------
 
-_RECIRC_SCHEMATICS = {"parallel_loop", "swing_tank", "single_pass_rtp"}
+_RECIRC_SCHEMATICS = {"parallel_loop", "swing_tank", "single_pass_rtp", "multi_pass_rtp"}
 
 
 class EcosizerEngine:
@@ -153,7 +208,9 @@ class EcosizerEngine:
 
             * ``'primary_no_recirc'`` — base DHWSystem (heat pump + stratified tank)
             * ``'parallel_loop'``    — separate TM tank in parallel for recirc losses
-            * ``'swing_tank'``       — (not yet implemented)
+            * ``'swing_tank'``       — swing-tank recirc system
+            * ``'single_pass_rtp'``  — single-pass return-to-primary
+            * ``'multi_pass_rtp'``   — multi-pass return-to-primary
 
         gpdpp : float, optional
             Gallons per person per day. If None, building-type defaults are used.
@@ -162,7 +219,7 @@ class EcosizerEngine:
         hpwh_model : str, optional
             HPWH model name for performance map lookup (future use).
         max_daily_run_hr : float
-            Maximum hours the primary heating system may run per day. Default 16.
+            Maximum hours the primary heating system may run per day. Default 16. NOT YET USED FOR MPRTP
         defrost_factor : float
             Fraction of rated capacity available after defrost cycles (0–1). Default 1.0.
         aquastat_fract : float
@@ -239,7 +296,7 @@ class EcosizerEngine:
         self.tm_off_time_hr            = tm_off_time_hr
         self.tm_safety_factor          = tm_safety_factor
         self.utility_cost_tracker      = utility_cost_tracker
-        self.california_spec_mode      = california_spec_mode
+        self.california_spec_mode             = california_spec_mode
 
         self._building    = None
         self._dhw_system  = None
@@ -360,6 +417,9 @@ class EcosizerEngine:
         --------------------
         * ``'primary_no_recirc'`` → DHWSystem
         * ``'parallel_loop'``    → ParallelLoopSystem
+        * ``'swing_tank'``       → SwingSystem
+        * ``'single_pass_rtp'``  → SinglePassRTPSystem
+        * ``'multi_pass_rtp'``   → MultiPassRTPSystem
 
         Raises
         ------
@@ -450,9 +510,27 @@ class EcosizerEngine:
                     load_shift_fract_total_vol = ls_fract,
                 )
 
+        if self.schematic == "multi_pass_rtp":
+            from ecoengine.objects.dhwsystems.rtp_systems.MultiPassRTPSystem import MultiPassRTPSystem
+            self._require_recirc_params()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return MultiPassRTPSystem.from_size(
+                    building         = self._building,
+                    supply_temp_f    = self.supply_temp_f,
+                    storage_temp_f   = self.storage_temp_f,
+                    return_temp_f    = self.return_temp_f,
+                    return_flow_gpm  = self.return_flow_gpm,
+                    max_daily_run_hr = 14,
+                    defrost_factor   = self.defrost_factor,
+                    control_schedule = control_schedule,
+                    control_map      = control_map,
+                )
+
         raise ValueError(
             f"Unknown schematic {self.schematic!r}. "
-            "Supported values: 'primary_no_recirc', 'parallel_loop', 'swing_tank', 'single_pass_rtp'."
+            "Supported values: 'primary_no_recirc', 'parallel_loop', 'swing_tank', "
+            "'single_pass_rtp', 'multi_pass_rtp'."
         )
 
     def _require_recirc_params(self) -> None:
@@ -563,12 +641,68 @@ class EcosizerEngine:
         """
         return {"monthly_energy_kwh": simulation_run.get_monthly_energy_kwh()}
 
+    def get_hw_magnitude(self) -> float:
+        """
+        Return the total daily DHW usage for the building [gallons at supply temperature].
+
+        Returns
+        -------
+        float
+        """
+        return self._building.daily_dhw_use_supplyT_gal
+
+    def plot_simulation(
+        self,
+        title: str = "Simulation Results",
+        filepath: str | None = None,
+        include_temperatures: bool = False,
+        return_as_div: bool = False,
+    ):
+        """
+        Run a 3-day design-day simulation and return a Plotly figure of the results.
+
+        Parameters
+        ----------
+        title : str
+            Figure title.  Default ``"Simulation Results"``.
+        filepath : str, optional
+            If provided, write the figure to this path as a self-contained
+            HTML file.  The figure is also returned regardless.
+        include_temperatures : bool
+            If True, add a right Y axis showing OAT, inlet water temperature,
+            and all tank node temperatures.  Default False.
+        return_as_div : bool
+            If True, return the figure as an HTML ``<div>`` string instead of
+            a ``plotly.graph_objects.Figure``.  Default False.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure or str
+            A Plotly figure, or an HTML div string when ``return_as_div=True``.
+
+        Raises
+        ------
+        ImportError
+            If ``plotly`` is not installed.
+        """
+        sim_run = self.simulate_3day()
+        fig = sim_run.to_plotly(
+            title                = title,
+            filepath             = filepath,
+            include_temperatures = include_temperatures,
+        )
+        if return_as_div:
+            return fig.to_html(full_html=False, include_plotlyjs=False)
+        return fig
+
     def plot_sizing_curve(
         self,
         title: str = "Primary Sizing Curve",
         filepath: str | None = None,
         strat_slope: float = 2.8,
-    ) -> "plotly.graph_objects.Figure":
+        return_as_div: bool = False,
+        return_with_x_y_points: bool = False,
+    ):
         """
         Return a Plotly figure of the sizing curve for the built system.
 
@@ -593,10 +727,25 @@ class EcosizerEngine:
         strat_slope : float
             Temperature gradient [°F / %-height] for stratification factor
             calculation.  Default 2.8.
+        return_as_div : bool
+            If True, return the figure as an HTML ``<div>`` string instead of
+            a ``plotly.graph_objects.Figure``.  Default False.
+        return_with_x_y_points : bool
+            If True, return ``[figure_or_div, x_values, y_values, start_index]``
+            instead of just the figure/div, where ``x_values`` and ``y_values``
+            are the plot coordinates and ``start_index`` is the recommended
+            slider position.  Default False.
 
         Returns
         -------
         plotly.graph_objects.Figure
+            When both flags are False.
+        str
+            HTML div string when ``return_as_div=True`` and
+            ``return_with_x_y_points=False``.
+        list
+            ``[figure_or_div, x_values, y_values, start_index]`` when
+            ``return_with_x_y_points=True``.
 
         Raises
         ------
@@ -604,12 +753,37 @@ class EcosizerEngine:
             If ``plotly`` is not installed.
         """
         control_schedule, control_map = self._build_control_map()
-        return self._dhw_system.plot_sizing_curve(
-            building          = self._building,
-            control_schedule  = control_schedule,
-            control_map       = control_map,
-            load_shift_percent= self.load_shift_percent,
-            strat_slope       = strat_slope,
-            title             = title,
-            filepath          = filepath,
+        fig = self._dhw_system.plot_sizing_curve(
+            building           = self._building,
+            control_schedule   = control_schedule,
+            control_map        = control_map,
+            load_shift_percent = self.load_shift_percent,
+            strat_slope        = strat_slope,
+            title              = title,
+            filepath           = filepath,
         )
+
+        result = fig.to_html(full_html=False, include_plotlyjs=False) if return_as_div else fig
+
+        if not return_with_x_y_points:
+            return result
+
+        is_ls = "shed" in control_map
+        if is_ls:
+            curve       = self._dhw_system.get_ls_sizing_curve(
+                self._building,
+                control_schedule   = control_schedule,
+                control_map        = control_map,
+                strat_slope        = strat_slope,
+                load_shift_percent = self.load_shift_percent,
+            )
+            x_vals      = [p * 100.0 for p in curve["load_shift_percent"]]
+            y_vals      = curve["storage_storageT_gal"]
+            start_index = curve["recommended_index"]
+        else:
+            curve       = self._dhw_system.get_sizing_curve(self._building, strat_slope=strat_slope)
+            x_vals      = curve["storage_storageT_gal"][::-1]
+            y_vals      = curve["capacity_kbtuh"][::-1]
+            start_index = len(x_vals) - 1 - curve["recommended_index"]
+
+        return [result, x_vals, y_vals, start_index]
