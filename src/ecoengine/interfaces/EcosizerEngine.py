@@ -6,7 +6,8 @@ import warnings
 from .Simulator import simulate_3day as _simulate_3day, simulate_annual as _simulate_annual
 from ecoengine.objects.building.ClimateZone import ClimateZone as _ClimateZone
 
-_MAPS_PATH = os.path.join(os.path.dirname(__file__), "../data/preformanceMaps/maps.json")
+_MAPS_PATH    = os.path.join(os.path.dirname(__file__), "../data/preformanceMaps/maps.json")
+_WS_LOOKUP    = os.path.join(os.path.dirname(__file__), "../data/climate_data/WeatherStation_ClimateZone_Lookup.csv")
 
 
 def get_oat_buckets(
@@ -109,6 +110,100 @@ def get_list_of_models(
             continue
         result.append([model_code, meta["name"]])
     return result
+
+
+def get_weather_stations(
+    exclude_zones: list[int] | None = None,
+) -> list[list]:
+    """
+    Return all available weather stations and their corresponding climate zone IDs.
+
+    Parameters
+    ----------
+    exclude_zones : list[int], optional
+        Climate zone IDs to omit from the result. Defaults to ``[96]``.
+
+    Returns
+    -------
+    list[list]
+        Each element is ``[weather_station_name, climate_zone_id]`` where
+        ``weather_station_name`` is the string accepted by
+        ``ClimateZone.from_weather_station()`` and ``climate_zone_id`` is the
+        corresponding integer zone number.  Weather data sourced from
+        https://energyplus.net/weather.
+    """
+    import csv
+
+    if exclude_zones is None:
+        exclude_zones = [96]
+
+    exclude = set(exclude_zones)
+    data = []
+    with open(_WS_LOOKUP, "r", newline="") as csvfile:
+        reader = csv.reader(csvfile)
+        next(reader)  # skip header
+        for row in reader:
+            if len(row) == 2:
+                station, zone_id = row
+                zone_id = int(zone_id)
+                if zone_id not in exclude:
+                    data.append([station, zone_id])
+    return data
+
+
+def get_hpwh_output_capacity(
+    model: str,
+    oat_f: float,
+    inlet_water_temp_f: float,
+    outlet_water_temp_f: float,
+    num_heaters: int = 1,
+    return_as_kw: bool = True,
+    defrost_derate: float = 0.0,
+) -> float:
+    """
+    Return the output capacity of an HPWH model at the given operating conditions.
+
+    Parameters
+    ----------
+    model : str
+        Model code string (see ``get_list_of_models()``).
+    oat_f : float
+        Outdoor air temperature [°F].
+    inlet_water_temp_f : float
+        Incoming cold-water temperature [°F].
+    outlet_water_temp_f : float
+        Hot storage outlet temperature [°F].
+    num_heaters : int
+        Number of HPWH units. Output is multiplied by this. Default 1.
+    return_as_kw : bool
+        If True (default), return output in kW. If False, return in kBTU/hr.
+    defrost_derate : float
+        Fractional capacity reduction due to defrost [0.0–1.0]. Default 0.0.
+
+    Returns
+    -------
+    float
+        Output capacity after defrost derate in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If ``defrost_derate`` is outside [0, 1] or ``num_heaters`` < 1.
+    """
+    if not 0.0 <= defrost_derate <= 1.0:
+        raise ValueError("defrost_derate must be between 0.0 and 1.0")
+    if not isinstance(num_heaters, int) or num_heaters < 1:
+        raise ValueError("num_heaters must be an integer >= 1")
+
+    from ecoengine.objects.components.heating.PerformanceMap import PerformanceMap
+
+    perf_map = PerformanceMap.from_model_name(model)
+    capacity_kbtuh = perf_map.get_capacity_kbtuh(oat_f, outlet_water_temp_f, inlet_water_temp_f)
+    capacity_kbtuh *= num_heaters * (1.0 - defrost_derate)
+
+    if return_as_kw:
+        return capacity_kbtuh / 3.41214  # kBTU/hr → kW
+    return capacity_kbtuh
 
 
 # ---------------------------------------------------------------------------
