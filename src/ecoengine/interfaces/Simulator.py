@@ -54,6 +54,9 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
 
     sim_run = SimulationRun(duration_min, timestep_min, **sim_run_kwargs)
 
+    from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem
+    sim_run.show_tm_panel = isinstance(dhw_system, SwingSystem)
+
     # Initialize storage tanks
     inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
     percent_useable = _initial_percent_useable(dhw_system)

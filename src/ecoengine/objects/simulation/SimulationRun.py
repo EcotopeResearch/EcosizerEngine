@@ -82,6 +82,8 @@ class SimulationRun:
 
         # Set by Simulator after construction; used for unit conversions in output methods
         self.supply_temp_f: float | None = None
+        # True only for SwingSystem / SwingERTrdOffSystem — enables the TM subplot
+        self.show_tm_panel: bool = False
 
         # Outlet deficit stop condition
         self.outlet_deficit_threshold_f   = outlet_deficit_threshold_f
@@ -337,7 +339,7 @@ class SimulationRun:
             )
 
         time_min = [i * self.timestep_min for i in range(len(self.dhw_demand_supplyT_gal))]
-        has_tm = bool(self.tm_tank_temp_f)
+        has_tm = self.show_tm_panel
 
         if has_tm:
             fig = make_subplots(

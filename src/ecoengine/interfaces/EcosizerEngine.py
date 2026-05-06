@@ -211,6 +211,7 @@ class EcosizerEngine:
             * ``'swing_tank'``       — swing-tank recirc system
             * ``'single_pass_rtp'``  — single-pass return-to-primary
             * ``'multi_pass_rtp'``   — multi-pass return-to-primary
+            * ``'instant_wh'``       — instantaneous (tankless) water heater, no storage
 
         gpdpp : float, optional
             Gallons per person per day. If None, building-type defaults are used.
@@ -420,6 +421,7 @@ class EcosizerEngine:
         * ``'swing_tank'``       → SwingSystem
         * ``'single_pass_rtp'``  → SinglePassRTPSystem
         * ``'multi_pass_rtp'``   → MultiPassRTPSystem
+        * ``'instant_wh'``       → InstantWHSystem
 
         Raises
         ------
@@ -527,10 +529,19 @@ class EcosizerEngine:
                     control_map      = control_map,
                 )
 
+        if self.schematic == "instant_wh":
+            from ecoengine.objects.dhwsystems.InstantWHSystem import InstantWHSystem
+            return InstantWHSystem.from_size(
+                building       = self._building,
+                supply_temp_f  = self.supply_temp_f,
+                storage_temp_f = self.storage_temp_f,
+                defrost_factor = self.defrost_factor,
+            )
+
         raise ValueError(
             f"Unknown schematic {self.schematic!r}. "
             "Supported values: 'primary_no_recirc', 'parallel_loop', 'swing_tank', "
-            "'single_pass_rtp', 'multi_pass_rtp'."
+            "'single_pass_rtp', 'multi_pass_rtp', 'instant_wh'."
         )
 
     def _require_recirc_params(self) -> None:
