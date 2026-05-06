@@ -921,7 +921,6 @@ class SwingSystem(RecircSystem):
             if self.water_heaters and self.water_heaters[0].control_schedule
             else "normal"
         )
-
         # --- 2. Primary heater: update state and heat primary tank ---
         for wh in self.water_heaters:
             wh.update_state(self.storage_tank, hour_of_day)
@@ -962,7 +961,6 @@ class SwingSystem(RecircSystem):
         self.tm_storage_tank.apply_fixed_heat_loss_kbtuh(
             self.get_recirc_loss_kbtuh(), interval_min
         )
-
         # --- 7. TM element: update state and heat swing tank ---
         self.tm_water_heater.update_state(self.tm_storage_tank, hour_of_day)
         tm_top_t    = self.tm_storage_tank.get_temperature_at_fraction(1.0)
@@ -975,7 +973,6 @@ class SwingSystem(RecircSystem):
         tm_ctrl = self.tm_water_heater.get_controls_for_hour(hour_of_day)
         tm_outlet_f = tm_ctrl.outlet_temp_f if tm_ctrl is not None else self.tm_off_temp_f
         self.tm_storage_tank.heat(tm_kbtuh, interval_min, tm_outlet_f)
-
         # --- 8. Draw computed volume from primary storage ---
         self.storage_tank.draw_physical_gal(hw_swing_gal, inlet_temp_f, self.supply_temp_f)
 
@@ -992,7 +989,6 @@ class SwingSystem(RecircSystem):
             self.storage_tank.get_temperature_at_fraction(f)
             for f in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
         ]
-
         # --- 11. Merge primary + TM outputs ---
         # heater_output_kbtuh stays PRIMARY-ONLY (used for gal/hr plot in top chart).
         # heater_power_in_kw merges both so get_total_energy_kwh() is accurate.
@@ -1000,7 +996,6 @@ class SwingSystem(RecircSystem):
             total_kw: float | None = (primary_kw or 0.0) + (tm_kw_val or 0.0)
         else:
             total_kw = None
-
         swing_mid_temp_f = self.tm_storage_tank.get_temperature_at_fraction(0.5)
         return {
             "demand_supplyT_gal":        demand_supplyT_gal,

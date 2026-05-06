@@ -344,7 +344,7 @@ class SimulationRun:
                 rows=2, cols=1,
                 specs=[[{"secondary_y": True}], [{"secondary_y": True}]],
                 shared_xaxes=True,
-                vertical_spacing=0.08,
+                vertical_spacing=0.18,
                 row_heights=[0.65, 0.35],
                 subplot_titles=["Primary System", "Temperature Maintenance (TM)"],
             )
@@ -473,6 +473,7 @@ class SimulationRun:
                 fig.update_yaxes(title_text="Temperature (°F)", secondary_y=True)
         fig.update_layout(
             title_text=title,
+            **({"height": 950} if has_tm else {}),
             legend=dict(
                 orientation="h",
                 yanchor="top",

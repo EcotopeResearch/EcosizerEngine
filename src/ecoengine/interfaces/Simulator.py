@@ -74,7 +74,6 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
         )
 
     sim_run.supply_temp_f = dhw_system.supply_temp_f
-
     num_steps = duration_min // timestep_min
     for i in range(num_steps):
         step = dhw_system.simulate_step(
@@ -82,7 +81,6 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
             timestep_interval = i,
             interval_min      = timestep_min,
         )
-
         sim_run.record_timestep(
             dhw_demand_supplyT_gal    = step["demand_supplyT_gal"],
             usable_volume_supplyT_gal = step["usable_volume_supplyT_gal"],
@@ -105,7 +103,6 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
         delivery_temp_f = step.get("delivery_temp_f", step["tank_temps_f"][-1])
         if sim_run.check_outlet_deficit(delivery_temp_f, dhw_system.supply_temp_f):
             break
-
     return sim_run
 
 

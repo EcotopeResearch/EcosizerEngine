@@ -437,7 +437,7 @@ class EcosizerEngine:
             else 1.0
         )
 
-        if self.schematic == "primary_no_recirc":
+        if self.schematic in ["primary_no_recirc", "singlepass_norecirc"]:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 return DHWSystem.from_size(
@@ -451,7 +451,7 @@ class EcosizerEngine:
                     load_shift_fract_total_vol = ls_fract,
                 )
 
-        if self.schematic == "parallel_loop":
+        if self.schematic in ["parallel_loop", "paralleltank"]:
             from ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem import ParallelLoopSystem
             self._require_recirc_params()
             with warnings.catch_warnings():
@@ -473,7 +473,7 @@ class EcosizerEngine:
                     load_shift_fract_total_vol = ls_fract,
                 )
 
-        if self.schematic == "swing_tank":
+        if self.schematic in ["swing_tank", "swingtank"]:
             from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem
             self._require_recirc_params()
             with warnings.catch_warnings():
@@ -492,7 +492,7 @@ class EcosizerEngine:
                     load_shift_fract_total_vol = ls_fract,
                 )
 
-        if self.schematic == "single_pass_rtp":
+        if self.schematic in ["single_pass_rtp", "sprtp"]:
             from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import SinglePassRTPSystem
             self._require_recirc_params()
             with warnings.catch_warnings():
@@ -510,7 +510,7 @@ class EcosizerEngine:
                     load_shift_fract_total_vol = ls_fract,
                 )
 
-        if self.schematic == "multi_pass_rtp":
+        if self.schematic in ["multi_pass_rtp", "mprtp"]:
             from ecoengine.objects.dhwsystems.rtp_systems.MultiPassRTPSystem import MultiPassRTPSystem
             self._require_recirc_params()
             with warnings.catch_warnings():
