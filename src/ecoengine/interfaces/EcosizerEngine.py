@@ -112,6 +112,118 @@ def get_list_of_models(
 
 
 # ---------------------------------------------------------------------------
+# Standalone sizing-curve plot helper
+# ---------------------------------------------------------------------------
+
+def get_sizing_curve_plot(
+    x: list,
+    y: list,
+    start_index: int,
+    load_shifting: bool = False,
+    er_sized: bool = False,
+    return_as_div: bool = False,
+):
+    """
+    Build a Plotly sizing-curve figure from pre-computed x/y points.
+
+    This is a lightweight alternative to ``EcosizerEngine.plot_sizing_curve()``
+    for callers that already have the curve data (e.g. from
+    ``EcosizerEngine.plot_sizing_curve(return_with_x_y_points=True)``).
+
+    Parameters
+    ----------
+    x : list
+        X-axis values.  Interpretation depends on the mode:
+
+        * Normal sizing  — storage volume [gal at storage temperature]
+        * Load-shifting  — load-shift coverage percentile [%]
+        * ER sizing      — percent of building covered [%]
+
+    y : list
+        Y-axis values.  Interpretation depends on the mode:
+
+        * Normal sizing  — heating capacity [kBTU/hr]
+        * Load-shifting  — storage volume [gal at storage temperature]
+        * ER sizing      — ER element capacity [kW]
+
+    start_index : int
+        Index into ``x``/``y`` where the recommended-size diamond starts.
+    load_shifting : bool
+        If True, use load-shift axis labels. Default False.
+    er_sized : bool
+        If True, use ER-sizing axis labels (overrides ``load_shifting``).
+        Default False.
+    return_as_div : bool
+        If True, return an HTML ``<div>`` string instead of a Figure.
+        Default False.
+
+    Returns
+    -------
+    plotly.graph_objects.Figure or str
+
+    Raises
+    ------
+    ImportError
+        If ``plotly`` is not installed.
+    """
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError(
+            "plotly is required for get_sizing_curve_plot(). "
+            "Install it with: pip install plotly"
+        )
+
+    if er_sized:
+        x_label  = "Percent Coverage (%)"
+        y_label  = "ER Heating Capacity (kW)"
+        title    = "Electric Resistance Sizing Curve"
+        hover    = "Coverage: <b>%{x:.1f}%</b><br>ER Capacity: <b>%{y:.1f} kW</b><extra></extra>"
+        def _label(i): return f"Coverage: <b>{x[i]:.1f}%</b>, ER Capacity: <b>{y[i]:.1f} kW</b>"
+    elif load_shifting:
+        x_label  = "Load-Shift Days Covered (%)"
+        y_label  = "Primary Tank Volume (gal at Storage Temperature)"
+        title    = "Load-Shift Sizing Curve"
+        hover    = "Coverage: <b>%{x:.1f}%</b><br>Storage: <b>%{y:.1f} gal</b><extra></extra>"
+        def _label(i): return f"Coverage: <b>{x[i]:.1f}%</b>, Storage: <b>{y[i]:.1f} gal</b>"
+    else:
+        x_label  = "Primary Tank Volume (gal at Storage Temperature)"
+        y_label  = "Heating Capacity (kBTU/hr)"
+        title    = "Primary Sizing Curve"
+        hover    = "Storage: <b>%{x:.1f} gal</b><br>Capacity: <b>%{y:.1f} kBTU/hr</b><extra></extra>"
+        def _label(i): return f"Storage: <b>{x[i]:.1f} gal</b>, Capacity: <b>{y[i]:.1f} kBTU/hr</b>"
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=x, y=y,
+        mode="lines",
+        line=dict(color="#28a745", width=3),
+        hovertemplate=hover,
+        showlegend=False,
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=[x[start_index]], y=[y[start_index]],
+        mode="markers",
+        marker=dict(symbol="diamond", color="#2EA3F2", size=12),
+        hovertemplate=hover,
+        showlegend=False,
+    ))
+
+    fig.update_layout(
+        title=title,
+        xaxis_title=x_label,
+        yaxis_title=y_label,
+        showlegend=False,
+    )
+
+    if return_as_div:
+        return fig.to_html(full_html=False, include_plotlyjs=False)
+    return fig
+
+
+# ---------------------------------------------------------------------------
 # Schematic → DHWSystem class registry
 # ---------------------------------------------------------------------------
 
@@ -151,6 +263,8 @@ class EcosizerEngine:
         schematic: str,
         # Building inputs
         gpdpp: float | None = None,
+        custom_peak_load_shape: list[float] | None = None,
+        custom_avg_load_shape: list[float] | None = None,
         # Primary heater inputs
         num_heaters: int = 1,
         hpwh_model: str | None = None,
@@ -215,6 +329,12 @@ class EcosizerEngine:
 
         gpdpp : float, optional
             Gallons per person per day. If None, building-type defaults are used.
+        custom_peak_load_shape : list[float], optional
+            24-element normalized peak-hour DHW load shape. Required when
+            ``building_type`` is None.
+        custom_avg_load_shape : list[float], optional
+            24-element normalized average-hour DHW load shape. Used for
+            annual simulation load profiles.
         num_heaters : int
             Number of primary HPWH units. Default 1.
         hpwh_model : str, optional
@@ -274,6 +394,8 @@ class EcosizerEngine:
         self.storage_temp_f            = storage_temp_f
         self.schematic                 = schematic
         self.gpdpp                     = gpdpp
+        self.custom_peak_load_shape    = custom_peak_load_shape
+        self.custom_avg_load_shape     = custom_avg_load_shape
         self.num_heaters               = num_heaters
         self.hpwh_model                = hpwh_model
         self.max_daily_run_hr          = max_daily_run_hr
@@ -321,10 +443,12 @@ class EcosizerEngine:
 
         zone = self._build_climate_zone(ClimateZone)
         return Building.from_building_type(
-            building_type = self.building_type,
-            magnitude     = self.magnitude,
-            climate_zone  = zone,
-            gpdpp         = self.gpdpp,
+            building_type           = self.building_type,
+            magnitude               = self.magnitude,
+            climate_zone            = zone,
+            gpdpp                   = self.gpdpp,
+            custom_peak_load_shape  = self.custom_peak_load_shape,
+            custom_avg_load_shape   = self.custom_avg_load_shape,
         )
 
     def _build_climate_zone(self, ClimateZone):
