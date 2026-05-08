@@ -983,14 +983,18 @@ class EcosizerEngine:
         control_schedule, control_map = self._build_control_map()
         if self.hpwh_model is not None:
             design_inlet_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
+            # Use num_units instead of N separate objects — all units share the
+            # same controls and tank sensor so they always act in unison. A single
+            # WaterHeater with num_units=N avoids N redundant interpolator calls
+            # per timestep (critical for pkl-backed performance maps at scale).
             water_heaters = [
                 WaterHeater.from_model_name(
                     model_name=self.hpwh_model,
                     control_schedule=control_schedule,
                     control_map=control_map,
                     design_inlet_temp_f=design_inlet_temp_f,
+                    num_units=self.num_heaters,
                 )
-                for _ in range(self.num_heaters)
             ]
         else:
             capacity_per_heater = self.heating_capacity_kbtuh / self.num_heaters
