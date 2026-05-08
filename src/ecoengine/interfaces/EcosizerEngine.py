@@ -944,15 +944,17 @@ class EcosizerEngine:
                 "in pre-sized mode."
             )
 
-    def _build_tm_water_heater(self, tm_controls):
+    def _build_tm_water_heater(self, tm_controls, force_electric_resistance : bool = False):
         """Build the TM WaterHeater (single unit) from tm_model or tm_capacity_kbtuh."""
         from ecoengine.objects.components.heating.WaterHeater import WaterHeater
+        if force_electric_resistance:
+            self.num_tm_heaters = 1
         per_unit_kbtuh = (
             self.tm_capacity_kbtuh / self.num_tm_heaters
             if self.tm_capacity_kbtuh is not None
             else None
         )
-        if self.tm_model is not None:
+        if self.tm_model is not None and not force_electric_resistance:
             return WaterHeater.from_model_name(
                 model_name=self.tm_model,
                 control_schedule=["normal"] * 24,
@@ -1078,7 +1080,7 @@ class EcosizerEngine:
                 defrost_factor=self.defrost_factor,
             )
             system.tm_storage_tank = MixedStorageTank(total_volume_gal=self.tm_storage_vol)
-            system.tm_water_heater = self._build_tm_water_heater(tm_controls)
+            system.tm_water_heater = self._build_tm_water_heater(tm_controls, force_electric_resistance = True)
             return system
 
         if self.schematic in ["single_pass_rtp", "sprtp"]:

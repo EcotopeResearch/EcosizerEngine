@@ -209,21 +209,63 @@ class SimulationRun:
         """
         return self.outage_minutes <= max_outage_min
 
+    def get_failure_message(self) -> str:
+        """
+        Return a human-readable description of a simulation failure.
+
+        Finds the first timestep with zero usable volume to identify the day
+        of failure, then computes the average outdoor air temperature across
+        all outage timesteps.
+
+        Returns
+        -------
+        str
+            A descriptive failure message, or a success message if no outage
+            occurred.
+        """
+        if self.is_successful():
+            return "Simulation succeeded: no DHW outage detected."
+
+        outage_steps = [
+            i for i, v in enumerate(self.usable_volume_supplyT_gal) if v <= 0.0
+        ]
+        if not outage_steps:
+            return (
+                f"Simulation failed: system was undersized. "
+                f"DHW outage occurred for {self.outage_minutes} minutes."
+            )
+
+        first_step = outage_steps[0]
+        day = (first_step * self.timestep_min) // (24 * 60) + 1
+        # For swing systems the delivery point is the swing tank, not the primary top.
+        if self.show_tm_panel and self.tm_tank_temp_f:
+            delivery_temps = self.tm_tank_temp_f
+        else:
+            delivery_temps = self.tank_temps_f[5]
+        avg_delivery_temp = sum(delivery_temps[i] for i in outage_steps) / len(outage_steps)
+
+        return (
+            f"Simulation failed: system was undersized. "
+            f"DHW outage occurred for {self.outage_minutes} minutes on day {day} "
+            f"of the simulation with an average delivered water temperature of {avg_delivery_temp:.1f}°F."
+        )
+
     def get_total_energy_kwh(self) -> float:
         """
         Return total electrical energy consumed over the simulation [kWh].
 
-        Timesteps with no power data (None) are treated as 0 kW.
+        Includes primary heater energy and, when present, TM heater energy
+        (from ``tm_heater_input_kw``). Timesteps with no power data (None)
+        are treated as 0 kW.
 
         Returns
         -------
         float
         """
         hours_per_step = self.timestep_min / 60.0
-        return sum(
-            (p or 0.0) * hours_per_step
-            for p in self.heater_power_in_kw
-        )
+        primary_kwh = sum((p or 0.0) * hours_per_step for p in self.heater_power_in_kw)
+        tm_kwh = sum((p or 0.0) * hours_per_step for p in self.tm_heater_input_kw)
+        return primary_kwh + tm_kwh
 
     def get_peak_demand_kw(self) -> float:
         """
@@ -522,7 +564,9 @@ class SimulationRun:
         max_kw_by_period: dict[int, float] = {}
 
         for i, kw_raw in enumerate(self.heater_power_in_kw):
-            kw   = kw_raw or 0.0
+            kw = kw_raw or 0.0
+            if self.tm_heater_input_kw and i < len(self.tm_heater_input_kw):
+                kw += self.tm_heater_input_kw[i] or 0.0
             rate = uc.get_energy_charge_at_step(i, self.timestep_min)
             energy_cost += kw * hours_per_step * rate
 
@@ -597,7 +641,9 @@ class SimulationRun:
         max_kw_by_period: dict[int, float] = {}
 
         for i, kw_raw in enumerate(self.heater_power_in_kw):
-            kw     = kw_raw or 0.0
+            kw = kw_raw or 0.0
+            if self.tm_heater_input_kw and i < len(self.tm_heater_input_kw):
+                kw += self.tm_heater_input_kw[i] or 0.0
             period = uc.get_demand_period_at_step(i, self.timestep_min)
             rate   = uc.get_energy_charge_at_step(i, self.timestep_min)
             month  = _step_to_month(i, self.timestep_min)

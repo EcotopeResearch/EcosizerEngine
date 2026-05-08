@@ -993,7 +993,7 @@ class SwingSystem(RecircSystem):
         # heater_output_kbtuh stays PRIMARY-ONLY (used for gal/hr plot in top chart).
         # heater_power_in_kw merges both so get_total_energy_kwh() is accurate.
         if primary_kw is not None or tm_kw_val is not None:
-            total_kw: float | None = (primary_kw or 0.0) + (tm_kw_val or 0.0)
+            total_kw: float | None = (primary_kw or 0.0)
         else:
             total_kw = None
         swing_mid_temp_f = self.tm_storage_tank.get_temperature_at_fraction(0.5)
