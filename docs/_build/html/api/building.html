@@ -1,0 +1,954 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="DHW Systems" href="dhwsystems.html"><link rel="prev" title="EcosizerEngine (Top-Level API)" href="ecosizerengine.html">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>Building &amp; Climate - EcosizerEngine</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">EcosizerEngine</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">EcosizerEngine</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Building &amp; Climate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dhwsystems.html">DHW Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="components.html">Equipment Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/api/building.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="building-climate">
+<h1>Building &amp; Climate<a class="headerlink" href="#building-climate" title="Link to this heading">¶</a></h1>
+<section id="building">
+<h2>Building<a class="headerlink" href="#building" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ecoengine.objects.building.Building.Building">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ecoengine.objects.building.Building.</span></span><span class="sig-name descname"><span class="pre">Building</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">climate_zone</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone"><span class="pre">ClimateZone</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">daily_dhw_use_supplyT_gal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_load_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">np.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avg_load_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">np.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utility_cost_tracker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker" title="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker"><span class="pre">UtilityCostTracker</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">design_oat_f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">design_inlet_water_temp_f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ecoengine/objects/building/Building.html#Building"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.Building.Building" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Stores information about the building and surrounding environment where a
+DHW system will be sized and/or simulated.</p>
+<p>Holds a ClimateZone (ambient conditions), a UtilityCostTracker (billing
+structure), and the building’s DHW load data (daily use and load shapes).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.Building.Building.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">climate_zone</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone"><span class="pre">ClimateZone</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">daily_dhw_use_supplyT_gal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_load_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">np.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avg_load_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">np.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utility_cost_tracker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker" title="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker"><span class="pre">UtilityCostTracker</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">design_oat_f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">design_inlet_water_temp_f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/Building.html#Building.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.Building.Building.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>climate_zone</strong> (<a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone"><em>ClimateZone</em></a><em> | </em><em>None</em>) – Ambient OAT and cold water temperature data for this location.
+If None and design conditions are provided, a constant-value
+ClimateZone is created automatically from those conditions.</p></li>
+<li><p><strong>daily_dhw_use_supplyT_gal</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Design daily hot water consumption at supply temperature [gallons].</p></li>
+<li><p><strong>peak_load_shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>np.ndarray</em>) – Normalized 24-hour load profile for the design (peaky) day.
+Each value is the fraction of daily DHW use in that hour.</p></li>
+<li><p><strong>avg_load_shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>np.ndarray</em>) – Normalized 24-hour load profile for an average day.</p></li>
+<li><p><strong>utility_cost_tracker</strong> (<a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker" title="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker"><em>UtilityCostTracker</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>building_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Label for the building type (e.g. ‘multi_family’, ‘multi_use’).</p></li>
+<li><p><strong>design_oat_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>) – Design outdoor air temperature [°F]. Used only when climate_zone
+is None; creates a constant-OAT ClimateZone that returns this
+value for every timestep and as the design condition.</p></li>
+<li><p><strong>design_inlet_water_temp_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>) – Design cold-water inlet temperature [°F]. Used only when
+climate_zone is None; creates a constant-inlet-temp ClimateZone
+that returns this value for every timestep and as the design
+condition.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.Building.Building.from_building_type">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_building_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">building_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">climate_zone</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone"><span class="pre">ClimateZone</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpdpp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_gpd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_br</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_peak_load_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_avg_load_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ecoengine.objects.building.Building.Building" title="ecoengine.objects.building.Building.Building"><span class="pre">Building</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/Building.html#Building.from_building_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.Building.Building.from_building_type" title="Link to this definition">¶</a></dt>
+<dd><p>Construct a Building from a named building type (or a list of types for
+multi-use buildings).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>building_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em><em>]</em>) – Named type(s): ‘multi_family’, ‘apartment’, ‘motel’, ‘office_building’,
+‘mens_dorm’, ‘womens_dorm’, ‘nursing_home’, ‘food_service_a’,
+‘food_service_b’, ‘elementary_school’, ‘junior_high’, ‘senior_high’.
+Use None for a custom-load-shape-only building (requires
+custom_peak_load_shape). Pass a list for a multi-use building.</p></li>
+<li><p><strong>magnitude</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a>) – Occupancy metric matching the building type(s). For multi-use, pass
+a list of the same length as building_type. An individual entry may
+be None only when building_type is also None for that slot (magnitude
+is then derived from the sum of the unnormalized custom load shape).</p></li>
+<li><p><strong>climate_zone</strong> (<a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone"><em>ClimateZone</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>gpdpp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Gallons per person per day. Used for ‘multi_family’ when standard_gpd
+is None.</p></li>
+<li><p><strong>standard_gpd</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Standard GPD key for ‘multi_family’: ‘ashLow’, ‘ashMed’, ‘ecoMark’,
+or ‘ca’. Overrides gpdpp when provided.</p></li>
+<li><p><strong>n_br</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>] </em><em>| </em><em>None</em>) – Unit counts by bedroom size [0BR-5BR]. Required for standard_gpd=’ca’.</p></li>
+<li><p><strong>custom_peak_load_shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>None</em><em>] </em><em>| </em><em>None</em>) – 24-element normalized peak load shape override. For multi-use, pass
+a list of shapes (or None entries to use the default for that type).</p></li>
+<li><p><strong>custom_avg_load_shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>None</em><em>] </em><em>| </em><em>None</em>) – Same as custom_peak_load_shape but for the average day.</p></li>
+<li><p><strong>annual</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – If True, load the 8760-hour annual load shape instead of the 24-hour
+daily shape. Only supported for multi_family buildings.</p></li>
+<li><p><strong>**kwargs</strong> – Forwarded to Building.__init__ (e.g. design_oat_f, utility_cost_tracker).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#ecoengine.objects.building.Building.Building" title="ecoengine.objects.building.Building.Building">Building</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.Building.Building.is_annual_load_shape">
+<span class="sig-name descname"><span class="pre">is_annual_load_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/Building.html#Building.is_annual_load_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.Building.Building.is_annual_load_shape" title="Link to this definition">¶</a></dt>
+<dd><p>Return True if the building is currently using the 8760-hour annual load shape.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.Building.Building.set_to_annual_load_shape">
+<span class="sig-name descname"><span class="pre">set_to_annual_load_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/Building.html#Building.set_to_annual_load_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.Building.Building.set_to_annual_load_shape" title="Link to this definition">¶</a></dt>
+<dd><p>Switch to the full 8760-hour annual load shape.</p>
+<p>Only supported for multi_family buildings, which have an
+‘Annual_Normalized’ profile in their load shape JSON. The annual
+shape serves as both peak and avg (there is no separate peaky day
+for an annual simulation).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If called on a non-multi_family building type.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.Building.Building.set_to_daily_load_shape">
+<span class="sig-name descname"><span class="pre">set_to_daily_load_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/Building.html#Building.set_to_daily_load_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.Building.Building.set_to_daily_load_shape" title="Link to this definition">¶</a></dt>
+<dd><p>Switch back to the 24-hour daily load shapes (Stream / Stream_Avg).</p>
+<p>Only supported for multi_family buildings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If called on a non-multi_family building type.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.Building.Building.get_dhw_load_supplyT_gal">
+<span class="sig-name descname"><span class="pre">get_dhw_load_supplyT_gal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestep_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_avg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/Building.html#Building.get_dhw_load_supplyT_gal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.Building.Building.get_dhw_load_supplyT_gal" title="Link to this definition">¶</a></dt>
+<dd><p>Return the DHW load in gallons at supply temperature for one timestep.</p>
+<p>The load shape describes what fraction of the daily total falls in each
+hour. The returned value is scaled down to the interval duration so that
+summing over all intervals in a day always equals daily_dhw_use_supplyT_gal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestep_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of intervals elapsed from the start of the simulation day/year.</p></li>
+<li><p><strong>interval_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Length of each interval in minutes. Defaults to 1 (minute-resolution).</p></li>
+<li><p><strong>use_avg</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – If True, use avg_load_shape; otherwise use peak_load_shape.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Gallons of DHW load at supply temperature for this interval.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.Building.Building.get_oat_f">
+<span class="sig-name descname"><span class="pre">get_oat_f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestep_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/Building.html#Building.get_oat_f"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.Building.Building.get_oat_f" title="Link to this definition">¶</a></dt>
+<dd><p>Return outdoor air temperature at the given timestep via ClimateZone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestep_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of intervals elapsed from the start of the simulation.</p></li>
+<li><p><strong>interval_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Length of each interval in minutes. Defaults to 1 (minute-resolution).
+Example: timestep_interval=3, interval_min=15 → minute 45.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Outdoor air temperature [°F].</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.Building.Building.get_inlet_water_temp_f">
+<span class="sig-name descname"><span class="pre">get_inlet_water_temp_f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestep_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/Building.html#Building.get_inlet_water_temp_f"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.Building.Building.get_inlet_water_temp_f" title="Link to this definition">¶</a></dt>
+<dd><p>Return cold/inlet water temperature at the given timestep via ClimateZone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestep_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of intervals elapsed from the start of the simulation.</p></li>
+<li><p><strong>interval_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Length of each interval in minutes. Defaults to 1 (minute-resolution).
+Example: timestep_interval=3, interval_min=15 → minute 45.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Inlet water temperature [°F].</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.Building.Building.get_design_oat_f">
+<span class="sig-name descname"><span class="pre">get_design_oat_f</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/Building.html#Building.get_design_oat_f"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.Building.Building.get_design_oat_f" title="Link to this definition">¶</a></dt>
+<dd><p>Return the design-day outdoor air temperature [°F].</p>
+<p>Delegates to ClimateZone.get_design_oat_f(). Returns None if no
+climate zone (real or design-condition) was provided at construction.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.Building.Building.get_design_inlet_water_temp_f">
+<span class="sig-name descname"><span class="pre">get_design_inlet_water_temp_f</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/Building.html#Building.get_design_inlet_water_temp_f"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.Building.Building.get_design_inlet_water_temp_f" title="Link to this definition">¶</a></dt>
+<dd><p>Return the design-day cold/inlet water temperature [°F].</p>
+<p>Delegates to ClimateZone.get_design_inlet_water_temp_f(). Returns
+None if no climate zone was provided at construction.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="climatezone">
+<h2>ClimateZone<a class="headerlink" href="#climatezone" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ecoengine.objects.building.ClimateZone.ClimateZone">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ecoengine.objects.building.ClimateZone.</span></span><span class="sig-name descname"><span class="pre">ClimateZone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zone_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">oat_f_by_hour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">inlet_water_temp_f_by_month</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_oat_f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_inlet_water_temp_f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ecoengine/objects/building/ClimateZone.html#ClimateZone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Stores outdoor air temperature (OAT) and cold/inlet water temperature for a
+building’s location over a typical meteorological year.</p>
+<p>OAT is stored hourly  (8,760 values — one per hour of the year).
+Inlet water temp is stored monthly (12 values — one per month).</p>
+<p>The simulator queries this object at every timestep to obtain ambient
+conditions for heat-pump performance and load calculations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.ClimateZone.ClimateZone.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zone_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">oat_f_by_hour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">inlet_water_temp_f_by_month</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_oat_f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_inlet_water_temp_f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/ClimateZone.html#ClimateZone.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.ClimateZone.ClimateZone.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>zone_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Numeric climate zone identifier (1-96 for OAT data;
+1-19 for full CA data including kG/kWh). None for design-condition zones.</p></li>
+<li><p><strong>oat_f_by_hour</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – Outdoor air temperatures for every hour of a typical year [°F].
+8,760 elements for real zones; None for design-condition zones.</p></li>
+<li><p><strong>inlet_water_temp_f_by_month</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – Average cold-water inlet temperature for each calendar month [°F].
+12 elements for real zones; None for design-condition zones.</p></li>
+<li><p><strong>constant_oat_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>) – If set, all OAT queries return this value instead of reading from
+oat_f_by_hour. Set automatically by from_design_conditions().</p></li>
+<li><p><strong>constant_inlet_water_temp_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>) – If set, all inlet water temp queries return this value instead of
+reading from inlet_water_temp_f_by_month. Set automatically by
+from_design_conditions().</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.ClimateZone.ClimateZone.from_zip_code">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_zip_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zip_code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone"><span class="pre">ClimateZone</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/ClimateZone.html#ClimateZone.from_zip_code"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.ClimateZone.ClimateZone.from_zip_code" title="Link to this definition">¶</a></dt>
+<dd><p>Construct a ClimateZone by looking up the CA climate zone for a zip code
+and loading the corresponding weather data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>zip_code</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – A California 5-digit zip code.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone">ClimateZone</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If the zip code is not found in the CA lookup table.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.ClimateZone.ClimateZone.from_weather_station">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_weather_station</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">station_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone"><span class="pre">ClimateZone</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/ClimateZone.html#ClimateZone.from_weather_station"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.ClimateZone.ClimateZone.from_weather_station" title="Link to this definition">¶</a></dt>
+<dd><p>Construct a ClimateZone from a named weather station.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>station_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Weather station name exactly as it appears in the lookup CSV
+(e.g. <code class="docutils literal notranslate"><span class="pre">'ID</span> <span class="pre">-</span> <span class="pre">Boise</span> <span class="pre">Air</span> <span class="pre">Terminal'</span></code>).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone">ClimateZone</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If the station name is not found in the lookup table.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.ClimateZone.ClimateZone.from_zone_id">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_zone_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zone_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone"><span class="pre">ClimateZone</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/ClimateZone.html#ClimateZone.from_zone_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.ClimateZone.ClimateZone.from_zone_id" title="Link to this definition">¶</a></dt>
+<dd><p>Construct a ClimateZone directly from a numeric climate zone ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>zone_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Climate zone number (1-96 for OAT data; 1-19 for full CA data).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone">ClimateZone</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.ClimateZone.ClimateZone.from_design_conditions">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_design_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">design_oat_f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">design_inlet_water_temp_f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone"><span class="pre">ClimateZone</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/ClimateZone.html#ClimateZone.from_design_conditions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.ClimateZone.ClimateZone.from_design_conditions" title="Link to this definition">¶</a></dt>
+<dd><p>Create a constant-condition ClimateZone for use when real climate data
+is unavailable.</p>
+<p>Every OAT query returns design_oat_f; every inlet water temp query
+returns design_inlet_water_temp_f. The design values are also returned
+by get_design_oat_f() and get_design_inlet_water_temp_f() directly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>design_oat_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>) – Constant outdoor air temperature to return for all timesteps [°F].</p></li>
+<li><p><strong>design_inlet_water_temp_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>) – Constant cold-water inlet temperature to return for all timesteps [°F].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone" title="ecoengine.objects.building.ClimateZone.ClimateZone">ClimateZone</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.ClimateZone.ClimateZone.get_oat_f">
+<span class="sig-name descname"><span class="pre">get_oat_f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestep_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/ClimateZone.html#ClimateZone.get_oat_f"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.ClimateZone.ClimateZone.get_oat_f" title="Link to this definition">¶</a></dt>
+<dd><p>Return outdoor air temperature at the given simulation timestep.</p>
+<p>OAT data is stored hourly, so this rounds down to the nearest hour.
+Wraps around yearly (safe for multi-year or 3-day simulations that
+start mid-year).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestep_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of intervals elapsed from the start of the simulation.</p></li>
+<li><p><strong>interval_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Length of each interval in minutes. Defaults to 1 (minute-resolution).
+Example: timestep_interval=3, interval_min=15 → minute 45.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Outdoor air temperature [°F].</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.ClimateZone.ClimateZone.get_inlet_water_temp_f">
+<span class="sig-name descname"><span class="pre">get_inlet_water_temp_f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestep_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/ClimateZone.html#ClimateZone.get_inlet_water_temp_f"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.ClimateZone.ClimateZone.get_inlet_water_temp_f" title="Link to this definition">¶</a></dt>
+<dd><p>Return cold/inlet water temperature at the given simulation timestep.</p>
+<p>Inlet water temperature is stored as a monthly average, so the
+timestep is converted to a day-of-year and then to a month.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestep_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of intervals elapsed from the start of the simulation.</p></li>
+<li><p><strong>interval_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Length of each interval in minutes. Defaults to 1 (minute-resolution).
+Example: timestep_interval=3, interval_min=15 → minute 45.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Inlet water temperature [°F].</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.ClimateZone.ClimateZone.get_design_oat_f">
+<span class="sig-name descname"><span class="pre">get_design_oat_f</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/ClimateZone.html#ClimateZone.get_design_oat_f"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.ClimateZone.ClimateZone.get_design_oat_f" title="Link to this definition">¶</a></dt>
+<dd><p>Return the design-day outdoor air temperature [°F].</p>
+<p>For real climate zones: the annual minimum OAT (worst-case heating
+condition for heat-pump sizing).
+For design-condition zones: the constant value set at construction.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.ClimateZone.ClimateZone.get_design_inlet_water_temp_f">
+<span class="sig-name descname"><span class="pre">get_design_inlet_water_temp_f</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/ClimateZone.html#ClimateZone.get_design_inlet_water_temp_f"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.ClimateZone.ClimateZone.get_design_inlet_water_temp_f" title="Link to this definition">¶</a></dt>
+<dd><p>Return the design-day cold water inlet temperature [°F].</p>
+<p>For real climate zones: the coldest monthly average (worst-case
+sizing condition).
+For design-condition zones: the constant value set at construction.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.ClimateZone.ClimateZone.get_oat_buckets">
+<span class="sig-name descname"><span class="pre">get_oat_buckets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/ClimateZone.html#ClimateZone.get_oat_buckets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.ClimateZone.ClimateZone.get_oat_buckets" title="Link to this definition">¶</a></dt>
+<dd><p>Return the distribution of daily average outdoor air temperatures
+across 5°F buckets for the full typical meteorological year.</p>
+<p>For each of the 365 days in the year the 24 hourly OAT values are
+averaged to produce a daily mean, which is then assigned to the
+nearest lower multiple of 5°F (e.g. 62.4°F → 60.0°F bucket).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mapping of bucket temperature [°F] → number of days in that
+bucket.  Only buckets with at least one day are included.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>]</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If this ClimateZone was created with
+    <code class="docutils literal notranslate"><span class="pre">from_design_conditions()</span></code> and has no real hourly OAT data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="utilitycosttracker">
+<h2>UtilityCostTracker<a class="headerlink" href="#utilitycosttracker" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ecoengine.objects.building.UtilityCostTracker.</span></span><span class="sig-name descname"><span class="pre">UtilityCostTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">demand_period_chart</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">demand_charge_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_charge_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_peak_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_discount_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monthly_base_charge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_charge_by_hour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_discount</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ecoengine/objects/building/UtilityCostTracker.html#UtilityCostTracker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Stores a utility billing structure and provides per-timestep rate lookups.</p>
+<p>Supports monthly base charges, peak/off-peak demand charges ($/kW), and
+peak/off-peak energy charges ($/kWh), with optional seasonal variation and
+an optional third discount period (e.g. overnight super-off-peak tariffs).</p>
+<section id="period-key-scheme">
+<h3>Period key scheme<a class="headerlink" href="#period-key-scheme" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Without discount (num_periods = 2):</dt><dd><p><code class="docutils literal notranslate"><span class="pre">month</span> <span class="pre">×</span> <span class="pre">2</span></code>     → off-peak
+<code class="docutils literal notranslate"><span class="pre">month</span> <span class="pre">×</span> <span class="pre">2</span> <span class="pre">+</span> <span class="pre">1</span></code> → peak</p>
+</dd>
+<dt>With discount (num_periods = 3):</dt><dd><p><code class="docutils literal notranslate"><span class="pre">month</span> <span class="pre">×</span> <span class="pre">3</span></code>     → off-peak
+<code class="docutils literal notranslate"><span class="pre">month</span> <span class="pre">×</span> <span class="pre">3</span> <span class="pre">+</span> <span class="pre">1</span></code> → peak
+<code class="docutils literal notranslate"><span class="pre">month</span> <span class="pre">×</span> <span class="pre">3</span> <span class="pre">+</span> <span class="pre">2</span></code> → discount</p>
+</dd>
+</dl>
+</section>
+<section id="construction">
+<h3>Construction<a class="headerlink" href="#construction" title="Link to this heading">¶</a></h3>
+<p>Use the factory classmethods rather than calling <code class="docutils literal notranslate"><span class="pre">__init__</span></code> directly:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uc</span> <span class="o">=</span> <span class="n">UtilityCostTracker</span><span class="o">.</span><span class="n">from_params</span><span class="p">(</span>
+    <span class="n">monthly_base_charge</span><span class="o">=</span><span class="mf">190.0</span><span class="p">,</span>
+    <span class="n">pk_start_hour</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">pk_end_hour</span><span class="o">=</span><span class="mi">21</span><span class="p">,</span>
+    <span class="n">pk_demand_charge</span><span class="o">=</span><span class="mf">38.75</span><span class="p">,</span>
+    <span class="n">pk_energy_charge</span><span class="o">=</span><span class="mf">0.21585</span><span class="p">,</span>
+    <span class="n">off_pk_demand_charge</span><span class="o">=</span><span class="mf">30.20</span><span class="p">,</span>
+    <span class="n">off_pk_energy_charge</span><span class="o">=</span><span class="mf">0.14341</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">uc</span> <span class="o">=</span> <span class="n">UtilityCostTracker</span><span class="o">.</span><span class="n">from_csv</span><span class="p">(</span><span class="s2">&quot;utility_rates.csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">demand_period_chart</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">demand_charge_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_charge_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_peak_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_discount_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monthly_base_charge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_charge_by_hour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_discount</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/UtilityCostTracker.html#UtilityCostTracker.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.__init__" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.from_params">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monthly_base_charge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_start_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_end_hour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_demand_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_pk_energy_charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_discount</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dscnt_start_hour</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dscnt_end_hour</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discnt_demand_charge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discnt_energy_charge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker" title="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker"><span class="pre">UtilityCostTracker</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/UtilityCostTracker.html#UtilityCostTracker.from_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.from_params" title="Link to this definition">¶</a></dt>
+<dd><p>Build a UtilityCostTracker from rate parameters.</p>
+<p>All rate/hour/month parameters may be scalars (uniform year-round rate)
+or lists (seasonal variation).  When lists are supplied they must all
+have the same length <em>n</em>, where each element describes one contiguous
+block of months.  <code class="docutils literal notranslate"><span class="pre">start_month</span></code> and <code class="docutils literal notranslate"><span class="pre">end_month</span></code> must partition
+<code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">12]</span></code> without gaps or overlaps: <code class="docutils literal notranslate"><span class="pre">start_month[0]</span></code> must be 0,
+<code class="docutils literal notranslate"><span class="pre">end_month[-1]</span></code> must be 12, and each <code class="docutils literal notranslate"><span class="pre">start_month[i]</span></code> must equal
+<code class="docutils literal notranslate"><span class="pre">end_month[i-1]</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>monthly_base_charge</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Fixed monthly connection charge [$].</p></li>
+<li><p><strong>pk_start_hour</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>]</em>) – Hour of day (0–23) when the peak period begins.</p></li>
+<li><p><strong>pk_end_hour</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>]</em>) – Hour of day (pk_start_hour–24) when the peak period ends.
+<code class="docutils literal notranslate"><span class="pre">pk_end_hour</span> <span class="pre">==</span> <span class="pre">pk_start_hour</span></code> → no peak period.
+<code class="docutils literal notranslate"><span class="pre">pk_start_hour</span> <span class="pre">==</span> <span class="pre">0,</span> <span class="pre">pk_end_hour</span> <span class="pre">==</span> <span class="pre">24</span></code> → all-peak day.</p></li>
+<li><p><strong>pk_demand_charge</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>) – Peak demand charge [$/kW].</p></li>
+<li><p><strong>pk_energy_charge</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>) – Peak energy rate [$/kWh].</p></li>
+<li><p><strong>off_pk_demand_charge</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>) – Off-peak demand charge [$/kW].</p></li>
+<li><p><strong>off_pk_energy_charge</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>) – Off-peak energy rate [$/kWh].</p></li>
+<li><p><strong>start_month</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>]</em>) – 0-based month index where each rate block begins.  Default 0.</p></li>
+<li><p><strong>end_month</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>]</em>) – 0-based month index where each rate block ends (exclusive).
+Default 12.</p></li>
+<li><p><strong>include_discount</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – If True, a third discount period is added within each month.</p></li>
+<li><p><strong>dscnt_start_hour</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>] or </em><em>None</em>) – Discount period start hour.</p></li>
+<li><p><strong>dscnt_end_hour</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>] or </em><em>None</em>) – Discount period end hour.</p></li>
+<li><p><strong>discnt_demand_charge</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] or </em><em>None</em>) – Discount demand charge [$/kW].</p></li>
+<li><p><strong>discnt_energy_charge</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] or </em><em>None</em>) – Discount energy rate [$/kWh].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker" title="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker">UtilityCostTracker</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If any parameter fails validation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.from_csv">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csv_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/io.html#io.TextIOWrapper" title="(in Python v3.14)"><span class="pre">TextIOWrapper</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker" title="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker"><span class="pre">UtilityCostTracker</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/UtilityCostTracker.html#UtilityCostTracker.from_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.from_csv" title="Link to this definition">¶</a></dt>
+<dd><p>Build a UtilityCostTracker from an 8760-row CSV file.</p>
+<p>The CSV must have a header row with (at minimum) these columns:
+<code class="docutils literal notranslate"><span class="pre">Energy</span> <span class="pre">Rate</span> <span class="pre">($/kWh)</span></code>, <code class="docutils literal notranslate"><span class="pre">Demand</span> <span class="pre">Rate</span> <span class="pre">($/kW)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Demand</span> <span class="pre">Period</span></code>, <code class="docutils literal notranslate"><span class="pre">Monthly</span> <span class="pre">Base</span> <span class="pre">Charge</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Monthly</span> <span class="pre">Base</span> <span class="pre">Charge</span></code> is read from the first data row only.
+Demand and energy rates are read from the first row in which each
+<code class="docutils literal notranslate"><span class="pre">Demand</span> <span class="pre">Period</span></code> value appears; subsequent rows may leave those
+columns blank.  Demand periods with odd labels are treated as peak;
+even labels as off-peak.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>csv_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>None</em>)</p></li>
+<li><p><strong>csv_file</strong> (<em>TextIOWrapper</em><em> or </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker" title="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker">UtilityCostTracker</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – On missing columns, wrong row count, or bad cell values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_energy_charge_at_step">
+<span class="sig-name descname"><span class="pre">get_energy_charge_at_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestep_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/UtilityCostTracker.html#UtilityCostTracker.get_energy_charge_at_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_energy_charge_at_step" title="Link to this definition">¶</a></dt>
+<dd><p>Return the energy rate [$/kWh] for simulation step <em>step</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – 0-based step index from the simulation.</p></li>
+<li><p><strong>timestep_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Simulation timestep size [minutes] (e.g. 1, 10, or 60).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_demand_period_at_step">
+<span class="sig-name descname"><span class="pre">get_demand_period_at_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestep_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/UtilityCostTracker.html#UtilityCostTracker.get_demand_period_at_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_demand_period_at_step" title="Link to this definition">¶</a></dt>
+<dd><p>Return the demand period key for simulation step <em>step</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>timestep_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_demand_charge_for_period">
+<span class="sig-name descname"><span class="pre">get_demand_charge_for_period</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">period_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_kw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/UtilityCostTracker.html#UtilityCostTracker.get_demand_charge_for_period"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_demand_charge_for_period" title="Link to this definition">¶</a></dt>
+<dd><p>Return the demand charge [$] for <em>period_key</em> given <em>max_kw</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>period_key</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>max_kw</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Peak power draw observed during the period [kW].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If <em>period_key</em> is not a defined period.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_all_demand_period_keys">
+<span class="sig-name descname"><span class="pre">get_all_demand_period_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/UtilityCostTracker.html#UtilityCostTracker.get_all_demand_period_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_all_demand_period_keys" title="Link to this definition">¶</a></dt>
+<dd><p>Return all defined demand period keys (one per month×period type).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_yearly_base_charge">
+<span class="sig-name descname"><span class="pre">get_yearly_base_charge</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/UtilityCostTracker.html#UtilityCostTracker.get_yearly_base_charge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_yearly_base_charge" title="Link to this definition">¶</a></dt>
+<dd><p>Return the annual base charge [$] (monthly_base_charge × 12).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.to_csv">
+<span class="sig-name descname"><span class="pre">to_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/ecoengine/objects/building/UtilityCostTracker.html#UtilityCostTracker.to_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.to_csv" title="Link to this definition">¶</a></dt>
+<dd><p>Export the rate structure to a CSV file readable by <code class="docutils literal notranslate"><span class="pre">from_csv</span></code>.</p>
+<p>Produces 8760 data rows (one per hour of a non-leap year) plus a header.
+Energy and demand rates are written on the <em>first</em> occurrence of each
+demand period; subsequent rows leave those fields blank.  The monthly
+base charge appears only in the first data row.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>csv_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Destination file path.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="dhwsystems.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">DHW Systems</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="ecosizerengine.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">EcosizerEngine (Top-Level API)</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Ecotope Inc.
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Building &amp; Climate</a><ul>
+<li><a class="reference internal" href="#building">Building</a><ul>
+<li><a class="reference internal" href="#ecoengine.objects.building.Building.Building"><code class="docutils literal notranslate"><span class="pre">Building</span></code></a><ul>
+<li><a class="reference internal" href="#ecoengine.objects.building.Building.Building.__init__"><code class="docutils literal notranslate"><span class="pre">Building.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.Building.Building.from_building_type"><code class="docutils literal notranslate"><span class="pre">Building.from_building_type()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.Building.Building.is_annual_load_shape"><code class="docutils literal notranslate"><span class="pre">Building.is_annual_load_shape()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.Building.Building.set_to_annual_load_shape"><code class="docutils literal notranslate"><span class="pre">Building.set_to_annual_load_shape()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.Building.Building.set_to_daily_load_shape"><code class="docutils literal notranslate"><span class="pre">Building.set_to_daily_load_shape()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.Building.Building.get_dhw_load_supplyT_gal"><code class="docutils literal notranslate"><span class="pre">Building.get_dhw_load_supplyT_gal()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.Building.Building.get_oat_f"><code class="docutils literal notranslate"><span class="pre">Building.get_oat_f()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.Building.Building.get_inlet_water_temp_f"><code class="docutils literal notranslate"><span class="pre">Building.get_inlet_water_temp_f()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.Building.Building.get_design_oat_f"><code class="docutils literal notranslate"><span class="pre">Building.get_design_oat_f()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.Building.Building.get_design_inlet_water_temp_f"><code class="docutils literal notranslate"><span class="pre">Building.get_design_inlet_water_temp_f()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#climatezone">ClimateZone</a><ul>
+<li><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone"><code class="docutils literal notranslate"><span class="pre">ClimateZone</span></code></a><ul>
+<li><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone.__init__"><code class="docutils literal notranslate"><span class="pre">ClimateZone.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone.from_zip_code"><code class="docutils literal notranslate"><span class="pre">ClimateZone.from_zip_code()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone.from_weather_station"><code class="docutils literal notranslate"><span class="pre">ClimateZone.from_weather_station()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone.from_zone_id"><code class="docutils literal notranslate"><span class="pre">ClimateZone.from_zone_id()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone.from_design_conditions"><code class="docutils literal notranslate"><span class="pre">ClimateZone.from_design_conditions()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone.get_oat_f"><code class="docutils literal notranslate"><span class="pre">ClimateZone.get_oat_f()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone.get_inlet_water_temp_f"><code class="docutils literal notranslate"><span class="pre">ClimateZone.get_inlet_water_temp_f()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone.get_design_oat_f"><code class="docutils literal notranslate"><span class="pre">ClimateZone.get_design_oat_f()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone.get_design_inlet_water_temp_f"><code class="docutils literal notranslate"><span class="pre">ClimateZone.get_design_inlet_water_temp_f()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.ClimateZone.ClimateZone.get_oat_buckets"><code class="docutils literal notranslate"><span class="pre">ClimateZone.get_oat_buckets()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#utilitycosttracker">UtilityCostTracker</a><ul>
+<li><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker</span></code></a><ul>
+<li><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.__init__"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.from_params"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.from_params()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.from_csv"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.from_csv()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_energy_charge_at_step"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.get_energy_charge_at_step()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_demand_period_at_step"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.get_demand_period_at_step()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_demand_charge_for_period"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.get_demand_charge_for_period()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_all_demand_period_keys"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.get_all_demand_period_keys()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.get_yearly_base_charge"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.get_yearly_base_charge()</span></code></a></li>
+<li><a class="reference internal" href="#ecoengine.objects.building.UtilityCostTracker.UtilityCostTracker.to_csv"><code class="docutils literal notranslate"><span class="pre">UtilityCostTracker.to_csv()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=acc74ff5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

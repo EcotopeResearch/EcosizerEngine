@@ -1,6 +1,6 @@
 SPHINXBUILD = sphinx-build
 SOURCEDIR   = .
-BUILDDIR    = _build
+BUILDDIR    = build
 
 .PHONY: help html clean
 

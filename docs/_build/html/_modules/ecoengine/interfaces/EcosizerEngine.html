@@ -1,0 +1,1705 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html"><link rel="search" title="Search" href="../../../search.html">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>ecoengine.interfaces.EcosizerEngine - EcosizerEngine</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">EcosizerEngine</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  
+  <span class="sidebar-brand-text">EcosizerEngine</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quick Start</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/building.html">Building &amp; Climate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/dhwsystems.html">DHW Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/components.html">Equipment Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/simulation.html">Simulation</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for ecoengine.interfaces.EcosizerEngine</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.Simulator</span><span class="w"> </span><span class="kn">import</span> <span class="n">simulate_3day</span> <span class="k">as</span> <span class="n">_simulate_3day</span><span class="p">,</span> <span class="n">simulate_annual</span> <span class="k">as</span> <span class="n">_simulate_annual</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.building.ClimateZone</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClimateZone</span> <span class="k">as</span> <span class="n">_ClimateZone</span>
+
+<span class="n">_MAPS_PATH</span>    <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;../data/preformanceMaps/maps.json&quot;</span><span class="p">)</span>
+<span class="n">_WS_LOOKUP</span>    <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;../data/climate_data/WeatherStation_ClimateZone_Lookup.csv&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_oat_buckets">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.get_oat_buckets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_oat_buckets</span><span class="p">(</span>
+    <span class="n">zip_code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">zone_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">weather_station</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the distribution of daily average outdoor air temperatures across</span>
+<span class="sd">    5°F buckets for a given location&#39;s typical meteorological year.</span>
+
+<span class="sd">    Exactly one of ``zip_code``, ``zone_id``, or ``weather_station`` must be</span>
+<span class="sd">    provided to identify the climate zone.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    zip_code : str | int | None</span>
+<span class="sd">        A California 5-digit zip code.</span>
+<span class="sd">    zone_id : int | None</span>
+<span class="sd">        A numeric climate zone ID (1-96).</span>
+<span class="sd">    weather_station : str | None</span>
+<span class="sd">        A weather station name as it appears in the lookup table.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict[float, int]</span>
+<span class="sd">        Mapping of bucket temperature [°F] → number of days per year with</span>
+<span class="sd">        a daily average OAT in that 5°F bucket.  Only populated buckets</span>
+<span class="sd">        are included.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; get_oat_buckets(zip_code=90210)</span>
+<span class="sd">    {50.0: 46, 55.0: 83, ...}</span>
+<span class="sd">    &gt;&gt;&gt; get_oat_buckets(zone_id=19)</span>
+<span class="sd">    {65.0: 25, ...}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">provided</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">zip_code</span><span class="p">,</span> <span class="n">zone_id</span><span class="p">,</span> <span class="n">weather_station</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">provided</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Provide exactly one of zip_code, zone_id, or weather_station.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">zip_code</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cz</span> <span class="o">=</span> <span class="n">_ClimateZone</span><span class="o">.</span><span class="n">from_zip_code</span><span class="p">(</span><span class="n">zip_code</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">zone_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cz</span> <span class="o">=</span> <span class="n">_ClimateZone</span><span class="o">.</span><span class="n">from_zone_id</span><span class="p">(</span><span class="n">zone_id</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cz</span> <span class="o">=</span> <span class="n">_ClimateZone</span><span class="o">.</span><span class="n">from_weather_station</span><span class="p">(</span><span class="n">weather_station</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cz</span><span class="o">.</span><span class="n">get_oat_buckets</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="get_list_of_models">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.get_list_of_models">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_models</span><span class="p">(</span>
+    <span class="n">multi_pass</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">include_residential</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">exclude_models</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sgip_models_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return available HPWH model codes and display names.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    multi_pass : bool</span>
+<span class="sd">        ``True`` → return only multi-pass (``_MP``) models.</span>
+<span class="sd">        ``False`` → return only single-pass (``_SP``) models.</span>
+<span class="sd">    include_residential : bool</span>
+<span class="sd">        ``True`` → include residential (``_R_``) models.</span>
+<span class="sd">        ``False`` → commercial (``_C_``) models only.</span>
+<span class="sd">    exclude_models : list[str] | None</span>
+<span class="sd">        Model codes to omit from the result.  Defaults to no exclusions.</span>
+<span class="sd">    sgip_models_only : bool</span>
+<span class="sd">        ``True`` (default) → restrict to models flagged ``SGIP_avail`` in</span>
+<span class="sd">        the performance-map database.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[list[str]]</span>
+<span class="sd">        Each element is ``[model_code, display_name]`` where ``model_code``</span>
+<span class="sd">        is the string accepted by ``WaterHeater.from_model_name()`` and</span>
+<span class="sd">        ``display_name`` is the human-readable label.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exclude</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude_models</span> <span class="ow">or</span> <span class="p">[])</span>
+    <span class="n">result</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">_MAPS_PATH</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">model_code</span><span class="p">,</span> <span class="n">meta</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">model_code</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">sgip_models_only</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SGIP_avail&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">is_commercial</span> <span class="o">=</span> <span class="n">model_code</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;C&quot;</span>   <span class="c1"># e.g. MODELS_Foo_C_MP → [-4]=&#39;C&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">include_residential</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_commercial</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">is_mp</span> <span class="o">=</span> <span class="n">model_code</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_MP&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">multi_pass</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_mp</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">multi_pass</span> <span class="ow">and</span> <span class="n">is_mp</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">model_code</span><span class="p">,</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]])</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="get_weather_stations">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.get_weather_stations">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_weather_stations</span><span class="p">(</span>
+    <span class="n">exclude_zones</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return all available weather stations and their corresponding climate zone IDs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    exclude_zones : list[int], optional</span>
+<span class="sd">        Climate zone IDs to omit from the result. Defaults to ``[96]``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[list]</span>
+<span class="sd">        Each element is ``[weather_station_name, climate_zone_id]`` where</span>
+<span class="sd">        ``weather_station_name`` is the string accepted by</span>
+<span class="sd">        ``ClimateZone.from_weather_station()`` and ``climate_zone_id`` is the</span>
+<span class="sd">        corresponding integer zone number.  Weather data sourced from</span>
+<span class="sd">        https://energyplus.net/weather.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+
+    <span class="k">if</span> <span class="n">exclude_zones</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">exclude_zones</span> <span class="o">=</span> <span class="p">[</span><span class="mi">96</span><span class="p">]</span>
+
+    <span class="n">exclude</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude_zones</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">_WS_LOOKUP</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">csvfile</span><span class="p">)</span>
+        <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>  <span class="c1"># skip header</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">station</span><span class="p">,</span> <span class="n">zone_id</span> <span class="o">=</span> <span class="n">row</span>
+                <span class="n">zone_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">zone_id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">zone_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">station</span><span class="p">,</span> <span class="n">zone_id</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+
+<div class="viewcode-block" id="get_hpwh_output_capacity">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.get_hpwh_output_capacity">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_hpwh_output_capacity</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">oat_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">inlet_water_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">outlet_water_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">num_heaters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">return_as_kw</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">defrost_derate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the output capacity of an HPWH model at the given operating conditions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : str</span>
+<span class="sd">        Model code string (see ``get_list_of_models()``).</span>
+<span class="sd">    oat_f : float</span>
+<span class="sd">        Outdoor air temperature [°F].</span>
+<span class="sd">    inlet_water_temp_f : float</span>
+<span class="sd">        Incoming cold-water temperature [°F].</span>
+<span class="sd">    outlet_water_temp_f : float</span>
+<span class="sd">        Hot storage outlet temperature [°F].</span>
+<span class="sd">    num_heaters : int</span>
+<span class="sd">        Number of HPWH units. Output is multiplied by this. Default 1.</span>
+<span class="sd">    return_as_kw : bool</span>
+<span class="sd">        If True (default), return output in kW. If False, return in kBTU/hr.</span>
+<span class="sd">    defrost_derate : float</span>
+<span class="sd">        Fractional capacity reduction due to defrost [0.0–1.0]. Default 0.0.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Output capacity after defrost derate in the requested unit.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``defrost_derate`` is outside [0, 1] or ``num_heaters`` &lt; 1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">defrost_derate</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;defrost_derate must be between 0.0 and 1.0&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">num_heaters</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">num_heaters</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;num_heaters must be an integer &gt;= 1&quot;</span><span class="p">)</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.PerformanceMap</span><span class="w"> </span><span class="kn">import</span> <span class="n">PerformanceMap</span>
+
+    <span class="n">perf_map</span> <span class="o">=</span> <span class="n">PerformanceMap</span><span class="o">.</span><span class="n">from_model_name</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">capacity_kbtuh</span> <span class="o">=</span> <span class="n">perf_map</span><span class="o">.</span><span class="n">get_capacity_kbtuh</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">outlet_water_temp_f</span><span class="p">,</span> <span class="n">inlet_water_temp_f</span><span class="p">)</span>
+    <span class="n">capacity_kbtuh</span> <span class="o">*=</span> <span class="n">num_heaters</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">defrost_derate</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_as_kw</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">capacity_kbtuh</span> <span class="o">/</span> <span class="mf">3.41214</span>  <span class="c1"># kBTU/hr → kW</span>
+    <span class="k">return</span> <span class="n">capacity_kbtuh</span></div>
+
+
+
+<span class="n">_MONTH_NAMES</span>         <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Jan&#39;</span><span class="p">,</span><span class="s1">&#39;Feb&#39;</span><span class="p">,</span><span class="s1">&#39;Mar&#39;</span><span class="p">,</span><span class="s1">&#39;Apr&#39;</span><span class="p">,</span><span class="s1">&#39;May&#39;</span><span class="p">,</span><span class="s1">&#39;Jun&#39;</span><span class="p">,</span><span class="s1">&#39;Jul&#39;</span><span class="p">,</span><span class="s1">&#39;Aug&#39;</span><span class="p">,</span><span class="s1">&#39;Sep&#39;</span><span class="p">,</span><span class="s1">&#39;Oct&#39;</span><span class="p">,</span><span class="s1">&#39;Nov&#39;</span><span class="p">,</span><span class="s1">&#39;Dec&#39;</span><span class="p">]</span>
+<span class="n">_ANNUAL_DURATION_MIN</span> <span class="o">=</span> <span class="mi">365</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span>
+
+
+<div class="viewcode-block" id="get_annual_utility_comparison_graph">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.get_annual_utility_comparison_graph">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_annual_utility_comparison_graph</span><span class="p">(</span>
+    <span class="n">sim_run_hp</span><span class="p">,</span>
+    <span class="n">sim_run_iwh</span><span class="p">,</span>
+    <span class="n">utility_cost_tracker</span><span class="p">,</span>
+    <span class="n">return_as_div</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_as_array</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build a stacked bar chart comparing monthly utility costs for an HPWH</span>
+<span class="sd">    system vs. an instantaneous electric resistance (UER) baseline.</span>
+
+<span class="sd">    Each month shows two adjacent bars — one for the HP system, one for UER —</span>
+<span class="sd">    stacked by charge type: base, energy, and demand.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sim_run_hp : SimulationRun</span>
+<span class="sd">        Annual simulation result for the heat pump system.</span>
+<span class="sd">    sim_run_iwh : SimulationRun</span>
+<span class="sd">        Annual simulation result for the instantaneous/UER baseline.</span>
+<span class="sd">    utility_cost_tracker : UtilityCostTracker</span>
+<span class="sd">        Rate structure applied to both runs.</span>
+<span class="sd">    return_as_div : bool</span>
+<span class="sd">        If True, return an HTML ``&lt;div&gt;`` string instead of a Figure.</span>
+<span class="sd">    return_as_array : bool</span>
+<span class="sd">        If True, return ``(hp_breakdown, iwh_breakdown)`` dicts instead of a</span>
+<span class="sd">        figure.  Each dict has keys ``&#39;energy&#39;`` (12 floats), ``&#39;demand&#39;``</span>
+<span class="sd">        (12 floats), and ``&#39;base&#39;`` (float).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    plotly.graph_objects.Figure, str, or tuple</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">sim_run_hp</span><span class="o">.</span><span class="n">duration_min</span> <span class="o">!=</span> <span class="n">_ANNUAL_DURATION_MIN</span> <span class="ow">or</span> <span class="n">sim_run_iwh</span><span class="o">.</span><span class="n">duration_min</span> <span class="o">!=</span> <span class="n">_ANNUAL_DURATION_MIN</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Both simulation runs must be annual (365-day) to generate a &quot;</span>
+            <span class="s2">&quot;utility comparison graph.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">hp_bd</span>  <span class="o">=</span> <span class="n">sim_run_hp</span><span class="o">.</span><span class="n">get_monthly_cost_breakdown_detailed</span><span class="p">(</span><span class="n">utility_cost_tracker</span><span class="p">)</span>
+    <span class="n">iwh_bd</span> <span class="o">=</span> <span class="n">sim_run_iwh</span><span class="o">.</span><span class="n">get_monthly_cost_breakdown_detailed</span><span class="p">(</span><span class="n">utility_cost_tracker</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_as_array</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">hp_bd</span><span class="p">,</span> <span class="n">iwh_bd</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;plotly is required for get_annual_utility_comparison_graph(). &quot;</span>
+            <span class="s2">&quot;Install with: pip install plotly&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Interleave HP and IWH bars: for each of 24 x-positions, even index = HP,</span>
+    <span class="c1"># odd index = IWH.  Trailing-space trick makes Plotly treat them as</span>
+    <span class="c1"># separate categories while keeping the visual pairing per month.</span>
+    <span class="n">x_labels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_MONTH_NAMES</span><span class="p">:</span>
+        <span class="n">x_labels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">name</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">])</span>
+
+    <span class="n">base</span> <span class="o">=</span> <span class="n">utility_cost_tracker</span><span class="o">.</span><span class="n">monthly_base_charge</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_interleave</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">slot</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;slot=0 → HP (even positions), slot=1 → IWH (odd positions).&quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">slot</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">v</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">v</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="n">categories</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;Base Charges&quot;</span><span class="p">,</span>          <span class="n">_interleave</span><span class="p">([</span><span class="n">base</span><span class="p">]</span> <span class="o">*</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>               <span class="n">_interleave</span><span class="p">([</span><span class="n">base</span><span class="p">]</span> <span class="o">*</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">&quot;Peak Energy Charges&quot;</span><span class="p">,</span>   <span class="n">_interleave</span><span class="p">(</span><span class="n">hp_bd</span><span class="p">[</span><span class="s2">&quot;energy_peak&quot;</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span>      <span class="n">_interleave</span><span class="p">(</span><span class="n">iwh_bd</span><span class="p">[</span><span class="s2">&quot;energy_peak&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">&quot;Off-Peak Energy Charges&quot;</span><span class="p">,</span> <span class="n">_interleave</span><span class="p">(</span><span class="n">hp_bd</span><span class="p">[</span><span class="s2">&quot;energy_off_peak&quot;</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span> <span class="n">_interleave</span><span class="p">(</span><span class="n">iwh_bd</span><span class="p">[</span><span class="s2">&quot;energy_off_peak&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">&quot;Peak Demand Charges&quot;</span><span class="p">,</span>   <span class="n">_interleave</span><span class="p">(</span><span class="n">hp_bd</span><span class="p">[</span><span class="s2">&quot;demand_peak&quot;</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span>      <span class="n">_interleave</span><span class="p">(</span><span class="n">iwh_bd</span><span class="p">[</span><span class="s2">&quot;demand_peak&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">&quot;Off-Peak Demand Charges&quot;</span><span class="p">,</span> <span class="n">_interleave</span><span class="p">(</span><span class="n">hp_bd</span><span class="p">[</span><span class="s2">&quot;demand_off_peak&quot;</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span> <span class="n">_interleave</span><span class="p">(</span><span class="n">iwh_bd</span><span class="p">[</span><span class="s2">&quot;demand_off_peak&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)),</span>
+    <span class="p">]</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">hp_vals</span><span class="p">,</span> <span class="n">iwh_vals</span> <span class="ow">in</span> <span class="n">categories</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">x_labels</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">hp_vals</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> for HP&quot;</span><span class="p">,</span>
+            <span class="n">hovertemplate</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> (HP)&lt;br&gt;%</span><span class="se">{{</span><span class="s2">x</span><span class="se">}}</span><span class="s2">&lt;br&gt;$%</span><span class="se">{{</span><span class="s2">y:.2f</span><span class="se">}}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;&quot;</span><span class="p">,</span>
+        <span class="p">))</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">x_labels</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">iwh_vals</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> for UER&quot;</span><span class="p">,</span>
+            <span class="n">hovertemplate</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> (UER)&lt;br&gt;%</span><span class="se">{{</span><span class="s2">x</span><span class="se">}}</span><span class="s2">&lt;br&gt;$%</span><span class="se">{{</span><span class="s2">y:.2f</span><span class="se">}}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;&quot;</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+        <span class="n">barmode</span><span class="o">=</span><span class="s2">&quot;stack&quot;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Utility Cost Comparison: Heat Pump (HP) vs. Unitary Electric Resistance (UER)&quot;</span><span class="p">,</span>
+        <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Cost ($)&quot;</span><span class="p">,</span>
+        <span class="n">xaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">tickvals</span><span class="o">=</span><span class="n">_MONTH_NAMES</span><span class="p">,</span>
+            <span class="n">ticktext</span><span class="o">=</span><span class="n">_MONTH_NAMES</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Month&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_as_div</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span><span class="n">full_html</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_plotlyjs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Standalone sizing-curve plot helper</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="get_sizing_curve_plot">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.get_sizing_curve_plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_sizing_curve_plot</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">start_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">load_shifting</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">er_sized</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_as_div</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build a Plotly sizing-curve figure from pre-computed x/y points.</span>
+
+<span class="sd">    This is a lightweight alternative to ``EcosizerEngine.plot_sizing_curve()``</span>
+<span class="sd">    for callers that already have the curve data (e.g. from</span>
+<span class="sd">    ``EcosizerEngine.plot_sizing_curve(return_with_x_y_points=True)``).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : list</span>
+<span class="sd">        X-axis values.  Interpretation depends on the mode:</span>
+
+<span class="sd">        * Normal sizing  — storage volume [gal at storage temperature]</span>
+<span class="sd">        * Load-shifting  — load-shift coverage percentile [%]</span>
+<span class="sd">        * ER sizing      — percent of building covered [%]</span>
+
+<span class="sd">    y : list</span>
+<span class="sd">        Y-axis values.  Interpretation depends on the mode:</span>
+
+<span class="sd">        * Normal sizing  — heating capacity [kBTU/hr]</span>
+<span class="sd">        * Load-shifting  — storage volume [gal at storage temperature]</span>
+<span class="sd">        * ER sizing      — ER element capacity [kW]</span>
+
+<span class="sd">    start_index : int</span>
+<span class="sd">        Index into ``x``/``y`` where the recommended-size diamond starts.</span>
+<span class="sd">    load_shifting : bool</span>
+<span class="sd">        If True, use load-shift axis labels. Default False.</span>
+<span class="sd">    er_sized : bool</span>
+<span class="sd">        If True, use ER-sizing axis labels (overrides ``load_shifting``).</span>
+<span class="sd">        Default False.</span>
+<span class="sd">    return_as_div : bool</span>
+<span class="sd">        If True, return an HTML ``&lt;div&gt;`` string instead of a Figure.</span>
+<span class="sd">        Default False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    plotly.graph_objects.Figure or str</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ImportError</span>
+<span class="sd">        If ``plotly`` is not installed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;plotly is required for get_sizing_curve_plot(). &quot;</span>
+            <span class="s2">&quot;Install it with: pip install plotly&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">er_sized</span><span class="p">:</span>
+        <span class="n">x_label</span>  <span class="o">=</span> <span class="s2">&quot;Percent Coverage (%)&quot;</span>
+        <span class="n">y_label</span>  <span class="o">=</span> <span class="s2">&quot;ER Heating Capacity (kW)&quot;</span>
+        <span class="n">title</span>    <span class="o">=</span> <span class="s2">&quot;Electric Resistance Sizing Curve&quot;</span>
+        <span class="n">hover</span>    <span class="o">=</span> <span class="s2">&quot;Coverage: &lt;b&gt;%</span><span class="si">{x:.1f}</span><span class="s2">%&lt;/b&gt;&lt;br&gt;ER Capacity: &lt;b&gt;%</span><span class="si">{y:.1f}</span><span class="s2"> kW&lt;/b&gt;&lt;extra&gt;&lt;/extra&gt;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_label</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Coverage: &lt;b&gt;</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&lt;/b&gt;, ER Capacity: &lt;b&gt;</span><span class="si">{</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> kW&lt;/b&gt;&quot;</span>
+    <span class="k">elif</span> <span class="n">load_shifting</span><span class="p">:</span>
+        <span class="n">x_label</span>  <span class="o">=</span> <span class="s2">&quot;Load-Shift Days Covered (%)&quot;</span>
+        <span class="n">y_label</span>  <span class="o">=</span> <span class="s2">&quot;Primary Tank Volume (gal at Storage Temperature)&quot;</span>
+        <span class="n">title</span>    <span class="o">=</span> <span class="s2">&quot;Load-Shift Sizing Curve&quot;</span>
+        <span class="n">hover</span>    <span class="o">=</span> <span class="s2">&quot;Coverage: &lt;b&gt;%</span><span class="si">{x:.1f}</span><span class="s2">%&lt;/b&gt;&lt;br&gt;Storage: &lt;b&gt;%</span><span class="si">{y:.1f}</span><span class="s2"> gal&lt;/b&gt;&lt;extra&gt;&lt;/extra&gt;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_label</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Coverage: &lt;b&gt;</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&lt;/b&gt;, Storage: &lt;b&gt;</span><span class="si">{</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> gal&lt;/b&gt;&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x_label</span>  <span class="o">=</span> <span class="s2">&quot;Primary Tank Volume (gal at Storage Temperature)&quot;</span>
+        <span class="n">y_label</span>  <span class="o">=</span> <span class="s2">&quot;Heating Capacity (kBTU/hr)&quot;</span>
+        <span class="n">title</span>    <span class="o">=</span> <span class="s2">&quot;Primary Sizing Curve&quot;</span>
+        <span class="n">hover</span>    <span class="o">=</span> <span class="s2">&quot;Storage: &lt;b&gt;%</span><span class="si">{x:.1f}</span><span class="s2"> gal&lt;/b&gt;&lt;br&gt;Capacity: &lt;b&gt;%</span><span class="si">{y:.1f}</span><span class="s2"> kBTU/hr&lt;/b&gt;&lt;extra&gt;&lt;/extra&gt;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_label</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Storage: &lt;b&gt;</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> gal&lt;/b&gt;, Capacity: &lt;b&gt;</span><span class="si">{</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> kBTU/hr&lt;/b&gt;&quot;</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span>
+        <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;#28a745&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+        <span class="n">hovertemplate</span><span class="o">=</span><span class="n">hover</span><span class="p">,</span>
+        <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">))</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">start_index</span><span class="p">]],</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">y</span><span class="p">[</span><span class="n">start_index</span><span class="p">]],</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;markers&quot;</span><span class="p">,</span>
+        <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s2">&quot;diamond&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#2EA3F2&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">),</span>
+        <span class="n">hovertemplate</span><span class="o">=</span><span class="n">hover</span><span class="p">,</span>
+        <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">))</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">xaxis_title</span><span class="o">=</span><span class="n">x_label</span><span class="p">,</span>
+        <span class="n">yaxis_title</span><span class="o">=</span><span class="n">y_label</span><span class="p">,</span>
+        <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_as_div</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span><span class="n">full_html</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_plotlyjs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Schematic → DHWSystem class registry</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">_RECIRC_SCHEMATICS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;parallel_loop&quot;</span><span class="p">,</span> <span class="s2">&quot;swing_tank&quot;</span><span class="p">,</span> <span class="s2">&quot;single_pass_rtp&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_pass_rtp&quot;</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="EcosizerEngine">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.EcosizerEngine">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EcosizerEngine</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Primary backend interface for the Ecosizer tool.</span>
+
+<span class="sd">    Accepts building and system parameters, builds and sizes the appropriate</span>
+<span class="sd">    DHWSystem subclass, and runs simulations. All input-range validation is</span>
+<span class="sd">    expected to be handled by the frontend before calling this class.</span>
+
+<span class="sd">    Construction immediately builds and sizes the system — no separate build()</span>
+<span class="sd">    or size() calls are required::</span>
+
+<span class="sd">        engine = EcosizerEngine(</span>
+<span class="sd">            building_type            = &quot;multi_family&quot;,</span>
+<span class="sd">            magnitude                = 100,</span>
+<span class="sd">            zip_code_or_climate_zone = {&quot;design_oat_f&quot;: 47, &quot;design_inlet_water_temp_f&quot;: 47},</span>
+<span class="sd">            supply_temp_f            = 125.0,</span>
+<span class="sd">            storage_temp_f           = 150.0,</span>
+<span class="sd">            schematic                = &quot;primary_no_recirc&quot;,</span>
+<span class="sd">        )</span>
+<span class="sd">        result = engine.simulate_3day()</span>
+<span class="sd">        result.to_plotly(filepath=&quot;output.html&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EcosizerEngine.__init__">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.EcosizerEngine.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">magnitude</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">zip_code_or_climate_zone</span><span class="p">,</span>
+        <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">storage_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">schematic</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="c1"># Building inputs</span>
+        <span class="n">gpdpp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_peak_load_shape</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_avg_load_shape</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># Primary heater inputs</span>
+        <span class="n">num_heaters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">hpwh_model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_daily_run_hr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">16.0</span><span class="p">,</span>
+        <span class="n">defrost_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="c1"># Aquastat / controls</span>
+        <span class="n">aquastat_fract</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">off_sensor_fract</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">on_trigger_t_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">off_trigger_t_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># Load shift (optional)</span>
+        <span class="n">load_shift_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">load_up_hours</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">shed_aquastat_fract</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">load_up_aquastat_fract</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shed_off_sensor_fract</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">load_up_off_sensor_fract</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">load_up_off_trigger_t_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">load_shift_percent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
+        <span class="c1"># Recirculation (required for recirc schematics)</span>
+        <span class="n">return_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_flow_gpm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># ParallelLoop TM controls</span>
+        <span class="n">tm_on_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tm_off_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tm_off_time_hr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">tm_safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.75</span><span class="p">,</span>
+        <span class="c1"># Utility cost (optional)</span>
+        <span class="n">utility_cost_tracker</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># Pre-sized system (optional — skip sizing when capacity and volume are known)</span>
+        <span class="n">storage_volume_storageT_gal</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">heating_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tm_storage_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tm_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tm_model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_tm_heaters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        building_type : str</span>
+<span class="sd">            Building use type (e.g. ``&#39;multi_family&#39;``, ``&#39;office&#39;``).</span>
+<span class="sd">        magnitude : int or float</span>
+<span class="sd">            Occupancy metric appropriate to the building type (people, units, etc.).</span>
+<span class="sd">        zip_code_or_climate_zone : str | int | dict</span>
+<span class="sd">            Climate lookup key. Accepted forms:</span>
+
+<span class="sd">            * 5-digit CA zip code string or int → ``ClimateZone.from_zip_code()``</span>
+<span class="sd">            * Integer 1–96 → ``ClimateZone.from_zone_id()``</span>
+<span class="sd">            * Non-numeric string → ``ClimateZone.from_weather_station()``</span>
+<span class="sd">            * Dict with keys ``&#39;design_oat_f&#39;`` and/or ``&#39;design_inlet_water_temp_f&#39;``</span>
+<span class="sd">              → ``ClimateZone.from_design_conditions()``</span>
+
+<span class="sd">        supply_temp_f : float</span>
+<span class="sd">            DHW delivery temperature [°F].</span>
+<span class="sd">        storage_temp_f : float</span>
+<span class="sd">            Hot water storage setpoint [°F].</span>
+<span class="sd">        schematic : str</span>
+<span class="sd">            Piping configuration. Supported values:</span>
+
+<span class="sd">            * ``&#39;primary_no_recirc&#39;`` — base DHWSystem (heat pump + stratified tank)</span>
+<span class="sd">            * ``&#39;parallel_loop&#39;``    — separate TM tank in parallel for recirc losses</span>
+<span class="sd">            * ``&#39;swing_tank&#39;``       — swing-tank recirc system</span>
+<span class="sd">            * ``&#39;single_pass_rtp&#39;``  — single-pass return-to-primary</span>
+<span class="sd">            * ``&#39;multi_pass_rtp&#39;``   — multi-pass return-to-primary</span>
+<span class="sd">            * ``&#39;instant_wh&#39;``       — instantaneous (tankless) water heater, no storage</span>
+
+<span class="sd">        gpdpp : float, optional</span>
+<span class="sd">            Gallons per person per day. If None, building-type defaults are used.</span>
+<span class="sd">        custom_peak_load_shape : list[float], optional</span>
+<span class="sd">            24-element normalized peak-hour DHW load shape. Required when</span>
+<span class="sd">            ``building_type`` is None.</span>
+<span class="sd">        custom_avg_load_shape : list[float], optional</span>
+<span class="sd">            24-element normalized average-hour DHW load shape. Used for</span>
+<span class="sd">            annual simulation load profiles.</span>
+<span class="sd">        num_heaters : int</span>
+<span class="sd">            Number of primary HPWH units. Default 1.</span>
+<span class="sd">        hpwh_model : str, optional</span>
+<span class="sd">            HPWH model name for performance map lookup (future use).</span>
+<span class="sd">        max_daily_run_hr : float</span>
+<span class="sd">            Maximum hours the primary heating system may run per day. Default 16. NOT YET USED FOR MPRTP</span>
+<span class="sd">        defrost_factor : float</span>
+<span class="sd">            Fraction of rated capacity available after defrost cycles (0–1). Default 1.0.</span>
+<span class="sd">        aquastat_fract : float</span>
+<span class="sd">            Fractional tank height of the ON aquastat (0–1). Default 0.5.</span>
+<span class="sd">        off_sensor_fract : float</span>
+<span class="sd">            Fractional tank height of the OFF aquastat (0–1). Default 0.1.</span>
+<span class="sd">        on_trigger_t_f : float, optional</span>
+<span class="sd">            Temperature at which the ON aquastat fires. Defaults to supply_temp_f.</span>
+<span class="sd">        off_trigger_t_f : float, optional</span>
+<span class="sd">            Temperature at which the OFF aquastat fires. Defaults to storage_temp_f.</span>
+<span class="sd">        load_shift_schedule : list[int], optional</span>
+<span class="sd">            24-element list (0 = shed hour, 1 = run hour). None → no load shifting.</span>
+<span class="sd">        load_up_hours : int</span>
+<span class="sd">            Hours spent in load-up mode before the first shed window.</span>
+<span class="sd">        shed_aquastat_fract : float, optional</span>
+<span class="sd">            ON aquastat fraction during shed hours (higher → more storage).</span>
+<span class="sd">        load_up_aquastat_fract : float, optional</span>
+<span class="sd">            ON aquastat fraction during load-up hours (lower → fires sooner).</span>
+<span class="sd">        shed_off_sensor_fract : float, optional</span>
+<span class="sd">            OFF aquastat fraction during shed hours. Defaults to off_sensor_fract.</span>
+<span class="sd">        load_up_off_sensor_fract : float, optional</span>
+<span class="sd">            OFF aquastat fraction during load-up hours. Defaults to off_sensor_fract.</span>
+<span class="sd">        load_up_off_trigger_t_f : float, optional</span>
+<span class="sd">            OFF trigger temperature during load-up hours. Defaults to off_trigger_t_f.</span>
+<span class="sd">        load_shift_percent : float</span>
+<span class="sd">            Percentile of days the load-shift sizing must cover [0.25, 1.0].</span>
+<span class="sd">            Default 0.95 — size for 95% of days, accepting that the highest-demand</span>
+<span class="sd">            5% of days may occasionally breach the shed window. Only applied</span>
+<span class="sd">            during load-shift sizing; normal sizing always uses the full daily demand.</span>
+<span class="sd">        return_temp_f : float, optional</span>
+<span class="sd">            Recirc loop return temperature [°F]. Required for recirc schematics.</span>
+<span class="sd">        return_flow_gpm : float, optional</span>
+<span class="sd">            Recirc loop flow rate [GPM]. Required for recirc schematics.</span>
+<span class="sd">        tm_on_temp_f : float, optional</span>
+<span class="sd">            TM element turn-on temperature [°F]. Defaults to supply_temp_f − 5.</span>
+<span class="sd">        tm_off_temp_f : float, optional</span>
+<span class="sd">            TM element turn-off temperature [°F]. Defaults to supply_temp_f.</span>
+<span class="sd">        tm_off_time_hr : float</span>
+<span class="sd">            Max TM heater off-cycle duration [hr]. Default 0.5.</span>
+<span class="sd">        tm_safety_factor : float</span>
+<span class="sd">            TM capacity safety multiplier (&gt; 1.0). Default 1.2.</span>
+<span class="sd">        utility_cost_tracker : UtilityCostTracker, optional</span>
+<span class="sd">            Attached to the building for annual cost estimates.</span>
+<span class="sd">        storage_volume_storageT_gal : float, optional</span>
+<span class="sd">            Pre-sized primary storage tank volume at storage temperature [gallons].</span>
+<span class="sd">            When provided together with ``heating_capacity_kbtuh`` (or</span>
+<span class="sd">            ``hpwh_model``), the sizing step is skipped entirely.</span>
+<span class="sd">        heating_capacity_kbtuh : float, optional</span>
+<span class="sd">            Pre-sized total primary heating capacity [kBTU/hr].  Must be paired</span>
+<span class="sd">            with ``storage_volume_storageT_gal`` (except for ``instant_wh``).</span>
+<span class="sd">            For multi-heater systems this is the combined fleet capacity;</span>
+<span class="sd">            each WaterHeater is assigned ``heating_capacity_kbtuh / num_heaters``.</span>
+<span class="sd">            Ignored when ``hpwh_model`` is also provided.</span>
+<span class="sd">        tm_storage_vol : float, optional</span>
+<span class="sd">            Pre-sized TM tank volume [gallons]. Required for ``parallel_loop``</span>
+<span class="sd">            and ``swing_tank`` when using the pre-sized path.</span>
+<span class="sd">        tm_capacity_kbtuh : float, optional</span>
+<span class="sd">            Pre-sized TM heater capacity [kBTU/hr]. Required for ``parallel_loop``</span>
+<span class="sd">            and ``swing_tank`` when ``tm_model`` is not provided.</span>
+<span class="sd">        tm_model : str, optional</span>
+<span class="sd">            HPWH model name for the TM heater&#39;s performance map. When provided,</span>
+<span class="sd">            ``tm_capacity_kbtuh`` is used only as the ER fallback capacity.</span>
+<span class="sd">            ``return_temp_f`` is used as ``design_inlet_temp_f``.</span>
+<span class="sd">        num_tm_heaters : int</span>
+<span class="sd">            Number of identical TM heater units for ``parallel_loop`` schematics.</span>
+<span class="sd">            The single ``tm_water_heater`` object represents one unit; its output</span>
+<span class="sd">            is multiplied by this value before being applied to the TM tank and</span>
+<span class="sd">            recorded. For the sized path, per-unit capacity =</span>
+<span class="sd">            ``_minimum_tm_capacity_kbtuh / num_tm_heaters``; for the pre-sized</span>
+<span class="sd">            path with ``tm_capacity_kbtuh``, per-unit =</span>
+<span class="sd">            ``tm_capacity_kbtuh / num_tm_heaters``. Default 1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">building_type</span>             <span class="o">=</span> <span class="n">building_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">magnitude</span>                 <span class="o">=</span> <span class="n">magnitude</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zip_code_or_climate_zone</span>  <span class="o">=</span> <span class="n">zip_code_or_climate_zone</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span>             <span class="o">=</span> <span class="n">supply_temp_f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span>            <span class="o">=</span> <span class="n">storage_temp_f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span>                 <span class="o">=</span> <span class="n">schematic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpdpp</span>                     <span class="o">=</span> <span class="n">gpdpp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_peak_load_shape</span>    <span class="o">=</span> <span class="n">custom_peak_load_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_avg_load_shape</span>     <span class="o">=</span> <span class="n">custom_avg_load_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_heaters</span>               <span class="o">=</span> <span class="n">num_heaters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hpwh_model</span>                <span class="o">=</span> <span class="n">hpwh_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span>          <span class="o">=</span> <span class="n">max_daily_run_hr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span>            <span class="o">=</span> <span class="n">defrost_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aquastat_fract</span>            <span class="o">=</span> <span class="n">aquastat_fract</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">off_sensor_fract</span>          <span class="o">=</span> <span class="n">off_sensor_fract</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_trigger_t_f</span>            <span class="o">=</span> <span class="n">on_trigger_t_f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">off_trigger_t_f</span>           <span class="o">=</span> <span class="n">off_trigger_t_f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_shift_schedule</span>       <span class="o">=</span> <span class="n">load_shift_schedule</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_up_hours</span>             <span class="o">=</span> <span class="n">load_up_hours</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shed_aquastat_fract</span>       <span class="o">=</span> <span class="n">shed_aquastat_fract</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_up_aquastat_fract</span>    <span class="o">=</span> <span class="n">load_up_aquastat_fract</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shed_off_sensor_fract</span>     <span class="o">=</span> <span class="n">shed_off_sensor_fract</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_up_off_sensor_fract</span>  <span class="o">=</span> <span class="n">load_up_off_sensor_fract</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_up_off_trigger_t_f</span>   <span class="o">=</span> <span class="n">load_up_off_trigger_t_f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_shift_percent</span>        <span class="o">=</span> <span class="n">load_shift_percent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span>             <span class="o">=</span> <span class="n">return_temp_f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span>           <span class="o">=</span> <span class="n">return_flow_gpm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_on_temp_f</span>              <span class="o">=</span> <span class="n">tm_on_temp_f</span> <span class="k">if</span> <span class="n">tm_on_temp_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">supply_temp_f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_off_temp_f</span>             <span class="o">=</span> <span class="n">tm_off_temp_f</span> <span class="k">if</span> <span class="n">tm_off_temp_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">supply_temp_f</span> <span class="o">+</span> <span class="mf">8.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_off_time_hr</span>            <span class="o">=</span> <span class="n">tm_off_time_hr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span>          <span class="o">=</span> <span class="n">tm_safety_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">utility_cost_tracker</span>           <span class="o">=</span> <span class="n">utility_cost_tracker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_volume_storageT_gal</span>    <span class="o">=</span> <span class="n">storage_volume_storageT_gal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heating_capacity_kbtuh</span>         <span class="o">=</span> <span class="n">heating_capacity_kbtuh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_vol</span>                 <span class="o">=</span> <span class="n">tm_storage_vol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_capacity_kbtuh</span>              <span class="o">=</span> <span class="n">tm_capacity_kbtuh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_model</span>                       <span class="o">=</span> <span class="n">tm_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_tm_heaters</span>                 <span class="o">=</span> <span class="n">num_tm_heaters</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_building</span>    <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span>  <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Build and size immediately</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">()</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Build orchestration</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="EcosizerEngine.build">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.EcosizerEngine.build">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the Building and DHWSystem (including sizing) from stored params.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_building</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_building</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_dhw_system</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_building</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct and return the Building for the configured type and climate.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.building.Building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.building.ClimateZone</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClimateZone</span>
+
+        <span class="n">zone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_climate_zone</span><span class="p">(</span><span class="n">ClimateZone</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Building</span><span class="o">.</span><span class="n">from_building_type</span><span class="p">(</span>
+            <span class="n">building_type</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">building_type</span><span class="p">,</span>
+            <span class="n">magnitude</span>               <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+            <span class="n">climate_zone</span>            <span class="o">=</span> <span class="n">zone</span><span class="p">,</span>
+            <span class="n">gpdpp</span>                   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpdpp</span><span class="p">,</span>
+            <span class="n">custom_peak_load_shape</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_peak_load_shape</span><span class="p">,</span>
+            <span class="n">custom_avg_load_shape</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_avg_load_shape</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_climate_zone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ClimateZone</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resolve zip_code_or_climate_zone to a ClimateZone instance.&quot;&quot;&quot;</span>
+        <span class="n">czv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zip_code_or_climate_zone</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">czv</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ClimateZone</span><span class="o">.</span><span class="n">from_design_conditions</span><span class="p">(</span><span class="o">**</span><span class="n">czv</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">czv</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">czv</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">czv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ClimateZone</span><span class="o">.</span><span class="n">from_zip_code</span><span class="p">(</span><span class="n">czv</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">czv</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">czv</span> <span class="o">&lt;=</span> <span class="mi">96</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ClimateZone</span><span class="o">.</span><span class="n">from_zone_id</span><span class="p">(</span><span class="n">czv</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">czv</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ClimateZone</span><span class="o">.</span><span class="n">from_weather_station</span><span class="p">(</span><span class="n">czv</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Cannot determine ClimateZone from </span><span class="si">{</span><span class="n">czv</span><span class="si">!r}</span><span class="s2">. &quot;</span>
+            <span class="s2">&quot;Pass a 5-digit CA zip code string, a zone ID int (1–96), &quot;</span>
+            <span class="s2">&quot;a weather station name string, or a dict with &#39;design_oat_f&#39; &quot;</span>
+            <span class="s2">&quot;and/or &#39;design_inlet_water_temp_f&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_control_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the control_schedule and control_map from stored aquastat parameters.</span>
+
+<span class="sd">        Returns (control_schedule, control_map).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.Controls</span><span class="w"> </span><span class="kn">import</span> <span class="n">Controls</span>
+
+        <span class="n">on_t</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_trigger_t_f</span>  <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_trigger_t_f</span>  <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span>
+        <span class="n">off_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_trigger_t_f</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_trigger_t_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span>
+
+        <span class="n">normal</span> <span class="o">=</span> <span class="n">Controls</span><span class="p">(</span>
+            <span class="n">on_sensor_fract</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aquastat_fract</span><span class="p">,</span>
+            <span class="n">on_trigger_t_f</span>   <span class="o">=</span> <span class="n">on_t</span><span class="p">,</span>
+            <span class="n">off_sensor_fract</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_sensor_fract</span><span class="p">,</span>
+            <span class="n">off_trigger_t_f</span>  <span class="o">=</span> <span class="n">off_t</span><span class="p">,</span>
+            <span class="n">outlet_temp_f</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_shift_schedule</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">normal</span><span class="p">}</span>
+
+        <span class="c1"># Build schedule from 24-element 0/1 list (0 = shed, 1 = run)</span>
+        <span class="n">schedule</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">shed_hours</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">load_shift_schedule</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">first_shed</span> <span class="o">=</span> <span class="n">shed_hours</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">shed_hours</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">hour</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">24</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_shift_schedule</span><span class="p">[</span><span class="n">hour</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">schedule</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;shed&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span>
+                <span class="n">first_shed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_up_hours</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                <span class="ow">and</span> <span class="n">first_shed</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_up_hours</span> <span class="o">&lt;=</span> <span class="n">hour</span> <span class="o">&lt;</span> <span class="n">first_shed</span>
+            <span class="p">):</span>
+                <span class="n">schedule</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;loadUp&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">schedule</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;normal&quot;</span><span class="p">)</span>
+
+        <span class="n">cmap</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">normal</span><span class="p">}</span>
+
+        <span class="n">shed_on_fract</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shed_aquastat_fract</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shed_aquastat_fract</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">aquastat_fract</span>
+        <span class="n">shed_off_fract</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shed_off_sensor_fract</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shed_off_sensor_fract</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_sensor_fract</span>
+        <span class="n">cmap</span><span class="p">[</span><span class="s2">&quot;shed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Controls</span><span class="p">(</span>
+            <span class="n">on_sensor_fract</span>  <span class="o">=</span> <span class="n">shed_on_fract</span><span class="p">,</span>
+            <span class="n">on_trigger_t_f</span>   <span class="o">=</span> <span class="n">on_t</span><span class="p">,</span>
+            <span class="n">off_sensor_fract</span> <span class="o">=</span> <span class="n">shed_off_fract</span><span class="p">,</span>
+            <span class="n">off_trigger_t_f</span>  <span class="o">=</span> <span class="n">off_t</span><span class="p">,</span>
+            <span class="n">outlet_temp_f</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_up_hours</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_up_aquastat_fract</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lu_off_fract</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_up_off_sensor_fract</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_up_off_sensor_fract</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">off_sensor_fract</span>
+            <span class="n">lu_off_t</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_up_off_trigger_t_f</span>  <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_up_off_trigger_t_f</span>  <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">off_t</span>
+            <span class="n">cmap</span><span class="p">[</span><span class="s2">&quot;loadUp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Controls</span><span class="p">(</span>
+                <span class="n">on_sensor_fract</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_up_aquastat_fract</span><span class="p">,</span>
+                <span class="n">on_trigger_t_f</span>   <span class="o">=</span> <span class="n">on_t</span><span class="p">,</span>
+                <span class="n">off_sensor_fract</span> <span class="o">=</span> <span class="n">lu_off_fract</span><span class="p">,</span>
+                <span class="n">off_trigger_t_f</span>  <span class="o">=</span> <span class="n">lu_off_t</span><span class="p">,</span>
+                <span class="n">outlet_temp_f</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">schedule</span><span class="p">,</span> <span class="n">cmap</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_dhw_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct and return the appropriate sized DHWSystem subclass based on</span>
+<span class="sd">        self.schematic.</span>
+
+<span class="sd">        Supported schematics</span>
+<span class="sd">        --------------------</span>
+<span class="sd">        * ``&#39;primary_no_recirc&#39;`` → DHWSystem</span>
+<span class="sd">        * ``&#39;parallel_loop&#39;``    → ParallelLoopSystem</span>
+<span class="sd">        * ``&#39;swing_tank&#39;``       → SwingSystem</span>
+<span class="sd">        * ``&#39;single_pass_rtp&#39;``  → SinglePassRTPSystem</span>
+<span class="sd">        * ``&#39;multi_pass_rtp&#39;``   → MultiPassRTPSystem</span>
+<span class="sd">        * ``&#39;instant_wh&#39;``       → InstantWHSystem</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the schematic is not recognised or required recirc params are missing.</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            If the schematic is recognised but not yet fully implemented.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_volume_storageT_gal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_presized_dhw_system</span><span class="p">()</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.DHWSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">DHWSystem</span><span class="p">,</span> <span class="n">_load_shift_fract_total_vol</span>
+
+        <span class="n">control_schedule</span><span class="p">,</span> <span class="n">control_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_control_map</span><span class="p">()</span>
+        <span class="n">ls_fract</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_load_shift_fract_total_vol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">load_shift_percent</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_shift_schedule</span>
+            <span class="k">else</span> <span class="mf">1.0</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;primary_no_recirc&quot;</span><span class="p">,</span> <span class="s2">&quot;singlepass_norecirc&quot;</span><span class="p">]:</span>
+            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">DHWSystem</span><span class="o">.</span><span class="n">from_size</span><span class="p">(</span>
+                    <span class="n">building</span>                   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span>
+                    <span class="n">supply_temp_f</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                    <span class="n">storage_temp_f</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                    <span class="n">max_daily_run_hr</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+                    <span class="n">defrost_factor</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+                    <span class="n">control_schedule</span>           <span class="o">=</span> <span class="n">control_schedule</span><span class="p">,</span>
+                    <span class="n">control_map</span>                <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
+                    <span class="n">load_shift_fract_total_vol</span> <span class="o">=</span> <span class="n">ls_fract</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;parallel_loop&quot;</span><span class="p">,</span> <span class="s2">&quot;paralleltank&quot;</span><span class="p">]:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParallelLoopSystem</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require_recirc_params</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">ParallelLoopSystem</span><span class="o">.</span><span class="n">from_size</span><span class="p">(</span>
+                    <span class="n">building</span>                   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span>
+                    <span class="n">supply_temp_f</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                    <span class="n">storage_temp_f</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                    <span class="n">return_temp_f</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span>
+                    <span class="n">return_flow_gpm</span>            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+                    <span class="n">tm_on_temp_f</span>               <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_on_temp_f</span><span class="p">,</span>
+                    <span class="n">tm_off_temp_f</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_off_temp_f</span><span class="p">,</span>
+                    <span class="n">tm_off_time_hr</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_off_time_hr</span><span class="p">,</span>
+                    <span class="n">tm_safety_factor</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span><span class="p">,</span>
+                    <span class="n">max_daily_run_hr</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+                    <span class="n">defrost_factor</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+                    <span class="n">control_schedule</span>           <span class="o">=</span> <span class="n">control_schedule</span><span class="p">,</span>
+                    <span class="n">control_map</span>                <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
+                    <span class="n">load_shift_fract_total_vol</span> <span class="o">=</span> <span class="n">ls_fract</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;swing_tank&quot;</span><span class="p">,</span> <span class="s2">&quot;swingtank&quot;</span><span class="p">]:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.recirc_systems.SwingSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwingSystem</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require_recirc_params</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">SwingSystem</span><span class="o">.</span><span class="n">from_size</span><span class="p">(</span>
+                    <span class="n">building</span>                   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span>
+                    <span class="n">supply_temp_f</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                    <span class="n">storage_temp_f</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                    <span class="n">return_temp_f</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span>
+                    <span class="n">return_flow_gpm</span>            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+                    <span class="n">tm_safety_factor</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span><span class="p">,</span>
+                    <span class="n">max_daily_run_hr</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+                    <span class="n">defrost_factor</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+                    <span class="n">control_schedule</span>           <span class="o">=</span> <span class="n">control_schedule</span><span class="p">,</span>
+                    <span class="n">control_map</span>                <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
+                    <span class="n">load_shift_fract_total_vol</span> <span class="o">=</span> <span class="n">ls_fract</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;single_pass_rtp&quot;</span><span class="p">,</span> <span class="s2">&quot;sprtp&quot;</span><span class="p">]:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SinglePassRTPSystem</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require_recirc_params</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">SinglePassRTPSystem</span><span class="o">.</span><span class="n">from_size</span><span class="p">(</span>
+                    <span class="n">building</span>                   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span>
+                    <span class="n">supply_temp_f</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                    <span class="n">storage_temp_f</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                    <span class="n">return_temp_f</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span>
+                    <span class="n">return_flow_gpm</span>            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+                    <span class="n">max_daily_run_hr</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+                    <span class="n">defrost_factor</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+                    <span class="n">control_schedule</span>           <span class="o">=</span> <span class="n">control_schedule</span><span class="p">,</span>
+                    <span class="n">control_map</span>                <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
+                    <span class="n">load_shift_fract_total_vol</span> <span class="o">=</span> <span class="n">ls_fract</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;multi_pass_rtp&quot;</span><span class="p">,</span> <span class="s2">&quot;mprtp&quot;</span><span class="p">]:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.rtp_systems.MultiPassRTPSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiPassRTPSystem</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require_recirc_params</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">MultiPassRTPSystem</span><span class="o">.</span><span class="n">from_size</span><span class="p">(</span>
+                    <span class="n">building</span>         <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span>
+                    <span class="n">supply_temp_f</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                    <span class="n">storage_temp_f</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                    <span class="n">return_temp_f</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span>
+                    <span class="n">return_flow_gpm</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+                    <span class="n">max_daily_run_hr</span> <span class="o">=</span> <span class="mi">14</span><span class="p">,</span>
+                    <span class="n">defrost_factor</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+                    <span class="n">control_schedule</span> <span class="o">=</span> <span class="n">control_schedule</span><span class="p">,</span>
+                    <span class="n">control_map</span>      <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="o">==</span> <span class="s2">&quot;instant_wh&quot;</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.InstantWHSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstantWHSystem</span>
+            <span class="k">return</span> <span class="n">InstantWHSystem</span><span class="o">.</span><span class="n">from_size</span><span class="p">(</span>
+                <span class="n">building</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span>
+                <span class="n">supply_temp_f</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                <span class="n">storage_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                <span class="n">defrost_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unknown schematic </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schematic</span><span class="si">!r}</span><span class="s2">. &quot;</span>
+            <span class="s2">&quot;Supported values: &#39;primary_no_recirc&#39;, &#39;parallel_loop&#39;, &#39;swing_tank&#39;, &quot;</span>
+            <span class="s2">&quot;&#39;single_pass_rtp&#39;, &#39;multi_pass_rtp&#39;, &#39;instant_wh&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_require_recirc_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="p">(</span><span class="s2">&quot;return_temp_f&quot;</span><span class="p">,</span>   <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">&quot;return_flow_gpm&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">),</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Schematic &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schematic</span><span class="si">}</span><span class="s2">&#39; requires: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_require_tm_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_vol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Schematic &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schematic</span><span class="si">}</span><span class="s2">&#39; requires tm_storage_vol in pre-sized mode.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_capacity_kbtuh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Schematic &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schematic</span><span class="si">}</span><span class="s2">&#39; requires tm_capacity_kbtuh or tm_model &quot;</span>
+                <span class="s2">&quot;in pre-sized mode.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_tm_water_heater</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tm_controls</span><span class="p">,</span> <span class="n">force_electric_resistance</span> <span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the TM WaterHeater (single unit) from tm_model or tm_capacity_kbtuh.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.WaterHeater</span><span class="w"> </span><span class="kn">import</span> <span class="n">WaterHeater</span>
+        <span class="k">if</span> <span class="n">force_electric_resistance</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_tm_heaters</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">per_unit_kbtuh</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tm_capacity_kbtuh</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_tm_heaters</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_capacity_kbtuh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_electric_resistance</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_model_name</span><span class="p">(</span>
+                <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_model</span><span class="p">,</span>
+                <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
+                <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
+                <span class="n">design_inlet_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">50.0</span><span class="p">,</span>
+                <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">per_unit_kbtuh</span><span class="p">,</span>  <span class="c1"># used by ER fallback when OAT &lt; map minimum</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
+            <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">per_unit_kbtuh</span><span class="p">,</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_presized_dhw_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the DHWSystem from explicitly provided storage volume and capacity,</span>
+<span class="sd">        skipping the sizing step entirely.</span>
+
+<span class="sd">        For schematics with a TM sub-system (``parallel_loop``, ``swing_tank``),</span>
+<span class="sd">        the TM is still auto-sized from recirc parameters since TM sizing does</span>
+<span class="sd">        not depend on building load.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.WaterHeater</span><span class="w"> </span><span class="kn">import</span> <span class="n">WaterHeater</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.StratifiedTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">StratifiedTank</span>
+
+        <span class="n">control_schedule</span><span class="p">,</span> <span class="n">control_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_control_map</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hpwh_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">design_inlet_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="o">.</span><span class="n">get_design_inlet_water_temp_f</span><span class="p">()</span> <span class="ow">or</span> <span class="mf">50.0</span>
+            <span class="c1"># Use num_units instead of N separate objects — all units share the</span>
+            <span class="c1"># same controls and tank sensor so they always act in unison. A single</span>
+            <span class="c1"># WaterHeater with num_units=N avoids N redundant interpolator calls</span>
+            <span class="c1"># per timestep (critical for pkl-backed performance maps at scale).</span>
+            <span class="n">water_heaters</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_model_name</span><span class="p">(</span>
+                    <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hpwh_model</span><span class="p">,</span>
+                    <span class="n">control_schedule</span><span class="o">=</span><span class="n">control_schedule</span><span class="p">,</span>
+                    <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span>
+                    <span class="n">design_inlet_temp_f</span><span class="o">=</span><span class="n">design_inlet_temp_f</span><span class="p">,</span>
+                    <span class="n">num_units</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heaters</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">capacity_per_heater</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_capacity_kbtuh</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heaters</span>
+            <span class="n">water_heaters</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
+                    <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">capacity_per_heater</span><span class="p">,</span>
+                    <span class="n">control_schedule</span><span class="o">=</span><span class="n">control_schedule</span><span class="p">,</span>
+                    <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heaters</span><span class="p">)</span>
+            <span class="p">]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_primary_tank</span><span class="p">(</span><span class="n">strat_slope</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_volume_storageT_gal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;storage_volume_storageT_gal is required for schematic &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schematic</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;total_volume_gal&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_volume_storageT_gal</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">strat_slope</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;strat_slope&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">strat_slope</span>
+            <span class="k">return</span> <span class="n">StratifiedTank</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;primary_no_recirc&quot;</span><span class="p">,</span> <span class="s2">&quot;singlepass_norecirc&quot;</span><span class="p">]:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.DHWSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">DHWSystem</span>
+            <span class="k">return</span> <span class="n">DHWSystem</span><span class="p">(</span>
+                <span class="n">water_heaters</span><span class="o">=</span><span class="n">water_heaters</span><span class="p">,</span>
+                <span class="n">storage_tank</span><span class="o">=</span><span class="n">_primary_tank</span><span class="p">(),</span>
+                <span class="n">supply_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                <span class="n">storage_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+                <span class="n">defrost_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;parallel_loop&quot;</span><span class="p">,</span> <span class="s2">&quot;paralleltank&quot;</span><span class="p">]:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParallelLoopSystem</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.Controls</span><span class="w"> </span><span class="kn">import</span> <span class="n">Controls</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.MixedStorageTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">MixedStorageTank</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require_recirc_params</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require_tm_params</span><span class="p">()</span>
+            <span class="n">tm_controls</span> <span class="o">=</span> <span class="n">Controls</span><span class="p">(</span>
+                <span class="n">on_sensor_fract</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                <span class="n">on_trigger_t_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_on_temp_f</span><span class="p">,</span>
+                <span class="n">off_sensor_fract</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                <span class="n">off_trigger_t_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_off_temp_f</span><span class="p">,</span>
+                <span class="n">outlet_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_off_temp_f</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">ParallelLoopSystem</span><span class="p">(</span>
+                <span class="n">water_heaters</span><span class="o">=</span><span class="n">water_heaters</span><span class="p">,</span>
+                <span class="n">storage_tank</span><span class="o">=</span><span class="n">_primary_tank</span><span class="p">(),</span>
+                <span class="n">supply_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                <span class="n">storage_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                <span class="n">return_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span>
+                <span class="n">return_flow_gpm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+                <span class="n">tm_on_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_on_temp_f</span><span class="p">,</span>
+                <span class="n">tm_off_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_off_temp_f</span><span class="p">,</span>
+                <span class="n">tm_off_time_hr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_off_time_hr</span><span class="p">,</span>
+                <span class="n">tm_safety_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span><span class="p">,</span>
+                <span class="n">tm_storage_tank</span><span class="o">=</span><span class="n">MixedStorageTank</span><span class="p">(</span><span class="n">total_volume_gal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_vol</span><span class="p">),</span>
+                <span class="n">tm_water_heater</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_build_tm_water_heater</span><span class="p">(</span><span class="n">tm_controls</span><span class="p">),</span>
+                <span class="n">num_tm_heaters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_tm_heaters</span><span class="p">,</span>
+                <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+                <span class="n">defrost_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;swing_tank&quot;</span><span class="p">,</span> <span class="s2">&quot;swingtank&quot;</span><span class="p">]:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.recirc_systems.SwingSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwingSystem</span><span class="p">,</span> <span class="n">_ELEMENT_DEADBAND_F</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.Controls</span><span class="w"> </span><span class="kn">import</span> <span class="n">Controls</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.MixedStorageTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">MixedStorageTank</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require_recirc_params</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require_tm_params</span><span class="p">()</span>
+            <span class="n">tm_controls</span> <span class="o">=</span> <span class="n">Controls</span><span class="p">(</span>
+                <span class="n">on_sensor_fract</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                <span class="n">on_trigger_t_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                <span class="n">off_sensor_fract</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                <span class="n">off_trigger_t_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">,</span>
+                <span class="n">outlet_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">system</span> <span class="o">=</span> <span class="n">SwingSystem</span><span class="p">(</span>
+                <span class="n">water_heaters</span><span class="o">=</span><span class="n">water_heaters</span><span class="p">,</span>
+                <span class="n">storage_tank</span><span class="o">=</span><span class="n">_primary_tank</span><span class="p">(),</span>
+                <span class="n">supply_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                <span class="n">storage_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                <span class="n">return_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span>
+                <span class="n">return_flow_gpm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+                <span class="n">tm_safety_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span><span class="p">,</span>
+                <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+                <span class="n">defrost_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">system</span><span class="o">.</span><span class="n">tm_storage_tank</span> <span class="o">=</span> <span class="n">MixedStorageTank</span><span class="p">(</span><span class="n">total_volume_gal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_vol</span><span class="p">)</span>
+            <span class="n">system</span><span class="o">.</span><span class="n">tm_water_heater</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_tm_water_heater</span><span class="p">(</span><span class="n">tm_controls</span><span class="p">,</span> <span class="n">force_electric_resistance</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">system</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;single_pass_rtp&quot;</span><span class="p">,</span> <span class="s2">&quot;sprtp&quot;</span><span class="p">]:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+                <span class="n">SinglePassRTPSystem</span><span class="p">,</span> <span class="n">_SPRTP_STRAT_SLOPE</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require_recirc_params</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">SinglePassRTPSystem</span><span class="p">(</span>
+                <span class="n">water_heaters</span><span class="o">=</span><span class="n">water_heaters</span><span class="p">,</span>
+                <span class="n">storage_tank</span><span class="o">=</span><span class="n">_primary_tank</span><span class="p">(</span><span class="n">strat_slope</span><span class="o">=</span><span class="n">_SPRTP_STRAT_SLOPE</span><span class="p">),</span>
+                <span class="n">supply_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                <span class="n">storage_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                <span class="n">return_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span>
+                <span class="n">return_flow_gpm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+                <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+                <span class="n">defrost_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;multi_pass_rtp&quot;</span><span class="p">,</span> <span class="s2">&quot;mprtp&quot;</span><span class="p">]:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.rtp_systems.MultiPassRTPSystem</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+                <span class="n">MultiPassRTPSystem</span><span class="p">,</span> <span class="n">_MPRTP_STRAT_SLOPE</span><span class="p">,</span> <span class="n">_MPRTP_MAX_DAILY_RUN_HR</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.SlugOverlayTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">SlugOverlayTank</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require_recirc_params</span><span class="p">()</span>
+            <span class="n">cold_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="o">.</span><span class="n">get_design_inlet_water_temp_f</span><span class="p">()</span> <span class="ow">or</span> <span class="mf">50.0</span>
+            <span class="k">return</span> <span class="n">MultiPassRTPSystem</span><span class="p">(</span>
+                <span class="n">water_heaters</span><span class="o">=</span><span class="n">water_heaters</span><span class="p">,</span>
+                <span class="n">storage_tank</span><span class="o">=</span><span class="n">SlugOverlayTank</span><span class="p">(</span>
+                    <span class="n">total_volume_gal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_volume_storageT_gal</span><span class="p">,</span>
+                    <span class="n">cold_temp_f</span><span class="o">=</span><span class="n">cold_temp_f</span><span class="p">,</span>
+                    <span class="n">storage_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                    <span class="n">supply_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                    <span class="n">strat_slope</span><span class="o">=</span><span class="n">_MPRTP_STRAT_SLOPE</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">supply_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                <span class="n">storage_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                <span class="n">return_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span>
+                <span class="n">return_flow_gpm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+                <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="n">_MPRTP_MAX_DAILY_RUN_HR</span><span class="p">,</span>
+                <span class="n">defrost_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="o">==</span> <span class="s2">&quot;instant_wh&quot;</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.InstantWHSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstantWHSystem</span>
+            <span class="n">system</span> <span class="o">=</span> <span class="n">InstantWHSystem</span><span class="p">(</span>
+                <span class="n">supply_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                <span class="n">storage_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                <span class="n">defrost_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">system</span><span class="o">.</span><span class="n">water_heaters</span> <span class="o">=</span> <span class="n">water_heaters</span>
+            <span class="k">return</span> <span class="n">system</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unknown schematic </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schematic</span><span class="si">!r}</span><span class="s2">. &quot;</span>
+            <span class="s2">&quot;Supported values: &#39;primary_no_recirc&#39;, &#39;parallel_loop&#39;, &#39;swing_tank&#39;, &quot;</span>
+            <span class="s2">&quot;&#39;single_pass_rtp&#39;, &#39;multi_pass_rtp&#39;, &#39;instant_wh&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Sizing results</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="EcosizerEngine.get_sizing_results">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.EcosizerEngine.get_sizing_results">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_sizing_results</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the sizing results from the built DHWSystem.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Always contains ``&#39;min_capacity_kbtuh&#39;`` and ``&#39;min_storage_storageT_gal&#39;``.</span>
+<span class="sd">            Parallel loop systems also include ``&#39;min_tm_volume_gal&#39;`` and</span>
+<span class="sd">            ``&#39;min_tm_capacity_kbtuh&#39;``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;min_capacity_kbtuh&quot;</span><span class="p">:</span>      <span class="n">sys</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span><span class="p">,</span>
+            <span class="s2">&quot;min_storage_storageT_gal&quot;</span><span class="p">:</span> <span class="n">sys</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="s2">&quot;_minimum_tm_volume_gal&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;min_tm_volume_gal&quot;</span><span class="p">]</span>      <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;min_tm_capacity_kbtuh&quot;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Simulation</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="EcosizerEngine.simulate_3day">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.EcosizerEngine.simulate_3day">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_3day</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run a 3-day design-day simulation at 1-minute timesteps.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **sim_run_kwargs</span>
+<span class="sd">            Optional keyword arguments forwarded to SimulationRun.__init__(),</span>
+<span class="sd">            e.g. ``outlet_deficit_threshold_f=5.0``, ``outlet_deficit_max_min=10``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SimulationRun</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_simulate_3day</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EcosizerEngine.simulate_annual">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.EcosizerEngine.simulate_annual">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_annual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run a full annual simulation at 10-minute timesteps.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **sim_run_kwargs</span>
+<span class="sd">            Optional keyword arguments forwarded to SimulationRun.__init__().</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SimulationRun</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_simulate_annual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Output helpers</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="EcosizerEngine.get_simulation_summary">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.EcosizerEngine.get_simulation_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_simulation_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_run</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a summary dict from a completed SimulationRun.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simulation_run : SimulationRun</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Keys: &#39;successful&#39;, &#39;total_outage_min&#39;, &#39;total_energy_kwh&#39;,</span>
+<span class="sd">            &#39;peak_demand_kw&#39;, &#39;num_steps_recorded&#39;, &#39;stopped_early&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">simulation_run</span><span class="o">.</span><span class="n">get_summary</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="EcosizerEngine.get_annual_cost_estimate">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.EcosizerEngine.get_annual_cost_estimate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_annual_cost_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_run</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute annual utility cost from a completed annual SimulationRun.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simulation_run : SimulationRun</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Monthly energy breakdown (kWh) by month.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;monthly_energy_kwh&quot;</span><span class="p">:</span> <span class="n">simulation_run</span><span class="o">.</span><span class="n">get_monthly_energy_kwh</span><span class="p">()}</span></div>
+
+
+<div class="viewcode-block" id="EcosizerEngine.get_hw_magnitude">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.EcosizerEngine.get_hw_magnitude">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_hw_magnitude</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the total daily DHW usage for the building [gallons at supply temperature].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span></div>
+
+
+<div class="viewcode-block" id="EcosizerEngine.plot_simulation">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.EcosizerEngine.plot_simulation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_simulation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Simulation Results&quot;</span><span class="p">,</span>
+        <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">include_temperatures</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_as_div</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run a 3-day design-day simulation and return a Plotly figure of the results.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        title : str</span>
+<span class="sd">            Figure title.  Default ``&quot;Simulation Results&quot;``.</span>
+<span class="sd">        filepath : str, optional</span>
+<span class="sd">            If provided, write the figure to this path as a self-contained</span>
+<span class="sd">            HTML file.  The figure is also returned regardless.</span>
+<span class="sd">        include_temperatures : bool</span>
+<span class="sd">            If True, add a right Y axis showing OAT, inlet water temperature,</span>
+<span class="sd">            and all tank node temperatures.  Default False.</span>
+<span class="sd">        return_as_div : bool</span>
+<span class="sd">            If True, return the figure as an HTML ``&lt;div&gt;`` string instead of</span>
+<span class="sd">            a ``plotly.graph_objects.Figure``.  Default False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        plotly.graph_objects.Figure or str</span>
+<span class="sd">            A Plotly figure, or an HTML div string when ``return_as_div=True``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ImportError</span>
+<span class="sd">            If ``plotly`` is not installed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sim_run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_3day</span><span class="p">()</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">sim_run</span><span class="o">.</span><span class="n">to_plotly</span><span class="p">(</span>
+            <span class="n">title</span>                <span class="o">=</span> <span class="n">title</span><span class="p">,</span>
+            <span class="n">filepath</span>             <span class="o">=</span> <span class="n">filepath</span><span class="p">,</span>
+            <span class="n">include_temperatures</span> <span class="o">=</span> <span class="n">include_temperatures</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_as_div</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fig</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span><span class="n">full_html</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_plotlyjs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fig</span></div>
+
+
+<div class="viewcode-block" id="EcosizerEngine.plot_sizing_curve">
+<a class="viewcode-back" href="../../../api/ecosizerengine.html#ecoengine.interfaces.EcosizerEngine.EcosizerEngine.plot_sizing_curve">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_sizing_curve</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Primary Sizing Curve&quot;</span><span class="p">,</span>
+        <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.8</span><span class="p">,</span>
+        <span class="n">return_as_div</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_with_x_y_points</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a Plotly figure of the sizing curve for the built system.</span>
+
+<span class="sd">        For systems without load shifting, produces the primary sizing curve</span>
+<span class="sd">        (storage volume vs. heating capacity as a function of daily run hours).</span>
+
+<span class="sd">        For systems with load shifting (``load_shift_schedule`` was provided),</span>
+<span class="sd">        produces the load-shift sizing curve (storage volume vs. coverage</span>
+<span class="sd">        percentile), with a slider to explore the capacity/storage trade-off.</span>
+
+<span class="sd">        The recommended point — corresponding to the ``max_daily_run_hr`` or</span>
+<span class="sd">        ``load_shift_percent`` passed to the engine — is highlighted on the</span>
+<span class="sd">        curve at page load.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        title : str</span>
+<span class="sd">            Figure title.  Default ``&quot;Primary Sizing Curve&quot;``.</span>
+<span class="sd">        filepath : str, optional</span>
+<span class="sd">            If provided, write the figure to this path as a self-contained</span>
+<span class="sd">            HTML file.  The figure is also returned regardless.</span>
+<span class="sd">        strat_slope : float</span>
+<span class="sd">            Temperature gradient [°F / %-height] for stratification factor</span>
+<span class="sd">            calculation.  Default 2.8.</span>
+<span class="sd">        return_as_div : bool</span>
+<span class="sd">            If True, return the figure as an HTML ``&lt;div&gt;`` string instead of</span>
+<span class="sd">            a ``plotly.graph_objects.Figure``.  Default False.</span>
+<span class="sd">        return_with_x_y_points : bool</span>
+<span class="sd">            If True, return ``[figure_or_div, x_values, y_values, start_index]``</span>
+<span class="sd">            instead of just the figure/div, where ``x_values`` and ``y_values``</span>
+<span class="sd">            are the plot coordinates and ``start_index`` is the recommended</span>
+<span class="sd">            slider position.  Default False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        plotly.graph_objects.Figure</span>
+<span class="sd">            When both flags are False.</span>
+<span class="sd">        str</span>
+<span class="sd">            HTML div string when ``return_as_div=True`` and</span>
+<span class="sd">            ``return_with_x_y_points=False``.</span>
+<span class="sd">        list</span>
+<span class="sd">            ``[figure_or_div, x_values, y_values, start_index]`` when</span>
+<span class="sd">            ``return_with_x_y_points=True``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ImportError</span>
+<span class="sd">            If ``plotly`` is not installed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">control_schedule</span><span class="p">,</span> <span class="n">control_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_control_map</span><span class="p">()</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span><span class="o">.</span><span class="n">plot_sizing_curve</span><span class="p">(</span>
+            <span class="n">building</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span>
+            <span class="n">control_schedule</span>   <span class="o">=</span> <span class="n">control_schedule</span><span class="p">,</span>
+            <span class="n">control_map</span>        <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
+            <span class="n">load_shift_percent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_shift_percent</span><span class="p">,</span>
+            <span class="n">strat_slope</span>        <span class="o">=</span> <span class="n">strat_slope</span><span class="p">,</span>
+            <span class="n">title</span>              <span class="o">=</span> <span class="n">title</span><span class="p">,</span>
+            <span class="n">filepath</span>           <span class="o">=</span> <span class="n">filepath</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span><span class="n">full_html</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_plotlyjs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">if</span> <span class="n">return_as_div</span> <span class="k">else</span> <span class="n">fig</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">return_with_x_y_points</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="n">is_ls</span> <span class="o">=</span> <span class="s2">&quot;shed&quot;</span> <span class="ow">in</span> <span class="n">control_map</span>
+        <span class="k">if</span> <span class="n">is_ls</span><span class="p">:</span>
+            <span class="n">curve</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span><span class="o">.</span><span class="n">get_ls_sizing_curve</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span>
+                <span class="n">control_schedule</span>   <span class="o">=</span> <span class="n">control_schedule</span><span class="p">,</span>
+                <span class="n">control_map</span>        <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
+                <span class="n">strat_slope</span>        <span class="o">=</span> <span class="n">strat_slope</span><span class="p">,</span>
+                <span class="n">load_shift_percent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_shift_percent</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x_vals</span>      <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="o">*</span> <span class="mf">100.0</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">curve</span><span class="p">[</span><span class="s2">&quot;load_shift_percent&quot;</span><span class="p">]]</span>
+            <span class="n">y_vals</span>      <span class="o">=</span> <span class="n">curve</span><span class="p">[</span><span class="s2">&quot;storage_storageT_gal&quot;</span><span class="p">]</span>
+            <span class="n">start_index</span> <span class="o">=</span> <span class="n">curve</span><span class="p">[</span><span class="s2">&quot;recommended_index&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">curve</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span><span class="o">.</span><span class="n">get_sizing_curve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span> <span class="n">strat_slope</span><span class="o">=</span><span class="n">strat_slope</span><span class="p">)</span>
+            <span class="n">x_vals</span>      <span class="o">=</span> <span class="n">curve</span><span class="p">[</span><span class="s2">&quot;storage_storageT_gal&quot;</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">y_vals</span>      <span class="o">=</span> <span class="n">curve</span><span class="p">[</span><span class="s2">&quot;capacity_kbtuh&quot;</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">start_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_vals</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">curve</span><span class="p">[</span><span class="s2">&quot;recommended_index&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">result</span><span class="p">,</span> <span class="n">x_vals</span><span class="p">,</span> <span class="n">y_vals</span><span class="p">,</span> <span class="n">start_index</span><span class="p">]</span></div>
+</div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Ecotope Inc.
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../_static/documentation_options.js?v=acc74ff5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

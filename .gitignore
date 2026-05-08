@@ -24,8 +24,8 @@ htmlcov/
 ~$*.docx
 ~$*.xlsx
 
-# Sphinx build output
-docs/_build/
+# Sphinx intermediate build artifacts (doctrees etc.) — HTML is committed
+docs/build/doctrees/
 
 # Local comparison / dev scripts
 compare_performance_maps.py

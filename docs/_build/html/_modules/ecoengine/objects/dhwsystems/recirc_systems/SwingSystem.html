@@ -1,0 +1,1333 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../../genindex.html"><link rel="search" title="Search" href="../../../../../search.html">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>ecoengine.objects.dhwsystems.recirc_systems.SwingSystem - EcosizerEngine</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../../../index.html"><div class="brand">EcosizerEngine</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../../../index.html">
+  
+  <span class="sidebar-brand-text">EcosizerEngine</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../quickstart.html">Quick Start</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/building.html">Building &amp; Climate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/dhwsystems.html">DHW Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/components.html">Equipment Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/simulation.html">Simulation</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for ecoengine.objects.dhwsystems.recirc_systems.SwingSystem</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.Controls</span><span class="w"> </span><span class="kn">import</span> <span class="n">Controls</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.WaterHeater</span><span class="w"> </span><span class="kn">import</span> <span class="n">WaterHeater</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.StratifiedTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">StratifiedTank</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.MixedStorageTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">MixedStorageTank</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.DHWSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_peak_indices</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.RecircSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecircSystem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_RHO_CP</span><span class="p">,</span> <span class="n">_W_TO_KBTUH</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.building.Building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
+
+<span class="c1"># Swing tank TM sizing table [gallons].</span>
+<span class="c1"># Volume is the smallest entry &gt;= recirc_loss_btuhr / (100 W/gal * 3.412142 BTU/hr/W).</span>
+<span class="n">_SWING_SIZING_TABLE</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">175</span><span class="p">,</span> <span class="mi">240</span><span class="p">,</span> <span class="mi">350</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">800</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">1250</span>
+<span class="p">]</span>
+
+<span class="c1"># CA-specific swing tank sizing table [gallons].</span>
+<span class="c1"># Subset of commercially available tank sizes recognised by California programs.</span>
+<span class="c1"># Used to snap the required TM volume to the nearest CA-approved size.</span>
+<span class="n">_SWING_SIZING_TABLE_CA</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">80</span><span class="p">,</span> <span class="mi">96</span><span class="p">,</span> <span class="mi">168</span><span class="p">,</span> <span class="mi">288</span><span class="p">,</span> <span class="mi">480</span><span class="p">]</span>
+<span class="n">_WATTS_PER_GAL</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">100.0</span>
+
+<span class="c1"># TM element deadband: fires at supply_temp_f, shuts off at supply_temp_f + 8 °F.</span>
+<span class="n">_ELEMENT_DEADBAND_F</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">8.0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_hr_to_min</span><span class="p">(</span><span class="n">hourly_arr</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Repeat each hourly value 60 times → per-minute array (length × 60).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">hourly_arr</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SwingSystem">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingSystem.SwingSystem">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SwingSystem</span><span class="p">(</span><span class="n">RecircSystem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Swing tank system: a single fully-mixed tank in SERIES with the primary</span>
+<span class="sd">    storage acts as both the recirculation temperature-maintenance (TM) volume</span>
+<span class="sd">    and a draw-through buffer.</span>
+
+<span class="sd">    All DHW demand passes through the swing tank before delivery, so the</span>
+<span class="sd">    primary storage only needs to supply the deficit not met by the swing</span>
+<span class="sd">    tank&#39;s thermal mass.  This reduces effective primary demand (captured by</span>
+<span class="sd">    ``_eff_mix_fraction``) but requires the TM element to maintain the swing</span>
+<span class="sd">    tank at or above supply temperature.</span>
+
+<span class="sd">    Sizing order (overrides DHWSystem)</span>
+<span class="sd">    -----------------------------------</span>
+<span class="sd">    1. Size TM (table lookup from recirc loss rate).</span>
+<span class="sd">    2. Compute running volume via swing-tank simulation — yields</span>
+<span class="sd">       ``_eff_mix_fraction`` as a side-effect.</span>
+<span class="sd">    3. Compute primary capacity using ``_eff_mix_fraction`` and storage temp.</span>
+
+<span class="sd">    Construction</span>
+<span class="sd">    ------------</span>
+<span class="sd">    Use the factory classmethod::</span>
+
+<span class="sd">        system = SwingSystem.from_size(</span>
+<span class="sd">            building        = building,</span>
+<span class="sd">            supply_temp_f   = 120.0,</span>
+<span class="sd">            storage_temp_f  = 150.0,</span>
+<span class="sd">            return_temp_f   = 110.0,</span>
+<span class="sd">            return_flow_gpm = 3.0,</span>
+<span class="sd">            tm_safety_factor = 1.2,</span>
+<span class="sd">        )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SwingSystem.__init__">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingSystem.SwingSystem.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">water_heaters</span><span class="p">,</span>
+        <span class="n">storage_tank</span><span class="p">,</span>
+        <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">storage_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_flow_gpm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">tm_safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">,</span>
+        <span class="n">max_daily_run_hr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">24.0</span><span class="p">,</span>
+        <span class="n">defrost_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">water_heaters</span><span class="p">,</span>
+            <span class="n">storage_tank</span><span class="p">,</span>
+            <span class="n">supply_temp_f</span><span class="p">,</span>
+            <span class="n">storage_temp_f</span><span class="p">,</span>
+            <span class="n">return_temp_f</span><span class="p">,</span>
+            <span class="n">return_flow_gpm</span><span class="p">,</span>
+            <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+            <span class="n">defrost_factor</span><span class="o">=</span><span class="n">defrost_factor</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">tm_safety_factor</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;tm_safety_factor must be &gt; 1.0 — the TM element must outpace recirc losses.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span> <span class="o">=</span> <span class="n">tm_safety_factor</span>
+
+        <span class="c1"># TM sizing results — populated by _size_tm_system()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span><span class="p">:</span>     <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_ca_volume_gal</span><span class="p">:</span>  <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Effective mix fraction — populated by _calc_running_volume_supplyT_gal()</span>
+        <span class="c1"># during size(). Captures the swing tank&#39;s reduction of primary demand (≤ 1.0).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eff_mix_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="c1"># TM (swing tank) components — populated by from_size() after sizing.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="p">:</span>  <span class="n">MixedStorageTank</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="p">:</span>  <span class="n">WaterHeater</span> <span class="o">|</span> <span class="kc">None</span>      <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Factory constructor</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SwingSystem.from_size">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingSystem.SwingSystem.from_size">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_size</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">storage_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_flow_gpm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">tm_safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">,</span>
+        <span class="n">max_daily_run_hr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">24.0</span><span class="p">,</span>
+        <span class="n">defrost_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">control_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Controls</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.8</span><span class="p">,</span>
+        <span class="n">load_shift_fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SwingSystem</span><span class="p">:</span>
+        <span class="n">system</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">water_heaters</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">storage_tank</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">supply_temp_f</span><span class="o">=</span><span class="n">supply_temp_f</span><span class="p">,</span>
+            <span class="n">storage_temp_f</span><span class="o">=</span><span class="n">storage_temp_f</span><span class="p">,</span>
+            <span class="n">return_temp_f</span><span class="o">=</span><span class="n">return_temp_f</span><span class="p">,</span>
+            <span class="n">return_flow_gpm</span><span class="o">=</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+            <span class="n">tm_safety_factor</span><span class="o">=</span><span class="n">tm_safety_factor</span><span class="p">,</span>
+            <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+            <span class="n">defrost_factor</span><span class="o">=</span><span class="n">defrost_factor</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">size</span><span class="p">(</span>
+            <span class="n">building</span><span class="p">,</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="n">control_schedule</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span>
+            <span class="n">strat_slope</span><span class="o">=</span><span class="n">strat_slope</span><span class="p">,</span>
+            <span class="n">load_shift_fract_total_vol</span><span class="o">=</span><span class="n">load_shift_fract_total_vol</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">storage_tank</span> <span class="o">=</span> <span class="n">StratifiedTank</span><span class="p">(</span>
+            <span class="n">total_volume_gal</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span><span class="p">,</span>
+            <span class="n">strat_slope</span><span class="o">=</span><span class="n">strat_slope</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">water_heaters</span> <span class="o">=</span> <span class="p">[</span><span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
+            <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span><span class="p">,</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="n">control_schedule</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span>
+        <span class="p">)]</span>
+
+        <span class="c1"># TM (swing tank) components</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">tm_storage_tank</span> <span class="o">=</span> <span class="n">MixedStorageTank</span><span class="p">(</span>
+            <span class="n">total_volume_gal</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">tm_controls</span> <span class="o">=</span> <span class="n">Controls</span><span class="p">(</span>
+            <span class="n">on_sensor_fract</span>  <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>   <span class="c1"># irrelevant for fully-mixed tank</span>
+            <span class="n">on_trigger_t_f</span>   <span class="o">=</span> <span class="n">supply_temp_f</span><span class="p">,</span>
+            <span class="n">off_sensor_fract</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">off_trigger_t_f</span>  <span class="o">=</span> <span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">,</span>
+            <span class="n">outlet_temp_f</span>    <span class="o">=</span> <span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">tm_water_heater</span> <span class="o">=</span> <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
+            <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span><span class="p">,</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">system</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Sizing — public interface (overrides DHWSystem.size())</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SwingSystem.size">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingSystem.SwingSystem.size">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">size</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">control_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Controls</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.8</span><span class="p">,</span>
+        <span class="n">load_shift_fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Size the swing tank system.</span>
+
+<span class="sd">        Overrides DHWSystem.size() to enforce the correct order:</span>
+<span class="sd">        volume first (which yields ``_eff_mix_fraction``), then capacity.</span>
+<span class="sd">        The SwingTank capacity formula uses storage temperature, not supply</span>
+<span class="sd">        temperature, matching the original codebase&#39;s _primaryHeatHrs2kBTUHR.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">was_annual</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">is_annual_load_shape</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">was_annual</span><span class="p">:</span>
+            <span class="n">building</span><span class="o">.</span><span class="n">set_to_daily_load_shape</span><span class="p">()</span>
+
+        <span class="n">original_max_run_hr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span>
+        <span class="k">if</span> <span class="n">control_schedule</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_load_shifting</span><span class="p">(</span><span class="n">control_map</span><span class="p">):</span>
+            <span class="n">non_shed</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">control_schedule</span> <span class="k">if</span> <span class="n">h</span> <span class="o">!=</span> <span class="s2">&quot;shed&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span> <span class="n">non_shed</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">design_inlet_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+
+            <span class="c1"># Step 1: TM sizing (table lookup) — must come first so that</span>
+            <span class="c1"># _sim_just_swing can use _minimum_tm_volume_gal and</span>
+            <span class="c1"># _minimum_tm_capacity_kbtuh.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_size_tm_system</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+
+            <span class="c1"># Step 2: Running volume (side-effect: populates _eff_mix_fraction)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_eff_mix_fraction</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">running_vol_supplyT_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_running_volume_supplyT_gal</span><span class="p">(</span>
+                <span class="n">building</span><span class="p">,</span> <span class="n">capacity_kbtuh</span><span class="o">=</span><span class="kc">None</span>
+            <span class="p">)</span>
+            <span class="n">strat_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_stratification_factor</span><span class="p">(</span><span class="n">control_map</span><span class="p">,</span> <span class="n">strat_slope</span><span class="p">,</span> <span class="n">design_inlet_temp_f</span><span class="p">)</span>
+            <span class="n">storage_vol_storageT_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_storage_volume_storageT_gal</span><span class="p">(</span>
+                <span class="n">running_vol_supplyT_gal</span><span class="p">,</span> <span class="n">strat_factor</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Step 3: Capacity uses storage temp + _eff_mix_fraction from normal sizing.</span>
+            <span class="c1"># Note: this intentionally diverges from the original codebase, which fed</span>
+            <span class="c1"># the LS effMixFraction back into the capacity formula (i.e. it would call</span>
+            <span class="c1"># sizePrimaryTankVolume() — which ran _calcRunningVolLS — before calling</span>
+            <span class="c1"># _primaryHeatHrs2kBTUHR() with the resulting LSeffMixFract).  The original</span>
+            <span class="c1"># SwingTank._primaryHeatHrs2kBTUHR() also computed Vload using raw aquastat</span>
+            <span class="c1"># fractions instead of strat-adjusted percentages, meaning its LU gen rate</span>
+            <span class="c1"># was inflated relative to the thermodynamically correct value.  Both of</span>
+            <span class="c1"># these are bugs in the original.  The new code:</span>
+            <span class="c1">#   (a) uses _strat_pct_of_tank (correct thermal accounting for Vload), and</span>
+            <span class="c1">#   (b) computes capacity with normal_eff_mix (no feedback from LS path).</span>
+            <span class="c1"># The result is a slightly smaller capacity for some LS scenarios, which is</span>
+            <span class="c1"># the physically correct answer — a smaller, better-matched system.</span>
+            <span class="n">capacity_kbtuh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_required_capacity</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">control_schedule</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_load_shifting</span><span class="p">(</span><span class="n">control_map</span><span class="p">):</span>
+                <span class="n">ls_gen_rate_gph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_gen_rate_ls_gph</span><span class="p">(</span>
+                    <span class="n">control_schedule</span><span class="p">,</span> <span class="n">control_map</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">strat_slope</span><span class="p">,</span>
+                    <span class="n">fract_total_vol</span><span class="o">=</span><span class="n">load_shift_fract_total_vol</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">ls_capacity_kbtuh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_required_capacity_ls_kbtuh</span><span class="p">(</span>
+                    <span class="n">control_schedule</span><span class="p">,</span> <span class="n">control_map</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">strat_slope</span><span class="p">,</span>
+                    <span class="n">fract_total_vol</span><span class="o">=</span><span class="n">load_shift_fract_total_vol</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">ls_running_vol</span><span class="p">,</span> <span class="n">ls_eff_mix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_running_volume_ls_swing</span><span class="p">(</span>
+                    <span class="n">control_schedule</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">ls_gen_rate_gph</span><span class="p">,</span>
+                    <span class="n">fract_total_vol</span><span class="o">=</span><span class="n">load_shift_fract_total_vol</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">ls_storage_vol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_storage_volume_ls_storageT_gal</span><span class="p">(</span>
+                    <span class="n">ls_running_vol</span><span class="p">,</span> <span class="n">control_map</span><span class="p">,</span> <span class="n">strat_slope</span><span class="p">,</span> <span class="n">design_inlet_temp_f</span>
+                <span class="p">)</span>
+                <span class="n">capacity_kbtuh</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">capacity_kbtuh</span><span class="p">,</span> <span class="n">ls_capacity_kbtuh</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">ls_storage_vol</span> <span class="o">&gt;</span> <span class="n">storage_vol_storageT_gal</span><span class="p">:</span>
+                    <span class="n">storage_vol_storageT_gal</span> <span class="o">=</span> <span class="n">ls_storage_vol</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_eff_mix_fraction</span> <span class="o">=</span> <span class="n">ls_eff_mix</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span>       <span class="o">=</span> <span class="n">capacity_kbtuh</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span> <span class="o">=</span> <span class="n">storage_vol_storageT_gal</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sizing_strat_slope</span>           <span class="o">=</span> <span class="n">strat_slope</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span> <span class="o">=</span> <span class="n">original_max_run_hr</span>
+
+        <span class="k">if</span> <span class="n">was_annual</span><span class="p">:</span>
+            <span class="n">building</span><span class="o">.</span><span class="n">set_to_annual_load_shape</span><span class="p">()</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Sizing curve — override to enforce correct call order</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SwingSystem.get_sizing_curve">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingSystem.SwingSystem.get_sizing_curve">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_sizing_curve</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="s2">&quot;Building&quot;</span><span class="p">,</span>
+        <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.8</span><span class="p">,</span>
+        <span class="n">step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override to enforce volume-before-capacity order required by SwingSystem.</span>
+
+<span class="sd">        ``_calc_required_capacity()`` uses ``_eff_mix_fraction``, which is set</span>
+<span class="sd">        as a side-effect of ``_calc_running_volume_supplyT_gal()``.  The base</span>
+<span class="sd">        class loop calls capacity first, which leaves ``_eff_mix_fraction`` at</span>
+<span class="sd">        its previous value.  This override swaps the order.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">was_annual</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">is_annual_load_shape</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">was_annual</span><span class="p">:</span>
+            <span class="n">building</span><span class="o">.</span><span class="n">set_to_daily_load_shape</span><span class="p">()</span>
+
+        <span class="n">_strat_slope</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_sizing_strat_slope&quot;</span><span class="p">,</span> <span class="n">strat_slope</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">design_inlet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+            <span class="n">_cmap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">control_map</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">strat_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_stratification_factor</span><span class="p">(</span><span class="n">_cmap</span><span class="p">,</span> <span class="n">_strat_slope</span><span class="p">,</span> <span class="n">design_inlet</span><span class="p">)</span>
+
+            <span class="n">min_run_hr</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">peak_load_shape</span><span class="p">))</span> <span class="o">*</span> <span class="mf">1.001</span>
+
+            <span class="n">arr1</span>       <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">24.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span> <span class="o">-</span><span class="n">step</span><span class="p">)</span>
+            <span class="n">arr2</span>       <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span> <span class="n">min_run_hr</span><span class="p">,</span> <span class="o">-</span><span class="n">step</span><span class="p">)</span>
+            <span class="n">heat_hours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">arr1</span><span class="p">,</span> <span class="n">arr2</span><span class="p">])</span>
+            <span class="n">rec_index</span>  <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr1</span><span class="p">)</span>
+
+            <span class="n">heat_hours_out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">capacity_out</span><span class="p">:</span>   <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">storage_out</span><span class="p">:</span>    <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">original_run_hr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">heat_hours</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># Volume must come first — sets _eff_mix_fraction used by capacity.</span>
+                        <span class="n">running_vol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_running_volume_supplyT_gal</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">running_vol</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                            <span class="k">break</span>
+                        <span class="n">cap</span>         <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_required_capacity</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+                        <span class="n">storage_vol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_storage_volume_storageT_gal</span><span class="p">(</span>
+                            <span class="n">running_vol</span><span class="p">,</span> <span class="n">strat_factor</span>
+                        <span class="p">)</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>
+                        <span class="k">break</span>
+                    <span class="n">heat_hours_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">h</span><span class="p">))</span>
+                    <span class="n">capacity_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cap</span><span class="p">)</span>
+                    <span class="n">storage_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">storage_vol</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span> <span class="o">=</span> <span class="n">original_run_hr</span>
+
+            <span class="n">rec_index</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">rec_index</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">heat_hours_out</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;heat_hours&quot;</span><span class="p">:</span>           <span class="n">heat_hours_out</span><span class="p">,</span>
+                <span class="s2">&quot;capacity_kbtuh&quot;</span><span class="p">:</span>       <span class="n">capacity_out</span><span class="p">,</span>
+                <span class="s2">&quot;storage_storageT_gal&quot;</span><span class="p">:</span> <span class="n">storage_out</span><span class="p">,</span>
+                <span class="s2">&quot;recommended_index&quot;</span><span class="p">:</span>    <span class="n">rec_index</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">was_annual</span><span class="p">:</span>
+                <span class="n">building</span><span class="o">.</span><span class="n">set_to_annual_load_shape</span><span class="p">()</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># TM sizing</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_size_tm_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Size the swing tank TM element and volume.</span>
+
+<span class="sd">        Volume is the smallest table entry satisfying both constraints:</span>
+
+<span class="sd">        1. Recirc-loss thermal mass:</span>
+<span class="sd">               recirc_loss_btuhr / (100 W/gal × 3.412142 BTU/hr/W) ≤ entry</span>
+
+<span class="sd">        2. Peak per-minute draw (when building is provided):</span>
+<span class="sd">               daily_dhw_gal × max(peak_load_shape) / 60 ≤ entry</span>
+<span class="sd">           This ensures the tank is never fully emptied in a single 1-minute</span>
+<span class="sd">           simulation timestep, even when recirc losses alone would size a</span>
+<span class="sd">           smaller tank.</span>
+
+<span class="sd">        Capacity is:</span>
+<span class="sd">            tm_safety_factor × recirc_loss_kbtuh</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">recirc_loss_btuhr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_recirc_loss_kbtuh</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1000.0</span>
+        <span class="n">vol_required</span> <span class="o">=</span> <span class="n">recirc_loss_btuhr</span> <span class="o">/</span> <span class="p">(</span><span class="n">_WATTS_PER_GAL</span> <span class="o">*</span> <span class="n">_W_TO_KBTUH</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">building</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">peak_draw_gal_per_min</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span>
+                <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">peak_load_shape</span><span class="p">))</span>
+                <span class="o">/</span> <span class="mf">60.0</span>
+            <span class="p">)</span>
+            <span class="n">vol_required</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">vol_required</span><span class="p">,</span> <span class="n">peak_draw_gal_per_min</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">vol_required</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">_SWING_SIZING_TABLE</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Recirculation losses (</span><span class="si">{</span><span class="n">recirc_loss_btuhr</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> BTU/hr) require a swing &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;tank larger than </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">_SWING_SIZING_TABLE</span><span class="p">)</span><span class="si">}</span><span class="s2"> gal. &quot;</span>
+                <span class="s2">&quot;Consider splitting into multiple central plants.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_SWING_SIZING_TABLE</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="n">vol_required</span>
+        <span class="p">)</span>
+        <span class="c1"># CA-approved tank size: smallest entry in the CA table &gt;= vol_required,</span>
+        <span class="c1"># capped at 480 gal (the largest CA table entry) when standard sizing exceeds it.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span> <span class="o">&lt;</span> <span class="mi">480</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_ca_volume_gal</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_SWING_SIZING_TABLE_CA</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="n">vol_required</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_ca_volume_gal</span> <span class="o">=</span> <span class="mf">480.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span> <span class="o">*</span> <span class="n">recirc_loss_btuhr</span> <span class="o">/</span> <span class="mf">1000.0</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Capacity — uses storage temp (key difference from base DHWSystem)</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_required_capacity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override: capacity formula uses storage temperature, not supply.</span>
+
+<span class="sd">        ``capacity = (daily_gal × effMixFraction / heatHrs)</span>
+<span class="sd">                     × RHO_CP × (storage_temp − inlet_temp) / defrost / 1000``</span>
+
+<span class="sd">        ``_eff_mix_fraction`` must be set by</span>
+<span class="sd">        ``_calc_running_volume_supplyT_gal()`` before this is called.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">design_inlet_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+        <span class="n">gen_rate_gph</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eff_mix_fraction</span>
+            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span>
+        <span class="p">)</span>
+        <span class="n">delta_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span> <span class="o">-</span> <span class="n">design_inlet_temp_f</span>
+        <span class="k">return</span> <span class="n">gen_rate_gph</span> <span class="o">*</span> <span class="n">_RHO_CP</span> <span class="o">*</span> <span class="n">delta_t</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span> <span class="o">/</span> <span class="mi">1000</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Running volume — swing simulation</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_running_volume_supplyT_gal</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>  <span class="c1"># unused; kept for base-class signature compatibility</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override: compute running volume via per-peak swing-tank simulation.</span>
+
+<span class="sd">        For each surplus→deficit transition in the peak load shape, the swing</span>
+<span class="sd">        tank is simulated over 24 hours.  The demand placed on the PRIMARY</span>
+<span class="sd">        (``hw_out_from_swing``) is the thermal deficit the swing tank cannot</span>
+<span class="sd">        absorb from its own mass.  The maximum cumulative deficit of</span>
+<span class="sd">        (primary generation − primary demand) is the running volume.</span>
+
+<span class="sd">        Side-effect: populates ``self._eff_mix_fraction``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Running volume [gallons at supply temperature].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">daily_gal</span>  <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span>
+        <span class="n">load_shape</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">peak_load_shape</span>   <span class="c1"># 24 normalised fractions</span>
+        <span class="n">inlet_t_f</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+
+        <span class="c1"># Hourly generation rate (normalised: each non-zero hour = 1/heatHrs)</span>
+        <span class="n">gen_norm</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span>
+        <span class="n">hourly_diff</span>   <span class="o">=</span> <span class="n">gen_norm</span> <span class="o">-</span> <span class="n">load_shape</span>
+
+        <span class="n">peak_indices</span> <span class="o">=</span> <span class="n">_get_peak_indices</span><span class="p">(</span><span class="n">hourly_diff</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">peak_indices</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+
+        <span class="n">n_real_peaks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">peak_indices</span><span class="p">)</span>
+        <span class="c1"># Also probe the hour after each real peak (matches original safety check)</span>
+        <span class="n">extended</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">peak_indices</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">peak_indices</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="mi">24</span><span class="p">:</span>
+                <span class="n">extended</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">extended</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">extended</span><span class="p">))</span>
+
+        <span class="n">running_vol</span>      <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">eff_mix_fraction</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">peak_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">extended</span><span class="p">):</span>
+            <span class="n">hw_out_hrly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">load_shape</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[</span><span class="n">peak_idx</span> <span class="p">:</span> <span class="n">peak_idx</span> <span class="o">+</span> <span class="mi">24</span><span class="p">]</span>
+            <span class="n">hw_out_min</span>  <span class="o">=</span> <span class="n">_hr_to_min</span><span class="p">(</span><span class="n">hw_out_hrly</span><span class="p">)</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">*</span> <span class="n">daily_gal</span>  <span class="c1"># gal/min</span>
+
+            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">hw_from_swing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sim_just_swing</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">hw_out_min</span><span class="p">),</span> <span class="n">hw_out_min</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="mf">0.1</span>
+            <span class="p">)</span>
+
+            <span class="n">temp_eff_mix</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">hw_from_swing</span><span class="p">)</span> <span class="o">/</span> <span class="n">daily_gal</span>
+
+            <span class="n">gen_hrly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">gen_norm</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[</span><span class="n">peak_idx</span> <span class="p">:</span> <span class="n">peak_idx</span> <span class="o">+</span> <span class="mi">24</span><span class="p">]</span>
+            <span class="n">gen_min</span>  <span class="o">=</span> <span class="n">_hr_to_min</span><span class="p">(</span><span class="n">gen_hrly</span><span class="p">)</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">*</span> <span class="n">daily_gal</span> <span class="o">*</span> <span class="n">temp_eff_mix</span>
+
+            <span class="n">diff_min</span> <span class="o">=</span> <span class="n">gen_min</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hw_from_swing</span><span class="p">)</span>
+            <span class="n">cum_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">diff_min</span><span class="p">)</span>
+            <span class="n">neg_vals</span> <span class="o">=</span> <span class="n">cum_diff</span><span class="p">[</span><span class="n">cum_diff</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># Skip extra-peak safety indices when no deficit is found</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="n">n_real_peaks</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">new_vol</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">new_vol</span> <span class="o">&gt;</span> <span class="n">running_vol</span><span class="p">:</span>
+                <span class="n">running_vol</span>      <span class="o">=</span> <span class="n">new_vol</span>
+                <span class="n">eff_mix_fraction</span> <span class="o">=</span> <span class="n">temp_eff_mix</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eff_mix_fraction</span> <span class="o">=</span> <span class="n">eff_mix_fraction</span>
+
+        <span class="c1"># The swing simulation works in storage-frame gallons (the primary feeds</span>
+        <span class="c1"># the swing tank at storage_temp_f).  Convert to supply-temp equivalent</span>
+        <span class="c1"># so _calc_storage_volume_storageT_gal receives a consistent unit.</span>
+        <span class="n">running_vol</span> <span class="o">*=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span> <span class="o">-</span> <span class="n">inlet_t_f</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">inlet_t_f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">running_vol</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># LS prelim volumes — swing-aware override</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_prelim_vols_supplyT_gal</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override: adjust preliminary volumes for swing tank contribution.</span>
+
+<span class="sd">        Each raw volume (demand during the period) is reduced by the fraction</span>
+<span class="sd">        that the swing tank can absorb from its thermal mass, determined by</span>
+<span class="sd">        simulating the swing tank over that period.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">daily_gal</span>  <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span>
+        <span class="n">load_shape</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">avg_load_shape</span>
+        <span class="n">load_shape_gph</span> <span class="o">=</span> <span class="n">load_shape</span> <span class="o">*</span> <span class="n">daily_gal</span>
+
+        <span class="n">first_shed_block</span><span class="p">,</span> <span class="n">load_up_hours</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_first_shed_block_and_load_up_hours</span><span class="p">(</span><span class="n">control_schedule</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># --- Vshift (demand during first shed block) ---</span>
+        <span class="n">vshift_raw</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">load_shape_gph</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">first_shed_block</span><span class="p">))</span>
+        <span class="n">shed_hw_min</span> <span class="o">=</span> <span class="n">_hr_to_min</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">load_shape_gph</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">first_shed_block</span><span class="p">])</span>
+        <span class="p">)</span> <span class="o">/</span> <span class="mf">60.0</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">hw_swing_shed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sim_just_swing</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">shed_hw_min</span><span class="p">),</span> <span class="n">shed_hw_min</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="mf">0.1</span>
+        <span class="p">)</span>
+        <span class="n">eff_shed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">hw_swing_shed</span><span class="p">)</span> <span class="o">/</span> <span class="n">vshift_raw</span> <span class="k">if</span> <span class="n">vshift_raw</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
+        <span class="n">vshift</span> <span class="o">=</span> <span class="n">vshift_raw</span> <span class="o">*</span> <span class="n">eff_shed</span> <span class="o">*</span> <span class="n">fract_total_vol</span>
+
+        <span class="c1"># --- VconsumedLU (demand during load-up hours) ---</span>
+        <span class="n">lu_start</span> <span class="o">=</span> <span class="n">first_shed_block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">load_up_hours</span>
+        <span class="n">vconsumed_lu_raw</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="nb">sum</span><span class="p">(</span><span class="n">load_shape_gph</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">lu_start</span><span class="p">,</span> <span class="n">first_shed_block</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">load_up_hours</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">vconsumed_lu_raw</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">lu_hw_min</span> <span class="o">=</span> <span class="n">_hr_to_min</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">load_shape_gph</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">lu_start</span><span class="p">,</span> <span class="n">first_shed_block</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span>
+            <span class="p">)</span> <span class="o">/</span> <span class="mf">60.0</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">hw_swing_lu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sim_just_swing</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">lu_hw_min</span><span class="p">),</span> <span class="n">lu_hw_min</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="mf">0.1</span>
+            <span class="p">)</span>
+            <span class="n">eff_lu</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">hw_swing_lu</span><span class="p">)</span> <span class="o">/</span> <span class="n">vconsumed_lu_raw</span>
+            <span class="n">vconsumed_lu</span> <span class="o">=</span> <span class="n">vconsumed_lu_raw</span> <span class="o">*</span> <span class="n">eff_lu</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vconsumed_lu</span> <span class="o">=</span> <span class="n">vconsumed_lu_raw</span>
+
+        <span class="k">return</span> <span class="n">vshift</span><span class="p">,</span> <span class="n">vconsumed_lu</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># LS generation rate — uses storage temp in capacity formula</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_gen_rate_ls_gph</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">control_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Controls</span><span class="p">],</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override: LS gen rate using swing-adjusted prelim volumes and storage temp.</span>
+
+<span class="sd">        Normal gen rate = daily_gal × effMixFraction / heatHrs.</span>
+<span class="sd">        LU gen rate     = (Vload + VconsumedLU) / loadUpHours.</span>
+
+<span class="sd">        Returns the maximum.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">daily_gal</span>           <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span>
+        <span class="n">normal_gen_rate_gph</span> <span class="o">=</span> <span class="n">daily_gal</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eff_mix_fraction</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">load_up_hours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_first_shed_block_and_load_up_hours</span><span class="p">(</span><span class="n">control_schedule</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">load_up_hours</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">normal_gen_rate_gph</span>
+
+        <span class="n">vshift</span><span class="p">,</span> <span class="n">vconsumed_lu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_prelim_vols_supplyT_gal</span><span class="p">(</span>
+            <span class="n">control_schedule</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">fract_total_vol</span>
+        <span class="p">)</span>
+
+        <span class="n">normal_ctrl</span> <span class="o">=</span> <span class="n">control_map</span><span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">]</span>
+        <span class="n">lu_ctrl</span>     <span class="o">=</span> <span class="n">control_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;loadUp&quot;</span><span class="p">,</span> <span class="n">normal_ctrl</span><span class="p">)</span>
+        <span class="n">shed_ctrl</span>   <span class="o">=</span> <span class="n">control_map</span><span class="p">[</span><span class="s2">&quot;shed&quot;</span><span class="p">]</span>
+
+        <span class="n">lu_strat</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strat_pct_of_tank</span><span class="p">(</span><span class="n">lu_ctrl</span><span class="o">.</span><span class="n">on_sensor_fract</span><span class="p">,</span>     <span class="n">lu_ctrl</span><span class="o">.</span><span class="n">on_trigger_t_f</span><span class="p">,</span>     <span class="n">strat_slope</span><span class="p">)</span>
+        <span class="n">normal_strat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strat_pct_of_tank</span><span class="p">(</span><span class="n">normal_ctrl</span><span class="o">.</span><span class="n">on_sensor_fract</span><span class="p">,</span> <span class="n">normal_ctrl</span><span class="o">.</span><span class="n">on_trigger_t_f</span><span class="p">,</span> <span class="n">strat_slope</span><span class="p">)</span>
+        <span class="n">shed_strat</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strat_pct_of_tank</span><span class="p">(</span><span class="n">shed_ctrl</span><span class="o">.</span><span class="n">on_sensor_fract</span><span class="p">,</span>   <span class="n">shed_ctrl</span><span class="o">.</span><span class="n">on_trigger_t_f</span><span class="p">,</span>   <span class="n">strat_slope</span><span class="p">)</span>
+
+        <span class="n">ls_band</span> <span class="o">=</span> <span class="n">lu_strat</span> <span class="o">-</span> <span class="n">shed_strat</span>
+        <span class="k">if</span> <span class="n">ls_band</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">normal_gen_rate_gph</span>
+
+        <span class="n">vload</span> <span class="o">=</span> <span class="n">vshift</span> <span class="o">*</span> <span class="p">(</span><span class="n">lu_strat</span> <span class="o">-</span> <span class="n">normal_strat</span><span class="p">)</span> <span class="o">/</span> <span class="n">ls_band</span>
+        <span class="n">lu_gen_rate_gph</span> <span class="o">=</span> <span class="p">(</span><span class="n">vload</span> <span class="o">+</span> <span class="n">vconsumed_lu</span><span class="p">)</span> <span class="o">/</span> <span class="n">load_up_hours</span>
+
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">normal_gen_rate_gph</span><span class="p">,</span> <span class="n">lu_gen_rate_gph</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_required_capacity_ls_kbtuh</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">control_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Controls</span><span class="p">],</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override: LS capacity uses storage temperature (matches normal path).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">design_inlet_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+        <span class="n">gen_rate_ls_gph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_gen_rate_ls_gph</span><span class="p">(</span>
+            <span class="n">control_schedule</span><span class="p">,</span> <span class="n">control_map</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">strat_slope</span><span class="p">,</span> <span class="n">fract_total_vol</span>
+        <span class="p">)</span>
+        <span class="n">delta_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span> <span class="o">-</span> <span class="n">design_inlet_temp_f</span>
+        <span class="k">return</span> <span class="n">gen_rate_ls_gph</span> <span class="o">*</span> <span class="n">_RHO_CP</span> <span class="o">*</span> <span class="n">delta_t</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span> <span class="o">/</span> <span class="mi">1000</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># LS running volume — swing-aware</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_running_volume_ls_supplyT_gal</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">building</span><span class="p">:</span> <span class="s2">&quot;Building&quot;</span><span class="p">,</span>
+        <span class="n">gen_rate_ls_gph</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override: delegate to the swing-aware implementation.</span>
+
+<span class="sd">        The base class uses a generic deficit algorithm that ignores the swing</span>
+<span class="sd">        tank&#39;s thermal mass contribution.  This override routes calls from</span>
+<span class="sd">        ``get_ls_sizing_curve()`` through ``_calc_running_volume_ls_swing()``,</span>
+<span class="sd">        so the LS sizing curve is consistent with ``size()``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vol</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_running_volume_ls_swing</span><span class="p">(</span>
+            <span class="n">control_schedule</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">gen_rate_ls_gph</span><span class="p">,</span> <span class="n">fract_total_vol</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">vol</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_running_volume_ls_swing</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">gen_rate_ls_gph</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Swing-aware LS running volume calculation.</span>
+
+<span class="sd">        Simulates the swing tank over the 24 hours starting from the end of</span>
+<span class="sd">        the first shed period.  Returns (running_vol_supplyT_gal, eff_mix_fraction).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">daily_gal</span>  <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span>
+        <span class="n">load_shape</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">avg_load_shape</span>
+        <span class="n">inlet_t_f</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+
+        <span class="n">first_shed_block</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_first_shed_block_and_load_up_hours</span><span class="p">(</span><span class="n">control_schedule</span><span class="p">)</span>
+        <span class="n">vshift</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_prelim_vols_supplyT_gal</span><span class="p">(</span>
+            <span class="n">control_schedule</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">fract_total_vol</span>
+        <span class="p">)</span>
+
+        <span class="c1"># 24-hr gen profile: gen_rate_ls during non-shed hours, 0 during shed</span>
+        <span class="n">gen_profile_gph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="mf">0.0</span> <span class="k">if</span> <span class="n">control_schedule</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;shed&quot;</span> <span class="k">else</span> <span class="n">gen_rate_ls_gph</span>
+            <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>
+        <span class="p">])</span>
+
+        <span class="c1"># Start from the first hour after the shed ends</span>
+        <span class="n">shed_end_idx</span> <span class="o">=</span> <span class="n">first_shed_block</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">hw_out_hourly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">load_shape</span> <span class="o">*</span> <span class="n">daily_gal</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[</span><span class="n">shed_end_idx</span> <span class="p">:</span> <span class="n">shed_end_idx</span> <span class="o">+</span> <span class="mi">24</span><span class="p">]</span>
+        <span class="n">hw_out_min</span>    <span class="o">=</span> <span class="n">_hr_to_min</span><span class="p">(</span><span class="n">hw_out_hourly</span><span class="p">)</span> <span class="o">/</span> <span class="mf">60.0</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">hw_from_swing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sim_just_swing</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">hw_out_min</span><span class="p">),</span> <span class="n">hw_out_min</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="mf">0.1</span>
+        <span class="p">)</span>
+        <span class="n">eff_mix_fraction</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">hw_from_swing</span><span class="p">)</span> <span class="o">/</span> <span class="n">daily_gal</span>
+
+        <span class="c1"># Generation per minute — NOT scaled by effMixFraction (matches original)</span>
+        <span class="n">gen_hrly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">gen_profile_gph</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[</span><span class="n">shed_end_idx</span> <span class="p">:</span> <span class="n">shed_end_idx</span> <span class="o">+</span> <span class="mi">24</span><span class="p">]</span>
+        <span class="n">gen_min</span>  <span class="o">=</span> <span class="n">_hr_to_min</span><span class="p">(</span><span class="n">gen_hrly</span><span class="p">)</span> <span class="o">/</span> <span class="mf">60.0</span>
+
+        <span class="n">diff_min</span> <span class="o">=</span> <span class="n">gen_min</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hw_from_swing</span><span class="p">)</span>
+        <span class="n">cum_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">diff_min</span><span class="p">)</span>
+        <span class="n">neg_vals</span> <span class="o">=</span> <span class="n">cum_diff</span><span class="p">[</span><span class="n">cum_diff</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">deficit</span>  <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">))</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+        <span class="n">running_vol</span> <span class="o">=</span> <span class="n">deficit</span> <span class="o">+</span> <span class="n">vshift</span>
+        <span class="c1"># Same storage-frame → supply-temp conversion as the normal path.</span>
+        <span class="n">running_vol</span> <span class="o">*=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span> <span class="o">-</span> <span class="n">inlet_t_f</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">inlet_t_f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">running_vol</span><span class="p">,</span> <span class="n">eff_mix_fraction</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Swing tank helpers</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sim_just_swing</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">hw_out</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">init_st</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulate the swing tank in isolation at 1-minute timesteps.</span>
+
+<span class="sd">        The primary is assumed to always supply water at ``storage_temp_f``.</span>
+<span class="sd">        Returns (swing_temps, tm_run_fractions, hw_out_from_swing) where</span>
+<span class="sd">        ``hw_out_from_swing[i]`` is the volume drawn from primary storage each</span>
+<span class="sd">        minute (at swing-tank temperature), which is the demand that the primary</span>
+<span class="sd">        system must satisfy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inlet_t_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+
+        <span class="n">swing_temps</span>     <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_steps</span>
+        <span class="n">tm_run</span>          <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_steps</span>
+        <span class="n">hw_from_primary</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_steps</span>
+
+        <span class="n">swing_temps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>     <span class="o">=</span> <span class="n">init_st</span> <span class="k">if</span> <span class="n">init_st</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span>
+        <span class="n">hw_from_primary</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">hw_out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># first step: assume full demand from primary</span>
+
+        <span class="n">swingheating</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">):</span>
+            <span class="n">t_prev</span> <span class="o">=</span> <span class="n">swing_temps</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># Demand on primary = supply-temp volume converted to swing-tank-temp volume</span>
+            <span class="k">if</span> <span class="n">t_prev</span> <span class="o">&gt;</span> <span class="n">inlet_t_f</span><span class="p">:</span>
+                <span class="n">hw_from_primary</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">hw_out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">inlet_t_f</span><span class="p">)</span>
+                    <span class="o">/</span> <span class="p">(</span><span class="n">t_prev</span> <span class="o">-</span> <span class="n">inlet_t_f</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">hw_from_primary</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">hw_out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="n">swingheating</span><span class="p">,</span> <span class="n">swing_temps</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tm_run</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_one_swing_step</span><span class="p">(</span>
+                <span class="n">swingheating</span><span class="p">,</span>
+                <span class="n">t_prev</span><span class="p">,</span>
+                <span class="n">hw_from_primary</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>  <span class="c1"># primary always feeds at storage temp</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">swing_temps</span><span class="p">,</span> <span class="n">tm_run</span><span class="p">,</span> <span class="n">hw_from_primary</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_one_swing_step</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">swingheating</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">t_curr</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">hw_out</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">primary_storage_t_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Advance the swing tank by one minute.</span>
+
+<span class="sd">        1. Mix primary hot water into the tank.</span>
+<span class="sd">        2. Apply recirculation heat loss.</span>
+<span class="sd">        3. Apply TM element heat if active; check on/off triggers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        swingheating : bool</span>
+<span class="sd">            True if element was active at the start of this step.</span>
+<span class="sd">        t_curr : float</span>
+<span class="sd">            Tank temperature at start of step [°F].</span>
+<span class="sd">        hw_out : float</span>
+<span class="sd">            Volume drawn from primary storage this minute [gal].</span>
+<span class="sd">        primary_storage_t_f : float</span>
+<span class="sd">            Temperature of hot water fed from primary into swing tank [°F].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (swingheating, t_new, time_run)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tm_vol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span>
+        <span class="n">t_new</span>  <span class="o">=</span> <span class="n">t_curr</span>
+
+        <span class="c1"># Mix primary hot water in</span>
+        <span class="k">if</span> <span class="n">hw_out</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">vol_remaining</span> <span class="o">=</span> <span class="n">tm_vol</span> <span class="o">-</span> <span class="n">hw_out</span>
+            <span class="k">if</span> <span class="n">vol_remaining</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Swing tank (</span><span class="si">{</span><span class="n">tm_vol</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> gal) is undersized: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;per-minute draw of </span><span class="si">{</span><span class="n">hw_out</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> gal exceeds tank volume.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">t_new</span> <span class="o">=</span> <span class="p">(</span><span class="n">hw_out</span> <span class="o">*</span> <span class="n">primary_storage_t_f</span> <span class="o">+</span> <span class="n">t_curr</span> <span class="o">*</span> <span class="n">vol_remaining</span><span class="p">)</span> <span class="o">/</span> <span class="n">tm_vol</span>
+
+        <span class="c1"># Recirc heat loss [°F/min]</span>
+        <span class="n">recirc_btuhr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_recirc_loss_kbtuh</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1000.0</span>
+        <span class="n">t_new</span> <span class="o">-=</span> <span class="n">recirc_btuhr</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">_RHO_CP</span> <span class="o">*</span> <span class="n">tm_vol</span><span class="p">)</span>
+
+        <span class="c1"># TM element heat rate [°F/min]</span>
+        <span class="n">element_dT</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span> <span class="o">*</span> <span class="mf">1000.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">_RHO_CP</span> <span class="o">*</span> <span class="n">tm_vol</span><span class="p">)</span>
+
+        <span class="n">time_running</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">swingheating</span><span class="p">:</span>
+            <span class="n">t_new</span>        <span class="o">+=</span> <span class="n">element_dT</span>
+            <span class="n">time_running</span>  <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="k">if</span> <span class="n">t_new</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">:</span>
+                <span class="n">time_over</span>    <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">t_new</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">))</span> <span class="o">/</span> <span class="n">element_dT</span><span class="p">,</span> <span class="mf">1.0</span>
+                <span class="p">)</span>
+                <span class="n">t_new</span>        <span class="o">-=</span> <span class="n">element_dT</span> <span class="o">*</span> <span class="n">time_over</span>
+                <span class="n">time_running</span>  <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">time_over</span>
+                <span class="n">swingheating</span>  <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="n">t_new</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span>
+            <span class="n">time_missed</span>  <span class="o">=</span> <span class="nb">min</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">t_new</span><span class="p">)</span> <span class="o">/</span> <span class="n">element_dT</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">t_new</span>        <span class="o">+=</span> <span class="n">element_dT</span> <span class="o">*</span> <span class="n">time_missed</span>
+            <span class="n">time_running</span>  <span class="o">=</span> <span class="n">time_missed</span>
+            <span class="n">swingheating</span>  <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">t_new</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Swing tank dropped below supply temperature during sizing simulation. &quot;</span>
+                <span class="s2">&quot;System is undersized — increase TM capacity or reduce recirc losses.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">swingheating</span><span class="p">,</span> <span class="n">t_new</span><span class="p">,</span> <span class="n">time_running</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># TM property — derived from tm_water_heater controls</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tm_off_temp_f</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Temperature at which the TM element shuts off (the swing tank&#39;s</span>
+<span class="sd">        fully-charged setpoint).</span>
+
+<span class="sd">        Derived from ``tm_water_heater``&#39;s Controls rather than stored</span>
+<span class="sd">        separately.  Falls back to ``supply_temp_f + _ELEMENT_DEADBAND_F``</span>
+<span class="sd">        before ``from_size()`` has been called (e.g. during sizing).</span>
+
+<span class="sd">        The Simulator reads this attribute to initialize the swing tank at</span>
+<span class="sd">        the correct starting temperature.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ctrl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">get_controls_for_hour</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ctrl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ctrl</span><span class="o">.</span><span class="n">off_trigger_t_f</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># TM sizing result accessors</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SwingSystem.get_minimum_tm_volume_gal">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingSystem.SwingSystem.get_minimum_tm_volume_gal">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_minimum_tm_volume_gal</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;size() must be called before get_minimum_tm_volume_gal().&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span></div>
+
+
+<div class="viewcode-block" id="SwingSystem.get_minimum_tm_ca_volume_gal">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingSystem.SwingSystem.get_minimum_tm_ca_volume_gal">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_minimum_tm_ca_volume_gal</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the minimum CA-approved swing tank volume [gal].</span>
+
+<span class="sd">        Snaps the required TM volume to the nearest (next-largest) entry in the</span>
+<span class="sd">        CA commercially-available tank size table ``[80, 96, 168, 288, 480]``.</span>
+<span class="sd">        Capped at 480 gal when the standard sizing table drives a larger result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_ca_volume_gal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;size() must be called before get_minimum_tm_ca_volume_gal().&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_ca_volume_gal</span></div>
+
+
+<div class="viewcode-block" id="SwingSystem.get_minimum_tm_capacity_kbtuh">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingSystem.SwingSystem.get_minimum_tm_capacity_kbtuh">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_minimum_tm_capacity_kbtuh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;size() must be called before get_minimum_tm_capacity_kbtuh().&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Simulation</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SwingSystem.simulate_step">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingSystem.SwingSystem.simulate_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_step</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building</span> <span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">timestep_interval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">interval_min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute one simulation timestep for the swing tank system.</span>
+
+<span class="sd">        The swing tank sits in series between the primary storage and the</span>
+<span class="sd">        building.  All DHW demand passes through the swing tank; the primary</span>
+<span class="sd">        storage only needs to supply what the swing tank cannot absorb from its</span>
+<span class="sd">        own thermal mass.</span>
+
+<span class="sd">        Order of operations</span>
+<span class="sd">        -------------------</span>
+<span class="sd">        1. Query building for demand, OAT, and inlet water temperature.</span>
+<span class="sd">        2. Update primary WaterHeater states; apply heat to primary StratifiedTank.</span>
+<span class="sd">        3. Compute physical gallons that must flow from primary to swing tank this</span>
+<span class="sd">           timestep based on current swing tank temperature and demand.</span>
+<span class="sd">        4. Obtain the average temperature of that draw block from the primary tank&#39;s</span>
+<span class="sd">           stratification profile (handles partial hot-zone depletion).</span>
+<span class="sd">        5. Mix primary inflow into swing tank (``tm_storage_tank.mix_primary_inflow``).</span>
+<span class="sd">        6. Apply recirculation heat loss to swing tank (``add_recirc_return``).</span>
+<span class="sd">        7. Update TM WaterHeater state; apply TM heat to swing tank.</span>
+<span class="sd">        8. Draw the computed physical volume from the primary storage tank.</span>
+<span class="sd">        9. Determine usable volume: 0 if swing tank is below supply temperature,</span>
+<span class="sd">           otherwise derived from the primary tank&#39;s stratification profile.</span>
+<span class="sd">        10. Merge primary and TM energy outputs and return per-step metrics.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        building : Building</span>
+<span class="sd">        timestep_interval : int</span>
+<span class="sd">        interval_min : int</span>
+<span class="sd">        mode : str</span>
+<span class="sd">            Ignored — operating mode is determined by each heater&#39;s control schedule.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Same keys as DHWSystem.simulate_step(). ``heater_output_kbtuh`` and</span>
+<span class="sd">            ``heater_power_in_kw`` include both primary and TM heater contributions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># --- 1. Building data ---</span>
+        <span class="n">use_avg</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">wh</span><span class="o">.</span><span class="n">is_load_shifting</span><span class="p">()</span> <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">)</span>
+        <span class="n">demand_supplyT_gal</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_dhw_load_supplyT_gal</span><span class="p">(</span>
+            <span class="n">timestep_interval</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">,</span> <span class="n">use_avg</span><span class="o">=</span><span class="n">use_avg</span>
+        <span class="p">)</span>
+        <span class="n">oat_f</span>        <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_oat_f</span><span class="p">(</span><span class="n">timestep_interval</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">)</span>
+        <span class="n">inlet_temp_f</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_inlet_water_temp_f</span><span class="p">(</span><span class="n">timestep_interval</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">)</span>
+        <span class="n">hour_of_day</span>  <span class="o">=</span> <span class="p">(</span><span class="n">timestep_interval</span> <span class="o">*</span> <span class="n">interval_min</span> <span class="o">//</span> <span class="mi">60</span><span class="p">)</span> <span class="o">%</span> <span class="mi">24</span>
+        <span class="n">outlet_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_outlet_temp_f</span><span class="p">(</span><span class="n">hour_of_day</span><span class="p">)</span>
+        <span class="n">step_mode</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">control_schedule</span><span class="p">[</span><span class="n">hour_of_day</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">control_schedule</span>
+            <span class="k">else</span> <span class="s2">&quot;normal&quot;</span>
+        <span class="p">)</span>
+        <span class="c1"># --- 2. Primary heater: update state and heat primary tank ---</span>
+        <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">:</span>
+            <span class="n">wh</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="p">,</span> <span class="n">hour_of_day</span><span class="p">)</span>
+
+        <span class="n">top_temp_f</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">get_temperature_at_fraction</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">primary_kbtuh</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">wh</span><span class="o">.</span><span class="n">get_output_kbtuh</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">wh</span><span class="o">.</span><span class="n">get_outlet_temp_f</span><span class="p">(</span><span class="n">hour_of_day</span><span class="p">),</span> <span class="n">inlet_temp_f</span><span class="p">)</span> <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span>
+        <span class="p">)</span>
+        <span class="n">primary_kw_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">wh</span><span class="o">.</span><span class="n">get_power_in_kw</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">wh</span><span class="o">.</span><span class="n">get_outlet_temp_f</span><span class="p">(</span><span class="n">hour_of_day</span><span class="p">),</span> <span class="n">inlet_temp_f</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span>
+            <span class="k">if</span> <span class="n">wh</span><span class="o">.</span><span class="n">is_active</span><span class="p">()</span>
+        <span class="p">]</span>
+        <span class="n">primary_kw</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">sum</span><span class="p">(</span><span class="n">kw</span> <span class="ow">or</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">primary_kw_list</span><span class="p">)</span> <span class="k">if</span> <span class="n">primary_kw_list</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">heat</span><span class="p">(</span><span class="n">primary_kbtuh</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">,</span> <span class="n">outlet_temp_f</span><span class="p">)</span>
+
+        <span class="c1"># --- 3. Physical gallons drawn from primary → swing tank this timestep ---</span>
+        <span class="n">swing_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">get_temperature_at_fraction</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">swing_t</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span>
+            <span class="n">hw_swing_gal</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">demand_supplyT_gal</span>
+                <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">inlet_temp_f</span><span class="p">)</span>
+                <span class="o">/</span> <span class="p">(</span><span class="n">swing_t</span> <span class="o">-</span> <span class="n">inlet_temp_f</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Swing tank is cold; full demand volume must come from primary</span>
+            <span class="n">hw_swing_gal</span> <span class="o">=</span> <span class="n">demand_supplyT_gal</span>
+
+        <span class="c1"># --- 4. Average feed temperature from primary stratification profile ---</span>
+        <span class="n">feed_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">get_average_draw_temp_f</span><span class="p">(</span><span class="n">hw_swing_gal</span><span class="p">)</span>
+
+        <span class="c1"># --- 5. Mix primary inflow into swing tank ---</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">mix_primary_inflow</span><span class="p">(</span><span class="n">hw_swing_gal</span><span class="p">,</span> <span class="n">feed_temp_f</span><span class="p">)</span>
+
+        <span class="c1"># --- 6. Recirculation heat loss (fixed rate, consistent with sizing formula) ---</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">apply_fixed_heat_loss_kbtuh</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_recirc_loss_kbtuh</span><span class="p">(),</span> <span class="n">interval_min</span>
+        <span class="p">)</span>
+        <span class="c1"># --- 7. TM element: update state and heat swing tank ---</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="p">,</span> <span class="n">hour_of_day</span><span class="p">)</span>
+        <span class="n">tm_top_t</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">get_temperature_at_fraction</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">tm_kbtuh</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">get_output_kbtuh</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">tm_top_t</span><span class="p">)</span>
+        <span class="n">tm_kw_val</span>   <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">get_power_in_kw</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">tm_top_t</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">is_active</span><span class="p">()</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">tm_ctrl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">get_controls_for_hour</span><span class="p">(</span><span class="n">hour_of_day</span><span class="p">)</span>
+        <span class="n">tm_outlet_f</span> <span class="o">=</span> <span class="n">tm_ctrl</span><span class="o">.</span><span class="n">outlet_temp_f</span> <span class="k">if</span> <span class="n">tm_ctrl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_off_temp_f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">heat</span><span class="p">(</span><span class="n">tm_kbtuh</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">,</span> <span class="n">tm_outlet_f</span><span class="p">)</span>
+        <span class="c1"># --- 8. Draw computed volume from primary storage ---</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">draw_physical_gal</span><span class="p">(</span><span class="n">hw_swing_gal</span><span class="p">,</span> <span class="n">inlet_temp_f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">)</span>
+
+        <span class="c1"># --- 9. Usable volume ---</span>
+        <span class="k">if</span> <span class="n">swing_t</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span>
+            <span class="n">usable_vol_gal</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">usable_vol_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">get_usable_volume_supplyT_gal</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span>
+            <span class="p">)</span>
+
+        <span class="c1"># --- 10. Tank temperature profile (primary stratified tank) ---</span>
+        <span class="n">tank_temps_f</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">get_temperature_at_fraction</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="c1"># --- 11. Merge primary + TM outputs ---</span>
+        <span class="c1"># heater_output_kbtuh stays PRIMARY-ONLY (used for gal/hr plot in top chart).</span>
+        <span class="c1"># heater_power_in_kw merges both so get_total_energy_kwh() is accurate.</span>
+        <span class="k">if</span> <span class="n">primary_kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">tm_kw_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">total_kw</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">(</span><span class="n">primary_kw</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">total_kw</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">swing_mid_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">get_temperature_at_fraction</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;demand_supplyT_gal&quot;</span><span class="p">:</span>        <span class="n">demand_supplyT_gal</span><span class="p">,</span>
+            <span class="s2">&quot;usable_volume_supplyT_gal&quot;</span><span class="p">:</span> <span class="n">usable_vol_gal</span><span class="p">,</span>
+            <span class="s2">&quot;heater_output_kbtuh&quot;</span><span class="p">:</span>       <span class="n">primary_kbtuh</span><span class="p">,</span>
+            <span class="s2">&quot;heater_power_in_kw&quot;</span><span class="p">:</span>        <span class="n">total_kw</span><span class="p">,</span>
+            <span class="s2">&quot;oat_f&quot;</span><span class="p">:</span>                     <span class="n">oat_f</span><span class="p">,</span>
+            <span class="s2">&quot;inlet_water_temp_f&quot;</span><span class="p">:</span>        <span class="n">inlet_temp_f</span><span class="p">,</span>
+            <span class="s2">&quot;tank_temps_f&quot;</span><span class="p">:</span>              <span class="n">tank_temps_f</span><span class="p">,</span>
+            <span class="s2">&quot;mode&quot;</span><span class="p">:</span>                      <span class="n">step_mode</span><span class="p">,</span>
+            <span class="c1"># Swing tank is the actual delivery point — use its temperature for</span>
+            <span class="c1"># the outlet-deficit stop condition instead of the primary tank top.</span>
+            <span class="s2">&quot;delivery_temp_f&quot;</span><span class="p">:</span>           <span class="n">swing_mid_temp_f</span><span class="p">,</span>
+            <span class="c1"># TM panel data (consumed by SimulationRun for the swing-tank subplot)</span>
+            <span class="s2">&quot;tm_tank_temp_f&quot;</span><span class="p">:</span>            <span class="n">swing_mid_temp_f</span><span class="p">,</span>
+            <span class="s2">&quot;tm_heater_output_kbtuh&quot;</span><span class="p">:</span>    <span class="n">tm_kbtuh</span><span class="p">,</span>
+            <span class="s2">&quot;tm_heater_input_kw&quot;</span><span class="p">:</span>        <span class="n">tm_kbtuh</span> <span class="o">/</span> <span class="n">_W_TO_KBTUH</span><span class="p">,</span> <span class="c1"># assume COP of 1</span>
+        <span class="p">}</span></div>
+</div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Ecotope Inc.
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../../../_static/documentation_options.js?v=acc74ff5"></script>
+    <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
