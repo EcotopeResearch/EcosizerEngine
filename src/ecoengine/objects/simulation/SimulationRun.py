@@ -632,8 +632,8 @@ class SimulationRun:
         Returns
         -------
         dict
-            ``{'energy_peak': [12], 'energy_off_peak': [12],
-               'demand_peak': [12], 'demand_off_peak': [12], 'base': float}``
+            Keys: ``energy_peak``, ``energy_off_peak``, ``demand_peak``,
+            ``demand_off_peak`` (each a 12-element list) and ``base`` (float).
         """
         hours_per_step      = self.timestep_min / 60.0
         energy_peak         = [0.0] * 12

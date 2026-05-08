@@ -521,20 +521,17 @@ class MultiPassRTPSystem(RTPSystem):
         """
         Run one simulation timestep for a multi-pass RTP system.
 
-        Order of operations
-        -------------------
+        Order of operations:
+
         1. Query Building for demand, OAT, and inlet water temperature.
         2. Keep the tank's cold-temp baseline current from the building inlet.
-        3. Determine on/off heater state:
-           - While NOT heating: use standard Controls logic.
-           - While HEATING: turn off when slug temperature reaches supply_temp_f.
-        4. Handle slug lifecycle transitions (activate on turn-on,
-           deactivate on turn-off).
-        5. Apply heating and demand via the mixing valve:
-           - Heating: redirect draw and heater output to the slug.
-           - Not heating: draw physical gallons from the tank via
-             mixing_valve_behavior; warm-inlet energy credit is implicit in
-             draw_physical_gal.
+        3. Determine on/off heater state (NOT heating: standard Controls logic;
+           HEATING: turn off when slug temperature reaches supply_temp_f).
+        4. Handle slug lifecycle transitions (activate on turn-on, deactivate
+           on turn-off).
+        5. Apply heating and demand via the mixing valve (heating: redirect
+           draw and heater output to the slug; not heating: draw physical
+           gallons from the tank via mixing_valve_behavior).
         6. Return per-step metrics.
 
         Parameters

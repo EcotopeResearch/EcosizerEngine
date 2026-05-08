@@ -24,5 +24,8 @@ htmlcov/
 ~$*.docx
 ~$*.xlsx
 
+# Sphinx build output
+docs/_build/
+
 # Local comparison / dev scripts
 compare_performance_maps.py

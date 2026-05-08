@@ -8,6 +8,9 @@ version = "3.0.0"
 requires-python = ">=3.11"
 dependencies = ["numpy", "scipy", "plotly"]
 
+[project.optional-dependencies]
+docs = ["sphinx>=6", "furo"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
