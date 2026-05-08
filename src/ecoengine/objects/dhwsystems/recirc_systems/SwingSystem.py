@@ -211,7 +211,7 @@ class SwingSystem(RecircSystem):
             # Step 1: TM sizing (table lookup) — must come first so that
             # _sim_just_swing can use _minimum_tm_volume_gal and
             # _minimum_tm_capacity_kbtuh.
-            self._size_tm_system()
+            self._size_tm_system(building)
 
             # Step 2: Running volume (side-effect: populates _eff_mix_fraction)
             self._eff_mix_fraction = 1.0
@@ -347,18 +347,35 @@ class SwingSystem(RecircSystem):
     # TM sizing
     # ------------------------------------------------------------------
 
-    def _size_tm_system(self) -> None:
+    def _size_tm_system(self, building=None) -> None:
         """
-        Size the swing tank TM element and volume from the recirc loss rate.
+        Size the swing tank TM element and volume.
 
-        Volume is the smallest table entry satisfying:
-            recirc_loss_btuhr / (100 W/gal × 3.412142 BTU/hr/W) ≤ entry
+        Volume is the smallest table entry satisfying both constraints:
+
+        1. Recirc-loss thermal mass:
+               recirc_loss_btuhr / (100 W/gal × 3.412142 BTU/hr/W) ≤ entry
+
+        2. Peak per-minute draw (when building is provided):
+               daily_dhw_gal × max(peak_load_shape) / 60 ≤ entry
+           This ensures the tank is never fully emptied in a single 1-minute
+           simulation timestep, even when recirc losses alone would size a
+           smaller tank.
 
         Capacity is:
             tm_safety_factor × recirc_loss_kbtuh
         """
         recirc_loss_btuhr = self.get_recirc_loss_kbtuh() * 1000.0
         vol_required = recirc_loss_btuhr / (_WATTS_PER_GAL * _W_TO_KBTUH)
+
+        if building is not None:
+            peak_draw_gal_per_min = (
+                building.daily_dhw_use_supplyT_gal
+                * float(np.max(building.peak_load_shape))
+                / 60.0
+            )
+            vol_required = max(vol_required, peak_draw_gal_per_min)
+
         if vol_required > max(_SWING_SIZING_TABLE):
             raise ValueError(
                 f"Recirculation losses ({recirc_loss_btuhr:.0f} BTU/hr) require a swing "
