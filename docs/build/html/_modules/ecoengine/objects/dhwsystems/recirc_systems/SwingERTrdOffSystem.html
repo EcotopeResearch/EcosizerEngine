@@ -1,0 +1,1013 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../../genindex.html"><link rel="search" title="Search" href="../../../../../search.html">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem - EcosizerEngine</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../../../index.html"><div class="brand">EcosizerEngine</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../../../index.html">
+  
+  <span class="sidebar-brand-text">EcosizerEngine</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../quickstart.html">Quick Start</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/building.html">Building &amp; Climate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/dhwsystems.html">DHW Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/components.html">Equipment Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/simulation.html">Simulation</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.Controls</span><span class="w"> </span><span class="kn">import</span> <span class="n">Controls</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.WaterHeater</span><span class="w"> </span><span class="kn">import</span> <span class="n">WaterHeater</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.MixedStorageTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">MixedStorageTank</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.StratifiedTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">StratifiedTank</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.DHWSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_peak_indices</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.SwingSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwingSystem</span><span class="p">,</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">,</span> <span class="n">_hr_to_min</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_RHO_CP</span><span class="p">,</span> <span class="n">_W_TO_KBTUH</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.building.Building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
+
+
+<div class="viewcode-block" id="SwingERTrdOffSystem">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SwingERTrdOffSystem</span><span class="p">(</span><span class="n">SwingSystem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Swing tank system with an electric resistance (ER) element sized to</span>
+<span class="sd">    compensate when the primary HPWH cannot maintain the swing tank at supply</span>
+<span class="sd">    temperature during peak demand events.</span>
+
+<span class="sd">    This class is identical to SwingSystem in all simulation behaviour —</span>
+<span class="sd">    ``simulate_step()`` is fully inherited without override.  The only</span>
+<span class="sd">    runtime difference is that the ``tm_water_heater`` carries a higher</span>
+<span class="sd">    ``nominal_capacity_kbtuh``: the base temperature-maintenance capacity</span>
+<span class="sd">    (sized to handle recirc losses) plus the ER addition (sized to close the</span>
+<span class="sd">    worst-case single-minute temperature deficit found by the sizing simulation).</span>
+
+<span class="sd">    Sizing flow</span>
+<span class="sd">    -----------</span>
+<span class="sd">    1. ``SwingSystem.size()`` — TM volume, running volume, primary capacity.</span>
+<span class="sd">    2. ``_size_er_element()`` — 2-day sizing simulation (primary empty + full</span>
+<span class="sd">       start); finds max swing-tank temperature deficit; computes ER capacity.</span>
+<span class="sd">    3. ``_minimum_tm_capacity_kbtuh`` is bumped by the ER result before</span>
+<span class="sd">       ``from_size()`` builds the ``tm_water_heater``.</span>
+
+<span class="sd">    Construction</span>
+<span class="sd">    ------------</span>
+<span class="sd">    Two factory classmethods are provided:</span>
+
+<span class="sd">    ``from_size`` — full sizing from scratch::</span>
+
+<span class="sd">        system = SwingERTrdOffSystem.from_size(</span>
+<span class="sd">            building        = building,</span>
+<span class="sd">            supply_temp_f   = 120.0,</span>
+<span class="sd">            storage_temp_f  = 150.0,</span>
+<span class="sd">            return_temp_f   = 110.0,</span>
+<span class="sd">            return_flow_gpm = 3.0,</span>
+<span class="sd">            er_safety_factor = 1.0,</span>
+<span class="sd">        )</span>
+
+<span class="sd">    ``from_components`` — sizes only the ER element given pre-built (possibly</span>
+<span class="sd">    undersized) primary components::</span>
+
+<span class="sd">        system = SwingERTrdOffSystem.from_components(</span>
+<span class="sd">            water_heaters           = swing.water_heaters,</span>
+<span class="sd">            storage_tank            = swing.storage_tank,</span>
+<span class="sd">            tm_storage_tank         = swing.tm_storage_tank,</span>
+<span class="sd">            initial_tm_capacity_kbtuh = swing.tm_water_heater.performance_map.nominal_capacity_kbtuh,</span>
+<span class="sd">            building                = building,</span>
+<span class="sd">            supply_temp_f           = 120.0,</span>
+<span class="sd">            storage_temp_f          = 150.0,</span>
+<span class="sd">            return_temp_f           = 110.0,</span>
+<span class="sd">            return_flow_gpm         = 3.0,</span>
+<span class="sd">        )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SwingERTrdOffSystem.__init__">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">water_heaters</span><span class="p">,</span>
+        <span class="n">storage_tank</span><span class="p">,</span>
+        <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">storage_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_flow_gpm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">tm_safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">,</span>
+        <span class="n">er_safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">max_daily_run_hr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">24.0</span><span class="p">,</span>
+        <span class="n">defrost_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">water_heaters</span><span class="o">=</span><span class="n">water_heaters</span><span class="p">,</span>
+            <span class="n">storage_tank</span><span class="o">=</span><span class="n">storage_tank</span><span class="p">,</span>
+            <span class="n">supply_temp_f</span><span class="o">=</span><span class="n">supply_temp_f</span><span class="p">,</span>
+            <span class="n">storage_temp_f</span><span class="o">=</span><span class="n">storage_temp_f</span><span class="p">,</span>
+            <span class="n">return_temp_f</span><span class="o">=</span><span class="n">return_temp_f</span><span class="p">,</span>
+            <span class="n">return_flow_gpm</span><span class="o">=</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+            <span class="n">tm_safety_factor</span><span class="o">=</span><span class="n">tm_safety_factor</span><span class="p">,</span>
+            <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+            <span class="n">defrost_factor</span><span class="o">=</span><span class="n">defrost_factor</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">er_safety_factor</span> <span class="o">=</span> <span class="n">er_safety_factor</span>
+        <span class="c1"># Set by _size_er_element(); stores the ER addition only (not base TM).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Factory constructor</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SwingERTrdOffSystem.from_components">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem.from_components">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_components</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">water_heaters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">WaterHeater</span><span class="p">],</span>
+        <span class="n">storage_tank</span><span class="p">,</span>
+        <span class="n">tm_storage_tank</span><span class="p">:</span> <span class="n">MixedStorageTank</span><span class="p">,</span>
+        <span class="n">initial_tm_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">storage_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_flow_gpm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">er_safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">control_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Controls</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SwingERTrdOffSystem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a ``SwingERTrdOffSystem`` from pre-sized components by sizing only</span>
+<span class="sd">        the ER element of the swing tank.</span>
+
+<span class="sd">        Use this when you already have a ``SwingSystem`` whose primary water</span>
+<span class="sd">        heaters and/or primary storage tank have been intentionally undersized,</span>
+<span class="sd">        and you want to compensate by adding an ER element to the swing tank.</span>
+<span class="sd">        The primary components are accepted as-is; only the swing tank TM</span>
+<span class="sd">        element capacity is recomputed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        water_heaters : list[WaterHeater]</span>
+<span class="sd">            Pre-built primary water heaters (already at their final, possibly</span>
+<span class="sd">            reduced, capacity).</span>
+<span class="sd">        storage_tank : StorageTank</span>
+<span class="sd">            Pre-built primary storage tank.</span>
+<span class="sd">        tm_storage_tank : MixedStorageTank</span>
+<span class="sd">            Pre-built swing tank (its ``total_volume_gal`` drives ER sizing).</span>
+<span class="sd">        initial_tm_capacity_kbtuh : float</span>
+<span class="sd">            Starting TM element capacity [kBTU/hr] before any ER addition.</span>
+<span class="sd">            Typically taken from the original ``SwingSystem.tm_water_heater``.</span>
+<span class="sd">        building : Building</span>
+<span class="sd">            Building model used for the ER sizing simulation.</span>
+<span class="sd">        supply_temp_f : float</span>
+<span class="sd">            Hot-water supply temperature [°F].</span>
+<span class="sd">        storage_temp_f : float</span>
+<span class="sd">            Primary storage temperature [°F].</span>
+<span class="sd">        return_temp_f : float</span>
+<span class="sd">            Recirculation loop return temperature [°F].</span>
+<span class="sd">        return_flow_gpm : float</span>
+<span class="sd">            Recirculation loop flow rate [GPM].</span>
+<span class="sd">        er_safety_factor : float</span>
+<span class="sd">            Multiplier applied to the raw ER capacity result (default 1.0).</span>
+<span class="sd">        control_schedule : list[str] | None</span>
+<span class="sd">            24-element hour-of-day schedule for the primary heaters&#39; controls.</span>
+<span class="sd">        control_map : dict[str, Controls] | None</span>
+<span class="sd">            Controls map for the primary heaters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SwingERTrdOffSystem</span>
+<span class="sd">            Fully constructed system with ``tm_water_heater`` sized to include</span>
+<span class="sd">            the ER addition.  Primary components are the objects passed in.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">system</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">water_heaters</span><span class="o">=</span><span class="n">water_heaters</span><span class="p">,</span>
+            <span class="n">storage_tank</span><span class="o">=</span><span class="n">storage_tank</span><span class="p">,</span>
+            <span class="n">supply_temp_f</span><span class="o">=</span><span class="n">supply_temp_f</span><span class="p">,</span>
+            <span class="n">storage_temp_f</span><span class="o">=</span><span class="n">storage_temp_f</span><span class="p">,</span>
+            <span class="n">return_temp_f</span><span class="o">=</span><span class="n">return_temp_f</span><span class="p">,</span>
+            <span class="n">return_flow_gpm</span><span class="o">=</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+            <span class="n">er_safety_factor</span><span class="o">=</span><span class="n">er_safety_factor</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Populate sizing state from the pre-built components so that</span>
+        <span class="c1"># _size_er_element() has all the values it needs.</span>
+        <span class="n">design_oat_f</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_design_oat_f</span><span class="p">()</span>
+        <span class="n">design_inlet_temp_f</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">wh</span><span class="o">.</span><span class="n">performance_map</span><span class="o">.</span><span class="n">get_capacity_kbtuh</span><span class="p">(</span><span class="n">design_oat_f</span><span class="p">,</span> <span class="n">storage_temp_f</span><span class="p">,</span> <span class="n">design_inlet_temp_f</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="n">water_heaters</span>
+        <span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span> <span class="o">=</span> <span class="n">storage_tank</span><span class="o">.</span><span class="n">total_volume_gal</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span>        <span class="o">=</span> <span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">total_volume_gal</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span>    <span class="o">=</span> <span class="n">initial_tm_capacity_kbtuh</span>
+
+        <span class="c1"># Assign the swing tank; _size_er_element will bump _minimum_tm_capacity_kbtuh.</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">tm_storage_tank</span> <span class="o">=</span> <span class="n">tm_storage_tank</span>
+
+        <span class="n">system</span><span class="o">.</span><span class="n">_size_er_element</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+
+        <span class="n">tm_controls</span> <span class="o">=</span> <span class="n">Controls</span><span class="p">(</span>
+            <span class="n">on_sensor_fract</span>  <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">on_trigger_t_f</span>   <span class="o">=</span> <span class="n">supply_temp_f</span><span class="p">,</span>
+            <span class="n">off_sensor_fract</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">off_trigger_t_f</span>  <span class="o">=</span> <span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">,</span>
+            <span class="n">outlet_temp_f</span>    <span class="o">=</span> <span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">tm_water_heater</span> <span class="o">=</span> <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
+            <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span><span class="p">,</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">system</span></div>
+
+
+<div class="viewcode-block" id="SwingERTrdOffSystem.from_size">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem.from_size">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_size</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">storage_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_flow_gpm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">tm_safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">,</span>
+        <span class="n">er_safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">max_daily_run_hr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">24.0</span><span class="p">,</span>
+        <span class="n">defrost_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">control_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Controls</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.8</span><span class="p">,</span>
+        <span class="n">load_shift_fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SwingERTrdOffSystem</span><span class="p">:</span>
+        <span class="n">system</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">water_heaters</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">storage_tank</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">supply_temp_f</span><span class="o">=</span><span class="n">supply_temp_f</span><span class="p">,</span>
+            <span class="n">storage_temp_f</span><span class="o">=</span><span class="n">storage_temp_f</span><span class="p">,</span>
+            <span class="n">return_temp_f</span><span class="o">=</span><span class="n">return_temp_f</span><span class="p">,</span>
+            <span class="n">return_flow_gpm</span><span class="o">=</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+            <span class="n">tm_safety_factor</span><span class="o">=</span><span class="n">tm_safety_factor</span><span class="p">,</span>
+            <span class="n">er_safety_factor</span><span class="o">=</span><span class="n">er_safety_factor</span><span class="p">,</span>
+            <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+            <span class="n">defrost_factor</span><span class="o">=</span><span class="n">defrost_factor</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">size</span><span class="p">(</span>
+            <span class="n">building</span><span class="p">,</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="n">control_schedule</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span>
+            <span class="n">strat_slope</span><span class="o">=</span><span class="n">strat_slope</span><span class="p">,</span>
+            <span class="n">load_shift_fract_total_vol</span><span class="o">=</span><span class="n">load_shift_fract_total_vol</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Primary components</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">storage_tank</span> <span class="o">=</span> <span class="n">StratifiedTank</span><span class="p">(</span>
+            <span class="n">total_volume_gal</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span><span class="p">,</span>
+            <span class="n">strat_slope</span><span class="o">=</span><span class="n">strat_slope</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">water_heaters</span> <span class="o">=</span> <span class="p">[</span><span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
+            <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span><span class="p">,</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="n">control_schedule</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span>
+        <span class="p">)]</span>
+
+        <span class="c1"># TM (swing tank) components — capacity already includes the ER addition</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">tm_storage_tank</span> <span class="o">=</span> <span class="n">MixedStorageTank</span><span class="p">(</span>
+            <span class="n">total_volume_gal</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">tm_controls</span> <span class="o">=</span> <span class="n">Controls</span><span class="p">(</span>
+            <span class="n">on_sensor_fract</span>  <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">on_trigger_t_f</span>   <span class="o">=</span> <span class="n">supply_temp_f</span><span class="p">,</span>
+            <span class="n">off_sensor_fract</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">off_trigger_t_f</span>  <span class="o">=</span> <span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">,</span>
+            <span class="n">outlet_temp_f</span>    <span class="o">=</span> <span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">tm_water_heater</span> <span class="o">=</span> <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
+            <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span><span class="p">,</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">system</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Sizing</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SwingERTrdOffSystem.size">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem.size">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">size</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">control_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Controls</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.8</span><span class="p">,</span>
+        <span class="n">load_shift_fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Size the system: base SwingSystem sizing followed by ER element sizing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">size</span><span class="p">(</span>
+            <span class="n">building</span><span class="p">,</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="n">control_schedule</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span>
+            <span class="n">strat_slope</span><span class="o">=</span><span class="n">strat_slope</span><span class="p">,</span>
+            <span class="n">load_shift_fract_total_vol</span><span class="o">=</span><span class="n">load_shift_fract_total_vol</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_size_er_element</span><span class="p">(</span><span class="n">building</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_size_er_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine additional ER capacity for the swing tank TM element by</span>
+<span class="sd">        simulating the full system over 2 days with two initial primary-tank</span>
+<span class="sd">        conditions (primary empty and primary full).</span>
+
+<span class="sd">        Mirrors ``SwingTankER.sizeERElement()`` from the original codebase.</span>
+
+<span class="sd">        Algorithm</span>
+<span class="sd">        ---------</span>
+<span class="sd">        At each minute step:</span>
+
+<span class="sd">        1. Compute the hot-water volume the swing tank must draw from the</span>
+<span class="sd">           primary based on the current swing tank temperature.</span>
+<span class="sd">        2. Update the primary tank level (bounded) based on HPWH generation</span>
+<span class="sd">           minus that draw.  When the primary is depleted, the swing tank</span>
+<span class="sd">           receives water at ``inlet_temp_f`` rather than ``storage_temp_f``.</span>
+<span class="sd">        3. Advance the swing tank one step using the base TM capacity only.</span>
+<span class="sd">           When the tank falls below ``supply_temp_f``, record the deficit</span>
+<span class="sd">           and clamp to ``supply_temp_f`` (simulating ER closing the gap).</span>
+
+<span class="sd">        When the primary tank is empty the HPWH is still running; its output</span>
+<span class="sd">        flows directly to the swing tank, so the feed temperature is blended</span>
+<span class="sd">        (hot HPWH output + cold city water) rather than pure cold.</span>
+
+<span class="sd">        ER capacity formula::</span>
+
+<span class="sd">            er_cap = (tm_vol × rhoCp × 60 × max_deficit / 1000) × er_safety_factor</span>
+
+<span class="sd">        This is the instantaneous power needed to raise the entire swing tank</span>
+<span class="sd">        volume by ``max_deficit`` degrees in one minute.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        building : Building</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inlet_t_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+
+        <span class="c1"># Primary HPWH capacity at design conditions.</span>
+        <span class="c1"># The original codebase queried the real performance map at</span>
+        <span class="c1"># (design_OAT, design_inlet + 15.0°F, storage_temp_f) to find the</span>
+        <span class="c1"># HPWH&#39;s actual output at worst-case conditions.  With NominalPerformanceMap</span>
+        <span class="c1"># the result is always _minimum_capacity_kbtuh regardless of temperatures,</span>
+        <span class="c1"># so we use it directly.  The +15.0°F inlet offset is preserved here for</span>
+        <span class="c1"># reference when this path is extended to real performance maps.</span>
+        <span class="c1"># TODO: confirm why +15°F is used for the inlet temperature here</span>
+        <span class="n">hpwh_design_kbtuh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span>
+
+        <span class="c1"># Primary HPWH generation rate [gal/min at storage temp]</span>
+        <span class="n">gen_gpm</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">hpwh_design_kbtuh</span> <span class="o">*</span> <span class="mf">1000.0</span>
+            <span class="o">/</span> <span class="p">(</span><span class="n">_RHO_CP</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span> <span class="o">-</span> <span class="n">inlet_t_f</span><span class="p">))</span>
+            <span class="o">/</span> <span class="mf">60.0</span>
+        <span class="p">)</span>
+
+        <span class="c1"># 2-day minute-resolution demand array starting from the peak demand hour.</span>
+        <span class="n">daily_gal</span>  <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span>
+        <span class="n">load_shape</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">peak_load_shape</span>   <span class="c1"># 24 normalised fractions</span>
+        <span class="n">hourly_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span> <span class="o">-</span> <span class="n">load_shape</span>
+        <span class="n">peak_indices</span> <span class="o">=</span> <span class="n">_get_peak_indices</span><span class="p">(</span><span class="n">hourly_diff</span><span class="p">)</span>
+        <span class="n">peak_idx</span> <span class="o">=</span> <span class="n">peak_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">peak_indices</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="c1"># 3 days tiled so we can slice 48 hours from any peak index</span>
+        <span class="n">hw_out_hourly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">load_shape</span> <span class="o">*</span> <span class="n">daily_gal</span><span class="p">,</span> <span class="mi">3</span><span class="p">)[</span><span class="n">peak_idx</span> <span class="p">:</span> <span class="n">peak_idx</span> <span class="o">+</span> <span class="mi">48</span><span class="p">]</span>
+        <span class="n">hw_out_min</span>    <span class="o">=</span> <span class="n">_hr_to_min</span><span class="p">(</span><span class="n">hw_out_hourly</span><span class="p">)</span> <span class="o">/</span> <span class="mf">60.0</span>   <span class="c1"># [gal/min at supply temp]</span>
+        <span class="n">n_steps</span>       <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hw_out_min</span><span class="p">)</span>
+
+        <span class="c1"># Base TM capacity before ER addition — used throughout the sizing sim</span>
+        <span class="n">base_tm_kbtuh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span>
+
+        <span class="n">max_deficit</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="c1"># Run two scenarios: primary starts empty (0 gal) and primary starts full</span>
+        <span class="k">for</span> <span class="n">primary_init_gal</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span><span class="p">):</span>
+            <span class="n">swing_t</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span>
+            <span class="n">swingheating</span>  <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">primary_level</span> <span class="o">=</span> <span class="n">primary_init_gal</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_steps</span><span class="p">):</span>
+                <span class="c1"># Hot water drawn from primary this minute [gal at swing temp]</span>
+                <span class="k">if</span> <span class="n">swing_t</span> <span class="o">&gt;</span> <span class="n">inlet_t_f</span><span class="p">:</span>
+                    <span class="n">hw_from_primary</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">hw_out_min</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">inlet_t_f</span><span class="p">)</span>
+                        <span class="o">/</span> <span class="p">(</span><span class="n">swing_t</span> <span class="o">-</span> <span class="n">inlet_t_f</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">hw_from_primary</span> <span class="o">=</span> <span class="n">hw_out_min</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                <span class="c1"># Total hot water available this minute: stored hot + HPWH generation.</span>
+                <span class="c1"># Even when the primary tank is empty, the HPWH is running and its</span>
+                <span class="c1"># output flows straight through to the swing tank, so the feed is a</span>
+                <span class="c1"># blend of hot HPWH output and cold city water rather than pure cold.</span>
+                <span class="n">hot_available</span> <span class="o">=</span> <span class="n">primary_level</span> <span class="o">+</span> <span class="n">gen_gpm</span>
+                <span class="k">if</span> <span class="n">hw_from_primary</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">hot_available</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+                    <span class="n">feed_temp</span> <span class="o">=</span> <span class="n">inlet_t_f</span>
+                <span class="k">elif</span> <span class="n">hw_from_primary</span> <span class="o">&lt;=</span> <span class="n">hot_available</span><span class="p">:</span>
+                    <span class="n">feed_temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span>   <span class="c1"># full demand met at storage temp</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Blend: hot_available gal at storage_temp + shortfall at inlet_t_f</span>
+                    <span class="n">feed_temp</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">hot_available</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span>
+                        <span class="o">+</span> <span class="p">(</span><span class="n">hw_from_primary</span> <span class="o">-</span> <span class="n">hot_available</span><span class="p">)</span> <span class="o">*</span> <span class="n">inlet_t_f</span>
+                    <span class="p">)</span> <span class="o">/</span> <span class="n">hw_from_primary</span>
+
+                <span class="c1"># Update primary tank level</span>
+                <span class="n">primary_level</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="n">primary_level</span> <span class="o">+</span> <span class="n">gen_gpm</span> <span class="o">-</span> <span class="n">hw_from_primary</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="n">swingheating</span><span class="p">,</span> <span class="n">swing_t</span><span class="p">,</span> <span class="n">deficit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_one_swing_step_er</span><span class="p">(</span>
+                    <span class="n">swingheating</span><span class="p">,</span> <span class="n">swing_t</span><span class="p">,</span> <span class="n">hw_from_primary</span><span class="p">,</span> <span class="n">feed_temp</span><span class="p">,</span> <span class="n">base_tm_kbtuh</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">deficit</span> <span class="o">&gt;</span> <span class="n">max_deficit</span><span class="p">:</span>
+                    <span class="n">max_deficit</span> <span class="o">=</span> <span class="n">deficit</span>
+
+        <span class="c1"># ER capacity: power needed to close max_deficit across the whole swing</span>
+        <span class="c1"># tank volume in one minute</span>
+        <span class="n">er_cap</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span>
+            <span class="o">*</span> <span class="n">_RHO_CP</span>
+            <span class="o">*</span> <span class="mf">60.0</span>
+            <span class="o">*</span> <span class="n">max_deficit</span>
+            <span class="o">/</span> <span class="mf">1000.0</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">er_safety_factor</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span>        <span class="o">=</span> <span class="n">er_cap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span> <span class="o">+=</span> <span class="n">er_cap</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_one_swing_step_er</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">swingheating</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">t_curr</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">hw_out</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">primary_storage_t_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">tm_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Advance the swing tank by one minute during the ER sizing simulation.</span>
+
+<span class="sd">        Identical to ``SwingSystem._run_one_swing_step()`` except:</span>
+
+<span class="sd">        * ``tm_capacity_kbtuh`` is passed explicitly (the base TM capacity,</span>
+<span class="sd">          before any ER addition).</span>
+<span class="sd">        * Instead of raising when the tank falls below ``supply_temp_f``, the</span>
+<span class="sd">          deficit is recorded and the tank is clamped to ``supply_temp_f``,</span>
+<span class="sd">          simulating the (yet-to-be-sized) ER element closing the gap.  The</span>
+<span class="sd">          simulation then continues from ``supply_temp_f`` on the next step.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        swingheating : bool</span>
+<span class="sd">            True if the TM element was active at the start of this step.</span>
+<span class="sd">        t_curr : float</span>
+<span class="sd">            Swing tank temperature at the start of this step [°F].</span>
+<span class="sd">        hw_out : float</span>
+<span class="sd">            Volume drawn from primary storage into the swing tank this minute [gal].</span>
+<span class="sd">        primary_storage_t_f : float</span>
+<span class="sd">            Temperature of inflow from primary (``storage_temp_f`` when</span>
+<span class="sd">            primary has hot water, ``inlet_temp_f`` when it is depleted).</span>
+<span class="sd">        tm_capacity_kbtuh : float</span>
+<span class="sd">            Base TM element capacity [kBTU/hr] (does not include ER addition).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        swingheating : bool</span>
+<span class="sd">        t_new : float</span>
+<span class="sd">            Swing tank temperature after this step [°F].</span>
+<span class="sd">        deficit_f : float</span>
+<span class="sd">            Degrees the tank fell below ``supply_temp_f`` before clamping.</span>
+<span class="sd">            0.0 when the base TM element alone maintained temperature.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tm_vol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span>
+        <span class="n">t_new</span>  <span class="o">=</span> <span class="n">t_curr</span>
+
+        <span class="c1"># Mix primary inflow into swing tank</span>
+        <span class="k">if</span> <span class="n">hw_out</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">vol_remaining</span> <span class="o">=</span> <span class="n">tm_vol</span> <span class="o">-</span> <span class="n">hw_out</span>
+            <span class="k">if</span> <span class="n">vol_remaining</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Swing tank (</span><span class="si">{</span><span class="n">tm_vol</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> gal) is undersized: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;per-minute draw of </span><span class="si">{</span><span class="n">hw_out</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> gal exceeds tank volume.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">t_new</span> <span class="o">=</span> <span class="p">(</span><span class="n">hw_out</span> <span class="o">*</span> <span class="n">primary_storage_t_f</span> <span class="o">+</span> <span class="n">t_curr</span> <span class="o">*</span> <span class="n">vol_remaining</span><span class="p">)</span> <span class="o">/</span> <span class="n">tm_vol</span>
+
+        <span class="c1"># Recirculation heat loss [°F/min]</span>
+        <span class="n">recirc_btuhr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_recirc_loss_kbtuh</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1000.0</span>
+        <span class="n">t_new</span> <span class="o">-=</span> <span class="n">recirc_btuhr</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">_RHO_CP</span> <span class="o">*</span> <span class="n">tm_vol</span><span class="p">)</span>
+
+        <span class="c1"># TM element heat rate [°F/min] using base (pre-ER) capacity</span>
+        <span class="n">element_dT</span> <span class="o">=</span> <span class="n">tm_capacity_kbtuh</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">_RHO_CP</span> <span class="o">*</span> <span class="n">tm_vol</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">swingheating</span><span class="p">:</span>
+            <span class="n">t_new</span> <span class="o">+=</span> <span class="n">element_dT</span>
+            <span class="k">if</span> <span class="n">t_new</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">:</span>
+                <span class="n">time_over</span>    <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">t_new</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">))</span> <span class="o">/</span> <span class="n">element_dT</span><span class="p">,</span> <span class="mf">1.0</span>
+                <span class="p">)</span>
+                <span class="n">t_new</span>       <span class="o">-=</span> <span class="n">element_dT</span> <span class="o">*</span> <span class="n">time_over</span>
+                <span class="n">swingheating</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="n">t_new</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span>
+            <span class="n">time_missed</span>  <span class="o">=</span> <span class="nb">min</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">t_new</span><span class="p">)</span> <span class="o">/</span> <span class="n">element_dT</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">t_new</span>       <span class="o">+=</span> <span class="n">element_dT</span> <span class="o">*</span> <span class="n">time_missed</span>
+            <span class="n">swingheating</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Record deficit and clamp — ER is assumed to close the gap this step</span>
+        <span class="n">deficit</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">t_new</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span>
+            <span class="n">deficit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">t_new</span>
+            <span class="n">t_new</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span>
+
+        <span class="k">return</span> <span class="n">swingheating</span><span class="p">,</span> <span class="n">t_new</span><span class="p">,</span> <span class="n">deficit</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># ER sizing result accessors</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SwingERTrdOffSystem.get_er_capacity_kbtuh">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem.get_er_capacity_kbtuh">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_er_capacity_kbtuh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the additional ER capacity added to the TM element [kBTU/hr].&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;size() must be called before get_er_capacity_kbtuh().&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span></div>
+
+
+<div class="viewcode-block" id="SwingERTrdOffSystem.get_er_capacity_kw">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem.get_er_capacity_kw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_er_capacity_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the additional ER capacity added to the TM element [kW].&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_er_capacity_kbtuh</span><span class="p">()</span> <span class="o">/</span> <span class="n">_W_TO_KBTUH</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># ER sizing curve (trade-off plot)</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SwingERTrdOffSystem.get_er_sized_points">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem.get_er_sized_points">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_er_sized_points</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">additional_er_safety</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute ER element size vs. percent-of-peak-load-covered trade-off points.</span>
+
+<span class="sd">        Iterates building magnitude from 120% down to the fraction where no ER</span>
+<span class="sd">        is needed, sizing the ER element at each step.  At 100% the already-</span>
+<span class="sd">        computed sizing result is used directly.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        building : Building</span>
+<span class="sd">            Building used during sizing.  ``magnitude`` is temporarily mutated</span>
+<span class="sd">            and restored before the method returns.</span>
+<span class="sd">        additional_er_safety : float</span>
+<span class="sd">            Safety factor applied to ER sizing for all fractions except 100%</span>
+<span class="sd">            (which uses the value from the original ``size()`` call).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        er_cap_kw : list[float]</span>
+<span class="sd">            Total TM element capacity (base + ER) [kW] at each fraction,</span>
+<span class="sd">            ordered from lowest to highest coverage.</span>
+<span class="sd">        fract_covered : list[float]</span>
+<span class="sd">            Percent-of-building values (e.g. 60.0, 70.0, … 120.0), same order.</span>
+<span class="sd">        startind : int</span>
+<span class="sd">            Index in the returned lists corresponding to 100% coverage (the</span>
+<span class="sd">            actual sized system).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;get_er_sized_points() requires a system where ER sizing was &quot;</span>
+                <span class="s2">&quot;needed.  No ER addition was found — check that size() has been &quot;</span>
+                <span class="s2">&quot;called and that peak demand exceeds primary HPWH capacity.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">original_daily_gal</span>   <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span>
+        <span class="n">base_tm_kbtuh</span>        <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span>
+        <span class="n">original_total_tm</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span>
+        <span class="n">original_er_kbtuh</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span>
+        <span class="n">original_er_safety</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">er_safety_factor</span>
+
+        <span class="n">er_cap_kw</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>    <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">fract_covered</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">startind</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="mf">120.0</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mf">100.0</span><span class="p">:</span>
+                <span class="n">startind</span>   <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fract_covered</span><span class="p">)</span>
+                <span class="n">total_tm_i</span> <span class="o">=</span> <span class="n">original_total_tm</span>
+                <span class="n">er_needed</span>  <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span> <span class="o">=</span> <span class="n">original_daily_gal</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span>    <span class="o">=</span> <span class="n">base_tm_kbtuh</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span>            <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">er_safety_factor</span>              <span class="o">=</span> <span class="n">additional_er_safety</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_size_er_element</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">er_safety_factor</span>              <span class="o">=</span> <span class="n">original_er_safety</span>
+                <span class="n">total_tm_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span>
+                <span class="n">er_needed</span>  <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">er_cap_kw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">total_tm_i</span> <span class="o">/</span> <span class="n">_W_TO_KBTUH</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="n">fract_covered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">-=</span> <span class="mf">10.0</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">er_needed</span><span class="p">:</span>
+                <span class="k">break</span>  <span class="c1"># no ER at this fraction; lower fractions won&#39;t need it either</span>
+
+        <span class="c1"># Restore mutated state</span>
+        <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span> <span class="o">=</span> <span class="n">original_daily_gal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span>    <span class="o">=</span> <span class="n">original_total_tm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span>            <span class="o">=</span> <span class="n">original_er_kbtuh</span>
+
+        <span class="c1"># Lists were built high-to-low; reverse so x is ascending</span>
+        <span class="n">fract_covered</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="n">er_cap_kw</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="n">startind</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fract_covered</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">startind</span>
+
+        <span class="k">return</span> <span class="n">er_cap_kw</span><span class="p">,</span> <span class="n">fract_covered</span><span class="p">,</span> <span class="n">startind</span></div>
+
+
+<div class="viewcode-block" id="SwingERTrdOffSystem.get_er_sizing_curve">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem.get_er_sizing_curve">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_er_sizing_curve</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">additional_er_safety</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a Plotly figure showing the ER element size vs. percent coverage</span>
+<span class="sd">        trade-off curve, with a slider to select the operating point.</span>
+
+<span class="sd">        The curve traces total TM element capacity (base + ER) [kW] against the</span>
+<span class="sd">        fraction of peak building load covered by the primary HPWH (%).  A</span>
+<span class="sd">        diamond marker and slider indicate the 100%-coverage (actual sized) point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        building : Building</span>
+<span class="sd">        additional_er_safety : float</span>
+<span class="sd">            Safety factor for the re-sizing iterations (default 1.0).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        plotly.graph_objects.Figure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">er_cap_kw</span><span class="p">,</span> <span class="n">fract_covered</span><span class="p">,</span> <span class="n">startind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_er_sized_points</span><span class="p">(</span>
+            <span class="n">building</span><span class="p">,</span> <span class="n">additional_er_safety</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+        <span class="c1"># --- main curve ---</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">fract_covered</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">er_cap_kw</span><span class="p">,</span>
+            <span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;#28a745&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+            <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot;Percent Coverage: %</span><span class="si">{x:.1f}</span><span class="s2">%&lt;br&gt;&quot;</span>
+                <span class="s2">&quot;ER Heating Capacity: %</span><span class="si">{y:.1f}</span><span class="s2"> kW&quot;</span>
+            <span class="p">),</span>
+            <span class="n">opacity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+        <span class="p">))</span>
+
+        <span class="c1"># --- one hidden marker per point (revealed by slider) ---</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fract_covered</span><span class="p">)):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">fract_covered</span><span class="p">[</span><span class="n">ii</span><span class="p">]],</span>
+                <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">er_cap_kw</span><span class="p">[</span><span class="n">ii</span><span class="p">]],</span>
+                <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;markers&quot;</span><span class="p">,</span>
+                <span class="n">marker_symbol</span><span class="o">=</span><span class="s2">&quot;diamond&quot;</span><span class="p">,</span>
+                <span class="n">opacity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">marker_color</span><span class="o">=</span><span class="s2">&quot;#2EA3F2&quot;</span><span class="p">,</span>
+                <span class="n">marker_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;System Size&quot;</span><span class="p">,</span>
+                <span class="n">hoverlabel</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">),</span> <span class="n">bordercolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">),</span>
+            <span class="p">))</span>
+
+        <span class="c1"># Make the starting marker visible</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">startind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Electric Resistance Sizing Curve&quot;</span><span class="p">,</span>
+            <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Percent Coverage (%)&quot;</span><span class="p">,</span>
+            <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Electric Resistance Heating Capacity (kW)&quot;</span><span class="p">,</span>
+            <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># --- slider ---</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">data</span><span class="p">)):</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Percent Coverage: &lt;b&gt;</span><span class="si">{</span><span class="n">fract_covered</span><span class="p">[</span><span class="n">ii</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">&lt;/b&gt; %, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Electric Resistance Heating Capacity: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;&lt;b&gt;</span><span class="si">{</span><span class="n">er_cap_kw</span><span class="p">[</span><span class="n">ii</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&lt;/b&gt; kW&quot;</span>
+            <span class="p">)</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;visible&quot;</span><span class="p">:</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">data</span><span class="p">)}],</span>
+            <span class="p">)</span>
+            <span class="n">step</span><span class="p">[</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;visible&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>  <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># curve always visible</span>
+            <span class="n">step</span><span class="p">[</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;visible&quot;</span><span class="p">][</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># this marker</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">sliders</span><span class="o">=</span><span class="p">[</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span>
+            <span class="n">active</span><span class="o">=</span><span class="n">startind</span><span class="p">,</span>
+            <span class="n">currentvalue</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">font</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">},</span>
+                <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;&lt;b&gt;Electric Resistance Size&lt;/b&gt; &quot;</span><span class="p">,</span>
+                <span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">xanchor</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">pad</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+            <span class="n">minorticklen</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">ticklen</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">bgcolor</span><span class="o">=</span><span class="s2">&quot;#CCD9DB&quot;</span><span class="p">,</span>
+            <span class="n">borderwidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)])</span>
+
+        <span class="k">return</span> <span class="n">fig</span></div>
+</div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Ecotope Inc.
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../../../_static/documentation_options.js?v=acc74ff5"></script>
+    <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
