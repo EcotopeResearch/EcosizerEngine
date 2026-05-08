@@ -23,3 +23,6 @@ htmlcov/
 # Word temp files
 ~$*.docx
 ~$*.xlsx
+
+# Local comparison / dev scripts
+compare_performance_maps.py

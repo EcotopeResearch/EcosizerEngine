@@ -502,8 +502,6 @@ class EcosizerEngine:
         tm_safety_factor: float = 1.75,
         # Utility cost (optional)
         utility_cost_tracker=None,
-        # CBECC-Res compliance mode
-        california_spec_mode: bool = False,
         # Pre-sized system (optional — skip sizing when capacity and volume are known)
         storage_volume_storageT_gal: float | None = None,
         heating_capacity_kbtuh: float | None = None,
@@ -599,8 +597,6 @@ class EcosizerEngine:
             TM capacity safety multiplier (> 1.0). Default 1.2.
         utility_cost_tracker : UtilityCostTracker, optional
             Attached to the building for annual cost estimates.
-        california_spec_mode : bool
-            If True, apply CBECC-Res sizing standards. Default False.
         storage_volume_storageT_gal : float, optional
             Pre-sized primary storage tank volume at storage temperature [gallons].
             When provided together with ``heating_capacity_kbtuh`` (or
@@ -662,7 +658,6 @@ class EcosizerEngine:
         self.tm_off_time_hr            = tm_off_time_hr
         self.tm_safety_factor          = tm_safety_factor
         self.utility_cost_tracker           = utility_cost_tracker
-        self.california_spec_mode           = california_spec_mode
         self.storage_volume_storageT_gal    = storage_volume_storageT_gal
         self.heating_capacity_kbtuh         = heating_capacity_kbtuh
         self.tm_storage_vol                 = tm_storage_vol
