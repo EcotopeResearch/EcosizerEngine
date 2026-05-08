@@ -53,6 +53,7 @@ class ParallelLoopSystem(RecircSystem):
         tm_safety_factor: float = 1.2,
         tm_storage_tank=None,
         tm_water_heater=None,
+        num_tm_heaters: int = 1,
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
     ):
@@ -86,7 +87,11 @@ class ParallelLoopSystem(RecircSystem):
         tm_storage_tank : MixedStorageTank | None
             TM storage tank (populated by from_size() or size()).
         tm_water_heater : WaterHeater | None
-            TM heater (populated by from_size() or size()).
+            TM heater representing a single unit (populated by from_size() or size()).
+        num_tm_heaters : int
+            Number of identical TM heater units. Output from tm_water_heater is
+            multiplied by this before being applied to tank heating and recorded.
+            Default 1.
         max_daily_run_hr : float
             Maximum hours the primary heating system may run per day.
         defrost_factor : float
@@ -108,6 +113,7 @@ class ParallelLoopSystem(RecircSystem):
         self.tm_safety_factor = tm_safety_factor
         self.tm_storage_tank  = tm_storage_tank
         self.tm_water_heater  = tm_water_heater
+        self.num_tm_heaters   = num_tm_heaters
 
         # TM sizing results — populated by size_tm_system()
         self._minimum_tm_volume_gal:    float | None = None
@@ -129,6 +135,7 @@ class ParallelLoopSystem(RecircSystem):
         tm_off_temp_f: float,
         tm_off_time_hr: float = 0.5,
         tm_safety_factor: float = 1.2,
+        num_tm_heaters: int = 1,
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
         control_schedule=None,
@@ -156,6 +163,10 @@ class ParallelLoopSystem(RecircSystem):
             Max TM heater off-cycle duration [hr]. Default 0.5.
         tm_safety_factor : float
             TM capacity safety multiplier (must be > 1.0). Default 1.2.
+        num_tm_heaters : int
+            Number of identical TM heater units. The total sized TM capacity is
+            divided by this to get per-unit capacity; simulate_step scales back
+            by num_tm_heaters. Default 1.
         max_daily_run_hr : float
             Max primary heater run time per day. Default 24.0.
         defrost_factor : float
@@ -179,6 +190,7 @@ class ParallelLoopSystem(RecircSystem):
             tm_off_temp_f=tm_off_temp_f,
             tm_off_time_hr=tm_off_time_hr,
             tm_safety_factor=tm_safety_factor,
+            num_tm_heaters=num_tm_heaters,
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
         )
@@ -213,7 +225,7 @@ class ParallelLoopSystem(RecircSystem):
             outlet_temp_f    = tm_off_temp_f,
         )
         system.tm_water_heater = WaterHeater.from_nominal_capacity(
-            nominal_capacity_kbtuh=system._minimum_tm_capacity_kbtuh,
+            nominal_capacity_kbtuh=system._minimum_tm_capacity_kbtuh / system.num_tm_heaters,
             control_schedule=["normal"] * 24,
             control_map={"normal": tm_controls},
         )
@@ -378,13 +390,15 @@ class ParallelLoopSystem(RecircSystem):
 
         self.tm_water_heater.update_state(self.tm_storage_tank, hour_of_day)
 
-        tm_top_temp_f = self.tm_storage_tank.get_temperature_at_fraction(1.0)
-        tm_kbtuh      = self.tm_water_heater.get_output_kbtuh(oat_f, tm_top_temp_f)
-        tm_kw         = (
-            self.tm_water_heater.get_power_in_kw(oat_f, tm_top_temp_f)
+        tm_top_temp_f   = self.tm_storage_tank.get_temperature_at_fraction(1.0)
+        tm_inlet_temp_f = (self.tm_off_temp_f + self.tm_on_temp_f) / 2.0
+        tm_kbtuh        = self.tm_water_heater.get_output_kbtuh(oat_f, tm_top_temp_f, tm_inlet_temp_f) * self.num_tm_heaters
+        tm_kw_per_unit  = (
+            self.tm_water_heater.get_power_in_kw(oat_f, tm_top_temp_f, tm_inlet_temp_f)
             if self.tm_water_heater.is_active()
             else None
         )
+        tm_kw = tm_kw_per_unit * self.num_tm_heaters if tm_kw_per_unit is not None else None
         self.tm_storage_tank.heat(tm_kbtuh, interval_min, self.tm_off_temp_f)
 
         # ------------------------------------------------------------------
@@ -393,11 +407,12 @@ class ParallelLoopSystem(RecircSystem):
         # heater_output_kbtuh stays PRIMARY-ONLY (used for gal/hr plot in top chart).
         # TM thermal output is tracked separately in tm_heater_output_kbtuh.
         # heater_power_in_kw merges both so get_total_energy_kwh() is accurate.
-        if tm_kw is not None:
-            step["heater_power_in_kw"] = (step["heater_power_in_kw"] or 0.0) + tm_kw
+        # if tm_kw is not None:
+        #     step["heater_power_in_kw"] = (step["heater_power_in_kw"] or 0.0) + tm_kw
 
         # TM panel data (consumed by SimulationRun for the TM subplot)
         step["tm_tank_temp_f"]         = self.tm_storage_tank.get_temperature_at_fraction(0.5)
         step["tm_heater_output_kbtuh"] = tm_kbtuh
-
+        step["tm_heater_input_kw"]     = tm_kw
+        print(f'{step["tm_heater_input_kw"]}, {step["tm_tank_temp_f"] }, {step["tm_heater_output_kbtuh"]}')
         return step

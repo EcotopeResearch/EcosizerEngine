@@ -1521,8 +1521,11 @@ class DHWSystem:
         lu_ctrl     = control_map.get("loadUp", normal_ctrl)
         shed_ctrl   = control_map["shed"]
 
+        # lu_x   = self._calc_supply_temp_gal_from_100gal_tank(
+        #     lu_ctrl.on_sensor_fract,   lu_ctrl.on_trigger_t_f,   strat_slope, inlet_temp_f
+        # )
         lu_x   = self._calc_supply_temp_gal_from_100gal_tank(
-            lu_ctrl.on_sensor_fract,   lu_ctrl.on_trigger_t_f,   strat_slope, inlet_temp_f
+            lu_ctrl.off_sensor_fract,   lu_ctrl.off_trigger_t_f,   strat_slope, inlet_temp_f
         )
         shed_x = self._calc_supply_temp_gal_from_100gal_tank(
             shed_ctrl.on_sensor_fract, shed_ctrl.on_trigger_t_f, strat_slope, inlet_temp_f

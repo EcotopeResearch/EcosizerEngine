@@ -6,6 +6,8 @@ from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 from ecoengine.constants.constants import _RHO_CP
 from .RTPSystem import RTPSystem
 
+_SPRTP_STRAT_SLOPE: float = 1.7
+
 
 class SinglePassRTPSystem(RTPSystem):
     """
@@ -53,7 +55,7 @@ class SinglePassRTPSystem(RTPSystem):
         defrost_factor: float = 1.0,
         control_schedule: list[str] | None = None,
         control_map: dict[str, Controls] | None = None,
-        strat_slope: float = 1.7,
+        strat_slope: float = _SPRTP_STRAT_SLOPE,
         load_shift_fract_total_vol: float = 1.0,
     ) -> SinglePassRTPSystem:
         """
@@ -224,6 +226,41 @@ class SinglePassRTPSystem(RTPSystem):
         result = super()._calc_running_volume_supplyT_gal(building, capacity_kbtuh)
         # finally:
         #     building.daily_dhw_use_supplyT_gal -= recirc_daily_supplyT_gal
+        return result
+
+    def _calc_gen_rate_ls_gph(
+        self,
+        control_schedule: list[str],
+        control_map,
+        building,
+        strat_slope: float,
+        fract_total_vol: float = 1.0,
+    ) -> float:
+        """
+        Add the daily recirc volume equivalent to the building magnitude before
+        computing the load-shift generation rate.
+
+        Mirrors the same boost applied in _calc_running_volume_ls_supplyT_gal so
+        that the generation rate and the demand seen by the deficit simulation are
+        computed against the same effective daily demand (DHW + recirc).  Without
+        this, the gen rate would be sized for DHW-only while the storage deficit
+        simulation sees the full DHW + recirc demand, producing an oversized tank.
+        """
+        design_inlet = self._require_design_inlet_temp(building)
+        recirc_daily_supplyT_gal = (
+            self.get_recirc_loss_kbtuh()
+            * 1000.0
+            / (_RHO_CP * (self.supply_temp_f - design_inlet))
+            * 24.0
+        )
+
+        building.daily_dhw_use_supplyT_gal += recirc_daily_supplyT_gal
+        try:
+            result = super()._calc_gen_rate_ls_gph(
+                control_schedule, control_map, building, strat_slope, fract_total_vol
+            )
+        finally:
+            building.daily_dhw_use_supplyT_gal -= recirc_daily_supplyT_gal
         return result
 
     def _calc_running_volume_ls_supplyT_gal(

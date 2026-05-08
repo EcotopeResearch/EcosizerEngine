@@ -76,6 +76,7 @@ class SimulationRun:
         # TM (swing tank) per-timestep data — only populated for SwingSystem runs
         self.tm_tank_temp_f:           list[float] = []
         self.tm_heater_output_kbtuh:   list[float] = []
+        self.tm_heater_input_kw:   list[float] = []
 
         # Cumulative outage counter [minutes]
         self.outage_minutes: int = 0
@@ -103,6 +104,7 @@ class SimulationRun:
         mode: str = "normal",
         tm_tank_temp_f: float | None = None,
         tm_heater_output_kbtuh: float | None = None,
+        tm_heater_input_kw: float | None = None,
     ) -> None:
         """
         Append one timestep's worth of data to the run record.
@@ -131,6 +133,9 @@ class SimulationRun:
         tm_heater_output_kbtuh : float | None
             Heat output of the TM element this timestep [kBTU/hr]. None for
             non-swing systems.
+        tm_heater_input_kw : float | None
+            Electrical power consumed by TM element [kW]. None when no
+            real performance map is available (e.g. NominalPerformanceMap).
         """
         self.dhw_demand_supplyT_gal.append(dhw_demand_supplyT_gal)
         self.usable_volume_supplyT_gal.append(usable_volume_supplyT_gal)
@@ -145,6 +150,8 @@ class SimulationRun:
             self.tm_tank_temp_f.append(tm_tank_temp_f)
         if tm_heater_output_kbtuh is not None:
             self.tm_heater_output_kbtuh.append(tm_heater_output_kbtuh)
+        if tm_heater_input_kw is not None:
+            self.tm_heater_input_kw.append(tm_heater_input_kw)
 
     def check_outlet_deficit(self, top_tank_temp_f: float, supply_temp_f: float) -> bool:
         """
@@ -571,6 +578,55 @@ class SimulationRun:
             "energy": energy_by_month,
             "demand": demand_by_month,
             "base":   uc.monthly_base_charge,
+        }
+
+    def get_monthly_cost_breakdown_detailed(self, uc) -> dict:
+        """
+        Like get_monthly_cost_breakdown but splits energy and demand charges
+        into peak and off-peak components.
+
+        Returns
+        -------
+        dict
+            ``{'energy_peak': [12], 'energy_off_peak': [12],
+               'demand_peak': [12], 'demand_off_peak': [12], 'base': float}``
+        """
+        hours_per_step      = self.timestep_min / 60.0
+        energy_peak         = [0.0] * 12
+        energy_off_peak     = [0.0] * 12
+        max_kw_by_period: dict[int, float] = {}
+
+        for i, kw_raw in enumerate(self.heater_power_in_kw):
+            kw     = kw_raw or 0.0
+            period = uc.get_demand_period_at_step(i, self.timestep_min)
+            rate   = uc.get_energy_charge_at_step(i, self.timestep_min)
+            month  = _step_to_month(i, self.timestep_min)
+            cost   = kw * hours_per_step * rate
+            if uc.is_peak_map.get(period, False):
+                energy_peak[month] += cost
+            else:
+                energy_off_peak[month] += cost
+            if period not in max_kw_by_period or kw > max_kw_by_period[period]:
+                max_kw_by_period[period] = kw
+
+        num_periods    = 3 if uc.include_discount else 2
+        demand_peak    = [0.0] * 12
+        demand_off_peak = [0.0] * 12
+        for period, max_kw in max_kw_by_period.items():
+            m = period // num_periods
+            if 0 <= m < 12:
+                charge = uc.get_demand_charge_for_period(period, max_kw)
+                if uc.is_peak_map.get(period, False):
+                    demand_peak[m] += charge
+                else:
+                    demand_off_peak[m] += charge
+
+        return {
+            "energy_peak":     energy_peak,
+            "energy_off_peak": energy_off_peak,
+            "demand_peak":     demand_peak,
+            "demand_off_peak": demand_off_peak,
+            "base":            uc.monthly_base_charge,
         }
 
     def get_monthly_energy_kwh(self) -> list[float]:

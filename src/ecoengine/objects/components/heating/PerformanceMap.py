@@ -562,6 +562,14 @@ class HPWHsimPerformanceMap(PerformanceMap):
     def _er_per_unit_kbtuh(self) -> float:
         if self._nominal_kbtuh is not None:
             return self._nominal_kbtuh / self.num_units
+        # No nominal provided: compute from the first OAT bracket at design inlet temp.
+        # Prevents 0.0 output when OAT drops below the map minimum (common for indoor
+        # commercial TM heaters whose perfmap OAT range starts above outdoor winter temps).
+        if self._perfmap:
+            entry    = self._perfmap[0]
+            input_kw = self._quad(entry["inputPower_coeffs"], self._design_inlet_f) / 1000.0
+            cop      = max(self._quad(entry["COP_coeffs"], self._design_inlet_f), 0.0)
+            return max(cop * input_kw * _W_TO_KBTUH, 0.0)
         return 0.0
 
     def _get_per_unit_kbtuh(

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ecoengine.constants.constants import _RHO_CP
+from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
 from .DHWSystem import DHWSystem
 
 
@@ -119,7 +119,7 @@ class InstantWHSystem(DHWSystem):
             "demand_supplyT_gal":        demand_supplyT_gal,
             "usable_volume_supplyT_gal": 0.0,
             "heater_output_kbtuh":       capacity_kbtuh,
-            "heater_power_in_kw":        None,
+            "heater_power_in_kw":        capacity_kbtuh / _W_TO_KBTUH,  # COP of 1.0
             "oat_f":                     oat_f,
             "inlet_water_temp_f":        inlet_temp_f,
             "tank_temps_f":              [self.supply_temp_f] * 6,

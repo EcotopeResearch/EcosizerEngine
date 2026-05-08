@@ -1012,4 +1012,5 @@ class SwingSystem(RecircSystem):
             # TM panel data (consumed by SimulationRun for the swing-tank subplot)
             "tm_tank_temp_f":            swing_mid_temp_f,
             "tm_heater_output_kbtuh":    tm_kbtuh,
+            "tm_heater_input_kw":        tm_kbtuh / _W_TO_KBTUH, # assume COP of 1
         }

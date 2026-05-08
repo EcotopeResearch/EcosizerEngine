@@ -217,9 +217,10 @@ class TestHPWHsimMultiEntryMP:
         assert cop > 1.0
 
     def test_oat_below_min_er_fallback(self, mp):
-        # OAT=49 < oat_min=50 → ER fallback: cap=0 (no nominal given)
+        # OAT=49 < oat_min=50 → ER fallback: computes from first OAT bracket
+        # at design_inlet_temp_f (50°F) since no nominal is provided
         cap = mp.get_capacity_kbtuh(49.0, 140.0, inlet_temp_f=50.0)
-        assert cap == pytest.approx(0.0)
+        assert cap > 0.0
 
     def test_oat_below_min_er_with_nominal(self):
         mp_er = PerformanceMap.from_model_name(
@@ -273,9 +274,9 @@ class TestHPWHsimMultiEntrySP:
         assert cap == pytest.approx(15.086, rel=1e-3)
 
     def test_below_oat_min_no_nominal(self, sp):
-        # No nominal → ER fallback returns 0
+        # No nominal → ER fallback computes from first OAT bracket at design inlet temp
         cap = sp.get_capacity_kbtuh(10.0, 140.0, inlet_temp_f=50.0)
-        assert cap == pytest.approx(0.0)
+        assert cap > 0.0
 
     def test_cop_plausible_at_oat_47(self, sp):
         cap = sp.get_capacity_kbtuh(47.0, 140.0, inlet_temp_f=50.0)

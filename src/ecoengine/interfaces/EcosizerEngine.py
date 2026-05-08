@@ -206,6 +206,119 @@ def get_hpwh_output_capacity(
     return capacity_kbtuh
 
 
+_MONTH_NAMES         = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+_ANNUAL_DURATION_MIN = 365 * 24 * 60
+
+
+def get_annual_utility_comparison_graph(
+    sim_run_hp,
+    sim_run_iwh,
+    utility_cost_tracker,
+    return_as_div: bool = False,
+    return_as_array: bool = False,
+):
+    """
+    Build a stacked bar chart comparing monthly utility costs for an HPWH
+    system vs. an instantaneous electric resistance (UER) baseline.
+
+    Each month shows two adjacent bars — one for the HP system, one for UER —
+    stacked by charge type: base, energy, and demand.
+
+    Parameters
+    ----------
+    sim_run_hp : SimulationRun
+        Annual simulation result for the heat pump system.
+    sim_run_iwh : SimulationRun
+        Annual simulation result for the instantaneous/UER baseline.
+    utility_cost_tracker : UtilityCostTracker
+        Rate structure applied to both runs.
+    return_as_div : bool
+        If True, return an HTML ``<div>`` string instead of a Figure.
+    return_as_array : bool
+        If True, return ``(hp_breakdown, iwh_breakdown)`` dicts instead of a
+        figure.  Each dict has keys ``'energy'`` (12 floats), ``'demand'``
+        (12 floats), and ``'base'`` (float).
+
+    Returns
+    -------
+    plotly.graph_objects.Figure, str, or tuple
+    """
+    if sim_run_hp.duration_min != _ANNUAL_DURATION_MIN or sim_run_iwh.duration_min != _ANNUAL_DURATION_MIN:
+        raise ValueError(
+            "Both simulation runs must be annual (365-day) to generate a "
+            "utility comparison graph."
+        )
+
+    hp_bd  = sim_run_hp.get_monthly_cost_breakdown_detailed(utility_cost_tracker)
+    iwh_bd = sim_run_iwh.get_monthly_cost_breakdown_detailed(utility_cost_tracker)
+
+    if return_as_array:
+        return hp_bd, iwh_bd
+
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError(
+            "plotly is required for get_annual_utility_comparison_graph(). "
+            "Install with: pip install plotly"
+        )
+
+    # Interleave HP and IWH bars: for each of 24 x-positions, even index = HP,
+    # odd index = IWH.  Trailing-space trick makes Plotly treat them as
+    # separate categories while keeping the visual pairing per month.
+    x_labels = []
+    for name in _MONTH_NAMES:
+        x_labels.extend([name, f"{name} "])
+
+    base = utility_cost_tracker.monthly_base_charge
+
+    def _interleave(values, slot):
+        """slot=0 → HP (even positions), slot=1 → IWH (odd positions)."""
+        out = []
+        for v in values:
+            if slot == 0:
+                out.extend([v, 0.0])
+            else:
+                out.extend([0.0, v])
+        return out
+
+    categories = [
+        ("Base Charges",          _interleave([base] * 12, 0),               _interleave([base] * 12, 1)),
+        ("Peak Energy Charges",   _interleave(hp_bd["energy_peak"], 0),      _interleave(iwh_bd["energy_peak"], 1)),
+        ("Off-Peak Energy Charges", _interleave(hp_bd["energy_off_peak"], 0), _interleave(iwh_bd["energy_off_peak"], 1)),
+        ("Peak Demand Charges",   _interleave(hp_bd["demand_peak"], 0),      _interleave(iwh_bd["demand_peak"], 1)),
+        ("Off-Peak Demand Charges", _interleave(hp_bd["demand_off_peak"], 0), _interleave(iwh_bd["demand_off_peak"], 1)),
+    ]
+
+    fig = go.Figure()
+    for label, hp_vals, iwh_vals in categories:
+        fig.add_trace(go.Bar(
+            x=x_labels, y=hp_vals,
+            name=f"{label} for HP",
+            hovertemplate=f"{label} (HP)<br>%{{x}}<br>$%{{y:.2f}}<extra></extra>",
+        ))
+        fig.add_trace(go.Bar(
+            x=x_labels, y=iwh_vals,
+            name=f"{label} for UER",
+            hovertemplate=f"{label} (UER)<br>%{{x}}<br>$%{{y:.2f}}<extra></extra>",
+        ))
+
+    fig.update_layout(
+        barmode="stack",
+        title="Utility Cost Comparison: Heat Pump (HP) vs. Unitary Electric Resistance (UER)",
+        yaxis_title="Cost ($)",
+        xaxis=dict(
+            tickvals=_MONTH_NAMES,
+            ticktext=_MONTH_NAMES,
+            title="Month",
+        ),
+    )
+
+    if return_as_div:
+        return fig.to_html(full_html=False, include_plotlyjs=False)
+    return fig
+
+
 # ---------------------------------------------------------------------------
 # Standalone sizing-curve plot helper
 # ---------------------------------------------------------------------------
@@ -391,6 +504,13 @@ class EcosizerEngine:
         utility_cost_tracker=None,
         # CBECC-Res compliance mode
         california_spec_mode: bool = False,
+        # Pre-sized system (optional — skip sizing when capacity and volume are known)
+        storage_volume_storageT_gal: float | None = None,
+        heating_capacity_kbtuh: float | None = None,
+        tm_storage_vol: float | None = None,
+        tm_capacity_kbtuh: float | None = None,
+        tm_model: str | None = None,
+        num_tm_heaters: int = 1,
     ):
         """
         Parameters
@@ -481,6 +601,34 @@ class EcosizerEngine:
             Attached to the building for annual cost estimates.
         california_spec_mode : bool
             If True, apply CBECC-Res sizing standards. Default False.
+        storage_volume_storageT_gal : float, optional
+            Pre-sized primary storage tank volume at storage temperature [gallons].
+            When provided together with ``heating_capacity_kbtuh`` (or
+            ``hpwh_model``), the sizing step is skipped entirely.
+        heating_capacity_kbtuh : float, optional
+            Pre-sized total primary heating capacity [kBTU/hr].  Must be paired
+            with ``storage_volume_storageT_gal`` (except for ``instant_wh``).
+            For multi-heater systems this is the combined fleet capacity;
+            each WaterHeater is assigned ``heating_capacity_kbtuh / num_heaters``.
+            Ignored when ``hpwh_model`` is also provided.
+        tm_storage_vol : float, optional
+            Pre-sized TM tank volume [gallons]. Required for ``parallel_loop``
+            and ``swing_tank`` when using the pre-sized path.
+        tm_capacity_kbtuh : float, optional
+            Pre-sized TM heater capacity [kBTU/hr]. Required for ``parallel_loop``
+            and ``swing_tank`` when ``tm_model`` is not provided.
+        tm_model : str, optional
+            HPWH model name for the TM heater's performance map. When provided,
+            ``tm_capacity_kbtuh`` is used only as the ER fallback capacity.
+            ``return_temp_f`` is used as ``design_inlet_temp_f``.
+        num_tm_heaters : int
+            Number of identical TM heater units for ``parallel_loop`` schematics.
+            The single ``tm_water_heater`` object represents one unit; its output
+            is multiplied by this value before being applied to the TM tank and
+            recorded. For the sized path, per-unit capacity =
+            ``_minimum_tm_capacity_kbtuh / num_tm_heaters``; for the pre-sized
+            path with ``tm_capacity_kbtuh``, per-unit =
+            ``tm_capacity_kbtuh / num_tm_heaters``. Default 1.
         """
         self.building_type             = building_type
         self.magnitude                 = magnitude
@@ -509,12 +657,18 @@ class EcosizerEngine:
         self.load_shift_percent        = load_shift_percent
         self.return_temp_f             = return_temp_f
         self.return_flow_gpm           = return_flow_gpm
-        self.tm_on_temp_f              = tm_on_temp_f if tm_on_temp_f is not None else supply_temp_f - 5.0
-        self.tm_off_temp_f             = tm_off_temp_f if tm_off_temp_f is not None else supply_temp_f
+        self.tm_on_temp_f              = tm_on_temp_f if tm_on_temp_f is not None else supply_temp_f
+        self.tm_off_temp_f             = tm_off_temp_f if tm_off_temp_f is not None else supply_temp_f + 8.0
         self.tm_off_time_hr            = tm_off_time_hr
         self.tm_safety_factor          = tm_safety_factor
-        self.utility_cost_tracker      = utility_cost_tracker
-        self.california_spec_mode             = california_spec_mode
+        self.utility_cost_tracker           = utility_cost_tracker
+        self.california_spec_mode           = california_spec_mode
+        self.storage_volume_storageT_gal    = storage_volume_storageT_gal
+        self.heating_capacity_kbtuh         = heating_capacity_kbtuh
+        self.tm_storage_vol                 = tm_storage_vol
+        self.tm_capacity_kbtuh              = tm_capacity_kbtuh
+        self.tm_model                       = tm_model
+        self.num_tm_heaters                 = num_tm_heaters
 
         self._building    = None
         self._dhw_system  = None
@@ -649,6 +803,9 @@ class EcosizerEngine:
         NotImplementedError
             If the schematic is recognised but not yet fully implemented.
         """
+        if self.storage_volume_storageT_gal is not None:
+            return self._build_presized_dhw_system()
+
         from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem, _load_shift_fract_total_vol
 
         control_schedule, control_map = self._build_control_map()
@@ -775,6 +932,210 @@ class EcosizerEngine:
             raise ValueError(
                 f"Schematic '{self.schematic}' requires: {', '.join(missing)}."
             )
+
+    def _require_tm_params(self) -> None:
+        if self.tm_storage_vol is None:
+            raise ValueError(
+                f"Schematic '{self.schematic}' requires tm_storage_vol in pre-sized mode."
+            )
+        if self.tm_capacity_kbtuh is None and self.tm_model is None:
+            raise ValueError(
+                f"Schematic '{self.schematic}' requires tm_capacity_kbtuh or tm_model "
+                "in pre-sized mode."
+            )
+
+    def _build_tm_water_heater(self, tm_controls):
+        """Build the TM WaterHeater (single unit) from tm_model or tm_capacity_kbtuh."""
+        from ecoengine.objects.components.heating.WaterHeater import WaterHeater
+        per_unit_kbtuh = (
+            self.tm_capacity_kbtuh / self.num_tm_heaters
+            if self.tm_capacity_kbtuh is not None
+            else None
+        )
+        if self.tm_model is not None:
+            return WaterHeater.from_model_name(
+                model_name=self.tm_model,
+                control_schedule=["normal"] * 24,
+                control_map={"normal": tm_controls},
+                design_inlet_temp_f=self.return_temp_f if self.return_temp_f is not None else 50.0,
+                nominal_capacity_kbtuh=per_unit_kbtuh,  # used by ER fallback when OAT < map minimum
+            )
+        return WaterHeater.from_nominal_capacity(
+            nominal_capacity_kbtuh=per_unit_kbtuh,
+            control_schedule=["normal"] * 24,
+            control_map={"normal": tm_controls},
+        )
+
+    def _build_presized_dhw_system(self):
+        """
+        Build the DHWSystem from explicitly provided storage volume and capacity,
+        skipping the sizing step entirely.
+
+        For schematics with a TM sub-system (``parallel_loop``, ``swing_tank``),
+        the TM is still auto-sized from recirc parameters since TM sizing does
+        not depend on building load.
+        """
+        from ecoengine.objects.components.heating.WaterHeater import WaterHeater
+        from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
+
+        control_schedule, control_map = self._build_control_map()
+        if self.hpwh_model is not None:
+            design_inlet_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
+            water_heaters = [
+                WaterHeater.from_model_name(
+                    model_name=self.hpwh_model,
+                    control_schedule=control_schedule,
+                    control_map=control_map,
+                    design_inlet_temp_f=design_inlet_temp_f,
+                )
+                for _ in range(self.num_heaters)
+            ]
+        else:
+            capacity_per_heater = self.heating_capacity_kbtuh / self.num_heaters
+            water_heaters = [
+                WaterHeater.from_nominal_capacity(
+                    nominal_capacity_kbtuh=capacity_per_heater,
+                    control_schedule=control_schedule,
+                    control_map=control_map,
+                )
+                for _ in range(self.num_heaters)
+            ]
+
+        def _primary_tank(strat_slope=None):
+            if self.storage_volume_storageT_gal is None:
+                raise ValueError(
+                    f"storage_volume_storageT_gal is required for schematic '{self.schematic}'."
+                )
+            kwargs = {"total_volume_gal": self.storage_volume_storageT_gal}
+            if strat_slope is not None:
+                kwargs["strat_slope"] = strat_slope
+            return StratifiedTank(**kwargs)
+
+        if self.schematic in ["primary_no_recirc", "singlepass_norecirc"]:
+            from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem
+            return DHWSystem(
+                water_heaters=water_heaters,
+                storage_tank=_primary_tank(),
+                supply_temp_f=self.supply_temp_f,
+                storage_temp_f=self.storage_temp_f,
+                max_daily_run_hr=self.max_daily_run_hr,
+                defrost_factor=self.defrost_factor,
+            )
+
+        if self.schematic in ["parallel_loop", "paralleltank"]:
+            from ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem import ParallelLoopSystem
+            from ecoengine.objects.components.heating.Controls import Controls
+            from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
+            self._require_recirc_params()
+            self._require_tm_params()
+            tm_controls = Controls(
+                on_sensor_fract=0.5,
+                on_trigger_t_f=self.tm_on_temp_f,
+                off_sensor_fract=0.5,
+                off_trigger_t_f=self.tm_off_temp_f,
+                outlet_temp_f=self.tm_off_temp_f,
+            )
+            return ParallelLoopSystem(
+                water_heaters=water_heaters,
+                storage_tank=_primary_tank(),
+                supply_temp_f=self.supply_temp_f,
+                storage_temp_f=self.storage_temp_f,
+                return_temp_f=self.return_temp_f,
+                return_flow_gpm=self.return_flow_gpm,
+                tm_on_temp_f=self.tm_on_temp_f,
+                tm_off_temp_f=self.tm_off_temp_f,
+                tm_off_time_hr=self.tm_off_time_hr,
+                tm_safety_factor=self.tm_safety_factor,
+                tm_storage_tank=MixedStorageTank(total_volume_gal=self.tm_storage_vol),
+                tm_water_heater=self._build_tm_water_heater(tm_controls),
+                num_tm_heaters=self.num_tm_heaters,
+                max_daily_run_hr=self.max_daily_run_hr,
+                defrost_factor=self.defrost_factor,
+            )
+
+        if self.schematic in ["swing_tank", "swingtank"]:
+            from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem, _ELEMENT_DEADBAND_F
+            from ecoengine.objects.components.heating.Controls import Controls
+            from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
+            self._require_recirc_params()
+            self._require_tm_params()
+            tm_controls = Controls(
+                on_sensor_fract=0.5,
+                on_trigger_t_f=self.supply_temp_f,
+                off_sensor_fract=0.5,
+                off_trigger_t_f=self.supply_temp_f + _ELEMENT_DEADBAND_F,
+                outlet_temp_f=self.supply_temp_f + _ELEMENT_DEADBAND_F,
+            )
+            system = SwingSystem(
+                water_heaters=water_heaters,
+                storage_tank=_primary_tank(),
+                supply_temp_f=self.supply_temp_f,
+                storage_temp_f=self.storage_temp_f,
+                return_temp_f=self.return_temp_f,
+                return_flow_gpm=self.return_flow_gpm,
+                tm_safety_factor=self.tm_safety_factor,
+                max_daily_run_hr=self.max_daily_run_hr,
+                defrost_factor=self.defrost_factor,
+            )
+            system.tm_storage_tank = MixedStorageTank(total_volume_gal=self.tm_storage_vol)
+            system.tm_water_heater = self._build_tm_water_heater(tm_controls)
+            return system
+
+        if self.schematic in ["single_pass_rtp", "sprtp"]:
+            from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import (
+                SinglePassRTPSystem, _SPRTP_STRAT_SLOPE,
+            )
+            self._require_recirc_params()
+            return SinglePassRTPSystem(
+                water_heaters=water_heaters,
+                storage_tank=_primary_tank(strat_slope=_SPRTP_STRAT_SLOPE),
+                supply_temp_f=self.supply_temp_f,
+                storage_temp_f=self.storage_temp_f,
+                return_temp_f=self.return_temp_f,
+                return_flow_gpm=self.return_flow_gpm,
+                max_daily_run_hr=self.max_daily_run_hr,
+                defrost_factor=self.defrost_factor,
+            )
+
+        if self.schematic in ["multi_pass_rtp", "mprtp"]:
+            from ecoengine.objects.dhwsystems.rtp_systems.MultiPassRTPSystem import (
+                MultiPassRTPSystem, _MPRTP_STRAT_SLOPE, _MPRTP_MAX_DAILY_RUN_HR,
+            )
+            from ecoengine.objects.components.storage.SlugOverlayTank import SlugOverlayTank
+            self._require_recirc_params()
+            cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
+            return MultiPassRTPSystem(
+                water_heaters=water_heaters,
+                storage_tank=SlugOverlayTank(
+                    total_volume_gal=self.storage_volume_storageT_gal,
+                    cold_temp_f=cold_temp_f,
+                    storage_temp_f=self.storage_temp_f,
+                    supply_temp_f=self.supply_temp_f,
+                    strat_slope=_MPRTP_STRAT_SLOPE,
+                ),
+                supply_temp_f=self.supply_temp_f,
+                storage_temp_f=self.storage_temp_f,
+                return_temp_f=self.return_temp_f,
+                return_flow_gpm=self.return_flow_gpm,
+                max_daily_run_hr=_MPRTP_MAX_DAILY_RUN_HR,
+                defrost_factor=self.defrost_factor,
+            )
+
+        if self.schematic == "instant_wh":
+            from ecoengine.objects.dhwsystems.InstantWHSystem import InstantWHSystem
+            system = InstantWHSystem(
+                supply_temp_f=self.supply_temp_f,
+                storage_temp_f=self.storage_temp_f,
+                defrost_factor=self.defrost_factor,
+            )
+            system.water_heaters = water_heaters
+            return system
+
+        raise ValueError(
+            f"Unknown schematic {self.schematic!r}. "
+            "Supported values: 'primary_no_recirc', 'parallel_loop', 'swing_tank', "
+            "'single_pass_rtp', 'multi_pass_rtp', 'instant_wh'."
+        )
 
     # ------------------------------------------------------------------
     # Sizing results

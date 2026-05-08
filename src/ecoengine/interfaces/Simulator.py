@@ -95,6 +95,7 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
             mode                      = step.get("mode", "normal"),
             tm_tank_temp_f            = step.get("tm_tank_temp_f"),
             tm_heater_output_kbtuh    = step.get("tm_heater_output_kbtuh"),
+            tm_heater_input_kw    = step.get("tm_heater_input_kw"),
         )
 
         if step["usable_volume_supplyT_gal"] <= 0.0:
