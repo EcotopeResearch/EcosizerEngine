@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecoengine"
-version = "3.0.0"
+version = "3.0.1"
 requires-python = ">=3.11"
 dependencies = ["numpy", "scipy", "plotly"]
 
@@ -13,6 +13,12 @@ docs = ["sphinx>=6", "furo"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"ecoengine.data.climate_data" = ["*.csv"]
+"ecoengine.data.load_shapes" = ["*.json"]
+"ecoengine.data.preformanceMaps" = ["*.json"]
+"ecoengine.data.preformanceMaps.pkls" = ["*.pkl"]
 
 [tool.pytest.ini_options]
 testpaths = ["src/ecoengine/tests"]
