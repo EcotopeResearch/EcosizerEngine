@@ -37,7 +37,6 @@ class StratifiedTank(StorageTank):
     def __init__(
         self,
         total_volume_gal: float,
-        num_nodes: int = 12,
         strat_slope: float = _DEFAULT_STRAT_SLOPE,
     ) -> None:
         """
@@ -45,9 +44,6 @@ class StratifiedTank(StorageTank):
         ----------
         total_volume_gal : float
             Total physical tank volume [gallons].
-        num_nodes : int
-            Number of vertical temperature nodes (retained for future use;
-            the analytical profile model does not use discrete nodes).
         strat_slope : float
             Temperature gradient through the transition zone between cold and
             hot layers [°F per percentage-point of tank height]. Higher values
@@ -56,7 +52,6 @@ class StratifiedTank(StorageTank):
             that model different schematics may set a different value here.
         """
         self.total_volume_gal = total_volume_gal
-        self.num_nodes        = num_nodes
         self.strat_slope      = strat_slope
 
         # Internal state — set by initialize()
