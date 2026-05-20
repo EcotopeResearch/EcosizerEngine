@@ -497,13 +497,13 @@ class MultiPassRTPSystem(RTPSystem):
             if slug_vol_gal > 0.0:
                 slug_temp_f += heat_kbtu_per_min * 1000.0 / (slug_vol_gal * _RHO_CP)
 
-            # Reset slug when it reaches supply temperature
+            if slug_vol_gal > max_slug_vol_gal:
+                max_slug_vol_gal = slug_vol_gal
+
+            # Reset slug when it reaches storage temperature
             if slug_vol_gal > 0.0 and slug_temp_f >= self.storage_temp_f: # Heres a place I messed with TODO
                 slug_vol_gal = 0.0
                 slug_temp_f  = cold_temp_f
-
-            if slug_vol_gal > max_slug_vol_gal:
-                max_slug_vol_gal = slug_vol_gal
 
         return max_slug_vol_gal
 
@@ -638,7 +638,7 @@ class MultiPassRTPSystem(RTPSystem):
             "usable_volume_supplyT_gal": usable_vol_gal,
             "heater_output_kbtuh":       total_kbtuh,
             "heater_power_in_kw":        total_kw,
-            "oat_f":                     top_temp_f,
+            "oat_f":                     oat_f,
             "inlet_water_temp_f":        inlet_water_temp_f,
             "tank_temps_f":              tank_temps_f,
             "mode":                      mode,
