@@ -22,6 +22,21 @@ _LS_NORM_STD:  float = 0.08236427664525116
 _LS_NORM_DIST: NormalDist = NormalDist(mu=_LS_NORM_MEAN, sigma=_LS_NORM_STD)
 
 
+class StorageVolumeTooSmallError(ValueError):
+    """
+    Raised when the sized storage volume is below the minimum required floor
+    (half the peak-hour demand at supply temperature).
+    """
+    def __init__(self, storage_storageT_gal: float, minimum_gal: float, capacity_kbtuh: float):
+        super().__init__(
+            f"Sized storage volume ({storage_storageT_gal:.1f} gal) is less than the "
+            f"minimum required volume ({minimum_gal:.1f} gal). "
+            "Increase the hours the heat pump runs per day to ensure adequate volume."
+        )
+        self.storage_storageT_gal = storage_storageT_gal
+        self.capacity_kbtuh       = capacity_kbtuh
+
+
 def _load_shift_fract_total_vol(load_shift_percent: float) -> float:
     """
     Convert a load-shift coverage percentile to a demand scaling fraction.
@@ -370,6 +385,10 @@ class DHWSystem:
                 capacity_kbtuh           = max(capacity_kbtuh, ls_capacity_kbtuh)
                 storage_vol_storageT_gal = max(storage_vol_storageT_gal, ls_storage_vol_storageT_gal)
 
+            min_vol_gal = self._calc_minimum_running_volume_supplyT_gal(building)
+            if storage_vol_storageT_gal < min_vol_gal:
+                raise StorageVolumeTooSmallError(storage_vol_storageT_gal, min_vol_gal, capacity_kbtuh)
+
             self._minimum_capacity_kbtuh       = capacity_kbtuh
             self._minimum_storage_storageT_gal = storage_vol_storageT_gal
             self._sizing_strat_slope           = strat_slope
@@ -501,9 +520,12 @@ class DHWSystem:
                         )
                     except (ValueError, RuntimeError):
                         break       # aquastat fraction or other sizing failure
-                    heat_hours_out.append(float(h))
-                    capacity_out.append(cap)
-                    storage_out.append(storage_vol)
+                    if storage_vol < self._calc_minimum_running_volume_supplyT_gal(building):
+                        break
+                    else:
+                        heat_hours_out.append(float(h))
+                        capacity_out.append(cap)
+                        storage_out.append(storage_vol)
             finally:
                 self.max_daily_run_hr = original_run_hr
 
@@ -704,16 +726,7 @@ class DHWSystem:
         ImportError
             If ``plotly`` is not installed.
         """
-        try:
-            import plotly.graph_objects as go
-        except ImportError:
-            raise ImportError(
-                "plotly is required for plot_sizing_curve(). "
-                "Install it with: pip install plotly"
-            )
-
         is_ls = self._is_load_shifting(control_map)
-
         if is_ls:
             curve = self.get_ls_sizing_curve(
                 building,
@@ -722,9 +735,46 @@ class DHWSystem:
                 strat_slope=strat_slope,
                 load_shift_percent=load_shift_percent,
             )
-            # X = coverage % (multiply fraction by 100 for readability)
+        else:
+            curve = self.get_sizing_curve(building, strat_slope=strat_slope)
+        return self._build_sizing_curve_figure(curve, is_ls, title, filepath)
+
+    def _build_sizing_curve_figure(
+        self,
+        curve: dict,
+        is_ls: bool,
+        title: str = "Primary Sizing Curve",
+        filepath: str | None = None,
+    ) -> "plotly.graph_objects.Figure":
+        """
+        Build and return a Plotly figure from pre-computed sizing curve data.
+
+        Separating figure assembly from data computation lets callers reuse
+        the curve dict (e.g. to extract x/y points) without computing it twice.
+
+        Parameters
+        ----------
+        curve : dict
+            Output of ``get_sizing_curve()`` or ``get_ls_sizing_curve()``.
+        is_ls : bool
+            True → load-shift curve layout; False → primary sizing curve layout.
+        title : str
+            Figure title.
+        filepath : str | None
+            If provided, write the figure to this path as a self-contained HTML file.
+        """
+        try:
+            import plotly.graph_objects as go
+        except ImportError:
+            raise ImportError(
+                "plotly is required for plot_sizing_curve(). "
+                "Install it with: pip install plotly"
+            )
+
+        if is_ls:
             x_vals  = [p * 100.0 for p in curve["load_shift_percent"]]
             y_vals  = curve["storage_storageT_gal"]
+            rec     = curve["recommended_index"]
             x_label = "Load-Shift Days Covered (%)"
             y_label = "Primary Tank Volume (gal at Storage Temperature)"
             hover   = (
@@ -738,13 +788,12 @@ class DHWSystem:
                     f"Storage: <b>{y_vals[i]:.1f} gal</b>"
                 )
         else:
-            curve = self.get_sizing_curve(
-                building,
-                strat_slope=strat_slope,
-            )
-            x_vals     = curve["storage_storageT_gal"]
-            y_vals     = curve["capacity_kbtuh"]
-            heat_hours = curve["heat_hours"]
+            # Reverse raw curve (high heat-hours first) so slider moves
+            # left-to-right with increasing storage on the x-axis.
+            x_vals     = curve["storage_storageT_gal"][::-1]
+            y_vals     = curve["capacity_kbtuh"][::-1]
+            heat_hours = curve["heat_hours"][::-1]
+            rec        = len(x_vals) - 1 - curve["recommended_index"]
             x_label    = "Primary Tank Volume (gal at Storage Temperature)"
             y_label    = "Heating Capacity (kBTU/hr)"
             hover      = (
@@ -752,15 +801,6 @@ class DHWSystem:
                 "Capacity: <b>%{y:.1f} kBTU/hr</b>"
                 "<extra></extra>"
             )
-            # The raw curve is ordered high→low storage (high heat hours first).
-            # Reverse so that the slider moves left-to-right in the same direction
-            # as the diamond moves along the x-axis (low storage → high storage).
-            _rec_raw = curve["recommended_index"]
-            x_vals     = x_vals[::-1]
-            y_vals     = y_vals[::-1]
-            heat_hours = heat_hours[::-1]
-            rec        = len(x_vals) - 1 - _rec_raw
-
             def _slider_label(i: int) -> str:
                 return (
                     f"Storage: <b>{x_vals[i]:.1f} gal</b>, "
@@ -768,8 +808,6 @@ class DHWSystem:
                     f"Run hours: <b>{heat_hours[i]:.2f} hr/day</b>"
                 )
 
-        if is_ls:
-            rec = curve["recommended_index"]
         fig = go.Figure()
 
         # Trace 0: the full sizing curve (always visible)
@@ -789,10 +827,9 @@ class DHWSystem:
                 marker=dict(symbol="diamond", color="#2EA3F2", size=12),
                 hovertemplate=hover,
                 showlegend=False,
-                visible=(i == rec),   # only the recommended point starts visible
+                visible=(i == rec),
             ))
 
-        # Build slider steps — each reveals one diamond trace
         steps = []
         for i in range(len(x_vals)):
             visibility = [True] + [j == i for j in range(len(x_vals))]
@@ -946,6 +983,10 @@ class DHWSystem:
             Required physical storage volume [gallons].
         """
         return running_volume_supplyT_gal / stratification_factor
+
+    def _calc_minimum_running_volume_supplyT_gal(self, building) -> float:
+        """Return the floor running volume: half the peak-hour demand at supply temperature."""
+        return float(np.max(building.peak_load_shape)) * building.daily_dhw_use_supplyT_gal / 2.0
 
     def _calc_stratification_factor(
         self,

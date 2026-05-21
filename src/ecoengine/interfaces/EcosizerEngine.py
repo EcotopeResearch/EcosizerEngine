@@ -1345,24 +1345,10 @@ class EcosizerEngine:
             If ``plotly`` is not installed.
         """
         control_schedule, control_map = self._build_control_map()
-        fig = self._dhw_system.plot_sizing_curve(
-            building           = self._building,
-            control_schedule   = control_schedule,
-            control_map        = control_map,
-            load_shift_percent = self.load_shift_percent,
-            strat_slope        = strat_slope,
-            title              = title,
-            filepath           = filepath,
-        )
-
-        result = fig.to_html(full_html=False, include_plotlyjs=False) if return_as_div else fig
-
-        if not return_with_x_y_points:
-            return result
-
         is_ls = "shed" in control_map
+
         if is_ls:
-            curve       = self._dhw_system.get_ls_sizing_curve(
+            curve = self._dhw_system.get_ls_sizing_curve(
                 self._building,
                 control_schedule   = control_schedule,
                 control_map        = control_map,
@@ -1378,4 +1364,9 @@ class EcosizerEngine:
             y_vals      = curve["capacity_kbtuh"][::-1]
             start_index = len(x_vals) - 1 - curve["recommended_index"]
 
-        return [result, x_vals, y_vals, start_index]
+        fig    = self._dhw_system._build_sizing_curve_figure(curve, is_ls, title, filepath)
+        result = fig.to_html(full_html=False, include_plotlyjs=False) if return_as_div else fig
+
+        if return_with_x_y_points:
+            return [result, x_vals, y_vals, start_index]
+        return result

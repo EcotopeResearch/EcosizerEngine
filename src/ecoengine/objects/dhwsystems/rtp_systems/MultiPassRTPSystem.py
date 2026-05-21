@@ -8,6 +8,7 @@ from ecoengine.objects.components.storage.SlugOverlayTank import SlugOverlayTank
 from ecoengine.constants.constants import _RHO_CP
 from .RTPSystem import RTPSystem
 from ..utils import mixing_valve_behavior
+from ..DHWSystem import StorageVolumeTooSmallError
 
 _MPRTP_STRAT_SLOPE: float = 0.8
 _MPRTP_MAX_DAILY_RUN_HR: float = 14.0
@@ -246,6 +247,10 @@ class MultiPassRTPSystem(RTPSystem):
             storage_vol_storageT_gal = self._calc_storage_volume_storageT_gal(
                 running_vol_supplyT_gal, strat_factor
             )
+
+            min_vol_gal = self._calc_minimum_running_volume_supplyT_gal(building)
+            if storage_vol_storageT_gal < min_vol_gal:
+                raise StorageVolumeTooSmallError(storage_vol_storageT_gal, min_vol_gal, capacity_kbtuh)
 
             self._minimum_capacity_kbtuh       = capacity_kbtuh
             self._minimum_storage_storageT_gal = storage_vol_storageT_gal

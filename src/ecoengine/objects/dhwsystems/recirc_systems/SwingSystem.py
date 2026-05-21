@@ -7,7 +7,7 @@ from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
-from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices
+from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices, StorageVolumeTooSmallError
 from .RecircSystem import RecircSystem
 from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
 
@@ -260,6 +260,10 @@ class SwingSystem(RecircSystem):
                     storage_vol_storageT_gal = ls_storage_vol
                     self._eff_mix_fraction = ls_eff_mix
 
+            min_vol_gal = self._calc_minimum_running_volume_supplyT_gal(building)
+            if storage_vol_storageT_gal < min_vol_gal:
+                raise StorageVolumeTooSmallError(storage_vol_storageT_gal, min_vol_gal, capacity_kbtuh)
+
             self._minimum_capacity_kbtuh       = capacity_kbtuh
             self._minimum_storage_storageT_gal = storage_vol_storageT_gal
             self._sizing_strat_slope           = strat_slope
@@ -325,9 +329,12 @@ class SwingSystem(RecircSystem):
                         )
                     except (ValueError, RuntimeError):
                         break
-                    heat_hours_out.append(float(h))
-                    capacity_out.append(cap)
-                    storage_out.append(storage_vol)
+                    if storage_vol < self._calc_minimum_running_volume_supplyT_gal(building):
+                        break
+                    else:
+                        heat_hours_out.append(float(h))
+                        capacity_out.append(cap)
+                        storage_out.append(storage_vol)
             finally:
                 self.max_daily_run_hr = original_run_hr
 
