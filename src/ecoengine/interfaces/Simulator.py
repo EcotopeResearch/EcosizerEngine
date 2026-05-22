@@ -55,7 +55,8 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
     sim_run = SimulationRun(duration_min, timestep_min, **sim_run_kwargs)
 
     from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem
-    sim_run.show_tm_panel = isinstance(dhw_system, SwingSystem)
+    from ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem import SwingERTrdOffSystem
+    sim_run.show_tm_panel = isinstance(dhw_system, SwingSystem) or isinstance(dhw_system, SwingERTrdOffSystem)
 
     # Initialize storage tanks
     inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
@@ -99,7 +100,8 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
         )
 
         if step["usable_volume_supplyT_gal"] <= 0.0:
-            sim_run.record_outage(timestep_min)
+            if not sim_run.show_tm_panel or step.get("tm_tank_temp_f") < dhw_system.supply_temp_f:
+                sim_run.record_outage(timestep_min)
 
         # Check outlet-deficit stop condition. For systems where the TM/swing
         # tank is the actual delivery point (e.g. SwingSystem), use its

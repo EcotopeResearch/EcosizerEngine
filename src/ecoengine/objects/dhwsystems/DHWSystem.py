@@ -1722,7 +1722,6 @@ class DHWSystem:
                 wh.update_state(self.storage_tank, hour_of_day)
 
             # Apply heating from all active heaters to the tank
-            top_temp_f     = self.storage_tank.get_temperature_at_fraction(1.0)
             total_kbtuh    = sum(
                 wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
                 for wh in self.water_heaters
@@ -1737,11 +1736,15 @@ class DHWSystem:
                 total_kw = sum(kw or 0.0 for kw in active_kws)
 
             self.storage_tank.heat(total_kbtuh, interval_min, outlet_temp_f)
+            top_temp_f     = self.storage_tank.get_temperature_at_fraction(1.0)
 
             # Draw hot water from tank to meet demand
-            self.storage_tank.draw(
-                demand_supplyT_gal, inlet_temp_f, self.supply_temp_f, outlet_temp_f
-            )
+            if top_temp_f >= self.supply_temp_f:
+                self.storage_tank.draw(
+                    demand_supplyT_gal, inlet_temp_f, self.supply_temp_f, outlet_temp_f
+                )
+            else:
+                self.storage_tank.draw_physical_gal(demand_supplyT_gal, inlet_temp_f, self.supply_temp_f)
 
             usable_vol_gal = self.storage_tank.get_usable_volume_supplyT_gal(
                 self.supply_temp_f
