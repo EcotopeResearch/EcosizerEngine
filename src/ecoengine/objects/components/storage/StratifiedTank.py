@@ -220,7 +220,7 @@ class StratifiedTank(StorageTank):
         avg_temp = self.get_average_draw_temp_f(physical_vol)
         if avg_temp >= outlet_temp_f - 1e-6:
             self._delta_gal -= physical_vol
-            self._delta_gal = max(self._delta_gal, self._delta_gal_floor(supply_temp_f))
+            self._delta_gal = max(self._delta_gal, self._delta_gal_floor())
             return
 
         # Slow path: draw dips into the transition / cold zone.
@@ -244,7 +244,7 @@ class StratifiedTank(StorageTank):
                 break
 
         self._delta_gal -= min((lo + hi) * 0.5, self.total_volume_gal)
-        self._delta_gal = max(self._delta_gal, self._delta_gal_floor(supply_temp_f))
+        self._delta_gal = max(self._delta_gal, self._delta_gal_floor())
 
     def heat(
         self,
@@ -410,7 +410,7 @@ class StratifiedTank(StorageTank):
         self._inlet_temp_f = inlet_temp_f
         if gal > 0.0:
             self._delta_gal -= gal
-            self._delta_gal = max(self._delta_gal, self._delta_gal_floor(supply_temp_f))
+            self._delta_gal = max(self._delta_gal, self._delta_gal_floor())
 
     # ------------------------------------------------------------------
     # Sizing support

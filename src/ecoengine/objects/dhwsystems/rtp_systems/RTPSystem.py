@@ -23,6 +23,7 @@ class RTPSystem(DHWSystem):
         return_flow_gpm: float,
         max_daily_run_hr: float = 16.0,
         defrost_factor: float = 1.0,
+        tm_safety_factor: float = 1.0,
     ):
         """
         Parameters
@@ -39,6 +40,10 @@ class RTPSystem(DHWSystem):
             Maximum hours the heating system may run per day. Default 16.
         defrost_factor : float
             Fraction of rated capacity available after defrost (0-1). Default 1.0.
+        tm_safety_factor : float
+            Multiplier applied to recirculation loss during sizing only (not
+            simulation). Increases sized capacity and volume to provide a
+            buffer above the bare steady-state recirc loss. Default 1.0.
         """
         super().__init__(
             water_heaters,
@@ -48,12 +53,17 @@ class RTPSystem(DHWSystem):
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
         )
-        self.return_temp_f   = return_temp_f
-        self.return_flow_gpm = return_flow_gpm
+        self.return_temp_f    = return_temp_f
+        self.return_flow_gpm  = return_flow_gpm
+        self.tm_safety_factor = tm_safety_factor
 
     # ------------------------------------------------------------------
     # Recirc loss
     # ------------------------------------------------------------------
+
+    def _get_sizing_recirc_loss_kbtuh(self) -> float:
+        """Return recirc loss scaled by tm_safety_factor for use during sizing only."""
+        return self.get_recirc_loss_kbtuh() * self.tm_safety_factor
 
     def get_recirc_loss_kbtuh(self) -> float:
         """
@@ -103,7 +113,7 @@ class RTPSystem(DHWSystem):
         """
         dhw_cap    = super()._calc_required_capacity(building)
         recirc_cap = (
-            self.get_recirc_loss_kbtuh()
+            self._get_sizing_recirc_loss_kbtuh()
             * 24.0
             / self.max_daily_run_hr
             / self.defrost_factor
@@ -143,7 +153,7 @@ class RTPSystem(DHWSystem):
             control_schedule, control_map, building, strat_slope, fract_total_vol
         )
         recirc_cap = (
-            self.get_recirc_loss_kbtuh()
+            self._get_sizing_recirc_loss_kbtuh()
             * 24.0
             / self.max_daily_run_hr
             / self.defrost_factor

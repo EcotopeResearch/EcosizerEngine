@@ -409,3 +409,77 @@ class TestSlugEnergyConservationWithDraw:
         tank.deactivate_slug()
 
         assert tank._energy_btu == pytest.approx(E0 + Q_total - E_removed_total, rel=1e-4)
+
+
+# ===========================================================================
+# StratifiedTank depletion behaviour
+# ===========================================================================
+
+class TestStratifiedTankDepletion:
+    """
+    Verify that drawing far more than the tank holds drives every node to inlet
+    temperature, and that even a small heat addition then warms the top node
+    above inlet temperature.
+
+    This guards against the historical bug where draw() clamped _delta_gal at
+    _delta_gal_floor(supply_temp_f) rather than _delta_gal_floor(), preventing
+    the tank from reaching a fully-cold state and making the top node always
+    report supply_temp_f during an outage.
+    """
+
+    _VOLUME_GAL    = 200.0
+    _STORAGE_T     = 150.0
+    _SUPPLY_T      = 120.0
+    _INLET_T       = 55.0
+    _OUTLET_T      = 150.0
+
+    def _full_tank(self) -> StratifiedTank:
+        tank = StratifiedTank(total_volume_gal=self._VOLUME_GAL)
+        tank.initialize(self._STORAGE_T, self._INLET_T, percent_useable=1.0)
+        return tank
+
+    def test_massive_draw_empties_all_nodes_to_inlet(self):
+        """Drawing 100× tank volume leaves every node at inlet temperature."""
+        tank = self._full_tank()
+        tank.draw(
+            volume_supplyT_gal = self._VOLUME_GAL * 100,
+            cold_temp_f        = self._INLET_T,
+            supply_temp_f      = self._SUPPLY_T,
+            outlet_temp_f      = self._OUTLET_T,
+        )
+        for fract in _FRACTIONS:
+            assert tank.get_temperature_at_fraction(fract) == pytest.approx(
+                self._INLET_T, abs=0.1
+            ), f"node at {fract*100:.0f}% should be inlet temp after full depletion"
+
+    def test_massive_draw_zeros_usable_volume(self):
+        """After a full depletion draw usable volume is zero."""
+        tank = self._full_tank()
+        tank.draw(self._VOLUME_GAL * 100, self._INLET_T, self._SUPPLY_T, self._OUTLET_T)
+        assert tank.get_usable_volume_supplyT_gal(self._SUPPLY_T) == pytest.approx(0.0, abs=1e-6)
+
+    def test_small_heat_after_depletion_warms_top(self):
+        """A small heat pulse on a depleted tank raises the top node above inlet."""
+        tank = self._full_tank()
+        tank.draw(self._VOLUME_GAL * 100, self._INLET_T, self._SUPPLY_T, self._OUTLET_T)
+
+        # Apply a modest 30-minute heat pulse at low capacity
+        tank.heat(kbtuh=5.0, duration_min=30.0, outlet_temp_f=self._OUTLET_T)
+
+        top_temp = tank.get_temperature_at_fraction(1.0)
+        assert top_temp > self._INLET_T, (
+            f"top node ({top_temp:.2f}°F) should be above inlet ({self._INLET_T}°F) "
+            "after heating a depleted tank"
+        )
+
+    def test_small_heat_after_depletion_leaves_bottom_cold(self):
+        """After a small heat pulse the bottom of the fully-depleted tank stays cold."""
+        tank = self._full_tank()
+        tank.draw(self._VOLUME_GAL * 100, self._INLET_T, self._SUPPLY_T, self._OUTLET_T)
+        tank.heat(kbtuh=5.0, duration_min=30.0, outlet_temp_f=self._OUTLET_T)
+
+        bottom_temp = tank.get_temperature_at_fraction(0.0)
+        assert bottom_temp == pytest.approx(self._INLET_T, abs=0.1), (
+            f"bottom node ({bottom_temp:.2f}°F) should still be at inlet temp "
+            "after a small heat pulse on a depleted tank"
+        )

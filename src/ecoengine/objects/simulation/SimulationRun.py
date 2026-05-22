@@ -237,17 +237,30 @@ class SimulationRun:
 
         first_step = outage_steps[0]
         day = (first_step * self.timestep_min) // (24 * 60) + 1
-        # For swing systems the delivery point is the swing tank, not the primary top.
+
+        # For swing/TM systems use the TM tank as the delivery point; for all others
+        # use the primary tank top node.  draw() no longer clamps _delta_gal at
+        # supply_temp_f, so the top node drops below supply_temp_f during a true
+        # temperature-limited outage and the reported temperature is meaningful.
+        # Volume-limited outages (primary depleted but TM still hot, or tank at
+        # exactly supply_temp_f) produce delivery temps >= supply_temp_f, which
+        # are uninformative — suppress the clause in that case.
         if self.show_tm_panel and self.tm_tank_temp_f:
             delivery_temps = self.tm_tank_temp_f
         else:
             delivery_temps = self.tank_temps_f[5]
-        avg_delivery_temp = sum(delivery_temps[i] for i in outage_steps) / len(outage_steps)
+        supply_t_f = self.supply_temp_f or 9999.0
+        below_supply = [delivery_temps[i] for i in outage_steps if delivery_temps[i] < supply_t_f - 0.5]
+        if below_supply:
+            avg_delivery_temp_f = sum(below_supply) / len(below_supply)
+            temp_clause = f" with an average delivered water temperature of {avg_delivery_temp_f:.1f}°F"
+        else:
+            temp_clause = ""
 
         return (
             f"Simulation failed: system was undersized. "
             f"DHW outage occurred for {self.outage_minutes} minutes on day {day} "
-            f"of the simulation with an average delivered water temperature of {avg_delivery_temp:.1f}°F."
+            f"of the simulation{temp_clause}."
         )
 
     def get_total_energy_kwh(self) -> float:

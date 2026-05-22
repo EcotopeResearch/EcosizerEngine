@@ -8,6 +8,7 @@ from ecoengine.objects.components.storage.SlugOverlayTank import SlugOverlayTank
 from ecoengine.constants.constants import _RHO_CP
 from .RTPSystem import RTPSystem
 from ..utils import mixing_valve_behavior
+from ..DHWSystem import StorageVolumeTooSmallError
 
 _MPRTP_STRAT_SLOPE: float = 0.8
 _MPRTP_MAX_DAILY_RUN_HR: float = 14.0
@@ -64,6 +65,7 @@ class MultiPassRTPSystem(RTPSystem):
         return_flow_gpm: float,
         max_daily_run_hr: float = _MPRTP_MAX_DAILY_RUN_HR,
         defrost_factor: float = 1.0,
+        tm_safety_factor: float = 1.0,
         control_schedule: list[str] | None = None,
         control_map: dict[str, Controls] | None = None,
         strat_slope: float = _MPRTP_STRAT_SLOPE,
@@ -84,6 +86,8 @@ class MultiPassRTPSystem(RTPSystem):
         max_daily_run_hr : float
             Maximum hours the heater may run per day. Default 14.
         defrost_factor : float
+        tm_safety_factor : float
+            Multiplier applied to recirculation loss during sizing only. Default 1.0.
         control_schedule : list[str] | None
             Passed to WaterHeater; load-shift sizing is not supported and
             will raise if a ``"shed"`` key appears in control_map.
@@ -124,6 +128,7 @@ class MultiPassRTPSystem(RTPSystem):
             return_flow_gpm=return_flow_gpm,
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
+            tm_safety_factor=tm_safety_factor,
         )
         system.size(building, control_map=control_map, strat_slope=strat_slope)
 
@@ -175,7 +180,7 @@ class MultiPassRTPSystem(RTPSystem):
                         deficit_minutes = i - start_heat_min
                         min_tank_outlet_f = tank_outlet_f
             
-            if deficit_minutes > 0:
+            if (deficit_minutes > 5 and supply_temp_f - min_tank_outlet_f > 2.0) or supply_temp_f - min_tank_outlet_f > 4.0: # criteria for outage
                 capacity_increase_kbtu = ((system.storage_tank.total_volume_gal * percent_useable) * _RHO_CP * (supply_temp_f - min_tank_outlet_f))/1000
                 if capacity_increase_kbtu > 0:
                     system._minimum_capacity_kbtuh = system._minimum_capacity_kbtuh + (capacity_increase_kbtu / (deficit_minutes/60))
@@ -246,6 +251,10 @@ class MultiPassRTPSystem(RTPSystem):
             storage_vol_storageT_gal = self._calc_storage_volume_storageT_gal(
                 running_vol_supplyT_gal, strat_factor
             )
+
+            min_vol_gal = self._calc_minimum_running_volume_supplyT_gal(building)
+            if storage_vol_storageT_gal < min_vol_gal:
+                raise StorageVolumeTooSmallError(storage_vol_storageT_gal, min_vol_gal, capacity_kbtuh)
 
             self._minimum_capacity_kbtuh       = capacity_kbtuh
             self._minimum_storage_storageT_gal = storage_vol_storageT_gal
@@ -319,7 +328,7 @@ class MultiPassRTPSystem(RTPSystem):
             #   → run_hr = numerator / (cap × defrost)
             design_inlet    = self._require_design_inlet_temp(building)
             delta_t         = self.supply_temp_f - design_inlet
-            recirc_loss     = self.get_recirc_loss_kbtuh()
+            recirc_loss     = self._get_sizing_recirc_loss_kbtuh()
             _numerator      = (
                 building.daily_dhw_use_supplyT_gal * _RHO_CP * delta_t / 1000.0
                 + recirc_loss * 24.0
@@ -497,13 +506,13 @@ class MultiPassRTPSystem(RTPSystem):
             if slug_vol_gal > 0.0:
                 slug_temp_f += heat_kbtu_per_min * 1000.0 / (slug_vol_gal * _RHO_CP)
 
-            # Reset slug when it reaches supply temperature
+            if slug_vol_gal > max_slug_vol_gal:
+                max_slug_vol_gal = slug_vol_gal
+
+            # Reset slug when it reaches storage temperature
             if slug_vol_gal > 0.0 and slug_temp_f >= self.storage_temp_f: # Heres a place I messed with TODO
                 slug_vol_gal = 0.0
                 slug_temp_f  = cold_temp_f
-
-            if slug_vol_gal > max_slug_vol_gal:
-                max_slug_vol_gal = slug_vol_gal
 
         return max_slug_vol_gal
 
@@ -638,7 +647,7 @@ class MultiPassRTPSystem(RTPSystem):
             "usable_volume_supplyT_gal": usable_vol_gal,
             "heater_output_kbtuh":       total_kbtuh,
             "heater_power_in_kw":        total_kw,
-            "oat_f":                     top_temp_f,
+            "oat_f":                     oat_f,
             "inlet_water_temp_f":        inlet_water_temp_f,
             "tank_temps_f":              tank_temps_f,
             "mode":                      mode,
