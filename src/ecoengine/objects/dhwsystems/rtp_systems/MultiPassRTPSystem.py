@@ -71,7 +71,8 @@ class MultiPassRTPSystem(RTPSystem):
         strat_slope: float = _MPRTP_STRAT_SLOPE,
         percent_useable: float = 1.0,
         capacity_boost_trial_days: int = 3,
-        capacity_boost_iterations: int = 3
+        capacity_boost_iterations: int = 3,
+        default_to_min_volume: bool = True
     ) -> MultiPassRTPSystem:
         """
         Size the system for the given building, then build it.
@@ -130,7 +131,7 @@ class MultiPassRTPSystem(RTPSystem):
             defrost_factor=defrost_factor,
             tm_safety_factor=tm_safety_factor,
         )
-        system.size(building, control_map=control_map, strat_slope=strat_slope)
+        system.size(building, control_map=control_map, strat_slope=strat_slope, default_to_min_volume = default_to_min_volume)
 
         cold_temp_f = system._require_design_inlet_temp(building)
         system.storage_tank = SlugOverlayTank(
@@ -204,6 +205,7 @@ class MultiPassRTPSystem(RTPSystem):
         control_map: dict[str, Controls] | None = None,
         strat_slope: float = _MPRTP_STRAT_SLOPE,
         load_shift_fract_total_vol: float = 1.0,
+        default_to_min_volume: bool = False,
     ) -> None:
         """
         Size the multi-pass RTP system.
@@ -254,7 +256,10 @@ class MultiPassRTPSystem(RTPSystem):
 
             min_vol_gal = self._calc_minimum_running_volume_supplyT_gal(building)
             if storage_vol_storageT_gal < min_vol_gal:
-                raise StorageVolumeTooSmallError(storage_vol_storageT_gal, min_vol_gal, capacity_kbtuh)
+                if default_to_min_volume:
+                    storage_vol_storageT_gal = min_vol_gal
+                else:
+                    raise StorageVolumeTooSmallError(storage_vol_storageT_gal, min_vol_gal, capacity_kbtuh)
 
             self._minimum_capacity_kbtuh       = capacity_kbtuh
             self._minimum_storage_storageT_gal = storage_vol_storageT_gal
@@ -365,7 +370,8 @@ class MultiPassRTPSystem(RTPSystem):
                             strat_slope      = _strat_slope,
                             percent_useable  = _pct_use,
                             capacity_boost_trial_days= 2,
-                            capacity_boost_iterations= 1
+                            capacity_boost_iterations= 1,
+                            default_to_min_volume = False
                         )
                     except (ValueError, RuntimeError, ZeroDivisionError):
                         break
