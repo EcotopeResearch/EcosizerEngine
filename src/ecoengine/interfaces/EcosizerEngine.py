@@ -878,6 +878,7 @@ class EcosizerEngine:
                     return_flow_gpm            = self.return_flow_gpm,
                     max_daily_run_hr           = self.max_daily_run_hr,
                     defrost_factor             = self.defrost_factor,
+                    tm_safety_factor           = self.tm_safety_factor,
                     control_schedule           = control_schedule,
                     control_map                = control_map,
                     load_shift_fract_total_vol = ls_fract,
@@ -896,6 +897,7 @@ class EcosizerEngine:
                     return_flow_gpm  = self.return_flow_gpm,
                     max_daily_run_hr = 14,
                     defrost_factor   = self.defrost_factor,
+                    tm_safety_factor = self.tm_safety_factor,
                     control_schedule = control_schedule,
                     control_map      = control_map,
                 )
@@ -1096,6 +1098,7 @@ class EcosizerEngine:
                 return_flow_gpm=self.return_flow_gpm,
                 max_daily_run_hr=self.max_daily_run_hr,
                 defrost_factor=self.defrost_factor,
+                tm_safety_factor=self.tm_safety_factor,
             )
 
         if self.schematic in ["multi_pass_rtp", "mprtp"]:
@@ -1120,6 +1123,7 @@ class EcosizerEngine:
                 return_flow_gpm=self.return_flow_gpm,
                 max_daily_run_hr=_MPRTP_MAX_DAILY_RUN_HR,
                 defrost_factor=self.defrost_factor,
+                tm_safety_factor=self.tm_safety_factor,
             )
 
         if self.schematic == "instant_wh":

@@ -414,5 +414,4 @@ class ParallelLoopSystem(RecircSystem):
         step["tm_tank_temp_f"]         = self.tm_storage_tank.get_temperature_at_fraction(0.5)
         step["tm_heater_output_kbtuh"] = tm_kbtuh
         step["tm_heater_input_kw"]     = tm_kw
-        print(f'{step["tm_heater_input_kw"]}, {step["tm_tank_temp_f"] }, {step["tm_heater_output_kbtuh"]}')
         return step

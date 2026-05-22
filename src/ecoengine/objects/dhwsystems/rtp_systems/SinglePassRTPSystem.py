@@ -53,6 +53,7 @@ class SinglePassRTPSystem(RTPSystem):
         return_flow_gpm: float,
         max_daily_run_hr: float = 16.0,
         defrost_factor: float = 1.0,
+        tm_safety_factor: float = 1.0,
         control_schedule: list[str] | None = None,
         control_map: dict[str, Controls] | None = None,
         strat_slope: float = _SPRTP_STRAT_SLOPE,
@@ -99,6 +100,7 @@ class SinglePassRTPSystem(RTPSystem):
             return_flow_gpm=return_flow_gpm,
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
+            tm_safety_factor=tm_safety_factor,
         )
         system.size(
             building,
@@ -155,7 +157,7 @@ class SinglePassRTPSystem(RTPSystem):
             load_shift_fract_total_vol=load_shift_fract_total_vol,
         )
         self._recirc_capacity_kbtuh: float = (
-            self.get_recirc_loss_kbtuh()
+            self._get_sizing_recirc_loss_kbtuh()
             * 24.0
             / self.max_daily_run_hr
             / self.defrost_factor
@@ -215,7 +217,7 @@ class SinglePassRTPSystem(RTPSystem):
         """
         design_inlet = self._require_design_inlet_temp(building)
         recirc_daily_supplyT_gal = (
-            self.get_recirc_loss_kbtuh()
+            self._get_sizing_recirc_loss_kbtuh()
             * 1000.0
             / (_RHO_CP * (self.supply_temp_f - design_inlet))
             * 24.0
@@ -248,7 +250,7 @@ class SinglePassRTPSystem(RTPSystem):
         """
         design_inlet = self._require_design_inlet_temp(building)
         recirc_daily_supplyT_gal = (
-            self.get_recirc_loss_kbtuh()
+            self._get_sizing_recirc_loss_kbtuh()
             * 1000.0
             / (_RHO_CP * (self.supply_temp_f - design_inlet))
             * 24.0
@@ -304,7 +306,7 @@ class SinglePassRTPSystem(RTPSystem):
         """
         design_inlet = self._require_design_inlet_temp(building)
         recirc_daily_supplyT_gal = (
-            self.get_recirc_loss_kbtuh()
+            self._get_sizing_recirc_loss_kbtuh()
             * 1000.0
             / (_RHO_CP * (self.supply_temp_f - design_inlet))
             * 24.0

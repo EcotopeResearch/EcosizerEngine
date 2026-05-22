@@ -20,7 +20,7 @@ import numpy as np
 
 from ecoengine.objects.building.Building import Building
 from ecoengine.objects.building.ClimateZone import ClimateZone
-from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem, _get_peak_indices
+from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem, _get_peak_indices, StorageVolumeTooSmallError
 from ecoengine.constants.constants import _RHO_CP
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.heating.PerformanceMap import NominalPerformanceMap
@@ -462,9 +462,21 @@ class TestFromSize:
         assert system._minimum_capacity_kbtuh > 0
 
     def test_higher_run_hours_gives_less_capacity(self, building_with_zone):
-        sys_8  = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, max_daily_run_hr=8.0)
-        sys_24 = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, max_daily_run_hr=24.0)
-        assert sys_24._minimum_capacity_kbtuh < sys_8._minimum_capacity_kbtuh
+        # Either run-hour setting may fall below the minimum volume floor for this
+        # building; extract capacity from the exception when that occurs.
+        try:
+            sys_8 = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, max_daily_run_hr=8.0)
+            cap_8 = sys_8._minimum_capacity_kbtuh
+        except StorageVolumeTooSmallError as e:
+            cap_8 = e.capacity_kbtuh
+
+        try:
+            sys_24 = DHWSystem.from_size(building_with_zone, SUPPLY_T, STORAGE_T, max_daily_run_hr=24.0)
+            cap_24 = sys_24._minimum_capacity_kbtuh
+        except StorageVolumeTooSmallError as e:
+            cap_24 = e.capacity_kbtuh
+
+        assert cap_24 < cap_8
 
     def test_temperature_params_stored(self, sized_system):
         assert sized_system.supply_temp_f  == SUPPLY_T
