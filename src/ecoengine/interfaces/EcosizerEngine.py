@@ -1088,10 +1088,17 @@ class EcosizerEngine:
             from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import (
                 SinglePassRTPSystem, _SPRTP_STRAT_SLOPE,
             )
+            from ecoengine.objects.components.storage.EnergyTank import EnergyTank
             self._require_recirc_params()
+            cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
             return SinglePassRTPSystem(
                 water_heaters=water_heaters,
-                storage_tank=_primary_tank(strat_slope=_SPRTP_STRAT_SLOPE),
+                storage_tank=EnergyTank(
+                    total_volume_gal=self.storage_volume_storageT_gal,
+                    cold_temp_f=cold_temp_f,
+                    storage_temp_f=self.storage_temp_f,
+                    strat_slope=_SPRTP_STRAT_SLOPE,
+                ),
                 supply_temp_f=self.supply_temp_f,
                 storage_temp_f=self.storage_temp_f,
                 return_temp_f=self.return_temp_f,

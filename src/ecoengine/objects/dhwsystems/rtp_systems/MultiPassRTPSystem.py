@@ -51,6 +51,8 @@ class MultiPassRTPSystem(RTPSystem):
     Load-shift sizing is not supported.
     """
 
+    storage_tank: SlugOverlayTank
+
     # ------------------------------------------------------------------
     # Factory constructor
     # ------------------------------------------------------------------
@@ -579,7 +581,7 @@ class MultiPassRTPSystem(RTPSystem):
 
         # Keep cold baseline current (important for annual simulations where
         # inlet water temperature changes by month).
-        tank._cold_temp_f = inlet_water_temp_f
+        self.storage_tank.update_cold_temp_f(inlet_water_temp_f)
 
         was_heating = any(wh.is_active() for wh in self.water_heaters)
 

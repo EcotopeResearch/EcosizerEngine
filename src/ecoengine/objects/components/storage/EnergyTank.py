@@ -69,6 +69,10 @@ class EnergyTank(StorageTank):
         # means the full tank height is usable.
         self._cold_pct: float = 0.0
 
+    def update_cold_temp_f(self, cold_temp_f : float):
+        if self._cold_temp_f == cold_temp_f:
+            return
+        self._cold_temp_f = cold_temp_f
     # ------------------------------------------------------------------
     # Energy ↔ shift_pct helpers
     # ------------------------------------------------------------------
