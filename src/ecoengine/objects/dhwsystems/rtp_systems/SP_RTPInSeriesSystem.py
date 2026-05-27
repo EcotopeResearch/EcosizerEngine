@@ -4,6 +4,7 @@ from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.EnergyTank import EnergyTank
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
+from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
 from ..utils import mixing_valve_behavior
 from .SinglePassRTPSystem import SinglePassRTPSystem, _SPRTP_STRAT_SLOPE
 
@@ -147,7 +148,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         return system
 
     # ------------------------------------------------------------------
-    # Gas backup sizing (placeholder)
+    # Gas backup sizing
     # ------------------------------------------------------------------
 
     def _size_gas_backup(
@@ -158,8 +159,9 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         gas_controls: Controls,
     ) -> None:
         """
-        Size gas_water_heater and gas_storage_tank to cover the shortfall
-        between the nominal primary HPWH specs and what full sizing requires.
+        Size gas_water_heater and gas_storage_tank by simulating 2 days as a
+        plain SinglePassRTPSystem (undersized primary only) and finding the
+        worst 30-minute outage window.
 
         Parameters
         ----------
@@ -170,14 +172,77 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             Primary storage volume ceiling [gal at storageT].
         gas_controls : Controls
             Controls for the gas backup water heater.
+
+        Raises
+        ------
+        ValueError
+            If the primary SPRTP is already adequately sized (outage < 10 min
+            and max deficit < 2 °F), meaning no gas backup is needed.
         """
-        # TODO: implement gas backup sizing logic
+        _WINDOW_MIN      = 30
+        _MIN_OUTAGE_MIN  = 10
+        _MIN_DEFICIT_F   = 2.0
+        _TOTAL_STEPS     = 2 * 24 * 60   # 2 days at 1-min intervals
+
+        # --- 1. Initialise primary tank to fully charged ---
+        inlet_temp_f = building.get_design_inlet_water_temp_f()
+        self.storage_tank.initialize(self.storage_temp_f, inlet_temp_f, percent_useable=1.0)
+
+        # --- 2. Two-day simulation as SinglePassRTPSystem ---
+        outage_volume_gal: list[float] = []
+        outage_energy_btu: list[float] = []
+        max_deficit_f: float = 0.0
+
+        for t in range(_TOTAL_STEPS):
+            pre_top_temp = self.storage_tank.get_temperature_at_fraction(1.0)
+            step = SinglePassRTPSystem.simulate_step(self, building, t, interval_min=1)
+            demand = step["demand_supplyT_gal"]
+
+            if pre_top_temp < self.supply_temp_f:
+                deficit_f = self.supply_temp_f - pre_top_temp
+                max_deficit_f = max(max_deficit_f, deficit_f)
+                outage_volume_gal.append(demand)
+                outage_energy_btu.append(_RHO_CP * demand * deficit_f)
+            else:
+                outage_volume_gal.append(0.0)
+                outage_energy_btu.append(0.0)
+
+        # --- 3. Check whether a gas backup is actually needed ---
+        total_outage_min = sum(1 for v in outage_volume_gal if v > 0.0)
+        if total_outage_min <= _MIN_OUTAGE_MIN and max_deficit_f <= _MIN_DEFICIT_F:
+            raise ValueError(
+                "The primary SinglePassRTPSystem is already adequately sized: "
+                f"outage duration was {total_outage_min} min "
+                f"(threshold {_MIN_OUTAGE_MIN} min) and max temperature deficit "
+                f"was {max_deficit_f:.2f} °F (threshold {_MIN_DEFICIT_F:.1f} °F). "
+                "No gas backup is required."
+            )
+
+        # --- 4. Sliding 30-minute window: find worst outage stretch ---
+        window_vol = sum(outage_volume_gal[:_WINDOW_MIN])
+        best_vol   = window_vol
+        best_start = 0
+
+        for i in range(1, _TOTAL_STEPS - _WINDOW_MIN + 1):
+            window_vol += outage_volume_gal[i + _WINDOW_MIN - 1] - outage_volume_gal[i - 1]
+            if window_vol > best_vol:
+                best_vol   = window_vol
+                best_start = i
+
+        best_slice_vol = outage_volume_gal[best_start : best_start + _WINDOW_MIN]
+        best_slice_btu = outage_energy_btu[best_start : best_start + _WINDOW_MIN]
+
+        gas_storage_vol_gal = sum(best_slice_vol)
+        avg_btu_per_min     = sum(best_slice_btu) / _WINDOW_MIN
+        gas_capacity_kbtuh  = avg_btu_per_min * 60.0 / 1000.0
+
+        # --- 5. Build gas backup components ---
         self.gas_water_heater = WaterHeater.from_nominal_capacity(
-            nominal_capacity_kbtuh=0.0,
-            control_schedule=["normal"],
+            nominal_capacity_kbtuh=gas_capacity_kbtuh,
+            control_schedule=["normal"] * 24,
             control_map={"normal": gas_controls},
         )
-        self.gas_storage_tank = MixedStorageTank(total_volume_gal=0.0)
+        self.gas_storage_tank = MixedStorageTank(total_volume_gal=gas_storage_vol_gal)
 
     # ------------------------------------------------------------------
     # Simulation
@@ -257,13 +322,13 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         self.gas_water_heater.update_state(self.gas_storage_tank, hour_of_day)
         gas_ctrl     = self.gas_water_heater.get_controls_for_hour(hour_of_day)
         gas_outlet_f = gas_ctrl.outlet_temp_f if gas_ctrl is not None else self.supply_temp_f + _GAS_DEADBAND_F
-        tm_kbtuh    = self.gas_water_heater.get_output_kbtuh(oat_f, gas_outlet_f)
-        tm_kw_val   = ( # TODO figure out gas carbon outputs
+        gas_kbtuh    = self.gas_water_heater.get_output_kbtuh(oat_f, gas_outlet_f)
+        gas_kw_val   = ( # TODO figure out gas carbon outputs
             self.gas_water_heater.get_power_in_kw(oat_f, gas_outlet_f)
             if self.gas_water_heater.is_active()
             else None
         )
-        self.gas_storage_tank.heat(tm_kbtuh, interval_min, gas_outlet_f)
+        self.gas_storage_tank.heat(gas_kbtuh, interval_min, gas_outlet_f)
 
         usable_vol_gal = self.storage_tank.get_usable_volume_supplyT_gal(
             self.supply_temp_f
@@ -282,4 +347,8 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             "inlet_water_temp_f":        inlet_temp_f,
             "tank_temps_f":              tank_temps_f,
             "mode":                      mode,
+            # TODO change this to gas names
+            "tm_tank_temp_f":            self.gas_storage_tank.get_temperature_at_fraction(1.0),
+            "tm_heater_output_kbtuh":    gas_kbtuh,
+            "tm_heater_input_kw":        gas_kbtuh / _W_TO_KBTUH, # assume COP of 1
         }
