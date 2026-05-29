@@ -38,6 +38,8 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
 
     gas_water_heater: WaterHeater
     gas_storage_tank: MixedStorageTank
+    outage_volume_gal: list[float]
+    outage_temp_delta_f: list[float]
 
     # ------------------------------------------------------------------
     # Factory constructor
@@ -191,8 +193,8 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         self.storage_tank.initialize(self.storage_temp_f, inlet_temp_f, percent_useable=percent_useable)
 
         # --- 2. Two-day simulation as SinglePassRTPSystem ---
-        outage_volume_gal: list[float] = []
-        outage_temp_delta_f: list[float] = []
+        self.outage_volume_gal   = []
+        self.outage_temp_delta_f = []
         max_deficit_f: float = 0.0
 
         for t in range(_TOTAL_STEPS):
@@ -202,14 +204,14 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             if pre_top_temp < self.supply_temp_f:
                 deficit_f = self.supply_temp_f - pre_top_temp
                 max_deficit_f = max(max_deficit_f, deficit_f)
-                outage_volume_gal.append(demand)
-                outage_temp_delta_f.append(deficit_f)
+                self.outage_volume_gal.append(demand)
+                self.outage_temp_delta_f.append(deficit_f)
             else:
-                outage_volume_gal.append(0.0)
-                outage_temp_delta_f.append(0.0)
+                self.outage_volume_gal.append(0.0)
+                self.outage_temp_delta_f.append(0.0)
 
         # --- 3. Check whether a gas backup is actually needed ---
-        total_outage_min = sum(1 for v in outage_volume_gal if v > 0.0)
+        total_outage_min = sum(1 for v in self.outage_volume_gal if v > 0.0)
         if total_outage_min <= _MIN_OUTAGE_MIN and max_deficit_f <= _MIN_DEFICIT_F:
             raise ValueError(
                 "The primary SinglePassRTPSystem is already adequately sized: "
@@ -219,25 +221,9 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
                 "No gas backup is required."
             )
 
-        # --- 4. Sliding 30-minute window: find worst outage stretch ---
-        window_vol = sum(outage_temp_delta_f[:_WINDOW_MIN])
-        best_vol   = window_vol
-        best_start = 0
-
-        for i in range(1, _TOTAL_STEPS - _WINDOW_MIN + 1):
-            window_vol += outage_temp_delta_f[i + _WINDOW_MIN - 1] - outage_temp_delta_f[i - 1]
-            if window_vol > best_vol:
-                best_vol   = window_vol
-                best_start = i
-
-        best_slice_vol   = outage_volume_gal[best_start : best_start + _WINDOW_MIN]
-        best_slice_delta = outage_temp_delta_f[best_start : best_start + _WINDOW_MIN]
-
-        gas_storage_vol_gal = sum(best_slice_vol)
-        avg_peak_flow_gpm = gas_storage_vol_gal / _WINDOW_MIN
-        avg_delta_f         = max(best_slice_delta)
-        gas_capacity_kbtuh  = _RHO_CP * avg_peak_flow_gpm * avg_delta_f * 60.0 / 1000.0
-        # TODO add thermal eficiency 
+        # --- 4. Size gas backup at the default 30-minute window ---
+        gas_capacity_kbtuh, gas_storage_vol_gal = self._gas_backup_from_window(_WINDOW_MIN)
+        # TODO add thermal efficiency
 
         # --- 5. Build gas backup components ---
         self.gas_water_heater = WaterHeater.from_nominal_capacity(
@@ -246,6 +232,162 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             control_map={"normal": gas_controls},
         )
         self.gas_storage_tank = MixedStorageTank(total_volume_gal=gas_storage_vol_gal)
+
+    # ------------------------------------------------------------------
+    # Gas backup sizing helpers
+    # ------------------------------------------------------------------
+
+    def _gas_backup_from_window(self, window_min: int) -> tuple[float, float]:
+        """
+        Find the worst ``window_min``-length stretch of the sizing-sim outage
+        arrays and return the implied gas backup requirements.
+
+        Parameters
+        ----------
+        window_min : int
+            Contiguous window length in minutes.
+
+        Returns
+        -------
+        tuple[float, float]
+            ``(gas_capacity_kbtuh, gas_storage_vol_gal)``
+        """
+        total_steps = len(self.outage_volume_gal)
+        w = min(window_min, total_steps)
+
+        window_score = sum(self.outage_temp_delta_f[:w])
+        best_score   = window_score
+        best_start   = 0
+
+        for i in range(1, total_steps - w + 1):
+            window_score += self.outage_temp_delta_f[i + w - 1] - self.outage_temp_delta_f[i - 1]
+            if window_score > best_score:
+                best_score = window_score
+                best_start = i
+
+        best_slice_vol   = self.outage_volume_gal[best_start : best_start + w]
+        best_slice_delta = self.outage_temp_delta_f[best_start : best_start + w]
+
+        gas_storage_vol_gal = sum(best_slice_vol)
+        avg_peak_flow_gpm   = gas_storage_vol_gal / w
+        avg_delta_f         = max(best_slice_delta) if any(d > 0 for d in best_slice_delta) else 0.0
+        gas_capacity_kbtuh  = _RHO_CP * avg_peak_flow_gpm * avg_delta_f * 60.0 / 1000.0
+
+        return gas_capacity_kbtuh, gas_storage_vol_gal
+
+    def get_sizing_curve(self) -> "plotly.graph_objects.Figure":
+        """
+        Return a Plotly sizing-curve figure for the gas backup system.
+
+        Sweeps window sizes from 60 down to 5 minutes in 5-minute steps,
+        computing the gas capacity and storage implied by each window.  The
+        30-minute window (the default used by ``_size_gas_backup``) is
+        highlighted as the recommended design point.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+
+        Raises
+        ------
+        RuntimeError
+            If ``from_size()`` has not been called (outage arrays not populated).
+        """
+        if not getattr(self, "outage_volume_gal", None):
+            raise RuntimeError(
+                "Gas backup outage data is not available. Call from_size() first."
+            )
+
+        try:
+            import plotly.graph_objects as go
+        except ImportError:
+            raise ImportError(
+                "plotly is required for get_sizing_curve(). "
+                "Install it with: pip install plotly"
+            )
+
+        _RECOMMENDED_WINDOW = 30
+        window_sizes = list(range(60, 0, -5))   # [60, 55, …, 5]
+
+        capacities = []
+        storages   = []
+        for w in window_sizes:
+            cap, vol = self._gas_backup_from_window(w)
+            capacities.append(cap)
+            storages.append(vol)
+
+        rec_idx = window_sizes.index(_RECOMMENDED_WINDOW)
+
+        hover = (
+            "Window: <b>%{customdata} min</b><br>"
+            "Gas storage: <b>%{x:.1f} gal</b><br>"
+            "Gas capacity: <b>%{y:.1f} kBTU/hr</b>"
+            "<extra></extra>"
+        )
+
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=storages, y=capacities,
+            mode="lines",
+            line=dict(color="#28a745", width=3),
+            customdata=window_sizes,
+            hovertemplate=hover,
+            showlegend=False,
+        ))
+
+        for i, w in enumerate(window_sizes):
+            fig.add_trace(go.Scatter(
+                x=[storages[i]], y=[capacities[i]],
+                mode="markers",
+                marker=dict(
+                    symbol="diamond",
+                    color="#ff7700" if i == rec_idx else "#2EA3F2",
+                    size=14 if i == rec_idx else 12,
+                ),
+                customdata=[w],
+                hovertemplate=hover,
+                showlegend=False,
+                visible=(i == rec_idx),
+            ))
+
+        steps = []
+        for i, w in enumerate(window_sizes):
+            visibility = [True] + [j == i for j in range(len(window_sizes))]
+            rec_tag = "  ← recommended" if w == _RECOMMENDED_WINDOW else ""
+            steps.append(dict(
+                label=(
+                    f"Window: <b>{w} min</b>  |  "
+                    f"Storage: <b>{storages[i]:.1f} gal</b>  |  "
+                    f"Capacity: <b>{capacities[i]:.1f} kBTU/hr</b>{rec_tag}"
+                ),
+                method="update",
+                args=[{"visible": visibility}],
+            ))
+
+        fig.update_layout(
+            title="Gas Backup Sizing Curve — SP RTP In-Series",
+            xaxis_title="Gas Storage Volume (gal)",
+            yaxis_title="Gas Heating Capacity (kBTU/hr)",
+            showlegend=False,
+            sliders=[dict(
+                steps=steps,
+                active=rec_idx,
+                currentvalue=dict(
+                    prefix="<b>Selected size</b>: ",
+                    visible=True,
+                    font=dict(size=14),
+                    xanchor="left",
+                ),
+                pad={"t": 60},
+                ticklen=0,
+                minorticklen=0,
+                bgcolor="#CCD9DB",
+                borderwidth=0,
+            )],
+        )
+
+        return fig
 
     # ------------------------------------------------------------------
     # Simulation
