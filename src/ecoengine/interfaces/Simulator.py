@@ -87,7 +87,7 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
     gas_tank = getattr(dhw_system, "gas_storage_tank", None)
     if gas_tank is not None:
         gas_tank.initialize(
-            storage_temp_f  = dhw_system.supply_temp_f + _GAS_DEADBAND_F,
+            storage_temp_f  = dhw_system.storage_temp_f,
             cold_temp_f     = inlet_temp_f,
             percent_useable = 1.0,
         )
