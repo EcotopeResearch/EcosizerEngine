@@ -3,7 +3,9 @@ from ecoengine.constants.constants import _RHO_CP
 def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, cold_temp_f : float, supply_temp_f : float, return_temp_f : float, storage_temp_f : float) -> dict:
     if storage_temp_f <= supply_temp_f:
         storage_draw_gal = load_supplyT_gal + flow_returnT_gal
-        inlet_temp_f = ((load_supplyT_gal * cold_temp_f) + (flow_returnT_gal * return_temp_f)) / storage_draw_gal
+        recirc_loop_delta_f = supply_temp_f - return_temp_f
+        derated_recirc_temp_f = storage_temp_f - recirc_loop_delta_f
+        inlet_temp_f = ((load_supplyT_gal * cold_temp_f) + (flow_returnT_gal * derated_recirc_temp_f)) / storage_draw_gal
     else:
     # For minute intervals, storage_temp_f is whatever temperature is at the top of the storage tank, set point storage temperature or not
         recirc_loss_btu = flow_returnT_gal * _RHO_CP * (supply_temp_f - return_temp_f)

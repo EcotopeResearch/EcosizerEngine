@@ -56,7 +56,14 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
 
     from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem
     from ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem import SwingERTrdOffSystem
-    sim_run.show_tm_panel = isinstance(dhw_system, SwingSystem) or isinstance(dhw_system, SwingERTrdOffSystem)
+    from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem import SP_RTPInSeriesSystem, _GAS_DEADBAND_F
+    sim_run.show_tm_panel = (
+        isinstance(dhw_system, SwingSystem)
+        or isinstance(dhw_system, SwingERTrdOffSystem)
+        or isinstance(dhw_system, SP_RTPInSeriesSystem)
+    )
+    if isinstance(dhw_system, SP_RTPInSeriesSystem):
+        sim_run.tm_panel_label = "Gas Backup"
 
     # Initialize storage tanks
     inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
@@ -73,6 +80,14 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
         tm_off_temp_f = getattr(dhw_system, "tm_off_temp_f", dhw_system.storage_temp_f)
         tm_tank.initialize(
             storage_temp_f  = tm_off_temp_f,
+            cold_temp_f     = inlet_temp_f,
+            percent_useable = 1.0,
+        )
+    # Initialize gas backup tank if present (SP_RTPInSeriesSystem)
+    gas_tank = getattr(dhw_system, "gas_storage_tank", None)
+    if gas_tank is not None:
+        gas_tank.initialize(
+            storage_temp_f  = dhw_system.supply_temp_f + _GAS_DEADBAND_F,
             cold_temp_f     = inlet_temp_f,
             percent_useable = 1.0,
         )

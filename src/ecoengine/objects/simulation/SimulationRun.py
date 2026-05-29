@@ -83,8 +83,10 @@ class SimulationRun:
 
         # Set by Simulator after construction; used for unit conversions in output methods
         self.supply_temp_f: float | None = None
-        # True only for SwingSystem / SwingERTrdOffSystem — enables the TM subplot
+        # True only for SwingSystem / SwingERTrdOffSystem / SP_RTPInSeriesSystem — enables the TM subplot
         self.show_tm_panel: bool = False
+        # Label used for the TM subplot title and axis labels
+        self.tm_panel_label: str = "Temperature Maintenance (TM)"
 
         # Outlet deficit stop condition
         self.outlet_deficit_threshold_f   = outlet_deficit_threshold_f
@@ -410,7 +412,7 @@ class SimulationRun:
                 shared_xaxes=True,
                 vertical_spacing=0.18,
                 row_heights=[0.65, 0.35],
-                subplot_titles=["Primary System", "Temperature Maintenance (TM)"],
+                subplot_titles=["Primary System", self.tm_panel_label],
             )
         else:
             fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -477,7 +479,7 @@ class SimulationRun:
             # Left Y2: TM heater output [kBTU/hr]
             fig.add_trace(
                 go.Scatter(x=tm_time, y=self.tm_heater_output_kbtuh,
-                           name="TM Heater Output (kBTU/hr)",
+                           name=f"{self.tm_panel_label} Heater Output (kBTU/hr)",
                            line=dict(color="darkorange", width=1),
                            fill="tozeroy", fillcolor="rgba(255,165,0,0.15)"),
                 secondary_y=False, row=2, col=1,
@@ -485,7 +487,7 @@ class SimulationRun:
             # Right Y2: TM tank temperature [°F]
             fig.add_trace(
                 go.Scatter(x=tm_time, y=self.tm_tank_temp_f,
-                           name="Swing Tank Temp (°F)",
+                           name=f"{self.tm_panel_label} Tank Temp (°F)",
                            line=dict(color="purple", width=1.5)),
                 secondary_y=True, row=2, col=1,
             )
@@ -527,9 +529,9 @@ class SimulationRun:
             if include_temperatures:
                 fig.update_yaxes(title_text="Temperature (°F)",
                                  secondary_y=True, row=1, col=1)
-            fig.update_yaxes(title_text="TM Output (kBTU/hr)",
+            fig.update_yaxes(title_text=f"{self.tm_panel_label} Output (kBTU/hr)",
                              secondary_y=False, row=2, col=1)
-            fig.update_yaxes(title_text="Swing Tank Temp (°F)",
+            fig.update_yaxes(title_text=f"{self.tm_panel_label} Tank Temp (°F)",
                              secondary_y=True, row=2, col=1)
         else:
             fig.update_yaxes(title_text="Volume (gal) / Flow Rate (gal/hr)", secondary_y=False)
