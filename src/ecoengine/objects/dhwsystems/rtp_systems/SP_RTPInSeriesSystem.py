@@ -307,7 +307,9 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             )
 
         _RECOMMENDED_WINDOW = 30
-        window_sizes = list(range(60, 0, -5))   # [60, 55, …, 5]
+        # Ascending order so the slider moves left-to-right as storage increases,
+        # matching the direction the diamond travels on the curve.
+        window_sizes = list(range(5, 65, 5))   # [5, 10, …, 60]
 
         capacities = []
         storages   = []
@@ -340,11 +342,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             fig.add_trace(go.Scatter(
                 x=[storages[i]], y=[capacities[i]],
                 mode="markers",
-                marker=dict(
-                    symbol="diamond",
-                    color="#ff7700" if i == rec_idx else "#2EA3F2",
-                    size=14 if i == rec_idx else 12,
-                ),
+                marker=dict(symbol="diamond", color="#2EA3F2", size=12),
                 customdata=[w],
                 hovertemplate=hover,
                 showlegend=False,
@@ -354,12 +352,11 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         steps = []
         for i, w in enumerate(window_sizes):
             visibility = [True] + [j == i for j in range(len(window_sizes))]
-            rec_tag = "  ← recommended" if w == _RECOMMENDED_WINDOW else ""
             steps.append(dict(
                 label=(
                     f"Window: <b>{w} min</b>  |  "
                     f"Storage: <b>{storages[i]:.1f} gal</b>  |  "
-                    f"Capacity: <b>{capacities[i]:.1f} kBTU/hr</b>{rec_tag}"
+                    f"Capacity: <b>{capacities[i]:.1f} kBTU/hr</b>"
                 ),
                 method="update",
                 args=[{"visible": visibility}],
