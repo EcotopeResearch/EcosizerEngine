@@ -3,7 +3,7 @@ from __future__ import annotations
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.EnergyTank import EnergyTank
-from ecoengine.objects.components.storage.SlugOverlayTank import SlugOverlayTank
+from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
 from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
 from ecoengine.interfaces.Simulator import _initial_percent_useable
 from ..utils import mixing_valve_behavior
@@ -18,7 +18,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
 
     The primary HPWH (EnergyTank + WaterHeater) is intentionally capped at
     caller-supplied nominal specs.  A gas_water_heater backed by a
-    gas_storage_tank (SlugOverlayTank) covers any remaining capacity or
+    gas_storage_tank (MixedStorageTank) covers any remaining capacity or
     volume shortfall.
 
     Construction
@@ -37,7 +37,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
     """
 
     gas_water_heater: WaterHeater
-    gas_storage_tank: SlugOverlayTank
+    gas_storage_tank: MixedStorageTank
     outage_volume_gal: list[float]
     outage_temp_delta_f: list[float]
 
@@ -136,9 +136,9 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
 
         # Gas backup controls: on at supply_temp, off at supply_temp + deadband
         gas_controls = Controls(
-            on_sensor_fract=0.2,
+            on_sensor_fract=0.5,
             on_trigger_t_f=supply_temp_f + 5.0,
-            off_sensor_fract=0.2,
+            off_sensor_fract=0.5,
             off_trigger_t_f=supply_temp_f + 5.0 + _GAS_DEADBAND_F,
             outlet_temp_f=supply_temp_f + 5.0 + _GAS_DEADBAND_F,
         )
@@ -209,6 +209,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             else:
                 self.outage_volume_gal.append(0.0)
                 self.outage_temp_delta_f.append(0.0)
+
         # --- 3. Check whether a gas backup is actually needed ---
         total_outage_min = sum(1 for v in self.outage_volume_gal if v > 0.0)
         if total_outage_min <= _MIN_OUTAGE_MIN and max_deficit_f <= _MIN_DEFICIT_F:
@@ -230,13 +231,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             control_schedule=["normal"] * 24,
             control_map={"normal": gas_controls},
         )
-        self.gas_storage_tank = SlugOverlayTank(
-            total_volume_gal=gas_storage_vol_gal,
-            cold_temp_f=inlet_temp_f,
-            storage_temp_f=self.storage_temp_f,
-            supply_temp_f=self.supply_temp_f,
-            strat_slope=0.8,
-        )
+        self.gas_storage_tank = MixedStorageTank(total_volume_gal=gas_storage_vol_gal)
 
     # ------------------------------------------------------------------
     # Gas backup sizing helpers
@@ -464,34 +459,18 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         primary_draw_temp_f = self.storage_tank.get_average_draw_temp_f(draw_gal)
         self.storage_tank.draw_physical_gal(draw_gal, mv_inlet_temp_f, update_internal_cold_temp = False)
 
-        # --- Gas backup: slug lifecycle + heating ---
-        self.gas_storage_tank.update_cold_temp_f(primary_draw_temp_f)
-
-        was_gas_heating = self.gas_water_heater.is_active()
+        # Gas water heater heating
+        self.gas_storage_tank.mix_primary_inflow(draw_gal, primary_draw_temp_f)
         self.gas_water_heater.update_state(self.gas_storage_tank, hour_of_day)
-        is_gas_heating = self.gas_water_heater.is_active()
-
-        if is_gas_heating and not was_gas_heating:
-            self.gas_storage_tank.activate_slug(self.supply_temp_f)
-        elif was_gas_heating and not is_gas_heating:
-            self.gas_storage_tank.deactivate_slug()
-
         gas_ctrl     = self.gas_water_heater.get_controls_for_hour(hour_of_day)
-        gas_outlet_f = gas_ctrl.outlet_temp_f if gas_ctrl is not None else self.supply_temp_f + 5.0 + _GAS_DEADBAND_F
-        if is_gas_heating and self.gas_storage_tank.is_slug_active():
-            gas_kbtuh = self.gas_water_heater.get_output_kbtuh(oat_f, gas_outlet_f)
-            self.gas_storage_tank.heat_slug(gas_kbtuh, interval_min)
-        else:
-            gas_kbtuh = 0.0
-
-        # Capture delivery temp before the draw — this is the average temperature
-        # of water actually served to the building this timestep.
-        gas_delivery_temp_f = (
-            self.gas_storage_tank.get_average_draw_temp_f(draw_gal)
-            if draw_gal > 0
-            else self.gas_storage_tank.get_temperature_at_fraction(1.0)
+        gas_outlet_f = gas_ctrl.outlet_temp_f if gas_ctrl is not None else self.supply_temp_f + _GAS_DEADBAND_F
+        gas_kbtuh    = self.gas_water_heater.get_output_kbtuh(oat_f, gas_outlet_f)
+        gas_kw_val   = ( # TODO figure out gas carbon outputs
+            self.gas_water_heater.get_power_in_kw(oat_f, gas_outlet_f)
+            if self.gas_water_heater.is_active()
+            else None
         )
-        self.gas_storage_tank.draw_physical_gal(draw_gal, primary_draw_temp_f)
+        self.gas_storage_tank.heat(gas_kbtuh, interval_min, gas_outlet_f)
 
         usable_vol_gal = self.storage_tank.get_usable_volume_supplyT_gal(
             self.supply_temp_f
@@ -513,5 +492,5 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             "tm_tank_temp_f":          self.gas_storage_tank.get_temperature_at_fraction(1.0),
             "tm_heater_output_kbtuh":  gas_kbtuh,
             "tm_heater_input_kw":      gas_kbtuh / _W_TO_KBTUH,
-            "delivery_temp_f":         gas_delivery_temp_f,
+            "delivery_temp_f":         self.gas_storage_tank.get_temperature_at_fraction(1.0),
         }
