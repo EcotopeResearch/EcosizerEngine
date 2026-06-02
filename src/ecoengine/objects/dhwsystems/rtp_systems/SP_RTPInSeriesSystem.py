@@ -6,7 +6,8 @@ from ecoengine.objects.components.storage.EnergyTank import EnergyTank
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
 from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
 from ecoengine.interfaces.Simulator import _initial_percent_useable
-from ..utils import mixing_valve_behavior
+from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices
+from ..utils import mixing_valve_behavior, ashrae_method_water_use_ratio
 from .SinglePassRTPSystem import SinglePassRTPSystem, _SPRTP_STRAT_SLOPE
 
 _GAS_DEADBAND_F: float = 8.0
@@ -187,28 +188,60 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         _MIN_DEFICIT_F   = 2.0
         _TOTAL_STEPS     = 2 * 24 * 60   # 2 days at 1-min intervals
 
-        # --- 1. Initialise primary tank at the same charge level used in simulation ---
-        inlet_temp_f = building.get_design_inlet_water_temp_f()
+        # --- 1. Determine peak-aligned simulation start minutes ---
+        inlet_temp_f    = building.get_design_inlet_water_temp_f()
         percent_useable = _initial_percent_useable(self)
-        self.storage_tank.initialize(self.storage_temp_f, inlet_temp_f, percent_useable=percent_useable)
+        recirc_loss_kbtuh = self.get_recirc_loss_kbtuh()
 
-        # --- 2. Two-day simulation as SinglePassRTPSystem ---
-        self.outage_volume_gal   = []
-        self.outage_temp_delta_f = []
-        max_deficit_f: float = 0.0
+        if nominal_capacity_kbtuh <= recirc_loss_kbtuh:
+            # Primary can't overcome recirc loss; peak-finding is meaningless.
+            peak_start_minutes = [0]
+        else:
+            net_capacity_kbtuh = nominal_capacity_kbtuh - recirc_loss_kbtuh
+            gen_rate_gph = (
+                net_capacity_kbtuh * 1000.0
+                / (_RHO_CP * (self.supply_temp_f - inlet_temp_f))
+            )
+            hourly_diff_gph = (
+                gen_rate_gph
+                - building.daily_dhw_use_supplyT_gal * building.peak_load_shape
+            )
+            peak_indices = _get_peak_indices(hourly_diff_gph)
+            peak_start_minutes = [idx * 60 for idx in peak_indices] if peak_indices else [0]
 
-        for t in range(_TOTAL_STEPS):
-            step = SinglePassRTPSystem.simulate_step(self, building, t, interval_min=1)
-            pre_top_temp = self.storage_tank.get_temperature_at_fraction(1.0)
-            demand = step["demand_supplyT_gal"]
-            if pre_top_temp < self.supply_temp_f:
-                deficit_f = self.supply_temp_f - pre_top_temp
-                max_deficit_f = max(max_deficit_f, deficit_f)
-                self.outage_volume_gal.append(demand)
-                self.outage_temp_delta_f.append(deficit_f)
-            else:
-                self.outage_volume_gal.append(0.0)
-                self.outage_temp_delta_f.append(0.0)
+        # --- 2. Two-day simulation(s): one per peak, keep worst ---
+        best_outage_volume_gal   = []
+        best_outage_temp_delta_f = []
+        best_max_delta: float    = -1.0
+
+        for peak_start in peak_start_minutes:
+            self.storage_tank.initialize(
+                self.storage_temp_f, inlet_temp_f, percent_useable=percent_useable
+            )
+            run_volume_gal   = []
+            run_temp_delta_f = []
+
+            for t in range(peak_start, peak_start + _TOTAL_STEPS):
+                step = SinglePassRTPSystem.simulate_step(self, building, t, interval_min=1)
+                top_temp = self.storage_tank.get_temperature_at_fraction(1.0)
+                demand = step["demand_supplyT_gal"]
+                if top_temp < self.supply_temp_f:
+                    deficit_f = self.supply_temp_f - top_temp
+                    run_volume_gal.append(demand)
+                    run_temp_delta_f.append(deficit_f)
+                else:
+                    run_volume_gal.append(0.0)
+                    run_temp_delta_f.append(0.0)
+
+            run_max_delta = max(run_temp_delta_f)
+            if run_max_delta > best_max_delta:
+                best_max_delta           = run_max_delta
+                best_outage_volume_gal   = run_volume_gal
+                best_outage_temp_delta_f = run_temp_delta_f
+
+        self.outage_volume_gal   = best_outage_volume_gal
+        self.outage_temp_delta_f = best_outage_temp_delta_f
+        max_deficit_f            = best_max_delta
 
         # --- 3. Check whether a gas backup is actually needed ---
         total_outage_min = sum(1 for v in self.outage_volume_gal if v > 0.0)
@@ -268,10 +301,19 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         best_slice_vol   = self.outage_volume_gal[best_start : best_start + w]
         best_slice_delta = self.outage_temp_delta_f[best_start : best_start + w]
 
-        gas_storage_vol_gal = sum(best_slice_vol)
+        # gas_storage_vol_gal = sum(best_slice_vol)
+        gas_storage_vol_gal = ashrae_method_water_use_ratio(window_min, sum(best_slice_vol))
         avg_peak_flow_gpm   = gas_storage_vol_gal / w
-        avg_delta_f         = max(best_slice_delta) if any(d > 0 for d in best_slice_delta) else 0.0
+        # avg_delta_f         = max(best_slice_delta) if any(d > 0 for d in best_slice_delta) else 0.0
+        avg_delta_f         = sum(best_slice_delta) / w if any(d > 0 for d in best_slice_delta) else 0.0
         gas_capacity_kbtuh  = _RHO_CP * avg_peak_flow_gpm * avg_delta_f * 60.0 / 1000.0
+        print(f"=========={window_min}=========")
+        print(f"{best_start} to {best_start + window_min}")
+        print(f"avg_peak_flow_gpm: {avg_peak_flow_gpm}")
+        print(f"avg_delta_f: {avg_delta_f}")
+        print(f"gas_capacity_kbtuh: {gas_capacity_kbtuh}")
+        print(best_slice_vol)
+        print(best_slice_delta)
 
         return gas_capacity_kbtuh, gas_storage_vol_gal
 
@@ -309,7 +351,8 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         _RECOMMENDED_WINDOW = 30
         # Ascending order so the slider moves left-to-right as storage increases,
         # matching the direction the diamond travels on the curve.
-        window_sizes = list(range(5, 65, 5))   # [5, 10, …, 60]
+        # window_sizes = list(range(5, 65, 5))   # [5, 10, …, 60]
+        window_sizes = [5, 15, 30, 60]
 
         capacities = []
         storages   = []

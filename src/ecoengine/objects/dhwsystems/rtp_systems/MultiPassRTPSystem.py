@@ -355,8 +355,8 @@ class MultiPassRTPSystem(RTPSystem):
             for h in heat_hours:
                 if h == self.max_daily_run_hr:
                     pt = self
-                elif h < 9:
-                    break
+                # elif h < 9: #TODO remove this
+                #     break
                 else:
                     try:
                         pt = MultiPassRTPSystem.from_size(
