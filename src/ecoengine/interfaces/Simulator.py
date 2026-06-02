@@ -63,11 +63,11 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
         or isinstance(dhw_system, SP_RTPInSeriesSystem)
     )
     if isinstance(dhw_system, SP_RTPInSeriesSystem):
-        sim_run.tm_panel_label = "Gas Backup"
+        sim_run.tm_panel_label = "In Series Heating"
 
     # Initialize storage tanks
     inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
-    percent_useable = _initial_percent_useable(dhw_system)
+    percent_useable = dhw_system.get_initial_percent_useable()
     if dhw_system.storage_tank is not None:
         dhw_system.storage_tank.initialize(
             storage_temp_f  = dhw_system.storage_temp_f,
@@ -166,24 +166,3 @@ def simulate_annual(dhw_system: DHWSystem, building: Building, **sim_run_kwargs)
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
-
-def _initial_percent_useable(dhw_system: DHWSystem) -> float:
-    """
-    Determine the initial tank charge level (fraction hot) from the system's
-    "normal" Controls on-aquastat fraction.
-
-    Starting the tank at ``1 - on_sensor_fract`` matches the original
-    engine's initialisation: the tank begins at the on-trigger level so the
-    heater fires immediately on the first cold hour and the simulation
-    reaches steady state quickly.
-
-    Falls back to 1.0 (fully charged) when no Controls are configured.
-    """
-    for wh in dhw_system.water_heaters:
-        if wh.control_map is None:
-            continue
-        # Prefer "normal" key; otherwise take the first available Controls.
-        ctrl = wh.control_map.get("normal") or next(iter(wh.control_map.values()), None)
-        if ctrl is not None:
-            return max(0.0, min(1.0, 1.0 - ctrl.on_sensor_fract))
-    return 1.0

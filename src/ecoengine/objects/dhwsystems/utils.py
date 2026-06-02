@@ -1,4 +1,5 @@
 from ecoengine.constants.constants import _RHO_CP
+from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices
 
 def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, cold_temp_f : float, supply_temp_f : float, return_temp_f : float, storage_temp_f : float) -> dict:
     if storage_temp_f <= supply_temp_f:
@@ -61,3 +62,333 @@ def ashrae_method_water_use_ratio(peak_min : int, total_gal : float) -> float:
     if peak_min == 15: return extrapolated_hourly_gal * (1.7/4.8)
     if peak_min == 30: return extrapolated_hourly_gal * (2.9/4.8)
     if peak_min == 60: return extrapolated_hourly_gal
+
+
+# ---------------------------------------------------------------------------
+# In-series gas backup sizing utilities
+# ---------------------------------------------------------------------------
+
+_ASHRAE_WINDOWS: list[int] = [5, 15, 30, 60]
+_RECOMMENDED_WINDOW: int   = 30
+
+
+def size_in_series_gas_backup(
+    primary_system,
+    building,
+    nominal_capacity_kbtuh: float,
+    simulate_step_fn=None,
+) -> tuple[list[float], list[float]]:
+    """
+    Run peak-aligned 2-day simulation(s) on an undersized primary system and
+    return the worst-case outage profile for gas backup sizing.
+
+    The simulation starts at each hour where the primary (net of recirc loss)
+    cannot keep up with demand.  The run producing the largest max temperature
+    deficit is kept.  No components are built; the caller uses the returned
+    arrays with ``gas_backup_from_window`` and ``get_ashrae_sizing_curve``.
+
+    Parameters
+    ----------
+    primary_system : DHWSystem
+        The undersized primary system.  Must expose ``storage_tank``,
+        ``storage_temp_f``, ``supply_temp_f``, ``get_recirc_loss_kbtuh()``,
+        and ``get_initial_percent_useable()``.
+    building : Building
+        The building the system serves.
+    nominal_capacity_kbtuh : float
+        Primary heater capacity [kBTU/hr], used to find peak-demand hours.
+    simulate_step_fn : callable | None
+        Called as ``simulate_step_fn(building, t, interval_min=1) -> dict``
+        at each timestep.  Defaults to ``primary_system.simulate_step``.
+        Pass a bound method when the default ``simulate_step`` would access
+        components not yet built (e.g. a gas backup tank that doesn't exist
+        during sizing).
+
+    Returns
+    -------
+    tuple[list[float], list[float]]
+        ``(outage_volume_gal, outage_temp_delta_f)`` — parallel lists of
+        length 2 × 24 × 60 = 2880.
+
+    Raises
+    ------
+    ValueError
+        If the primary is already adequately sized (outage ≤ 10 min AND
+        max deficit ≤ 2 °F), meaning no gas backup is required.
+    """
+    _MIN_OUTAGE_MIN = 10
+    _MIN_DEFICIT_F  = 2.0
+    _TOTAL_STEPS    = 2 * 24 * 60
+
+    if simulate_step_fn is None:
+        simulate_step_fn = lambda b, t, interval_min=1: primary_system.simulate_step(b, t, interval_min)
+
+    inlet_temp_f      = building.get_design_inlet_water_temp_f()
+    percent_useable   = primary_system.get_initial_percent_useable()
+    recirc_loss_kbtuh = primary_system.get_recirc_loss_kbtuh()
+
+    if nominal_capacity_kbtuh <= recirc_loss_kbtuh:
+        peak_start_minutes = [0]
+    else:
+        net_capacity_kbtuh = nominal_capacity_kbtuh - recirc_loss_kbtuh
+        gen_rate_gph = (
+            net_capacity_kbtuh * 1000.0
+            / (_RHO_CP * (primary_system.supply_temp_f - inlet_temp_f))
+        )
+        hourly_diff_gph = (
+            gen_rate_gph
+            - building.daily_dhw_use_supplyT_gal * building.peak_load_shape
+        )
+        peak_indices       = _get_peak_indices(hourly_diff_gph)
+        peak_start_minutes = [idx * 60 for idx in peak_indices] if peak_indices else [0]
+
+    best_outage_volume_gal   = []
+    best_outage_temp_delta_f = []
+    best_max_delta: float    = -1.0
+
+    for peak_start in peak_start_minutes:
+        primary_system.storage_tank.initialize(
+            primary_system.storage_temp_f, inlet_temp_f, percent_useable=percent_useable
+        )
+        run_volume_gal   = []
+        run_temp_delta_f = []
+
+        for t in range(peak_start, peak_start + _TOTAL_STEPS):
+            step     = simulate_step_fn(building, t)
+            top_temp = primary_system.storage_tank.get_temperature_at_fraction(1.0)
+            demand   = step["demand_supplyT_gal"]
+            if top_temp < primary_system.supply_temp_f:
+                deficit_f = primary_system.supply_temp_f - top_temp
+                run_volume_gal.append(demand)
+                run_temp_delta_f.append(deficit_f)
+            else:
+                run_volume_gal.append(0.0)
+                run_temp_delta_f.append(0.0)
+
+        run_max_delta = max(run_temp_delta_f)
+        if run_max_delta > best_max_delta:
+            best_max_delta           = run_max_delta
+            best_outage_volume_gal   = run_volume_gal
+            best_outage_temp_delta_f = run_temp_delta_f
+
+    total_outage_min = sum(1 for v in best_outage_volume_gal if v > 0.0)
+    if total_outage_min <= _MIN_OUTAGE_MIN and best_max_delta <= _MIN_DEFICIT_F:
+        raise ValueError(
+            "The primary system is already adequately sized: "
+            f"outage duration was {total_outage_min} min "
+            f"(threshold {_MIN_OUTAGE_MIN} min) and max temperature deficit "
+            f"was {best_max_delta:.2f} °F (threshold {_MIN_DEFICIT_F:.1f} °F). "
+            "No gas backup is required."
+        )
+
+    return best_outage_volume_gal, best_outage_temp_delta_f
+
+
+def gas_backup_from_window(
+    outage_volume_gal: list[float],
+    outage_temp_delta_f: list[float],
+    window_min: int,
+) -> tuple[float, float]:
+    """
+    Find the worst contiguous ``window_min``-length stretch of the outage
+    arrays and return the implied gas backup capacity and storage volume.
+
+    Uses the ASHRAE diversity ratio (via ``ashrae_method_water_use_ratio``)
+    to convert peak-window volume to a realistic hourly-equivalent storage
+    requirement.  ``window_min`` must be one of [5, 15, 30, 60].
+
+    Parameters
+    ----------
+    outage_volume_gal : list[float]
+        Per-minute demand during primary outage (0 outside outage) [gal].
+    outage_temp_delta_f : list[float]
+        Per-minute temperature deficit during outage (0 outside) [°F].
+    window_min : int
+        Contiguous window length in minutes. Must be in [5, 15, 30, 60].
+
+    Returns
+    -------
+    tuple[float, float]
+        ``(gas_capacity_kbtuh, gas_storage_vol_gal)``
+    """
+    total_steps = len(outage_volume_gal)
+    w = min(window_min, total_steps)
+
+    window_score = sum(outage_temp_delta_f[:w])
+    best_score   = window_score
+    best_start   = 0
+
+    for i in range(1, total_steps - w + 1):
+        window_score += outage_temp_delta_f[i + w - 1] - outage_temp_delta_f[i - 1]
+        if window_score > best_score:
+            best_score = window_score
+            best_start = i
+
+    best_slice_vol   = outage_volume_gal[best_start : best_start + w]
+    best_slice_delta = outage_temp_delta_f[best_start : best_start + w]
+
+    gas_storage_vol_gal = ashrae_method_water_use_ratio(window_min, sum(best_slice_vol))
+    avg_peak_flow_gpm   = gas_storage_vol_gal / w
+    avg_delta_f = sum(best_slice_delta) / w if any(d > 0 for d in best_slice_delta) else 0.0
+    gas_capacity_kbtuh  = _RHO_CP * avg_peak_flow_gpm * avg_delta_f * 60.0 / 1000.0
+
+    return gas_capacity_kbtuh, gas_storage_vol_gal
+
+
+def get_ashrae_sizing_curve(
+    outage_volume_gal: list[float],
+    outage_temp_delta_f: list[float],
+) -> dict:
+    """
+    Compute the gas backup sizing curve across all ASHRAE window durations.
+
+    Sweeps ``window_min`` over [5, 15, 30, 60] minutes, calling
+    ``gas_backup_from_window`` at each size.  The 30-minute window is the
+    recommended design point.
+
+    Parameters
+    ----------
+    outage_volume_gal : list[float]
+        Per-minute outage demand array from ``size_in_series_gas_backup``.
+    outage_temp_delta_f : list[float]
+        Per-minute temperature deficit array from ``size_in_series_gas_backup``.
+
+    Returns
+    -------
+    dict
+        ``"window_sizes"``       : list[int]   — ASHRAE window durations [min]
+        ``"capacities_kbtuh"``   : list[float] — gas heater capacity [kBTU/hr]
+        ``"storages_gal"``       : list[float] — gas storage volume [gal]
+        ``"recommended_index"``  : int         — index of the 30-min window
+
+    Raises
+    ------
+    RuntimeError
+        If both outage arrays are empty.
+    """
+    if not outage_volume_gal:
+        raise RuntimeError(
+            "Outage arrays are empty. Call size_in_series_gas_backup() first."
+        )
+
+    capacities = []
+    storages   = []
+    for w in _ASHRAE_WINDOWS:
+        cap, vol = gas_backup_from_window(outage_volume_gal, outage_temp_delta_f, w)
+        capacities.append(cap)
+        storages.append(vol)
+
+    return {
+        "window_sizes":      _ASHRAE_WINDOWS,
+        "capacities_kbtuh":  capacities,
+        "storages_gal":      storages,
+        "recommended_index": _ASHRAE_WINDOWS.index(_RECOMMENDED_WINDOW),
+    }
+
+
+def plot_ashrae_sizing_curve(
+    curve: dict,
+    title: str = "Gas Backup Sizing Curve",
+) -> "plotly.graph_objects.Figure":
+    """
+    Build a Plotly sizing-curve figure from the dict returned by
+    ``get_ashrae_sizing_curve``.
+
+    The curve plots gas storage volume (x) vs. gas heating capacity (y) for
+    each ASHRAE window duration, with a slider to select the design point.
+    The recommended 30-minute window is the default active position.
+
+    Parameters
+    ----------
+    curve : dict
+        Output of ``get_ashrae_sizing_curve()``.
+    title : str
+        Figure title.
+
+    Returns
+    -------
+    plotly.graph_objects.Figure
+
+    Raises
+    ------
+    ImportError
+        If plotly is not installed.
+    """
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError(
+            "plotly is required for plot_ashrae_sizing_curve(). "
+            "Install it with: pip install plotly"
+        )
+
+    window_sizes = curve["window_sizes"]
+    capacities   = curve["capacities_kbtuh"]
+    storages     = curve["storages_gal"]
+    rec_idx      = curve["recommended_index"]
+
+    hover = (
+        "Window: <b>%{customdata} min</b><br>"
+        "Gas storage: <b>%{x:.1f} gal</b><br>"
+        "Gas capacity: <b>%{y:.1f} kBTU/hr</b>"
+        "<extra></extra>"
+    )
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=storages, y=capacities,
+        mode="lines",
+        line=dict(color="#28a745", width=3),
+        customdata=window_sizes,
+        hovertemplate=hover,
+        showlegend=False,
+    ))
+
+    for i, w in enumerate(window_sizes):
+        fig.add_trace(go.Scatter(
+            x=[storages[i]], y=[capacities[i]],
+            mode="markers",
+            marker=dict(symbol="diamond", color="#2EA3F2", size=12),
+            customdata=[w],
+            hovertemplate=hover,
+            showlegend=False,
+            visible=(i == rec_idx),
+        ))
+
+    steps = []
+    for i, w in enumerate(window_sizes):
+        visibility = [True] + [j == i for j in range(len(window_sizes))]
+        steps.append(dict(
+            label=(
+                f"Window: <b>{w} min</b>  |  "
+                f"Storage: <b>{storages[i]:.1f} gal</b>  |  "
+                f"Capacity: <b>{capacities[i]:.1f} kBTU/hr</b>"
+            ),
+            method="update",
+            args=[{"visible": visibility}],
+        ))
+
+    fig.update_layout(
+        title=title,
+        xaxis_title="Gas Storage Volume (gal)",
+        yaxis_title="Gas Heating Capacity (kBTU/hr)",
+        showlegend=False,
+        sliders=[dict(
+            steps=steps,
+            active=rec_idx,
+            currentvalue=dict(
+                prefix="<b>Selected size</b>: ",
+                visible=True,
+                font=dict(size=14),
+                xanchor="left",
+            ),
+            pad={"t": 60},
+            ticklen=0,
+            minorticklen=0,
+            bgcolor="#CCD9DB",
+            borderwidth=0,
+        )],
+    )
+
+    return fig

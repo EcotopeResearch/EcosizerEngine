@@ -5,9 +5,13 @@ from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.EnergyTank import EnergyTank
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
 from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
-from ecoengine.interfaces.Simulator import _initial_percent_useable
-from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices
-from ..utils import mixing_valve_behavior, ashrae_method_water_use_ratio
+from ..utils import (
+    mixing_valve_behavior,
+    size_in_series_gas_backup,
+    gas_backup_from_window,
+    get_ashrae_sizing_curve,
+    plot_ashrae_sizing_curve,
+)
 from .SinglePassRTPSystem import SinglePassRTPSystem, _SPRTP_STRAT_SLOPE
 
 _GAS_DEADBAND_F: float = 8.0
@@ -183,82 +187,22 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             If the primary SPRTP is already adequately sized (outage < 10 min
             and max deficit < 2 °F), meaning no gas backup is needed.
         """
-        _WINDOW_MIN      = 30
-        _MIN_OUTAGE_MIN  = 10
-        _MIN_DEFICIT_F   = 2.0
-        _TOTAL_STEPS     = 2 * 24 * 60   # 2 days at 1-min intervals
+        _WINDOW_MIN = 30
 
-        # --- 1. Determine peak-aligned simulation start minutes ---
-        inlet_temp_f    = building.get_design_inlet_water_temp_f()
-        percent_useable = _initial_percent_useable(self)
-        recirc_loss_kbtuh = self.get_recirc_loss_kbtuh()
+        # --- 1 & 2. Sizing simulation → outage arrays (raises ValueError if no backup needed) ---
+        self.outage_volume_gal, self.outage_temp_delta_f = size_in_series_gas_backup(
+            primary_system=self,
+            building=building,
+            nominal_capacity_kbtuh=nominal_capacity_kbtuh,
+            simulate_step_fn=lambda b, t, interval_min=1: SinglePassRTPSystem.simulate_step(
+                self, b, t, interval_min
+            ),
+        )
 
-        if nominal_capacity_kbtuh <= recirc_loss_kbtuh:
-            # Primary can't overcome recirc loss; peak-finding is meaningless.
-            peak_start_minutes = [0]
-        else:
-            net_capacity_kbtuh = nominal_capacity_kbtuh - recirc_loss_kbtuh
-            gen_rate_gph = (
-                net_capacity_kbtuh * 1000.0
-                / (_RHO_CP * (self.supply_temp_f - inlet_temp_f))
-            )
-            hourly_diff_gph = (
-                gen_rate_gph
-                - building.daily_dhw_use_supplyT_gal * building.peak_load_shape
-            )
-            peak_indices = _get_peak_indices(hourly_diff_gph)
-            peak_start_minutes = [idx * 60 for idx in peak_indices] if peak_indices else [0]
-
-        # --- 2. Two-day simulation(s): one per peak, keep worst ---
-        best_outage_volume_gal   = []
-        best_outage_temp_delta_f = []
-        best_max_delta: float    = -1.0
-
-        for peak_start in peak_start_minutes:
-            self.storage_tank.initialize(
-                self.storage_temp_f, inlet_temp_f, percent_useable=percent_useable
-            )
-            run_volume_gal   = []
-            run_temp_delta_f = []
-
-            for t in range(peak_start, peak_start + _TOTAL_STEPS):
-                step = SinglePassRTPSystem.simulate_step(self, building, t, interval_min=1)
-                top_temp = self.storage_tank.get_temperature_at_fraction(1.0)
-                demand = step["demand_supplyT_gal"]
-                if top_temp < self.supply_temp_f:
-                    deficit_f = self.supply_temp_f - top_temp
-                    run_volume_gal.append(demand)
-                    run_temp_delta_f.append(deficit_f)
-                else:
-                    run_volume_gal.append(0.0)
-                    run_temp_delta_f.append(0.0)
-
-            run_max_delta = max(run_temp_delta_f)
-            if run_max_delta > best_max_delta:
-                best_max_delta           = run_max_delta
-                best_outage_volume_gal   = run_volume_gal
-                best_outage_temp_delta_f = run_temp_delta_f
-
-        self.outage_volume_gal   = best_outage_volume_gal
-        self.outage_temp_delta_f = best_outage_temp_delta_f
-        max_deficit_f            = best_max_delta
-
-        # --- 3. Check whether a gas backup is actually needed ---
-        total_outage_min = sum(1 for v in self.outage_volume_gal if v > 0.0)
-        if total_outage_min <= _MIN_OUTAGE_MIN and max_deficit_f <= _MIN_DEFICIT_F:
-            raise ValueError(
-                "The primary SinglePassRTPSystem is already adequately sized: "
-                f"outage duration was {total_outage_min} min "
-                f"(threshold {_MIN_OUTAGE_MIN} min) and max temperature deficit "
-                f"was {max_deficit_f:.2f} °F (threshold {_MIN_DEFICIT_F:.1f} °F). "
-                "No gas backup is required."
-            )
-
-        # --- 4. Size gas backup at the default 30-minute window ---
+        # --- 3. Size gas backup components at the default 30-minute window ---
         gas_capacity_kbtuh, gas_storage_vol_gal = self._gas_backup_from_window(_WINDOW_MIN)
         # TODO add thermal efficiency
 
-        # --- 5. Build gas backup components ---
         self.gas_water_heater = WaterHeater.from_nominal_capacity(
             nominal_capacity_kbtuh=gas_capacity_kbtuh,
             control_schedule=["normal"] * 24,
@@ -272,59 +216,46 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
 
     def _gas_backup_from_window(self, window_min: int) -> tuple[float, float]:
         """
-        Find the worst ``window_min``-length stretch of the sizing-sim outage
-        arrays and return the implied gas backup requirements.
-
-        Parameters
-        ----------
-        window_min : int
-            Contiguous window length in minutes.
-
-        Returns
-        -------
-        tuple[float, float]
-            ``(gas_capacity_kbtuh, gas_storage_vol_gal)``
+        Return ``(gas_capacity_kbtuh, gas_storage_vol_gal)`` for the given
+        window duration using the stored outage arrays.
         """
-        total_steps = len(self.outage_volume_gal)
-        w = min(window_min, total_steps)
+        return gas_backup_from_window(
+            self.outage_volume_gal, self.outage_temp_delta_f, window_min
+        )
 
-        window_score = sum(self.outage_temp_delta_f[:w])
-        best_score   = window_score
-        best_start   = 0
+    def get_sizing_curve(self) -> dict:
+        """
+        Return the gas backup sizing curve as a data dict.
 
-        for i in range(1, total_steps - w + 1):
-            window_score += self.outage_temp_delta_f[i + w - 1] - self.outage_temp_delta_f[i - 1]
-            if window_score > best_score:
-                best_score = window_score
-                best_start = i
+        Keys: ``"window_sizes"``, ``"capacities_kbtuh"``, ``"storages_gal"``,
+        ``"recommended_index"``.  Pass the result to ``plot_sizing_curve()``
+        to get a Plotly figure.
 
-        best_slice_vol   = self.outage_volume_gal[best_start : best_start + w]
-        best_slice_delta = self.outage_temp_delta_f[best_start : best_start + w]
+        Raises
+        ------
+        RuntimeError
+            If ``from_size()`` has not been called yet.
+        """
+        if not getattr(self, "outage_volume_gal", None):
+            raise RuntimeError(
+                "Gas backup outage data is not available. Call from_size() first."
+            )
+        return get_ashrae_sizing_curve(self.outage_volume_gal, self.outage_temp_delta_f)
 
-        # gas_storage_vol_gal = sum(best_slice_vol)
-        gas_storage_vol_gal = ashrae_method_water_use_ratio(window_min, sum(best_slice_vol))
-        avg_peak_flow_gpm   = gas_storage_vol_gal / w
-        # avg_delta_f         = max(best_slice_delta) if any(d > 0 for d in best_slice_delta) else 0.0
-        avg_delta_f         = sum(best_slice_delta) / w if any(d > 0 for d in best_slice_delta) else 0.0
-        gas_capacity_kbtuh  = _RHO_CP * avg_peak_flow_gpm * avg_delta_f * 60.0 / 1000.0
-        print(f"=========={window_min}=========")
-        print(f"{best_start} to {best_start + window_min}")
-        print(f"avg_peak_flow_gpm: {avg_peak_flow_gpm}")
-        print(f"avg_delta_f: {avg_delta_f}")
-        print(f"gas_capacity_kbtuh: {gas_capacity_kbtuh}")
-        print(best_slice_vol)
-        print(best_slice_delta)
-
-        return gas_capacity_kbtuh, gas_storage_vol_gal
-
-    def get_sizing_curve(self) -> "plotly.graph_objects.Figure":
+    def plot_sizing_curve(
+        self,
+        title: str = "Gas Backup Sizing Curve — SP RTP In-Series",
+    ) -> "plotly.graph_objects.Figure":
         """
         Return a Plotly sizing-curve figure for the gas backup system.
 
-        Sweeps window sizes from 60 down to 5 minutes in 5-minute steps,
-        computing the gas capacity and storage implied by each window.  The
-        30-minute window (the default used by ``_size_gas_backup``) is
-        highlighted as the recommended design point.
+        Calls ``get_sizing_curve()`` internally to obtain the data dict, then
+        delegates to ``plot_ashrae_sizing_curve``.
+
+        Parameters
+        ----------
+        title : str
+            Figure title.
 
         Returns
         -------
@@ -333,101 +264,9 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         Raises
         ------
         RuntimeError
-            If ``from_size()`` has not been called (outage arrays not populated).
+            If ``from_size()`` has not been called yet.
         """
-        if not getattr(self, "outage_volume_gal", None):
-            raise RuntimeError(
-                "Gas backup outage data is not available. Call from_size() first."
-            )
-
-        try:
-            import plotly.graph_objects as go
-        except ImportError:
-            raise ImportError(
-                "plotly is required for get_sizing_curve(). "
-                "Install it with: pip install plotly"
-            )
-
-        _RECOMMENDED_WINDOW = 30
-        # Ascending order so the slider moves left-to-right as storage increases,
-        # matching the direction the diamond travels on the curve.
-        # window_sizes = list(range(5, 65, 5))   # [5, 10, …, 60]
-        window_sizes = [5, 15, 30, 60]
-
-        capacities = []
-        storages   = []
-        for w in window_sizes:
-            cap, vol = self._gas_backup_from_window(w)
-            capacities.append(cap)
-            storages.append(vol)
-
-        rec_idx = window_sizes.index(_RECOMMENDED_WINDOW)
-
-        hover = (
-            "Window: <b>%{customdata} min</b><br>"
-            "Gas storage: <b>%{x:.1f} gal</b><br>"
-            "Gas capacity: <b>%{y:.1f} kBTU/hr</b>"
-            "<extra></extra>"
-        )
-
-        fig = go.Figure()
-
-        fig.add_trace(go.Scatter(
-            x=storages, y=capacities,
-            mode="lines",
-            line=dict(color="#28a745", width=3),
-            customdata=window_sizes,
-            hovertemplate=hover,
-            showlegend=False,
-        ))
-
-        for i, w in enumerate(window_sizes):
-            fig.add_trace(go.Scatter(
-                x=[storages[i]], y=[capacities[i]],
-                mode="markers",
-                marker=dict(symbol="diamond", color="#2EA3F2", size=12),
-                customdata=[w],
-                hovertemplate=hover,
-                showlegend=False,
-                visible=(i == rec_idx),
-            ))
-
-        steps = []
-        for i, w in enumerate(window_sizes):
-            visibility = [True] + [j == i for j in range(len(window_sizes))]
-            steps.append(dict(
-                label=(
-                    f"Window: <b>{w} min</b>  |  "
-                    f"Storage: <b>{storages[i]:.1f} gal</b>  |  "
-                    f"Capacity: <b>{capacities[i]:.1f} kBTU/hr</b>"
-                ),
-                method="update",
-                args=[{"visible": visibility}],
-            ))
-
-        fig.update_layout(
-            title="Gas Backup Sizing Curve — SP RTP In-Series",
-            xaxis_title="Gas Storage Volume (gal)",
-            yaxis_title="Gas Heating Capacity (kBTU/hr)",
-            showlegend=False,
-            sliders=[dict(
-                steps=steps,
-                active=rec_idx,
-                currentvalue=dict(
-                    prefix="<b>Selected size</b>: ",
-                    visible=True,
-                    font=dict(size=14),
-                    xanchor="left",
-                ),
-                pad={"t": 60},
-                ticklen=0,
-                minorticklen=0,
-                bgcolor="#CCD9DB",
-                borderwidth=0,
-            )],
-        )
-
-        return fig
+        return plot_ashrae_sizing_curve(self.get_sizing_curve(), title=title)
 
     # ------------------------------------------------------------------
     # Simulation

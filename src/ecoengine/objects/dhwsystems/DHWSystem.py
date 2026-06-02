@@ -1792,6 +1792,32 @@ class DHWSystem:
         ]
         return max(outlet_temps) if outlet_temps else self.storage_temp_f
 
+    def get_initial_percent_useable(self) -> float:
+        """
+        Return the initial tank charge level (fraction hot) for simulation.
+
+        Reads the on-aquastat fraction from the system's "normal" Controls
+        (falling back to the first available Controls key if "normal" is
+        absent).  Starting the tank at ``1 - on_sensor_fract`` puts it right
+        at the on-trigger level so the heater fires immediately on the first
+        cold hour and the simulation reaches steady state quickly.
+
+        Falls back to 1.0 (fully charged) when no Controls are configured.
+
+        Returns
+        -------
+        float
+            Fraction of tank volume that is usable at the start of simulation
+            (0–1).
+        """
+        for wh in self.water_heaters:
+            if wh.control_map is None:
+                continue
+            ctrl = wh.control_map.get("normal") or next(iter(wh.control_map.values()), None)
+            if ctrl is not None:
+                return max(0.0, min(1.0, 1.0 - ctrl.on_sensor_fract))
+        return 1.0
+
     def check_for_outage(self, demand_supplyT_gal: float) -> bool:
         """
         Return True if the storage tank cannot meet the given demand.
