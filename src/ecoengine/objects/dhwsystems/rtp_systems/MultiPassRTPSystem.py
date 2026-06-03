@@ -371,7 +371,8 @@ class MultiPassRTPSystem(RTPSystem):
                             percent_useable  = _pct_use,
                             capacity_boost_trial_days= 2,
                             capacity_boost_iterations= 1,
-                            default_to_min_volume = False
+                            default_to_min_volume = False,
+                            tm_safety_factor= self.tm_safety_factor,
                         )
                     except (ValueError, RuntimeError, ZeroDivisionError):
                         break
