@@ -370,6 +370,7 @@ class SinglePassRTPSystem(RTPSystem):
             else "normal"
         )
 
+        draw_gal = 0.0
         if self.storage_tank is not None:
             self.storage_tank.update_cold_temp_f(inlet_temp_f)
             # Update on/off state for each heater based on current tank condition
@@ -430,6 +431,7 @@ class SinglePassRTPSystem(RTPSystem):
             "inlet_water_temp_f":        inlet_temp_f,
             "tank_temps_f":              tank_temps_f,
             "mode":                      mode,
+            "draw_thru_system_gal":      draw_gal,
         }
         # if self.storage_tank is not None:
         #     self.storage_tank.add_recirc_return(

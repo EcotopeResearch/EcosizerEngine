@@ -57,12 +57,14 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
     from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem
     from ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem import SwingERTrdOffSystem
     from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem import SP_RTPInSeriesSystem, _GAS_DEADBAND_F
+    from ecoengine.objects.dhwsystems.rtp_systems.MP_RTPInSeriesSystem import MP_RTPInSeriesSystem
+    _is_in_series = isinstance(dhw_system, (SP_RTPInSeriesSystem, MP_RTPInSeriesSystem))
     sim_run.show_tm_panel = (
         isinstance(dhw_system, SwingSystem)
         or isinstance(dhw_system, SwingERTrdOffSystem)
-        or isinstance(dhw_system, SP_RTPInSeriesSystem)
+        or _is_in_series
     )
-    if isinstance(dhw_system, SP_RTPInSeriesSystem):
+    if _is_in_series:
         sim_run.tm_panel_label = "In Series Heating"
 
     # Initialize storage tanks

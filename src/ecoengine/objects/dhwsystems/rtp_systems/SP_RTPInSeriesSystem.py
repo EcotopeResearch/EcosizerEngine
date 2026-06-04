@@ -118,13 +118,6 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             defrost_factor=defrost_factor,
             tm_safety_factor=tm_safety_factor,
         )
-        system.size(
-            building,
-            control_schedule=control_schedule,
-            control_map=control_map,
-            strat_slope=strat_slope,
-            load_shift_fract_total_vol=load_shift_fract_total_vol,
-        )
 
         # Primary HPWH: capped at caller-provided nominal specs
         system.storage_tank = EnergyTank(
@@ -194,9 +187,6 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             primary_system=self,
             building=building,
             nominal_capacity_kbtuh=nominal_capacity_kbtuh,
-            simulate_step_fn=lambda b, t, interval_min=1: SinglePassRTPSystem.simulate_step(
-                self, b, t, interval_min
-            ),
         )
 
         # --- 3. Size gas backup components at the default 30-minute window ---
@@ -280,15 +270,15 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         mode: str = "normal",
     ) -> dict:
         """
-        Run one timestep for a single-pass RTP system.
+        Run one timestep for a single-pass RTP in-series system.
 
-        Delegates the DHW draw and heater logic to the base class, then
-        applies recirculation losses to the storage tank.  The recirc
-        return flow cools the bottom of the tank every minute, reducing
-        usable volume.  The returned dict is updated to reflect post-recirc
-        tank state.
+        Falls back to the parent SinglePassRTPSystem.simulate_step during the
+        gas backup sizing phase, when gas_storage_tank has not yet been built.
         """
-        # step = super().simulate_step(building, timestep_interval, interval_min, mode)
+        if not hasattr(self, "gas_storage_tank"):
+            return SinglePassRTPSystem.simulate_step(
+                self, building, timestep_interval, interval_min, mode
+            )
         use_avg = any(wh.is_load_shifting() for wh in self.water_heaters)
         demand_supplyT_gal = building.get_dhw_load_supplyT_gal(
             timestep_interval, interval_min, use_avg=use_avg
@@ -374,5 +364,5 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             "tm_tank_temp_f":          self.gas_storage_tank.get_temperature_at_fraction(1.0),
             "tm_heater_output_kbtuh":  gas_kbtuh,
             "tm_heater_input_kw":      gas_kbtuh / _W_TO_KBTUH,
-            "delivery_temp_f":         self.gas_storage_tank.get_temperature_at_fraction(1.0),
+            "delivery_temp_f":         gas_top_t,
         }

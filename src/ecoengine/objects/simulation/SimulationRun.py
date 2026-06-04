@@ -228,9 +228,21 @@ class SimulationRun:
         if self.is_successful():
             return "Simulation succeeded: no DHW outage detected."
 
-        outage_steps = [
-            i for i, v in enumerate(self.usable_volume_supplyT_gal) if v <= 0.0
-        ]
+        supply_t_f = self.supply_temp_f or 9999.0
+
+        # For systems with a secondary (TM/gas backup) panel, a true outage
+        # requires both the primary to be empty AND the secondary to be below
+        # supply temp — mirroring the Simulator's record_outage() guard.
+        if self.show_tm_panel and self.tm_tank_temp_f:
+            outage_steps = [
+                i for i, v in enumerate(self.usable_volume_supplyT_gal)
+                if v <= 0.0 and self.tm_tank_temp_f[i] < supply_t_f
+            ]
+        else:
+            outage_steps = [
+                i for i, v in enumerate(self.usable_volume_supplyT_gal) if v <= 0.0
+            ]
+
         if not outage_steps:
             return (
                 f"Simulation failed: system was undersized. "
@@ -251,7 +263,6 @@ class SimulationRun:
             delivery_temps = self.tm_tank_temp_f
         else:
             delivery_temps = self.tank_temps_f[5]
-        supply_t_f = self.supply_temp_f or 9999.0
         below_supply = [delivery_temps[i] for i in outage_steps if delivery_temps[i] < supply_t_f - 0.5]
         if below_supply:
             avg_delivery_temp_f = sum(below_supply) / len(below_supply)
@@ -261,7 +272,7 @@ class SimulationRun:
 
         return (
             f"Simulation failed: system was undersized. "
-            f"DHW outage occurred for {self.outage_minutes} minutes on day {day} "
+            f"{self.outage_minutes} minutes of DHW outage had accrued by day {day} "
             f"of the simulation{temp_clause}."
         )
 

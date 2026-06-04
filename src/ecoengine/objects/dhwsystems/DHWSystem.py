@@ -896,6 +896,8 @@ class DHWSystem:
         design_inlet_temp_f = self._require_design_inlet_temp(building)
         gen_rate_gph        = building.daily_dhw_use_supplyT_gal / self.max_daily_run_hr
         delta_t             = self.supply_temp_f - design_inlet_temp_f
+        print(f"gen_rate_gph : {gen_rate_gph}")
+
         return gen_rate_gph * _RHO_CP * delta_t / self.defrost_factor / 1000
 
     def _calc_running_volume_supplyT_gal(

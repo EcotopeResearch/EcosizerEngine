@@ -76,7 +76,6 @@ def size_in_series_gas_backup(
     primary_system,
     building,
     nominal_capacity_kbtuh: float,
-    simulate_step_fn=None,
 ) -> tuple[list[float], list[float]]:
     """
     Run peak-aligned 2-day simulation(s) on an undersized primary system and
@@ -86,6 +85,11 @@ def size_in_series_gas_backup(
     cannot keep up with demand.  The run producing the largest max temperature
     deficit is kept.  No components are built; the caller uses the returned
     arrays with ``gas_backup_from_window`` and ``get_ashrae_sizing_curve``.
+
+    ``primary_system.simulate_step`` is called directly at each timestep.
+    In-series subclasses (e.g. ``SP_RTPInSeriesSystem``) must detect that the
+    gas backup tank has not been built yet and fall back to their parent
+    ``simulate_step`` so that only the primary is simulated.
 
     Parameters
     ----------
@@ -97,12 +101,6 @@ def size_in_series_gas_backup(
         The building the system serves.
     nominal_capacity_kbtuh : float
         Primary heater capacity [kBTU/hr], used to find peak-demand hours.
-    simulate_step_fn : callable | None
-        Called as ``simulate_step_fn(building, t, interval_min=1) -> dict``
-        at each timestep.  Defaults to ``primary_system.simulate_step``.
-        Pass a bound method when the default ``simulate_step`` would access
-        components not yet built (e.g. a gas backup tank that doesn't exist
-        during sizing).
 
     Returns
     -------
@@ -119,9 +117,6 @@ def size_in_series_gas_backup(
     _MIN_OUTAGE_MIN = 10
     _MIN_DEFICIT_F  = 2.0
     _TOTAL_STEPS    = 2 * 24 * 60
-
-    if simulate_step_fn is None:
-        simulate_step_fn = lambda b, t, interval_min=1: primary_system.simulate_step(b, t, interval_min)
 
     inlet_temp_f      = building.get_design_inlet_water_temp_f()
     percent_useable   = primary_system.get_initial_percent_useable()
@@ -154,9 +149,9 @@ def size_in_series_gas_backup(
         run_temp_delta_f = []
 
         for t in range(peak_start, peak_start + _TOTAL_STEPS):
-            step     = simulate_step_fn(building, t)
+            step     = primary_system.simulate_step(building, t, 1)
             top_temp = primary_system.storage_tank.get_temperature_at_fraction(1.0)
-            demand   = step["demand_supplyT_gal"]
+            demand   = step["draw_thru_system_gal"]
             if top_temp < primary_system.supply_temp_f:
                 deficit_f = primary_system.supply_temp_f - top_temp
                 run_volume_gal.append(demand)

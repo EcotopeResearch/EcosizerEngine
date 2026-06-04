@@ -118,6 +118,7 @@ class RTPSystem(DHWSystem):
             / self.max_daily_run_hr
             / self.defrost_factor
         )
+        print(f"dhw_cap is {dhw_cap}, recirc_cap is {recirc_cap}")
         return dhw_cap + recirc_cap
 
     def _calc_required_capacity_ls_kbtuh(
