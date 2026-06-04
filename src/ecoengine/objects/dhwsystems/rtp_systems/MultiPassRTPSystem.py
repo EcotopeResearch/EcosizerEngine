@@ -134,7 +134,6 @@ class MultiPassRTPSystem(RTPSystem):
             tm_safety_factor=tm_safety_factor,
         )
         system.size(building, control_map=control_map, strat_slope=strat_slope, default_to_min_volume = default_to_min_volume)
-        print(f"------- for {system.max_daily_run_hr} : system._minimum_capacity_kbtuh is {system._minimum_capacity_kbtuh}")
         cold_temp_f = system._require_design_inlet_temp(building)
         system.storage_tank = SlugOverlayTank(
             total_volume_gal=system._minimum_storage_storageT_gal,
@@ -153,7 +152,6 @@ class MultiPassRTPSystem(RTPSystem):
         inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
         ctrl = control_map.get("normal") or next(iter(control_map.values()), None)
         starting_percent_usable = max(0.0, min(1.0, 1.0 - ctrl.on_sensor_fract))
-        print(f"system._minimum_capacity_kbtuh is {system._minimum_capacity_kbtuh}")
         for _ in range(capacity_boost_iterations):
             system.storage_tank.initialize(
                 storage_temp_f  = system.storage_temp_f,
@@ -193,10 +191,8 @@ class MultiPassRTPSystem(RTPSystem):
                         control_schedule=control_schedule,
                         control_map=control_map,
                     )]
-                    print(f"now it is {system._minimum_capacity_kbtuh}")
             else:
                 break
-        print(f"finally it is {system._minimum_capacity_kbtuh}")
         return system
 
     # ------------------------------------------------------------------
@@ -390,8 +386,6 @@ class MultiPassRTPSystem(RTPSystem):
                 back_hr = round(
                     _numerator / (pt._minimum_capacity_kbtuh * self.defrost_factor), 1
                 )
-                print(f"{_numerator}, {pt._minimum_capacity_kbtuh}, {_numerator / pt._minimum_capacity_kbtuh}")
-                print(f"{h} hmmmm ..... {back_hr}")
 
                 if rec_back_hr is None:
                     rec_back_hr = back_hr   # first sweep point = recommended design
