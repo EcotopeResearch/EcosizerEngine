@@ -2,6 +2,46 @@ from ecoengine.constants.constants import _RHO_CP
 from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices
 
 def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, cold_temp_f : float, supply_temp_f : float, return_temp_f : float, storage_temp_f : float) -> dict:
+    """
+    Calculate the storage draw volume and tank inlet temperature for one timestep
+    given a thermostatic mixing valve serving both a DHW load and a recirculation loop.
+
+    The mixing valve blends hot storage water with cold (or warm return) water to
+    deliver exactly ``supply_temp_f`` to the building.  Three regimes exist:
+
+    1. **Storage too cool** (``storage_temp_f <= supply_temp_f``): The valve cannot
+       reach supply temp, so all demand and recirc flow comes from storage.  The
+       inlet temperature is a blend of cold makeup and a derated recirc return.
+    2. **High load** (``load_supplyT_gal > critical_flow_gal``): Demand is large
+       enough that the mixing valve draws cold makeup water; the full recirc return
+       is blended back to the building and nothing returns to the tank.
+    3. **Low load** (``load_supplyT_gal <= critical_flow_gal``): Demand is small
+       relative to recirc loss, so part of the recirc return is routed back into
+       the tank.  The inlet is a blend of cold makeup and that returned recirc flow.
+
+    Parameters
+    ----------
+    load_supplyT_gal : float
+        DHW demand this timestep [gal at supply temperature].
+    flow_returnT_gal : float
+        Volume of recirculation return flow this timestep [gal at return temperature].
+    cold_temp_f : float
+        Cold (makeup) water temperature [°F].
+    supply_temp_f : float
+        Target mixed delivery temperature [°F].
+    return_temp_f : float
+        Recirculation loop return temperature [°F].
+    storage_temp_f : float
+        Current temperature at the top of the storage (or swing) tank [°F].
+
+    Returns
+    -------
+    dict
+        ``storage_draw_gal`` — volume drawn from the tank this timestep [gal].
+        ``inlet_temp_f``     — blended temperature of water entering the tank [°F].
+    """
+    # where there is no flow through the cold side of the mixing valve, when storage or swing is too cool
+    # in swing tanks, cold inlet comes from the primary storage, is hot, and adds heat to swing tank (unless primary storage is out of hot water)
     if storage_temp_f <= supply_temp_f:
         storage_draw_gal = load_supplyT_gal + flow_returnT_gal
         recirc_loop_delta_f = supply_temp_f - return_temp_f
@@ -11,11 +51,12 @@ def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, co
     # For minute intervals, storage_temp_f is whatever temperature is at the top of the storage tank, set point storage temperature or not
         recirc_loss_btu = flow_returnT_gal * _RHO_CP * (supply_temp_f - return_temp_f)
         critical_flow_gal = recirc_loss_btu / (_RHO_CP * (storage_temp_f - supply_temp_f))
-
+        # where all recirculation flows through the mixing valve back to the building, when flow is high 
         if load_supplyT_gal > critical_flow_gal:
             storage_draw_gal = (load_supplyT_gal * ((supply_temp_f - cold_temp_f) / (storage_temp_f - cold_temp_f))) + \
                 (flow_returnT_gal * ((supply_temp_f - return_temp_f) / (storage_temp_f - cold_temp_f)))
             inlet_temp_f = cold_temp_f
+        # where some of the recirculation return goes back to the storage or swing tank, lower flows
         else:
             storage_draw_gal = (load_supplyT_gal + flow_returnT_gal) * ((supply_temp_f - return_temp_f) / (storage_temp_f - return_temp_f))
             recirc_to_tank_gal = storage_draw_gal - load_supplyT_gal
