@@ -150,6 +150,8 @@ class SwingDualFuelSystem(SwingSystem):
         storage_temp_f: float,
         return_temp_f: float,
         return_flow_gpm: float,
+        nominal_capacity_kbtuh: float,
+        nominal_storage_gal: float,
         tm_safety_factor: float = 1.2,
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
@@ -159,8 +161,15 @@ class SwingDualFuelSystem(SwingSystem):
         load_shift_fract_total_vol: float = 1.0,
     ) -> SwingDualFuelSystem:
         """
-        Size the primary system, then size the supplemental swing tank via the
-        ASHRAE method and build all components.
+        Size the primary SwingSystem, cap it at the caller-supplied nominal
+        specs, then size the supplemental swing tank via the ASHRAE method.
+
+        The full SwingSystem sizing is always run first so that
+        ``_size_tm_system`` populates ``_minimum_tm_volume_gal`` and
+        ``_minimum_tm_capacity_kbtuh`` for the internal swing-tank simulation
+        used during primary capacity calculation.  The actual primary HPWH and
+        StratifiedTank are then built at the (typically smaller) nominal values,
+        creating a deliberate shortfall that the supplemental swing tank covers.
 
         Parameters
         ----------
@@ -173,6 +182,10 @@ class SwingDualFuelSystem(SwingSystem):
             Recirculation loop return temperature [°F].
         return_flow_gpm : float
             Recirculation loop flow rate [GPM].
+        nominal_capacity_kbtuh : float
+            Primary HPWH heating capacity ceiling [kBTU/hr].
+        nominal_storage_gal : float
+            Primary storage tank volume ceiling [gal at storageT].
         tm_safety_factor : float
             Multiplier on recirc loss for TM element capacity. Must be > 1.0.
         max_daily_run_hr : float
@@ -204,9 +217,8 @@ class SwingDualFuelSystem(SwingSystem):
             defrost_factor=defrost_factor,
         )
 
-        # Step 1: Size the primary system (calls _size_tm_system internally so
-        # that _sim_just_swing has _minimum_tm_volume_gal/_minimum_tm_capacity_kbtuh
-        # available during the primary capacity calculation).
+        # Step 1: Run full SwingSystem sizing so _size_tm_system populates
+        # _minimum_tm_volume_gal/_minimum_tm_capacity_kbtuh for _sim_just_swing.
         system.size(
             building,
             control_schedule=control_schedule,
@@ -215,13 +227,14 @@ class SwingDualFuelSystem(SwingSystem):
             load_shift_fract_total_vol=load_shift_fract_total_vol,
         )
 
-        # Step 2: Build primary components.
+        # Step 2: Build primary components capped at the caller-supplied nominal
+        # specs (deliberately undersized relative to the full swing sizing).
         system.storage_tank = StratifiedTank(
-            total_volume_gal=system._minimum_storage_storageT_gal,
+            total_volume_gal=nominal_storage_gal,
             strat_slope=strat_slope,
         )
         system.water_heaters = [WaterHeater.from_nominal_capacity(
-            nominal_capacity_kbtuh=system._minimum_capacity_kbtuh,
+            nominal_capacity_kbtuh=nominal_capacity_kbtuh,
             control_schedule=control_schedule,
             control_map=control_map,
         )]
@@ -249,6 +262,7 @@ class SwingDualFuelSystem(SwingSystem):
         system._size_supplemental(
             building=building,
             tm_controls=tm_controls,
+            nominal_capacity_kbtuh=nominal_capacity_kbtuh,
         )
 
         return system
@@ -261,6 +275,7 @@ class SwingDualFuelSystem(SwingSystem):
         self,
         building: Building,
         tm_controls: Controls,
+        nominal_capacity_kbtuh: float,
     ) -> None:
         """
         Re-size ``tm_storage_tank`` and ``tm_water_heater`` via the ASHRAE
@@ -279,6 +294,9 @@ class SwingDualFuelSystem(SwingSystem):
         tm_controls : Controls
             Controls for the supplemental swing tank element (on at supply_temp,
             off at supply_temp + deadband).
+        nominal_capacity_kbtuh : float
+            Primary HPWH capacity ceiling [kBTU/hr]; used to identify peak-demand
+            hours for the sizing simulation.
 
         Raises
         ------
@@ -303,7 +321,7 @@ class SwingDualFuelSystem(SwingSystem):
             size_supplemental_heating_and_storage(
                 primary_system=proxy,
                 building=building,
-                nominal_capacity_kbtuh=self._minimum_capacity_kbtuh,
+                nominal_capacity_kbtuh=nominal_capacity_kbtuh,
             )
         )
 
