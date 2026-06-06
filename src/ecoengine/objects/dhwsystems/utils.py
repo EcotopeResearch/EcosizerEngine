@@ -26,7 +26,9 @@ def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, co
     flow_returnT_gal : float
         Volume of recirculation return flow this timestep [gal at return temperature].
     cold_temp_f : float
-        Cold (makeup) water temperature [°F].
+        Cold inlet water temperature [°F]. In the case of a swing tank, this water comes from
+        primary storage will typically actually be the hottest temperature. In a RTP system, this it the
+        cold city water inlet
     supply_temp_f : float
         Target mixed delivery temperature [°F].
     return_temp_f : float
@@ -37,8 +39,9 @@ def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, co
     Returns
     -------
     dict
-        ``storage_draw_gal`` — volume drawn from the tank this timestep [gal].
-        ``inlet_temp_f``     — blended temperature of water entering the tank [°F].
+        ``storage_draw_gal``          — volume drawn from the tank this timestep [gal].
+        ``inlet_temp_f``              — blended temperature of water entering the tank [°F].
+        ``cold_load_to_storage_gal``  — cold-side draw volume sent to the storage tank [gal].
     """
     # where there is no flow through the cold side of the mixing valve, when storage or swing is too cool
     # in swing tanks, cold inlet comes from the primary storage, is hot, and adds heat to swing tank (unless primary storage is out of hot water)
@@ -47,6 +50,7 @@ def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, co
         recirc_loop_delta_f = supply_temp_f - return_temp_f
         derated_recirc_temp_f = storage_temp_f - recirc_loop_delta_f
         inlet_temp_f = ((load_supplyT_gal * cold_temp_f) + (flow_returnT_gal * derated_recirc_temp_f)) / storage_draw_gal
+        cold_load_to_storage_gal = load_supplyT_gal
     else:
     # For minute intervals, storage_temp_f is whatever temperature is at the top of the storage tank, set point storage temperature or not
         recirc_loss_btu = flow_returnT_gal * _RHO_CP * (supply_temp_f - return_temp_f)
@@ -56,14 +60,82 @@ def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, co
             storage_draw_gal = (load_supplyT_gal * ((supply_temp_f - cold_temp_f) / (storage_temp_f - cold_temp_f))) + \
                 (flow_returnT_gal * ((supply_temp_f - return_temp_f) / (storage_temp_f - cold_temp_f)))
             inlet_temp_f = cold_temp_f
+            cold_load_to_storage_gal = load_supplyT_gal * ((supply_temp_f - cold_temp_f) / (storage_temp_f - cold_temp_f)) # TODO check w evan
         # where some of the recirculation return goes back to the storage or swing tank, lower flows
         else:
             storage_draw_gal = (load_supplyT_gal + flow_returnT_gal) * ((supply_temp_f - return_temp_f) / (storage_temp_f - return_temp_f))
             recirc_to_tank_gal = storage_draw_gal - load_supplyT_gal
             inlet_temp_f = ((load_supplyT_gal * cold_temp_f) + (recirc_to_tank_gal * return_temp_f)) / storage_draw_gal
+            cold_load_to_storage_gal = load_supplyT_gal
     return {
         "storage_draw_gal" : storage_draw_gal,
-        "inlet_temp_f" : inlet_temp_f
+        "inlet_temp_f" : inlet_temp_f,
+        "cold_load_to_storage_gal" : cold_load_to_storage_gal,
+    }
+
+def mixing_valve_behavior_swing(load_supplyT_gal : float, flow_returnT_gal : float, cold_temp_f : float, supply_temp_f : float, return_temp_f : float, swing_storage_temp_f : float,
+                                swing_inlet_temp : float) -> dict:
+    """
+    Variant of ``mixing_valve_behavior`` for swing tank systems where the cold
+    side of the mixing valve is fed from primary storage (not city water).
+
+    Identical regime logic to ``mixing_valve_behavior``, but ``cold_temp_f``
+    represents the average temperature of the primary storage draw rather than
+    city cold water, and ``swing_inlet_temp`` is used as the blending temperature
+    for the storage-draw inlet in the low-load and under-temp regimes.
+
+    Parameters
+    ----------
+    load_supplyT_gal : float
+        DHW demand this timestep [gal at supply temperature].
+    flow_returnT_gal : float
+        Volume of recirculation return flow this timestep [gal at return temperature].
+    cold_temp_f : float
+        Average temperature of hot water drawn from primary storage [°F].
+    supply_temp_f : float
+        Target mixed delivery temperature [°F].
+    return_temp_f : float
+        Recirculation loop return temperature [°F].
+    swing_storage_temp_f : float
+        Current temperature at the mid-point of the swing tank [°F].
+    swing_inlet_temp : float
+        Temperature of water entering the swing tank from the primary storage [°F].
+
+    Returns
+    -------
+    dict
+        ``storage_draw_gal``         — volume drawn from the swing tank [gal].
+        ``inlet_temp_f``             — blended temperature entering the swing tank [°F].
+        ``cold_load_to_storage_gal`` — cold-side draw volume pulled from primary storage [gal].
+    """
+    # where there is no flow through the cold side of the mixing valve, when storage or swing is too cool
+    # in swing tanks, cold inlet comes from the primary storage, is hot, and adds heat to swing tank (unless primary storage is out of hot water)
+    if swing_storage_temp_f <= supply_temp_f:
+        storage_draw_gal = load_supplyT_gal + flow_returnT_gal
+        recirc_loop_delta_f = supply_temp_f - return_temp_f
+        derated_recirc_temp_f = swing_storage_temp_f - recirc_loop_delta_f
+        inlet_temp_f = ((load_supplyT_gal * swing_inlet_temp) + (flow_returnT_gal * derated_recirc_temp_f)) / storage_draw_gal
+        cold_load_to_storage_gal = load_supplyT_gal
+    else:
+    # For minute intervals, storage_temp_f is whatever temperature is at the top of the storage tank, set point storage temperature or not
+        recirc_loss_btu = flow_returnT_gal * _RHO_CP * (supply_temp_f - return_temp_f)
+        critical_flow_gal = recirc_loss_btu / (_RHO_CP * (swing_storage_temp_f - supply_temp_f))
+        # where all recirculation flows through the mixing valve back to the building, when flow is high 
+        if load_supplyT_gal > critical_flow_gal:
+            storage_draw_gal = (load_supplyT_gal * ((supply_temp_f - cold_temp_f) / (swing_storage_temp_f - cold_temp_f))) + \
+                (flow_returnT_gal * ((supply_temp_f - return_temp_f) / (swing_storage_temp_f - cold_temp_f)))
+            inlet_temp_f = swing_inlet_temp
+            cold_load_to_storage_gal = load_supplyT_gal * ((supply_temp_f - cold_temp_f) / (swing_storage_temp_f - cold_temp_f)) # TODO check w evan
+        # where some of the recirculation return goes back to the storage or swing tank, lower flows
+        else:
+            storage_draw_gal = (load_supplyT_gal + flow_returnT_gal) * ((supply_temp_f - return_temp_f) / (swing_storage_temp_f - return_temp_f))
+            recirc_to_tank_gal = storage_draw_gal - load_supplyT_gal
+            inlet_temp_f = ((load_supplyT_gal * swing_inlet_temp) + (recirc_to_tank_gal * return_temp_f)) / storage_draw_gal
+            cold_load_to_storage_gal = load_supplyT_gal
+    return {
+        "storage_draw_gal" : storage_draw_gal,
+        "inlet_temp_f" : inlet_temp_f,
+        "cold_load_to_storage_gal" : cold_load_to_storage_gal,
     }
 
 def ashrae_method_water_use_ratio(peak_min : int, total_gal : float) -> float:
@@ -113,14 +185,15 @@ _ASHRAE_WINDOWS: list[int] = [5, 15, 30, 60]
 _RECOMMENDED_WINDOW: int   = 30
 
 
-def size_in_series_gas_backup(
+def size_supplemental_heating_and_storage(
     primary_system,
     building,
     nominal_capacity_kbtuh: float,
+    draw_variable: str = "draw_thru_system_gal",
 ) -> tuple[list[float], list[float]]:
     """
     Run peak-aligned 2-day simulation(s) on an undersized primary system and
-    return the worst-case outage profile for gas backup sizing.
+    return the worst-case outage profile for supplemental heating/storage sizing.
 
     The simulation starts at each hour where the primary (net of recirc loss)
     cannot keep up with demand.  The run producing the largest max temperature
@@ -129,7 +202,7 @@ def size_in_series_gas_backup(
 
     ``primary_system.simulate_step`` is called directly at each timestep.
     In-series subclasses (e.g. ``SP_RTPInSeriesSystem``) must detect that the
-    gas backup tank has not been built yet and fall back to their parent
+    supplemental tank has not been built yet and fall back to their parent
     ``simulate_step`` so that only the primary is simulated.
 
     Parameters
@@ -142,6 +215,9 @@ def size_in_series_gas_backup(
         The building the system serves.
     nominal_capacity_kbtuh : float
         Primary heater capacity [kBTU/hr], used to find peak-demand hours.
+    draw_variable : str
+        Key in the ``simulate_step`` result dict that holds the per-timestep
+        draw volume [gal].  Defaults to ``"draw_thru_system_gal"``.
 
     Returns
     -------
@@ -192,7 +268,7 @@ def size_in_series_gas_backup(
         for t in range(peak_start, peak_start + _TOTAL_STEPS):
             step     = primary_system.simulate_step(building, t, 1)
             top_temp = primary_system.storage_tank.get_temperature_at_fraction(1.0)
-            demand   = step["draw_thru_system_gal"]
+            demand   = step[draw_variable]
             if top_temp < primary_system.supply_temp_f:
                 deficit_f = primary_system.supply_temp_f - top_temp
                 run_volume_gal.append(demand)
@@ -285,9 +361,9 @@ def get_ashrae_sizing_curve(
     Parameters
     ----------
     outage_volume_gal : list[float]
-        Per-minute outage demand array from ``size_in_series_gas_backup``.
+        Per-minute outage demand array from ``size_supplemental_heating_and_storage``.
     outage_temp_delta_f : list[float]
-        Per-minute temperature deficit array from ``size_in_series_gas_backup``.
+        Per-minute temperature deficit array from ``size_supplemental_heating_and_storage``.
 
     Returns
     -------
@@ -304,7 +380,7 @@ def get_ashrae_sizing_curve(
     """
     if not outage_volume_gal:
         raise RuntimeError(
-            "Outage arrays are empty. Call size_in_series_gas_backup() first."
+            "Outage arrays are empty. Call size_supplemental_heating_and_storage() first."
         )
 
     capacities = []
