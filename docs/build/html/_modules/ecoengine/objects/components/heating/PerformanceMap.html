@@ -251,11 +251,7 @@
 <span class="p">)</span>
 
 <span class="c1"># Model names whose pkl interpolator takes only (inlet, OAT) — no outlet dimension</span>
-<span class="n">_TWO_INPUT_PKL_NAMES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span>
-    <span class="s2">&quot;MODELS_SANCO2_C_SP&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;MODELS_COLMAC_R454B_C_SP&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;MODELS_Droplet_C_SP&quot;</span><span class="p">,</span>
-<span class="p">})</span>
+<span class="n">_TWO_INPUT_PKL_NAMES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({})</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_load_maps_json</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -328,7 +324,6 @@
 <span class="sd">        ----------</span>
 <span class="sd">        model_name : str</span>
 <span class="sd">            Equipment model identifier as it appears in ``maps.json``</span>
-<span class="sd">            (e.g. ``&#39;MODELS_ColmacCxV_5_C_SP&#39;``).</span>
 <span class="sd">        num_units : int</span>
 <span class="sd">            Number of identical heat pump units deployed.  All capacity and</span>
 <span class="sd">            power outputs are scaled by this factor.  Default 1.</span>

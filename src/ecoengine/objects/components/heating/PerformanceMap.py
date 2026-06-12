@@ -16,11 +16,7 @@ _DATA_DIR = os.path.normpath(
 )
 
 # Model names whose pkl interpolator takes only (inlet, OAT) — no outlet dimension
-_TWO_INPUT_PKL_NAMES = frozenset({
-    "MODELS_SANCO2_C_SP",
-    "MODELS_COLMAC_R454B_C_SP",
-    "MODELS_Droplet_C_SP",
-})
+_TWO_INPUT_PKL_NAMES = frozenset({})
 
 
 def _load_maps_json() -> dict:
@@ -86,7 +82,6 @@ class PerformanceMap:
         ----------
         model_name : str
             Equipment model identifier as it appears in ``maps.json``
-            (e.g. ``'MODELS_ColmacCxV_5_C_SP'``).
         num_units : int
             Number of identical heat pump units deployed.  All capacity and
             power outputs are scaled by this factor.  Default 1.

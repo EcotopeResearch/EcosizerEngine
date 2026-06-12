@@ -28,7 +28,6 @@ simulation.
        storage_temp_f           = 150.0,
        schematic                = "primary_no_recirc",
        num_heaters              = 2,
-       hpwh_model               = "MODELS_ColmacCxV_5_C_SP",
    )
 
    engine.build()
