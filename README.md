@@ -1,5 +1,8 @@
 # EcosizerEngine
 
+EcosizerEngine Copyright (C) 2023  Ecotope Inc.
+This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute under certain conditions; details check GNU AFFERO GENERAL PUBLIC LICENSE_08102020.docx.
+
 A Python simulation engine for sizing and simulating domestic hot water (DHW) systems in multi-family and commercial buildings, with a focus on heat pump water heater (HPWH) technology.
 
 Requires Python 3.11+. Dependencies: `numpy`, `scipy`, `plotly`.
