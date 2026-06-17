@@ -7,7 +7,7 @@ from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTa
 from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
 from ..utils import (
     mixing_valve_behavior,
-    size_in_series_gas_backup,
+    size_supplemental_heating_and_storage,
     gas_backup_from_window,
     get_ashrae_sizing_curve,
     plot_ashrae_sizing_curve,
@@ -183,7 +183,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         _WINDOW_MIN = 30
 
         # --- 1 & 2. Sizing simulation → outage arrays (raises ValueError if no backup needed) ---
-        self.outage_volume_gal, self.outage_temp_delta_f = size_in_series_gas_backup(
+        self.outage_volume_gal, self.outage_temp_delta_f = size_supplemental_heating_and_storage(
             primary_system=self,
             building=building,
             nominal_capacity_kbtuh=nominal_capacity_kbtuh,

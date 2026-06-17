@@ -467,6 +467,14 @@ class PklPerformanceMap(PerformanceMap):
         out_kw, _     = self._get_per_unit_kw(oat_f, inlet, outlet)
         return out_kw * self.num_units * _W_TO_KBTUH
 
+    def get_capacity_kw(
+        self,
+        oat_f: float,
+        outlet_temp_f: float,
+        inlet_temp_f: float | None = None,
+    ) -> float:
+        return self.get_capacity_kbtuh(oat_f, outlet_temp_f, inlet_temp_f) / _W_TO_KBTUH
+
     def get_power_in_kw(
         self,
         oat_f: float,

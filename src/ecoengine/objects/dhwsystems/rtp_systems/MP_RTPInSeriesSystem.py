@@ -8,7 +8,7 @@ from ecoengine.constants.constants import _W_TO_KBTUH
 from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem import _GAS_DEADBAND_F
 from ..utils import (
     mixing_valve_behavior,
-    size_in_series_gas_backup,
+    size_supplemental_heating_and_storage,
     gas_backup_from_window,
     get_ashrae_sizing_curve,
     plot_ashrae_sizing_curve,
@@ -182,7 +182,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
         """
         _WINDOW_MIN = 30
 
-        self.outage_volume_gal, self.outage_temp_delta_f = size_in_series_gas_backup(
+        self.outage_volume_gal, self.outage_temp_delta_f = size_supplemental_heating_and_storage(
             primary_system=self,
             building=building,
             nominal_capacity_kbtuh=nominal_capacity_kbtuh,
