@@ -16,12 +16,10 @@ _BUNDLED_DATA_DIR = os.path.normpath(
     )
 )
 
-# Model names whose pkl interpolator takes only (inlet, OAT) — no outlet dimension
-_TWO_INPUT_PKL_NAMES = frozenset({
-    "MODELS_SANCO2_C_SP",
-    "MODELS_COLMAC_R454B_C_SP",
-    "MODELS_Droplet_C_SP",
-})
+# Model names whose pkl interpolator takes only (inlet, OAT) — no outlet dimension.
+# MP-suffix models are automatically treated as two-input via the endswith("MP") check.
+# Add non-MP model names here when their pkl was built with a 2-input grid.
+_TWO_INPUT_PKL_NAMES: frozenset[str] = frozenset()
 
 # Per-directory cache so that different perf_map_dir values can coexist in one process.
 _maps_json_cache: dict[str, dict] = {}
