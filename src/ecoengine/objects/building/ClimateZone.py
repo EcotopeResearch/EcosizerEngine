@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-import importlib.resources as pkg_resources
+import os
 
 # ---------------------------------------------------------------------------
 # Module-level helpers
@@ -11,12 +11,12 @@ import importlib.resources as pkg_resources
 # Used to convert a day-of-year into a month index for inlet-water lookups.
 _MONTH_START_DAY = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
 
-_CLIMATE_DATA_PKG = 'ecoengine.data.climate_data'
+_BUNDLED_CLIMATE_DATA_DIR = os.path.join(os.path.dirname(__file__), "../../data/climate_data")
 
 
-def _open_climate_csv(filename: str):
-    """Return an open text stream for a file in the climate_data package."""
-    return (pkg_resources.files(_CLIMATE_DATA_PKG) / filename).open('r', newline='')
+def _open_climate_csv(filename: str, data_dir: str):
+    """Return an open text stream for a climate CSV file in data_dir."""
+    return open(os.path.join(data_dir, filename), 'r', newline='')
 
 
 def _day_of_year_to_month(day_of_year: int) -> int:
@@ -85,7 +85,7 @@ class ClimateZone:
     # ------------------------------------------------------------------
 
     @classmethod
-    def from_zip_code(cls, zip_code: str | int) -> ClimateZone:
+    def from_zip_code(cls, zip_code: str | int, climate_data_dir: str | None = None) -> ClimateZone:
         """
         Construct a ClimateZone by looking up the CA climate zone for a zip code
         and loading the corresponding weather data.
@@ -94,6 +94,9 @@ class ClimateZone:
         ----------
         zip_code : str | int
             A California 5-digit zip code.
+        climate_data_dir : str | None
+            Path to a directory containing the climate CSV files.  When None,
+            falls back to the bundled data shipped with the package.
 
         Returns
         -------
@@ -104,11 +107,12 @@ class ClimateZone:
         ValueError
             If the zip code is not found in the CA lookup table.
         """
-        zone_id = cls._lookup_zone_for_zip(zip_code)
-        return cls.from_zone_id(zone_id)
+        data_dir = climate_data_dir if climate_data_dir is not None else _BUNDLED_CLIMATE_DATA_DIR
+        zone_id = cls._lookup_zone_for_zip(zip_code, data_dir)
+        return cls.from_zone_id(zone_id, data_dir)
 
     @classmethod
-    def from_weather_station(cls, station_id: str) -> ClimateZone:
+    def from_weather_station(cls, station_id: str, climate_data_dir: str | None = None) -> ClimateZone:
         """
         Construct a ClimateZone from a named weather station.
 
@@ -117,6 +121,9 @@ class ClimateZone:
         station_id : str
             Weather station name exactly as it appears in the lookup CSV
             (e.g. ``'ID - Boise Air Terminal'``).
+        climate_data_dir : str | None
+            Path to a directory containing the climate CSV files.  When None,
+            falls back to the bundled data shipped with the package.
 
         Returns
         -------
@@ -127,25 +134,31 @@ class ClimateZone:
         ValueError
             If the station name is not found in the lookup table.
         """
-        zone_id = cls._lookup_zone_for_station(station_id)
-        return cls.from_zone_id(zone_id)
+        data_dir = climate_data_dir if climate_data_dir is not None else _BUNDLED_CLIMATE_DATA_DIR
+        zone_id = cls._lookup_zone_for_station(station_id, data_dir)
+        return cls.from_zone_id(zone_id, data_dir)
 
     @classmethod
-    def from_zone_id(cls, zone_id: int) -> ClimateZone:
+    def from_zone_id(cls, zone_id: int, climate_data_dir: str | None = None) -> ClimateZone:
         """
         Construct a ClimateZone directly from a numeric climate zone ID.
 
         Parameters
         ----------
         zone_id : int
-            Climate zone number (1-96 for OAT data; 1-19 for full CA data).
+            Climate zone number (1–21 in the bundled data; 1–8 are CA zones
+            with full kG/kWh data; 9–21 are weather-station zones).
+        climate_data_dir : str | None
+            Path to a directory containing the climate CSV files.  When None,
+            falls back to the bundled data shipped with the package.
 
         Returns
         -------
         ClimateZone
         """
-        oat_f_by_hour               = cls._load_oat_data(zone_id)
-        inlet_water_temp_f_by_month = cls._load_inlet_water_data(zone_id)
+        data_dir = climate_data_dir if climate_data_dir is not None else _BUNDLED_CLIMATE_DATA_DIR
+        oat_f_by_hour               = cls._load_oat_data(zone_id, data_dir)
+        inlet_water_temp_f_by_month = cls._load_inlet_water_data(zone_id, data_dir)
         return cls(zone_id, oat_f_by_hour, inlet_water_temp_f_by_month)
 
     @classmethod
@@ -314,7 +327,7 @@ class ClimateZone:
     # ------------------------------------------------------------------
 
     @classmethod
-    def _lookup_zone_for_zip(cls, zip_code: str | int) -> int:
+    def _lookup_zone_for_zip(cls, zip_code: str | int, data_dir: str) -> int:
         """
         Search ZipCode_ClimateZone_Lookup.csv for the given zip code.
 
@@ -329,7 +342,7 @@ class ClimateZone:
             If the zip code is not in the table.
         """
         zip_str = str(zip_code).strip()
-        with _open_climate_csv('ZipCode_ClimateZone_Lookup.csv') as f:
+        with _open_climate_csv('ZipCode_ClimateZone_Lookup.csv', data_dir) as f:
             reader = csv.DictReader(f)
             for row in reader:
                 if row['Zip Code'].strip() == zip_str:
@@ -340,7 +353,7 @@ class ClimateZone:
         )
 
     @classmethod
-    def _lookup_zone_for_station(cls, station_id: str) -> int:
+    def _lookup_zone_for_station(cls, station_id: str, data_dir: str) -> int:
         """
         Search WeatherStation_ClimateZone_Lookup.csv for the given station name.
 
@@ -355,7 +368,7 @@ class ClimateZone:
             If the station name is not in the table.
         """
         station_str = str(station_id).strip()
-        with _open_climate_csv('WeatherStation_ClimateZone_Lookup.csv') as f:
+        with _open_climate_csv('WeatherStation_ClimateZone_Lookup.csv', data_dir) as f:
             reader = csv.DictReader(f)
             for row in reader:
                 if row['Weather Station'].strip() == station_str:
@@ -365,7 +378,7 @@ class ClimateZone:
         )
 
     @classmethod
-    def _load_oat_data(cls, zone_id: int) -> list[float]:
+    def _load_oat_data(cls, zone_id: int, data_dir: str) -> list[float]:
         """
         Load the full-year hourly OAT sequence for the given zone from
         DryBulbTemperatures_ByClimateZone.csv.
@@ -381,7 +394,7 @@ class ClimateZone:
         col_index = zone_id - 1  # CSV columns are 1-indexed
 
         oat_values = []
-        with _open_climate_csv('DryBulbTemperatures_ByClimateZone.csv') as f:
+        with _open_climate_csv('DryBulbTemperatures_ByClimateZone.csv', data_dir) as f:
             reader = csv.reader(f)
             next(reader)  # skip header row
             for row in reader:
@@ -390,7 +403,7 @@ class ClimateZone:
         return oat_values
 
     @classmethod
-    def _load_inlet_water_data(cls, zone_id: int) -> list[float]:
+    def _load_inlet_water_data(cls, zone_id: int, data_dir: str) -> list[float]:
         """
         Load the 12 monthly average inlet-water temperatures for the given zone
         from InletWaterTemperatures_ByClimateZone.csv.
@@ -407,7 +420,7 @@ class ClimateZone:
         col_index = zone_id - 1  # CSV columns are 1-indexed
 
         monthly_temps = []
-        with _open_climate_csv('InletWaterTemperatures_ByClimateZone.csv') as f:
+        with _open_climate_csv('InletWaterTemperatures_ByClimateZone.csv', data_dir) as f:
             reader = csv.reader(f)
             next(reader)  # skip header row
             for row in reader:

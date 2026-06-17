@@ -89,7 +89,7 @@ class PerformanceMap:
         ----------
         model_name : str
             Equipment model identifier as it appears in ``maps.json``
-            (e.g. ``'MODELS_ColmacCxV_5_C_SP'``).
+            (e.g. ``'MODELS_GenericHPWH3_C_SP'``).
         num_units : int
             Number of identical heat pump units deployed.  All capacity and
             power outputs are scaled by this factor.  Default 1.

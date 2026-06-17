@@ -14,6 +14,7 @@ def get_oat_buckets(
     zip_code: str | int | None = None,
     zone_id: int | None = None,
     weather_station: str | None = None,
+    climate_data_dir: str | None = None,
 ) -> dict[float, int]:
     """
     Return the distribution of daily average outdoor air temperatures across
@@ -30,6 +31,9 @@ def get_oat_buckets(
         A numeric climate zone ID (1-96).
     weather_station : str | None
         A weather station name as it appears in the lookup table.
+    climate_data_dir : str | None
+        Path to a directory containing the climate CSV files.  When None,
+        falls back to the bundled data shipped with the package.
 
     Returns
     -------
@@ -52,11 +56,11 @@ def get_oat_buckets(
         )
 
     if zip_code is not None:
-        cz = _ClimateZone.from_zip_code(zip_code)
+        cz = _ClimateZone.from_zip_code(zip_code, climate_data_dir=climate_data_dir)
     elif zone_id is not None:
-        cz = _ClimateZone.from_zone_id(zone_id)
+        cz = _ClimateZone.from_zone_id(zone_id, climate_data_dir=climate_data_dir)
     else:
-        cz = _ClimateZone.from_weather_station(weather_station)
+        cz = _ClimateZone.from_weather_station(weather_station, climate_data_dir=climate_data_dir)
 
     return cz.get_oat_buckets()
 
@@ -123,6 +127,7 @@ def get_list_of_models(
 
 def get_weather_stations(
     exclude_zones: list[int] | None = None,
+    climate_data_dir: str | None = None,
 ) -> list[list]:
     """
     Return all available weather stations and their corresponding climate zone IDs.
@@ -131,6 +136,9 @@ def get_weather_stations(
     ----------
     exclude_zones : list[int], optional
         Climate zone IDs to omit from the result. Defaults to ``[96]``.
+    climate_data_dir : str | None
+        Path to a directory containing the climate CSV files.  When None,
+        falls back to the bundled data shipped with the package.
 
     Returns
     -------
@@ -146,9 +154,15 @@ def get_weather_stations(
     if exclude_zones is None:
         exclude_zones = [96]
 
+    ws_lookup = (
+        os.path.join(climate_data_dir, "WeatherStation_ClimateZone_Lookup.csv")
+        if climate_data_dir is not None
+        else _WS_LOOKUP
+    )
+
     exclude = set(exclude_zones)
     data = []
-    with open(_WS_LOOKUP, "r", newline="") as csvfile:
+    with open(ws_lookup, "r", newline="") as csvfile:
         reader = csv.reader(csvfile)
         next(reader)  # skip header
         for row in reader:
@@ -523,6 +537,7 @@ class EcosizerEngine:
         tm_model: str | None = None,
         num_tm_heaters: int = 1,
         perf_map_dir: str | None = None,
+        climate_data_dir: str | None = None,
     ):
         """
         Parameters
@@ -535,7 +550,7 @@ class EcosizerEngine:
             Climate lookup key. Accepted forms:
 
             * 5-digit CA zip code string or int → ``ClimateZone.from_zip_code()``
-            * Integer 1–96 → ``ClimateZone.from_zone_id()``
+            * Integer 1–21 → ``ClimateZone.from_zone_id()``
             * Non-numeric string → ``ClimateZone.from_weather_station()``
             * Dict with keys ``'design_oat_f'`` and/or ``'design_inlet_water_temp_f'``
               → ``ClimateZone.from_design_conditions()``
@@ -679,6 +694,7 @@ class EcosizerEngine:
         self.tm_model                       = tm_model
         self.num_tm_heaters                 = num_tm_heaters
         self.perf_map_dir                   = perf_map_dir
+        self.climate_data_dir               = climate_data_dir
 
         self._building    = None
         self._dhw_system  = None
@@ -713,14 +729,15 @@ class EcosizerEngine:
     def _build_climate_zone(self, ClimateZone):
         """Resolve zip_code_or_climate_zone to a ClimateZone instance."""
         czv = self.zip_code_or_climate_zone
+        cdd = self.climate_data_dir
         if isinstance(czv, dict):
             return ClimateZone.from_design_conditions(**czv)
         if isinstance(czv, str) and czv.isdigit() and len(czv) == 5:
-            return ClimateZone.from_zip_code(czv)
-        if isinstance(czv, int) and 1 <= czv <= 96:
-            return ClimateZone.from_zone_id(czv)
+            return ClimateZone.from_zip_code(czv, climate_data_dir=cdd)
+        if isinstance(czv, int) and 1 <= czv <= 21:
+            return ClimateZone.from_zone_id(czv, climate_data_dir=cdd)
         if isinstance(czv, str):
-            return ClimateZone.from_weather_station(czv)
+            return ClimateZone.from_weather_station(czv, climate_data_dir=cdd)
         raise ValueError(
             f"Cannot determine ClimateZone from {czv!r}. "
             "Pass a 5-digit CA zip code string, a zone ID int (1–96), "
