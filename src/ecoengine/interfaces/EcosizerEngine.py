@@ -6,7 +6,7 @@ import warnings
 from .Simulator import simulate_3day as _simulate_3day, simulate_annual as _simulate_annual
 from ecoengine.objects.building.ClimateZone import ClimateZone as _ClimateZone
 
-_MAPS_PATH    = os.path.join(os.path.dirname(__file__), "../data/preformanceMaps/maps.json")
+_BUNDLED_MAPS_PATH = os.path.join(os.path.dirname(__file__), "../data/preformanceMaps/maps.json")
 _WS_LOOKUP    = os.path.join(os.path.dirname(__file__), "../data/climate_data/WeatherStation_ClimateZone_Lookup.csv")
 
 
@@ -66,6 +66,7 @@ def get_list_of_models(
     include_residential: bool = True,
     exclude_models: list[str] | None = None,
     sgip_models_only: bool = True,
+    perf_map_dir: str | None = None,
 ) -> list[list[str]]:
     """
     Return available HPWH model codes and display names.
@@ -83,6 +84,9 @@ def get_list_of_models(
     sgip_models_only : bool
         ``True`` (default) → restrict to models flagged ``SGIP_avail`` in
         the performance-map database.
+    perf_map_dir : str | None
+        Path to directory containing ``maps.json``.  When None, falls back
+        to the bundled data shipped with the package.
 
     Returns
     -------
@@ -91,9 +95,14 @@ def get_list_of_models(
         is the string accepted by ``WaterHeater.from_model_name()`` and
         ``display_name`` is the human-readable label.
     """
+    maps_path = (
+        os.path.join(perf_map_dir, "maps.json")
+        if perf_map_dir is not None
+        else _BUNDLED_MAPS_PATH
+    )
     exclude = set(exclude_models or [])
     result: list[list[str]] = []
-    with open(_MAPS_PATH) as f:
+    with open(maps_path) as f:
         data: dict = json.load(f)
     for model_code, meta in data.items():
         if model_code in exclude:
@@ -159,6 +168,7 @@ def get_hpwh_output_capacity(
     num_heaters: int = 1,
     return_as_kw: bool = True,
     defrost_derate: float = 0.0,
+    perf_map_dir: str | None = None,
 ) -> float:
     """
     Return the output capacity of an HPWH model at the given operating conditions.
@@ -179,6 +189,9 @@ def get_hpwh_output_capacity(
         If True (default), return output in kW. If False, return in kBTU/hr.
     defrost_derate : float
         Fractional capacity reduction due to defrost [0.0–1.0]. Default 0.0.
+    perf_map_dir : str | None
+        Path to directory containing ``maps.json`` and ``pkls/``.  When None,
+        falls back to the bundled data shipped with the package.
 
     Returns
     -------
@@ -197,7 +210,7 @@ def get_hpwh_output_capacity(
 
     from ecoengine.objects.components.heating.PerformanceMap import PerformanceMap
 
-    perf_map = PerformanceMap.from_model_name(model)
+    perf_map = PerformanceMap.from_model_name(model, perf_map_dir=perf_map_dir)
     capacity_kbtuh = perf_map.get_capacity_kbtuh(oat_f, outlet_water_temp_f, inlet_water_temp_f)
     capacity_kbtuh *= num_heaters * (1.0 - defrost_derate)
 
@@ -509,6 +522,7 @@ class EcosizerEngine:
         tm_capacity_kbtuh: float | None = None,
         tm_model: str | None = None,
         num_tm_heaters: int = 1,
+        perf_map_dir: str | None = None,
     ):
         """
         Parameters
@@ -664,6 +678,7 @@ class EcosizerEngine:
         self.tm_capacity_kbtuh              = tm_capacity_kbtuh
         self.tm_model                       = tm_model
         self.num_tm_heaters                 = num_tm_heaters
+        self.perf_map_dir                   = perf_map_dir
 
         self._building    = None
         self._dhw_system  = None
@@ -958,6 +973,7 @@ class EcosizerEngine:
                 control_map={"normal": tm_controls},
                 design_inlet_temp_f=self.return_temp_f if self.return_temp_f is not None else 50.0,
                 nominal_capacity_kbtuh=per_unit_kbtuh,  # used by ER fallback when OAT < map minimum
+                perf_map_dir=self.perf_map_dir,
             )
         return WaterHeater.from_nominal_capacity(
             nominal_capacity_kbtuh=per_unit_kbtuh,
@@ -991,6 +1007,7 @@ class EcosizerEngine:
                     control_map=control_map,
                     design_inlet_temp_f=design_inlet_temp_f,
                     num_units=self.num_heaters,
+                    perf_map_dir=self.perf_map_dir,
                 )
             ]
         else:

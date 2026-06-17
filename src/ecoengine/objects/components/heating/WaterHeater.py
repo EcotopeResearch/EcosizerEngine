@@ -123,6 +123,7 @@ class WaterHeater:
         design_inlet_temp_f: float = 50.0,
         nominal_capacity_kbtuh: float | None = None,
         fuel_type: Literal["electric", "gas"] = "electric",
+        perf_map_dir: str | None = None,
     ) -> WaterHeater:
         """
         Create a WaterHeater by loading its PerformanceMap from the equipment
@@ -145,6 +146,9 @@ class WaterHeater:
             Total system capacity for ER fallback sizing. Default None.
         fuel_type : "electric" | "gas"
             Fuel source for this heater. Default is "electric".
+        perf_map_dir : str | None
+            Path to directory containing ``maps.json`` and ``pkls/``.
+            Passed through to ``PerformanceMap.from_model_name()``.
 
         Returns
         -------
@@ -156,6 +160,7 @@ class WaterHeater:
                 num_units=num_units,
                 design_inlet_temp_f=design_inlet_temp_f,
                 nominal_capacity_kbtuh=nominal_capacity_kbtuh,
+                perf_map_dir=perf_map_dir,
             ),
             control_schedule=control_schedule,
             control_map=control_map,
