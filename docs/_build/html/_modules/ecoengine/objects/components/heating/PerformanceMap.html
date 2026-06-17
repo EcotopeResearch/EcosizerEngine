@@ -242,29 +242,31 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_W_TO_KBTUH</span>
 
-<span class="c1"># Absolute path to the performance maps data directory</span>
-<span class="n">_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span>
+<span class="c1"># Bundled data directory — used as a fallback when perf_map_dir is not supplied.</span>
+<span class="c1"># Will be removed once the data is fully externalised.</span>
+<span class="n">_BUNDLED_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span>
     <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
         <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span>
         <span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;preformanceMaps&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 <span class="p">)</span>
 
-<span class="c1"># Model names whose pkl interpolator takes only (inlet, OAT) — no outlet dimension</span>
-<span class="n">_TWO_INPUT_PKL_NAMES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span>
-    <span class="s2">&quot;MODELS_SANCO2_C_SP&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;MODELS_COLMAC_R454B_C_SP&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;MODELS_Droplet_C_SP&quot;</span><span class="p">,</span>
-<span class="p">})</span>
+<span class="c1"># Model names whose pkl interpolator takes only (inlet, OAT) — no outlet dimension.</span>
+<span class="c1"># MP-suffix models are automatically treated as two-input via the endswith(&quot;MP&quot;) check.</span>
+<span class="c1"># Add non-MP model names here when their pkl was built with a 2-input grid.</span>
+<span class="n">_TWO_INPUT_PKL_NAMES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+
+<span class="c1"># Per-directory cache so that different perf_map_dir values can coexist in one process.</span>
+<span class="n">_maps_json_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_load_maps_json</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the parsed maps.json model registry (cached after first load).&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_load_maps_json</span><span class="p">,</span> <span class="s2">&quot;_cache&quot;</span><span class="p">):</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;maps.json&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_maps_json</span><span class="p">(</span><span class="n">perf_map_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the parsed maps.json from perf_map_dir, cached per directory.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">perf_map_dir</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_maps_json_cache</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">perf_map_dir</span><span class="p">,</span> <span class="s2">&quot;maps.json&quot;</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">_load_maps_json</span><span class="o">.</span><span class="n">_cache</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_load_maps_json</span><span class="o">.</span><span class="n">_cache</span>
+            <span class="n">_maps_json_cache</span><span class="p">[</span><span class="n">perf_map_dir</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_maps_json_cache</span><span class="p">[</span><span class="n">perf_map_dir</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="PerformanceMap">
@@ -317,6 +319,7 @@
         <span class="n">num_units</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">design_inlet_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">50.0</span><span class="p">,</span>
         <span class="n">nominal_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">perf_map_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PerformanceMap</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load a PerformanceMap from the equipment model registry by name.</span>
@@ -328,7 +331,7 @@
 <span class="sd">        ----------</span>
 <span class="sd">        model_name : str</span>
 <span class="sd">            Equipment model identifier as it appears in ``maps.json``</span>
-<span class="sd">            (e.g. ``&#39;MODELS_ColmacCxV_5_C_SP&#39;``).</span>
+<span class="sd">            (e.g. ``&#39;MODELS_GenericHPWH3_C_SP&#39;``).</span>
 <span class="sd">        num_units : int</span>
 <span class="sd">            Number of identical heat pump units deployed.  All capacity and</span>
 <span class="sd">            power outputs are scaled by this factor.  Default 1.</span>
@@ -340,6 +343,10 @@
 <span class="sd">            Total system output capacity at design conditions [kBTU/hr].</span>
 <span class="sd">            Required for the ER fallback path (OAT below performance-map</span>
 <span class="sd">            minimum); if None the fallback returns 0 kBTU/hr.</span>
+<span class="sd">        perf_map_dir : str | None</span>
+<span class="sd">            Path to the directory containing ``maps.json`` and a ``pkls/``</span>
+<span class="sd">            subdirectory.  When None, falls back to the bundled data directory</span>
+<span class="sd">            shipped with the package.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -347,7 +354,8 @@
 <span class="sd">            If ``model_name`` is not found in the registry, or the registry</span>
 <span class="sd">            entry has neither pkl nor perfmap data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">registry</span> <span class="o">=</span> <span class="n">_load_maps_json</span><span class="p">()</span>
+        <span class="n">data_dir</span> <span class="o">=</span> <span class="n">perf_map_dir</span> <span class="k">if</span> <span class="n">perf_map_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_BUNDLED_DATA_DIR</span>
+        <span class="n">registry</span> <span class="o">=</span> <span class="n">_load_maps_json</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">registry</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Model &#39;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&#39; not found in the performance map registry. &quot;</span>
@@ -368,7 +376,7 @@
 
         <span class="k">if</span> <span class="s2">&quot;pkl_prefix&quot;</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">:</span>
             <span class="n">prefix</span>   <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;pkl_prefix&quot;</span><span class="p">]</span>
-            <span class="n">pkls_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;pkls&quot;</span><span class="p">)</span>
+            <span class="n">pkls_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;pkls&quot;</span><span class="p">)</span>
 
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkls_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_capacity_interpolator.pkl&quot;</span><span class="p">),</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">output_interp</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -738,6 +746,17 @@
         <span class="n">inlet</span><span class="p">,</span> <span class="n">outlet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_temps</span><span class="p">(</span><span class="n">outlet_temp_f</span><span class="p">,</span> <span class="n">inlet_temp_f</span><span class="p">)</span>
         <span class="n">out_kw</span><span class="p">,</span> <span class="n">_</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_per_unit_kw</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">inlet</span><span class="p">,</span> <span class="n">outlet</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out_kw</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_units</span> <span class="o">*</span> <span class="n">_W_TO_KBTUH</span></div>
+
+
+<div class="viewcode-block" id="PklPerformanceMap.get_capacity_kw">
+<a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.heating.PerformanceMap.PklPerformanceMap.get_capacity_kw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_capacity_kw</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">oat_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">outlet_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">inlet_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_capacity_kbtuh</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">outlet_temp_f</span><span class="p">,</span> <span class="n">inlet_temp_f</span><span class="p">)</span> <span class="o">/</span> <span class="n">_W_TO_KBTUH</span></div>
 
 
 <div class="viewcode-block" id="PklPerformanceMap.get_power_in_kw">

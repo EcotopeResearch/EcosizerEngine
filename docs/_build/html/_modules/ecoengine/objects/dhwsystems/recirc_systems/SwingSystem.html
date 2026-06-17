@@ -242,7 +242,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.WaterHeater</span><span class="w"> </span><span class="kn">import</span> <span class="n">WaterHeater</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.StratifiedTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">StratifiedTank</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.MixedStorageTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">MixedStorageTank</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.DHWSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_peak_indices</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.DHWSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_peak_indices</span><span class="p">,</span> <span class="n">StorageVolumeTooSmallError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.RecircSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecircSystem</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_RHO_CP</span><span class="p">,</span> <span class="n">_W_TO_KBTUH</span>
 
@@ -505,6 +505,10 @@
                     <span class="n">storage_vol_storageT_gal</span> <span class="o">=</span> <span class="n">ls_storage_vol</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_eff_mix_fraction</span> <span class="o">=</span> <span class="n">ls_eff_mix</span>
 
+            <span class="n">min_vol_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_minimum_running_volume_supplyT_gal</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">storage_vol_storageT_gal</span> <span class="o">&lt;</span> <span class="n">min_vol_gal</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">StorageVolumeTooSmallError</span><span class="p">(</span><span class="n">storage_vol_storageT_gal</span><span class="p">,</span> <span class="n">min_vol_gal</span><span class="p">,</span> <span class="n">capacity_kbtuh</span><span class="p">)</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span>       <span class="o">=</span> <span class="n">capacity_kbtuh</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span> <span class="o">=</span> <span class="n">storage_vol_storageT_gal</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_sizing_strat_slope</span>           <span class="o">=</span> <span class="n">strat_slope</span>
@@ -573,9 +577,12 @@
                         <span class="p">)</span>
                     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>
                         <span class="k">break</span>
-                    <span class="n">heat_hours_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">h</span><span class="p">))</span>
-                    <span class="n">capacity_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cap</span><span class="p">)</span>
-                    <span class="n">storage_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">storage_vol</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">storage_vol</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_minimum_running_volume_supplyT_gal</span><span class="p">(</span><span class="n">building</span><span class="p">):</span>
+                        <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">heat_hours_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">h</span><span class="p">))</span>
+                        <span class="n">capacity_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cap</span><span class="p">)</span>
+                        <span class="n">storage_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">storage_vol</span><span class="p">)</span>
             <span class="k">finally</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span> <span class="o">=</span> <span class="n">original_run_hr</span>
 
@@ -1240,15 +1247,14 @@
         <span class="p">)</span>
         <span class="c1"># --- 7. TM element: update state and heat swing tank ---</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="p">,</span> <span class="n">hour_of_day</span><span class="p">)</span>
-        <span class="n">tm_top_t</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">get_temperature_at_fraction</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
-        <span class="n">tm_kbtuh</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">get_output_kbtuh</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">tm_top_t</span><span class="p">)</span>
+        <span class="n">tm_ctrl</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">get_controls_for_hour</span><span class="p">(</span><span class="n">hour_of_day</span><span class="p">)</span>
+        <span class="n">tm_outlet_f</span> <span class="o">=</span> <span class="n">tm_ctrl</span><span class="o">.</span><span class="n">off_trigger_t_f</span>
+        <span class="n">tm_kbtuh</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">get_output_kbtuh</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">tm_outlet_f</span><span class="p">)</span>
         <span class="n">tm_kw_val</span>   <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">get_power_in_kw</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">tm_top_t</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">get_power_in_kw</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">tm_outlet_f</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">is_active</span><span class="p">()</span>
             <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
-        <span class="n">tm_ctrl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_water_heater</span><span class="o">.</span><span class="n">get_controls_for_hour</span><span class="p">(</span><span class="n">hour_of_day</span><span class="p">)</span>
-        <span class="n">tm_outlet_f</span> <span class="o">=</span> <span class="n">tm_ctrl</span><span class="o">.</span><span class="n">outlet_temp_f</span> <span class="k">if</span> <span class="n">tm_ctrl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_off_temp_f</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">heat</span><span class="p">(</span><span class="n">tm_kbtuh</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">,</span> <span class="n">tm_outlet_f</span><span class="p">)</span>
         <span class="c1"># --- 8. Draw computed volume from primary storage ---</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">draw_physical_gal</span><span class="p">(</span><span class="n">hw_swing_gal</span><span class="p">,</span> <span class="n">inlet_temp_f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">)</span>
