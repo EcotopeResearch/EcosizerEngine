@@ -108,6 +108,7 @@ class _SwingDualFuelPrimary(DHWSystem):
 
         return {
             "draw_thru_system_gal": result["storage_draw_gal"],
+            "swing_inlet_temp_f" : self.swing_tank_temp_f
         }
 
 
@@ -322,6 +323,7 @@ class SwingDualFuelSystem(SwingSystem):
                 primary_system=proxy,
                 building=building,
                 nominal_capacity_kbtuh=nominal_capacity_kbtuh,
+                temperature_variable="swing_inlet_temp_f"
             )
         )
 

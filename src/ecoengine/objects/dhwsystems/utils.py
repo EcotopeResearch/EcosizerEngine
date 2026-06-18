@@ -26,9 +26,7 @@ def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, co
     flow_returnT_gal : float
         Volume of recirculation return flow this timestep [gal at return temperature].
     cold_temp_f : float
-        Cold inlet water temperature [°F]. In the case of a swing tank, this water comes from
-        primary storage will typically actually be the hottest temperature. In a RTP system, this it the
-        cold city water inlet
+        Cold inlet water temperature [°F].
     supply_temp_f : float
         Target mixed delivery temperature [°F].
     return_temp_f : float
@@ -48,7 +46,7 @@ def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, co
     if storage_temp_f <= supply_temp_f:
         storage_draw_gal = load_supplyT_gal + flow_returnT_gal
         recirc_loop_delta_f = supply_temp_f - return_temp_f
-        derated_recirc_temp_f = storage_temp_f - recirc_loop_delta_f
+        derated_recirc_temp_f = max(storage_temp_f - recirc_loop_delta_f, cold_temp_f)
         inlet_temp_f = ((load_supplyT_gal * cold_temp_f) + (flow_returnT_gal * derated_recirc_temp_f)) / storage_draw_gal
         cold_load_to_storage_gal = load_supplyT_gal
     else:
@@ -91,7 +89,7 @@ def mixing_valve_behavior_swing(load_supplyT_gal : float, flow_returnT_gal : flo
     flow_returnT_gal : float
         Volume of recirculation return flow this timestep [gal at return temperature].
     cold_temp_f : float
-        Average temperature of hot water drawn from primary storage [°F].
+        Cold inlet water temperature [°F].
     supply_temp_f : float
         Target mixed delivery temperature [°F].
     return_temp_f : float
@@ -113,11 +111,11 @@ def mixing_valve_behavior_swing(load_supplyT_gal : float, flow_returnT_gal : flo
     if swing_storage_temp_f <= supply_temp_f:
         storage_draw_gal = load_supplyT_gal + flow_returnT_gal
         recirc_loop_delta_f = supply_temp_f - return_temp_f
-        derated_recirc_temp_f = swing_storage_temp_f - recirc_loop_delta_f
+        derated_recirc_temp_f = max(swing_storage_temp_f - recirc_loop_delta_f, cold_temp_f)
         inlet_temp_f = ((load_supplyT_gal * swing_inlet_temp) + (flow_returnT_gal * derated_recirc_temp_f)) / storage_draw_gal
         cold_load_to_storage_gal = load_supplyT_gal
     else:
-    # For minute intervals, storage_temp_f is whatever temperature is at the top of the storage tank, set point storage temperature or not
+        # For minute intervals, storage_temp_f is whatever temperature is at the top of the storage tank, set point storage temperature or not
         recirc_loss_btu = flow_returnT_gal * _RHO_CP * (supply_temp_f - return_temp_f)
         critical_flow_gal = recirc_loss_btu / (_RHO_CP * (swing_storage_temp_f - supply_temp_f))
         # where all recirculation flows through the mixing valve back to the building, when flow is high 
@@ -190,6 +188,7 @@ def size_supplemental_heating_and_storage(
     building,
     nominal_capacity_kbtuh: float,
     draw_variable: str = "draw_thru_system_gal",
+    temperature_variable: str = None,
 ) -> tuple[list[float], list[float]]:
     """
     Run peak-aligned 2-day simulation(s) on an undersized primary system and
@@ -267,7 +266,10 @@ def size_supplemental_heating_and_storage(
 
         for t in range(peak_start, peak_start + _TOTAL_STEPS):
             step     = primary_system.simulate_step(building, t, 1)
-            top_temp = primary_system.storage_tank.get_temperature_at_fraction(1.0)
+            if temperature_variable is None:
+                top_temp = primary_system.storage_tank.get_temperature_at_fraction(1.0)
+            else:
+                top_temp = step[temperature_variable]
             demand   = step[draw_variable]
             if top_temp < primary_system.supply_temp_f:
                 deficit_f = primary_system.supply_temp_f - top_temp
@@ -326,12 +328,29 @@ def gas_backup_from_window(
     total_steps = len(outage_volume_gal)
     w = min(window_min, total_steps)
 
-    window_score = sum(outage_temp_delta_f[:w])
+    # Score windows by sum(vol × delta) — the per-minute heat-deficit rate
+    # integrated over the window — rather than sum(delta) alone.
+    #
+    # Using sum(delta) fails when the primary is fully depleted throughout the
+    # outage and delta is therefore constant (e.g. SwingDualFuelSystem when
+    # nominal_capacity ≈ recirc_loss): every window ties on delta and the
+    # algorithm keeps best_start = 0, which may fall in an off-peak, low-flow
+    # window where only recirc is flowing.  Scoring by vol × delta ensures a
+    # high-demand peak window (large vol AND large delta) beats a low-flow
+    # off-peak window regardless of whether delta is flat.
+    #
+    # To revert to the original delta-only scoring, replace the three lines
+    # below that reference `heat_deficit` with:
+    #   window_score = sum(outage_temp_delta_f[:w])
+    #   ...
+    #   window_score += outage_temp_delta_f[i + w - 1] - outage_temp_delta_f[i - 1]
+    heat_deficit = [v * d for v, d in zip(outage_volume_gal, outage_temp_delta_f)]
+    window_score = sum(heat_deficit[:w])
     best_score   = window_score
     best_start   = 0
 
     for i in range(1, total_steps - w + 1):
-        window_score += outage_temp_delta_f[i + w - 1] - outage_temp_delta_f[i - 1]
+        window_score += heat_deficit[i + w - 1] - heat_deficit[i - 1]
         if window_score > best_score:
             best_score = window_score
             best_start = i
