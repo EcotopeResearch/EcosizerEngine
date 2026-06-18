@@ -25,7 +25,7 @@ class StorageTank(ABC):
         self,
         storage_temp_f: float,
         cold_temp_f: float,
-        percent_useable: float,
+        initial_hot_fract: float,
     ) -> None:
         """Set initial tank thermal state before a simulation begins."""
 

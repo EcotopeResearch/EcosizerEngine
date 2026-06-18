@@ -10,8 +10,8 @@ class SlugOverlayTank(EnergyTank):
 
     Physical geometry
     -----------------
-    ``percent_useable`` is the fraction of tank volume above the cold-water inlet
-    pipe.  The zone below the inlet (``1 - percent_useable``) can never hold hot
+    ``drawdown_fract`` is the fraction of tank volume above the cold-water inlet
+    pipe.  The zone below the inlet (``1 - drawdown_fract``) can never hold hot
     water and is permanently excluded from slug and usable-volume calculations.
     ``_cold_pct`` and ``_max_usable_vol_gal`` are computed from this value once at
     construction and never change.
@@ -50,7 +50,7 @@ class SlugOverlayTank(EnergyTank):
         cold_temp_f: float,
         storage_temp_f: float,
         supply_temp_f: float,
-        percent_useable: float = 1.0,
+        drawdown_fract: float = 1.0,
         strat_slope: float = _DEFAULT_STRAT_SLOPE,
     ) -> None:
         """
@@ -62,19 +62,19 @@ class SlugOverlayTank(EnergyTank):
         supply_temp_f : float
             Hot-water delivery temperature [°F].  Stored so that ``initialize()``
             can charge the tank to the correct energy level.
-        percent_useable : float
+        drawdown_fract : float
             Fraction of total tank volume above the cold-water inlet pipe (0–1).
             Defaults to 1.0 (inlet at the very bottom).  Control sensors must be
-            placed above ``(1 - percent_useable) × total_volume_gal`` height.
+            placed above ``(1 - drawdown_fract) × total_volume_gal`` height.
         strat_slope : float
             EnergyTank stratification slope [°F / %-height].
         """
         super().__init__(total_volume_gal, cold_temp_f, storage_temp_f, strat_slope)
         self._supply_temp_f: float      = supply_temp_f
-        self.percent_useable: float     = percent_useable
-        # Fixed geometry derived once from percent_useable
-        self._cold_pct: float           = (1.0 - percent_useable) * 100.0
-        self._max_usable_vol_gal: float = percent_useable * total_volume_gal
+        self.drawdown_fract: float      = drawdown_fract
+        # Fixed geometry derived once from drawdown_fract
+        self._cold_pct: float           = (1.0 - drawdown_fract) * 100.0
+        self._max_usable_vol_gal: float = drawdown_fract * total_volume_gal
         # Slug state (inactive at construction)
         self._slug_active: bool         = False
         self._slug_vol_gal: float       = 0.0
@@ -89,18 +89,18 @@ class SlugOverlayTank(EnergyTank):
         self,
         storage_temp_f: float,
         cold_temp_f: float,
-        percent_useable: float,
+        initial_hot_fract: float,
     ) -> None:
         """
-        Set initial energy so that ``percent_useable`` fraction of total tank
+        Set initial energy so that ``initial_hot_fract`` fraction of total tank
         volume is at or above ``supply_temp_f``.
 
         Overrides EnergyTank.initialize() because that method places the
-        thermocline using ``s_init = (percent_useable − 1) × 100``, which with a
+        thermocline using ``s_init = (initial_hot_fract − 1) × 100``, which with a
         gentle strat_slope (< 1 °F / %-height) leaves zero usable volume at
         supply temperature.  Here we invert the usable-volume formula directly:
 
-            desired x_supply_pct = (1 − percent_useable) × 100
+            desired x_supply_pct = (1 − initial_hot_fract) × 100
             shift_pct = (supply_temp_f − cold_temp_f) / strat_slope − x_supply_pct
         """
         self._cold_temp_f    = cold_temp_f
@@ -111,11 +111,11 @@ class SlugOverlayTank(EnergyTank):
         self._slug_top_pct   = self._cold_pct
 
         dT = storage_temp_f - cold_temp_f
-        if dT <= 0.0 or self.strat_slope <= 0.0 or percent_useable <= 0.0:
+        if dT <= 0.0 or self.strat_slope <= 0.0 or initial_hot_fract <= 0.0:
             self._energy_btu = 0.0
             return
 
-        x_supply_pct = (1.0 - percent_useable) * 100.0
+        x_supply_pct = (1.0 - initial_hot_fract) * 100.0
         shift_pct    = (self._supply_temp_f - cold_temp_f) / self.strat_slope - x_supply_pct
         self._energy_btu = max(0.0, min(
             self._energy_at_shift_pct(shift_pct),
@@ -305,7 +305,7 @@ class SlugOverlayTank(EnergyTank):
         when the slug temperature meets or exceeds ``supply_temp_f``.
         """
         if not self._slug_active:
-            return min(super().get_usable_volume_supplyT_gal(supply_temp_f), self.total_volume_gal * self.percent_useable)
+            return min(super().get_usable_volume_supplyT_gal(supply_temp_f), self.total_volume_gal * self.drawdown_fract)
         # hot_usable  = super().get_usable_volume_supplyT_gal(supply_temp_f)
         hot_usable = self._max_usable_vol_gal - self._slug_vol_gal # should all be aupply or above
         slug_usable = self._slug_vol_gal if self._slug_temp_f >= supply_temp_f else 0.0

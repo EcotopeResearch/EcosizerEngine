@@ -143,12 +143,12 @@ class EnergyTank(StorageTank):
         self,
         storage_temp_f: float,
         cold_temp_f: float,
-        percent_useable: float,
+        initial_hot_fract: float,
     ) -> None:
         """
         Set initial energy state.
 
-        Places the cold boundary at ``(1 − percent_useable) × 100`` percent
+        Places the cold boundary at ``(1 − initial_hot_fract) × 100`` percent
         height — identical to how StratifiedTank initializes its profile — then
         converts that thermocline position to a stored energy value.
 
@@ -158,12 +158,12 @@ class EnergyTank(StorageTank):
             Hot storage temperature [°F].
         cold_temp_f : float
             Cold / inlet water temperature [°F].
-        percent_useable : float
-            Fraction of tank volume that is above the cold inlet water inlet (0–1).
+        initial_hot_fract : float
+            Fraction of tank volume that starts at or above storage temperature (0–1).
         """
         self._cold_temp_f    = cold_temp_f
         self._storage_temp_f = storage_temp_f
-        s_init = (percent_useable - 1.0) * 100.0
+        s_init = (initial_hot_fract - 1.0) * 100.0
         self._energy_btu = self._energy_at_shift_pct(s_init)
 
     # ------------------------------------------------------------------

@@ -372,7 +372,7 @@ MPRTP_SCENARIOS = [
         building_type="multi_family", magnitude=100, gpdpp=25,
         supply_t_f=125.0, storage_t_f=140.0, inlet_t_f=50.0, design_oat_f=35.0,
         max_run_hr=14.0, defrost_factor=1.0,
-        on_fract=0.2, off_fract=0.2, percent_useable=0.85,
+        on_fract=0.2, off_fract=0.2, drawdown_fract=0.85,
         return_temp_f=115.0, return_flow_gpm=3.0,
     ),
     dict(
@@ -380,7 +380,7 @@ MPRTP_SCENARIOS = [
         building_type="multi_family", magnitude=200, gpdpp=25,
         supply_t_f=125.0, storage_t_f=140.0, inlet_t_f=50.0, design_oat_f=35.0,
         max_run_hr=14.0, defrost_factor=1.0,
-        on_fract=0.2, off_fract=0.2, percent_useable=0.85,
+        on_fract=0.2, off_fract=0.2, drawdown_fract=0.85,
         return_temp_f=115.0, return_flow_gpm=5.0,
     ),
     dict(
@@ -388,7 +388,7 @@ MPRTP_SCENARIOS = [
         building_type="multi_family", magnitude=50, gpdpp=30,
         supply_t_f=125.0, storage_t_f=140.0, inlet_t_f=50.0, design_oat_f=35.0,
         max_run_hr=14.0, defrost_factor=1.0,
-        on_fract=0.2, off_fract=0.2, percent_useable=0.85,
+        on_fract=0.2, off_fract=0.2, drawdown_fract=0.85,
         return_temp_f=110.0, return_flow_gpm=2.0,
     ),
     dict(
@@ -396,7 +396,7 @@ MPRTP_SCENARIOS = [
         building_type="multi_family", magnitude=300, gpdpp=25,
         supply_t_f=125.0, storage_t_f=140.0, inlet_t_f=50.0, design_oat_f=47.0,
         max_run_hr=14.0, defrost_factor=1.0,
-        on_fract=0.2, off_fract=0.2, percent_useable=0.85,
+        on_fract=0.2, off_fract=0.2, drawdown_fract=0.85,
         return_temp_f=117.0, return_flow_gpm=8.0,
     ),
 ]
@@ -1060,7 +1060,7 @@ def run_new_mprtp_sizing(scenarios: list[dict]) -> list[dict]:
                     defrost_factor   = sc["defrost_factor"],
                     control_schedule = ["normal"] * 24,
                     control_map      = cmap,
-                    percent_useable  = sc.get("percent_useable", 1.0),
+                    drawdown_fract   = sc.get("drawdown_fract", 1.0),
                 )
 
             results.append({

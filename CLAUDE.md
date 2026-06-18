@@ -72,13 +72,14 @@ data/
 - `MPNoRecircSystem` — multi-pass, no recirculation
 - `RecircSystem` → `ParallelLoopSystem`, `SwingSystem` — systems with recirc loops
   - `SwingSystem` → `SwingERTrdOffSystem` — ER trade-off variant; adds `get_er_sized_points(building)` and `get_er_sizing_curve(building)` which iterate building load from 120%→0% to produce a Plotly slider figure of ER element size vs. percent coverage
+  - `SwingSystem` → `SwingDualFuelSystem` — HPWH primary (undersized) + gas-fired swing tank; `from_size()` accepts `nominal_capacity_kbtuh` and `nominal_storage_gal` for the primary. Supplemental swing tank is auto-sized via `_size_supplemental()` (see gotcha below).
 - `RTPSystem` → `SinglePassRTPSystem`, `MultiPassRTPSystem`, `SP_RTPInParallelSystem`, `SP_RTPInSeriesSystem`, `MP_RTPInSeriesSystem` — Return-to-Primary systems
 
 **`StorageTank`** (`objects/components/storage/StorageTank.py`) — Abstract base class. `StratifiedTank` subclass implements a 12-node model. `MixedStorageTank` subclass uses a single fully-mixed node. Key methods: `initialize()`, `draw()`, `heat()`, `add_recirc_return()`, `get_usable_volume_supplyT_gal()`, `get_stratification_factor()`.
 
 **`WaterHeater`** (`objects/components/heating/WaterHeater.py`) — Single HPWH unit with on/off state. Factory classmethods: `from_nominal_capacity()`, `from_model_name()`. Backed by `PerformanceMap` for capacity/power lookup and `Controls` for temperature setpoints. Key methods: `update_state()`, `get_capacity_kbtuh()`, `get_power_in_kw()`, `get_output_kbtuh()`.
 
-**`PerformanceMap`** (`objects/components/heating/PerformanceMap.py`) — Abstract base with three concrete subclasses:
+**`PerformanceMap`** (`objects/components/heating/PerformanceMap.py`) — Abstract base with three concrete subclasses. Key methods: `get_capacity_kbtuh()`, `get_power_in_kw()`, `get_capacity_kw()`, `is_within_operating_bounds()`.
 - `NominalPerformanceMap` — constant capacity, no OAT/temp dependence
 - `PklPerformanceMap` — interpolates from a pickled 3-D grid (OAT × inlet_temp × outlet_temp); data lives in `data/preformanceMaps/pkls/`
 - `HPWHsimPerformanceMap` — polynomial curve-fit model using quadratic + linear coefficients
@@ -108,6 +109,8 @@ data/
 **`get_oat_buckets()` skips header** — The old codebase had a bug where the CSV header row was not skipped, shifting one day's bucket assignment. The new implementation correctly skips the header. Do not try to replicate the old behavior.
 
 **`interval_min` parameter convention** — Many methods on `Building`, `ClimateZone`, and `DHWSystem` take `(timestep_interval, interval_min=1)` where `timestep_interval` is the count of elapsed intervals and `interval_min` is the length of each interval in minutes. Actual elapsed minutes = `timestep_interval * interval_min`.
+
+**`SwingDualFuelSystem` supplemental sizing** — `_size_supplemental()` calls `size_supplemental_heating_and_storage()` (in `utils.py`) which runs a peak-aligned 2-day simulation on an `_SwingDualFuelPrimary` proxy to generate `outage_volume_gal` and `outage_temp_delta_f` arrays. The proxy returns `"swing_inlet_temp_f"` (actual inlet temp to swing tank), so `temperature_variable="swing_inlet_temp_f"` must be passed. `gas_backup_from_window()` then selects the worst 30-minute outage window by scoring with `sum(vol × delta)` (heat-deficit rate), **not** `sum(delta)` alone — the delta-only scoring fails when the primary is fully depleted and recirc-only flow dominates the first window. The revert path is documented in comments in `utils.py`. Building a `SwingDualFuelSystem` without auto-sizing (e.g. for simulation comparison): construct `SwingSystem(water_heaters=[], storage_tank=None, ...)` directly, then set `storage_tank`, `water_heaters`, `tm_storage_tank`, and `tm_water_heater` manually. Use `_ELEMENT_DEADBAND_F` (importable from `SwingSystem.py`) for the swing tank `Controls` on/off deadband.
 
 ### Data Flow
 
@@ -141,9 +144,9 @@ User parameters
 
 ## Implementation Status
 
-**All classes are fully implemented.** The codebase is feature-complete with 257 passing tests.
+**All classes are fully implemented.** The codebase is feature-complete with 332 passing tests.
 
-Implemented components: `EcosizerEngine`, `Simulator`, `Building`, `ClimateZone`, `UtilityCostTracker`, `WaterHeater`, `Controls`, `PerformanceMap` (+ `NominalPerformanceMap`, `PklPerformanceMap`, `HPWHsimPerformanceMap`), `StorageTank` (+ `StratifiedTank`, `MixedStorageTank`), `DHWSystem` and all subclasses, `SimulationRun`.
+Implemented components: `EcosizerEngine`, `Simulator`, `Building`, `ClimateZone`, `UtilityCostTracker`, `WaterHeater`, `Controls`, `PerformanceMap` (+ `NominalPerformanceMap`, `PklPerformanceMap`, `HPWHsimPerformanceMap`), `StorageTank` (+ `StratifiedTank`, `MixedStorageTank`), `DHWSystem` and all subclasses (including `SwingDualFuelSystem` and `SwingERTrdOffSystem`), `SimulationRun`.
 
 ## Common Extension Points
 

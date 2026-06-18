@@ -1793,7 +1793,7 @@ class DHWSystem:
         ]
         return max(outlet_temps) if outlet_temps else self.storage_temp_f
 
-    def get_initial_percent_useable(self) -> float:
+    def get_initial_hot_fract(self) -> float:
         """
         Return the initial tank charge level (fraction hot) for simulation.
 

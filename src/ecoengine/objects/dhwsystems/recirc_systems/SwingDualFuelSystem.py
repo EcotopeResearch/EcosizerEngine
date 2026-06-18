@@ -101,14 +101,14 @@ class _SwingDualFuelPrimary(DHWSystem):
             avg_tank_temp_for_draw_f,
         )
 
-        self.swing_tank_temp_f = result["inlet_temp_f"]
+        self.swing_tank_temp_f = max(result["inlet_temp_f"], self.supply_temp_f) # reset to supply to avoid large recirc hits
         self.storage_tank.draw_physical_gal(
             result["cold_load_to_storage_gal"], inlet_temp_f, self.supply_temp_f
         )
 
         return {
             "draw_thru_system_gal": result["storage_draw_gal"],
-            "swing_inlet_temp_f" : self.swing_tank_temp_f
+            "swing_inlet_temp_f" : result["inlet_temp_f"]
         }
 
 
@@ -328,7 +328,7 @@ class SwingDualFuelSystem(SwingSystem):
         )
 
         tm_capacity_kbtuh, tm_storage_vol_gal = gas_backup_from_window(
-            self.outage_volume_gal, self.outage_temp_delta_f, _WINDOW_MIN
+            self.outage_volume_gal, self.outage_temp_delta_f, _WINDOW_MIN, True
         )
 
         self.tm_storage_tank = MixedStorageTank(total_volume_gal=tm_storage_vol_gal)
@@ -358,7 +358,7 @@ class SwingDualFuelSystem(SwingSystem):
             raise RuntimeError(
                 "Supplemental outage data not available. Call from_size() first."
             )
-        return get_ashrae_sizing_curve(self.outage_volume_gal, self.outage_temp_delta_f)
+        return get_ashrae_sizing_curve(self.outage_volume_gal, self.outage_temp_delta_f, True)
 
     def plot_sizing_curve(
         self,

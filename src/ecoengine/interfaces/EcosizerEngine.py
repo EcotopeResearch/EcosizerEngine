@@ -538,6 +538,7 @@ class EcosizerEngine:
         num_tm_heaters: int = 1,
         perf_map_dir: str | None = None,
         climate_data_dir: str | None = None,
+        drawdown_fract: float = 1.0,
     ):
         """
         Parameters
@@ -654,6 +655,12 @@ class EcosizerEngine:
             ``_minimum_tm_capacity_kbtuh / num_tm_heaters``; for the pre-sized
             path with ``tm_capacity_kbtuh``, per-unit =
             ``tm_capacity_kbtuh / num_tm_heaters``. Default 1.
+        drawdown_fract : float
+            Fraction of the primary storage tank volume above the cold-water
+            inlet pipe (0–1). Only applies to ``'multi_pass_rtp'`` / ``'mprtp'``
+            schematics (``SlugOverlayTank`` geometry). Default 1.0 (inlet at the
+            very bottom — full tank is usable). Control on-sensors must be placed
+            above ``1 - drawdown_fract`` fractional height.
         """
         self.building_type             = building_type
         self.magnitude                 = magnitude
@@ -695,6 +702,7 @@ class EcosizerEngine:
         self.num_tm_heaters                 = num_tm_heaters
         self.perf_map_dir                   = perf_map_dir
         self.climate_data_dir               = climate_data_dir
+        self.drawdown_fract                 = drawdown_fract
 
         self._building    = None
         self._dhw_system  = None
@@ -932,6 +940,7 @@ class EcosizerEngine:
                     tm_safety_factor = self.tm_safety_factor,
                     control_schedule = control_schedule,
                     control_map      = control_map,
+                    drawdown_fract   = self.drawdown_fract,
                 )
 
         if self.schematic == "instant_wh":
@@ -1157,6 +1166,7 @@ class EcosizerEngine:
                     storage_temp_f=self.storage_temp_f,
                     supply_temp_f=self.supply_temp_f,
                     strat_slope=_MPRTP_STRAT_SLOPE,
+                    drawdown_fract=self.drawdown_fract,
                 ),
                 supply_temp_f=self.supply_temp_f,
                 storage_temp_f=self.storage_temp_f,

@@ -242,14 +242,14 @@ class TestStorageTankEquivalence:
 # SlugOverlayTank — slug energy conservation
 # ===========================================================================
 
-def _make_slug_tank(percent_useable: float = 1.0) -> SlugOverlayTank:
+def _make_slug_tank(drawdown_fract: float = 1.0) -> SlugOverlayTank:
     """100-gal tank with MPRTP-typical temperatures and strat_slope."""
     return SlugOverlayTank(
         total_volume_gal=100.0,
         cold_temp_f=50.0,
         storage_temp_f=140.0,
         supply_temp_f=125.0,
-        percent_useable=percent_useable,
+        drawdown_fract=drawdown_fract,
         strat_slope=0.8,
     )
 
@@ -264,12 +264,12 @@ class TestSlugEnergyConservation:
     """
 
     def test_energy_conserved_no_unusable_zone(self):
-        # percent_useable=1.0: cold inlet at the very bottom, no unusable zone.
+        # drawdown_fract=1.0: cold inlet at the very bottom, no unusable zone.
         # Initialize to 70% usable so there is a 30-gal sub-supply slug zone.
         # Slug spans 0–30 % of tank height, avg temp ≈ 113 °F.
         # Q=500 BTU is well below the storage-temp cap (~6765 BTU available).
-        tank = _make_slug_tank(percent_useable=1.0)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        tank = _make_slug_tank(drawdown_fract=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70)
 
         E0 = tank._energy_btu
 
@@ -285,8 +285,8 @@ class TestSlugEnergyConservation:
 
     def test_energy_conserved_larger_heat_addition(self):
         # Same setup but more heat added — still below the storage-temp cap.
-        tank = _make_slug_tank(percent_useable=1.0)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        tank = _make_slug_tank(drawdown_fract=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70)
 
         E0 = tank._energy_btu
 
@@ -301,11 +301,11 @@ class TestSlugEnergyConservation:
         assert tank._energy_btu == pytest.approx(E0 + Q, rel=1e-4)
 
     def test_energy_conserved_with_unusable_zone(self):
-        # percent_useable=0.85: 15 % of tank is below the cold inlet pipe.
+        # drawdown_fract=0.85: 15 % of tank is below the cold inlet pipe.
         # The unusable zone contains real BTUs that must survive deactivation.
         # Slug spans 15–30 % of tank height, avg temp ≈ 119 °F.
-        tank = _make_slug_tank(percent_useable=0.85)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        tank = _make_slug_tank(drawdown_fract=0.85)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70)
 
         E0 = tank._energy_btu
 
@@ -337,9 +337,9 @@ class TestSlugEnergyConservationWithDraw:
     """
 
     def test_draw_from_above_slug_no_unusable_zone(self):
-        # percent_useable=1.0; draw 20 gal from the hot zone above the slug.
-        tank = _make_slug_tank(percent_useable=1.0)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        # drawdown_fract=1.0; draw 20 gal from the hot zone above the slug.
+        tank = _make_slug_tank(drawdown_fract=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70)
 
         E0 = tank._energy_btu
 
@@ -360,9 +360,9 @@ class TestSlugEnergyConservationWithDraw:
         assert tank._energy_btu == pytest.approx(E0 + Q - E_removed, rel=1e-4)
 
     def test_draw_from_above_slug_with_unusable_zone(self):
-        # percent_useable=0.85; 15 % below inlet; draw 20 gal from hot zone.
-        tank = _make_slug_tank(percent_useable=0.85)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        # drawdown_fract=0.85; 15 % below inlet; draw 20 gal from hot zone.
+        tank = _make_slug_tank(drawdown_fract=0.85)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70)
 
         E0 = tank._energy_btu
 
@@ -384,8 +384,8 @@ class TestSlugEnergyConservationWithDraw:
 
     def test_multiple_draws_no_unusable_zone(self):
         # Three interleaved heat + draw cycles; cumulative accounting must balance.
-        tank = _make_slug_tank(percent_useable=1.0)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        tank = _make_slug_tank(drawdown_fract=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70)
 
         E0 = tank._energy_btu
         inlet_temp_f = 50.0
@@ -435,7 +435,7 @@ class TestStratifiedTankDepletion:
 
     def _full_tank(self) -> StratifiedTank:
         tank = StratifiedTank(total_volume_gal=self._VOLUME_GAL)
-        tank.initialize(self._STORAGE_T, self._INLET_T, percent_useable=1.0)
+        tank.initialize(self._STORAGE_T, self._INLET_T, initial_hot_fract=1.0)
         return tank
 
     def test_massive_draw_empties_all_nodes_to_inlet(self):

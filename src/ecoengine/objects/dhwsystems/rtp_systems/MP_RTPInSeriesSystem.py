@@ -65,7 +65,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
         control_schedule: list[str] | None = None,
         control_map: dict[str, Controls] | None = None,
         strat_slope: float = _MPRTP_STRAT_SLOPE,
-        percent_useable: float = 1.0,
+        drawdown_fract: float = 1.0,
     ) -> MP_RTPInSeriesSystem:
         """
         Build an MP RTP in-series system capped at the caller-supplied primary specs.
@@ -97,7 +97,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
             Controls objects keyed by schedule label.
         strat_slope : float
             SlugOverlayTank stratification slope [°F / %-height]. Default 0.8.
-        percent_useable : float
+        drawdown_fract : float
             Fraction of tank volume above the cold-water inlet pipe (0–1).
 
         Returns
@@ -123,7 +123,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
             cold_temp_f=cold_temp_f,
             storage_temp_f=storage_temp_f,
             supply_temp_f=supply_temp_f,
-            percent_useable=percent_useable,
+            drawdown_fract=drawdown_fract,
             strat_slope=strat_slope,
         )
         system.water_heaters = [WaterHeater.from_nominal_capacity(

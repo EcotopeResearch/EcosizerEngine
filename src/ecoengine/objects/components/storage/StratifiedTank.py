@@ -68,14 +68,14 @@ class StratifiedTank(StorageTank):
         self,
         storage_temp_f: float,
         cold_temp_f: float,
-        percent_useable: float,
+        initial_hot_fract: float,
     ) -> None:
         """
         Set initial temperature stratification profile.
 
         Places the cold boundary (where T = cold_temp_f) at
-        ``(1 - percent_useable) * 100`` percent height, so the top
-        ``percent_useable`` fraction of the tank starts at storage temperature.
+        ``(1 - initial_hot_fract) * 100`` percent height, so the top
+        ``initial_hot_fract`` fraction of the tank starts at storage temperature.
 
         Parameters
         ----------
@@ -84,8 +84,8 @@ class StratifiedTank(StorageTank):
             outlet temperature cap.
         cold_temp_f : float
             Cold/incoming water temperature [°F].
-        percent_useable : float
-            Fraction of tank volume that is above the cold inlet water inlet (0–1).
+        initial_hot_fract : float
+            Fraction of tank volume that starts at or above storage temperature (0–1).
         """
         self._inlet_temp_f  = cold_temp_f
         self._outlet_temp_f = storage_temp_f
@@ -94,7 +94,7 @@ class StratifiedTank(StorageTank):
         # Solve for strat_inter so the ramp passes through cold_temp_f at
         # x_cold_pct with delta_gal = 0:
         #   strat_slope * x_cold_pct + strat_inter = cold_temp_f
-        x_cold_pct = (1.0 - percent_useable) * 100.0
+        x_cold_pct = (1.0 - initial_hot_fract) * 100.0
         self._strat_inter = cold_temp_f - self.strat_slope * x_cold_pct
 
     # ------------------------------------------------------------------

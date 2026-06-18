@@ -29,12 +29,12 @@ RETURN_GPM   = 3.0
 GPDPP        = 25.0
 DESIGN_OAT   = 35.0
 DESIGN_INLET = 50.0
-PCT_USEABLE  = 0.9
+DRAWDOWN_FRACT = 0.9
 
 # ---------------------------------------------------------------------------
 # Control scenarios
 # ---------------------------------------------------------------------------
-# percent_useable=0.9 → unusable zone is 0–10% height; sensors must be ≥ 0.10.
+# DRAWDOWN_FRACT=0.9 → unusable zone is 0–10% height; sensors must be ≥ 0.10.
 SCENARIOS = [
     {
         "label": "Bottom sensor — tight deadband",
@@ -215,7 +215,7 @@ for scenario in SCENARIOS:
             return_flow_gpm  = RETURN_GPM,
             control_schedule = ["normal"] * 24,
             control_map      = ctrl_map,
-            percent_useable  = PCT_USEABLE,
+            drawdown_fract   = DRAWDOWN_FRACT,
         )
 
         cap       = system._minimum_capacity_kbtuh
