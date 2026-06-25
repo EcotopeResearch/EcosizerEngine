@@ -182,7 +182,7 @@ class MultiPassRTPSystem(RTPSystem):
                         deficit_minutes = i - start_heat_min
                         min_tank_outlet_f = tank_outlet_f
             
-            if (deficit_minutes > 5 and supply_temp_f - min_tank_outlet_f > 2.0) or supply_temp_f - min_tank_outlet_f > 4.0: # criteria for outage
+            if (deficit_minutes > 5 and supply_temp_f - min_tank_outlet_f > 1.0) or supply_temp_f - min_tank_outlet_f > 4.0: # criteria for outage
                 capacity_increase_kbtu = ((system.storage_tank.total_volume_gal * drawdown_fract) * _RHO_CP * (supply_temp_f - min_tank_outlet_f))/1000
                 if capacity_increase_kbtu > 0:
                     system._minimum_capacity_kbtuh = system._minimum_capacity_kbtuh + (capacity_increase_kbtu / (deficit_minutes/60))

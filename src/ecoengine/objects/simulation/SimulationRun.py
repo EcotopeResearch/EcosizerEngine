@@ -249,8 +249,8 @@ class SimulationRun:
                 f"DHW outage occurred for {self.outage_minutes} minutes."
             )
 
-        first_step = outage_steps[0]
-        day = (first_step * self.timestep_min) // (24 * 60) + 1
+        last_step = outage_steps[-1]
+        day = (last_step * self.timestep_min) // (24 * 60) + 1
 
         # For swing/TM systems use the TM tank as the delivery point; for all others
         # use the primary tank top node.  draw() no longer clamps _delta_gal at
@@ -262,17 +262,17 @@ class SimulationRun:
         if self.show_tm_panel and self.tm_tank_temp_f:
             delivery_temps = self.tm_tank_temp_f
         else:
-            delivery_temps = self.tank_temps_f[5]
-        below_supply = [delivery_temps[i] for i in outage_steps if delivery_temps[i] < supply_t_f - 0.5]
+            delivery_temps = self.tank_temps_f[-1]
+        below_supply = [delivery_temps[i] for i in outage_steps if delivery_temps[i] < supply_t_f - 1.0]
         if below_supply:
             avg_delivery_temp_f = sum(below_supply) / len(below_supply)
             temp_clause = f" with an average delivered water temperature of {avg_delivery_temp_f:.1f}°F"
         else:
-            temp_clause = ""
+            temp_clause = " with DHW delivery less than 1.0°F below expected temperature"
 
         return (
-            f"Simulation failed: system was undersized. "
-            f"{self.outage_minutes} minutes of DHW outage had accrued by day {day} "
+            f"{'Simulation failed: system was undersized.' if below_supply else 'Partial success:'} "
+            f"{self.outage_minutes} minutes of DHW outage had accrued by the end of day {day} "
             f"of the simulation{temp_clause}."
         )
 

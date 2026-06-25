@@ -302,7 +302,6 @@ def gas_backup_from_window(
     outage_volume_gal: list[float],
     outage_temp_delta_f: list[float],
     window_min: int,
-    include_vol_in_window: bool = False #TODO get rid of this
 ) -> tuple[float, float]:
     """
     Find the worst contiguous ``window_min``-length stretch of the outage
@@ -346,8 +345,6 @@ def gas_backup_from_window(
     #   ...
     #   window_score += outage_temp_delta_f[i + w - 1] - outage_temp_delta_f[i - 1]
     heat_deficit = outage_temp_delta_f
-    # if include_vol_in_window:
-    #     heat_deficit = [v * d for v, d in zip(outage_volume_gal, outage_temp_delta_f)]
     window_score = sum(heat_deficit[:w])
     best_score   = window_score
     best_start   = 0
@@ -371,8 +368,7 @@ def gas_backup_from_window(
 
 def get_ashrae_sizing_curve(
     outage_volume_gal: list[float],
-    outage_temp_delta_f: list[float],
-    include_vol_in_window: bool = False
+    outage_temp_delta_f: list[float]
 ) -> dict:
     """
     Compute the gas backup sizing curve across all ASHRAE window durations.
@@ -409,7 +405,7 @@ def get_ashrae_sizing_curve(
     capacities = []
     storages   = []
     for w in _ASHRAE_WINDOWS:
-        cap, vol = gas_backup_from_window(outage_volume_gal, outage_temp_delta_f, w, include_vol_in_window)
+        cap, vol = gas_backup_from_window(outage_volume_gal, outage_temp_delta_f, w)
         capacities.append(cap)
         storages.append(vol)
 

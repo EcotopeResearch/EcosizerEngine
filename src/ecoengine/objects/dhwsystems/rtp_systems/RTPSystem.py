@@ -55,6 +55,8 @@ class RTPSystem(DHWSystem):
         )
         self.return_temp_f    = return_temp_f
         self.return_flow_gpm  = return_flow_gpm
+        if tm_safety_factor < 1.0:
+            raise Exception(f"tm_safety_factor must be 1.0 or larger. Value received: {tm_safety_factor}")
         self.tm_safety_factor = tm_safety_factor
 
     # ------------------------------------------------------------------
