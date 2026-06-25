@@ -90,3 +90,28 @@ class Controls:
         """
         temp = storage_tank.get_temperature_at_fraction(self.off_sensor_fract)
         return temp >= self.off_trigger_t_f
+
+
+class AlwaysOffControls(Controls):
+    """
+    Controls variant that keeps a heater permanently disabled.
+
+    ``should_turn_on`` always returns False and ``should_turn_off`` always
+    returns True, regardless of tank state.  Useful as a placeholder when a
+    heater slot must exist structurally but must never fire.
+    """
+
+    def __init__(self, outlet_temp_f: float = 120.0) -> None:
+        super().__init__(
+            on_sensor_fract=0.5,
+            on_trigger_t_f=1000.0,
+            off_sensor_fract=0.5,
+            off_trigger_t_f=0.0,
+            outlet_temp_f=outlet_temp_f,
+        )
+
+    def should_turn_on(self, storage_tank) -> bool:
+        return False
+
+    def should_turn_off(self, storage_tank) -> bool:
+        return True

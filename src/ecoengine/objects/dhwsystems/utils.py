@@ -1,5 +1,6 @@
 from ecoengine.constants.constants import _RHO_CP
 from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices
+from ecoengine.objects.components.heating.Controls import AlwaysOffControls
 
 def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, cold_temp_f : float, supply_temp_f : float, return_temp_f : float, storage_temp_f : float) -> dict:
     """
@@ -523,3 +524,28 @@ def plot_ashrae_sizing_curve(
     )
 
     return fig
+
+def set_dual_fuel_shed_controls(control_map: dict) -> dict:
+    """
+    Add or replace the ``'shed'`` entry in a DHWSystem control_map with an
+    ``AlwaysOffControls`` instance, disabling the primary heater during load-shed
+    periods in dual-fuel systems.
+
+    Parameters
+    ----------
+    control_map : dict
+        A ``control_map`` dict from a DHWSystem (keys are schedule labels such
+        as ``'normal'``, ``'load_up'``, ``'shed'``; values are ``Controls``
+        objects).
+
+    Returns
+    -------
+    dict
+        The same dict, mutated in place, with ``control_map['shed']`` set to
+        an ``AlwaysOffControls`` whose ``outlet_temp_f`` is copied from the
+        ``'normal'`` entry if present, otherwise 140.0°F.
+    """
+    shed = control_map.get("shed")
+    outlet_temp_f = shed.outlet_temp_f if shed is not None else 140.0
+    control_map["shed"] = AlwaysOffControls(outlet_temp_f=outlet_temp_f)
+    return control_map
