@@ -1793,30 +1793,46 @@ class DHWSystem:
         ]
         return max(outlet_temps) if outlet_temps else self.storage_temp_f
 
-    def get_initial_hot_fract(self) -> float:
+    def get_initial_hot_fract(self, controls_setting: str = "normal", on_setpoint: bool = True) -> float:
         """
         Return the initial tank charge level (fraction hot) for simulation.
 
-        Reads the on-aquastat fraction from the system's "normal" Controls
-        (falling back to the first available Controls key if "normal" is
-        absent).  Starting the tank at ``1 - on_sensor_fract`` puts it right
-        at the on-trigger level so the heater fires immediately on the first
-        cold hour and the simulation reaches steady state quickly.
+        Reads the aquastat fraction for the specified operating mode.  If
+        ``on_setpoint`` is True, uses the ON-sensor position (tank at the
+        on-trigger threshold, heater about to fire).  If False, uses the
+        OFF-sensor position (tank fully charged at the heater-off threshold).
 
-        Falls back to 1.0 (fully charged) when no Controls are configured.
+        Falls back to ``"normal"`` if ``controls_setting`` is absent, then to
+        the first available Controls entry.  Returns 1.0 (fully charged) when
+        no Controls are configured.
+
+        Parameters
+        ----------
+        controls_setting : str
+            Controls map key to read (e.g. ``"normal"``, ``"load_up"``).
+            Default ``"normal"``.
+        on_setpoint : bool
+            If True, returns ``1 - on_sensor_fract`` (tank just triggering the
+            heater).  If False, returns ``1 - off_sensor_fract`` (tank fully
+            charged at the heater-off threshold).  Default True.
 
         Returns
         -------
         float
-            Fraction of tank volume that is usable at the start of simulation
+            Fraction of tank volume that is hot at the start of simulation
             (0–1).
         """
         for wh in self.water_heaters:
             if wh.control_map is None:
                 continue
-            ctrl = wh.control_map.get("normal") or next(iter(wh.control_map.values()), None)
+            ctrl = (
+                wh.control_map.get(controls_setting)
+                or wh.control_map.get("normal")
+                or next(iter(wh.control_map.values()), None)
+            )
             if ctrl is not None:
-                return max(0.0, min(1.0, 1.0 - ctrl.on_sensor_fract))
+                fract = ctrl.on_sensor_fract if on_setpoint else ctrl.off_sensor_fract
+                return max(0.0, min(1.0, 1.0 - fract))
         return 1.0
 
     def check_for_outage(self, demand_supplyT_gal: float) -> bool:

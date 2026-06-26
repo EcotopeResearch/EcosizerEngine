@@ -235,9 +235,9 @@ def size_supplemental_heating_and_storage(
     _MIN_DEFICIT_F  = 2.0
     _TOTAL_STEPS    = 2 * 24 * 60
 
-    inlet_temp_f      = building.get_design_inlet_water_temp_f()
-    initial_hot_fract = primary_system.get_initial_hot_fract()
-    recirc_loss_kbtuh = primary_system.get_recirc_loss_kbtuh()
+    inlet_temp_f              = building.get_design_inlet_water_temp_f()
+    default_initial_hot_fract = primary_system.get_initial_hot_fract()
+    recirc_loss_kbtuh         = primary_system.get_recirc_loss_kbtuh()
 
     if nominal_capacity_kbtuh <= recirc_loss_kbtuh:
         peak_start_minutes = [0]
@@ -254,13 +254,38 @@ def size_supplemental_heating_and_storage(
         peak_indices       = _get_peak_indices(hourly_diff_gph)
         peak_start_minutes = [idx * 60 for idx in peak_indices] if peak_indices else [0]
 
+    # Each candidate is (start_minute, initial_hot_fract).
+    # Demand-peak starts use the normal on-setpoint (worst steady-state charge level).
+    candidates: list[tuple[int, float]] = [
+        (s, default_initial_hot_fract) for s in peak_start_minutes
+    ]
+
+    # Shed-start candidates: tank initialized to the load_up off-setpoint (fully
+    # charged after a load-up cycle) to capture worst-case depletion when the
+    # primary turns off at the start of each shed period.
+    # TODO: apply the same all-shed-blocks approach to load-shift sizing in
+    #       SwingSystem.size() — currently only the first shed block is used there.
+    _cmap = primary_system.water_heaters[0].control_map if primary_system.water_heaters else None
+    if _cmap and "shed" in _cmap:
+        _schedule = (
+            primary_system.water_heaters[0].control_schedule
+            if primary_system.water_heaters and primary_system.water_heaters[0].control_schedule
+            else []
+        )
+        shed_initial_hot_fract = primary_system.get_initial_hot_fract(
+            controls_setting="load_up", on_setpoint=False
+        )
+        for _h, _label in enumerate(_schedule):
+            if _label == "shed" and (_h == 0 or _schedule[_h - 1] != "shed"):
+                candidates.append((_h * 60, shed_initial_hot_fract))
+
     best_outage_volume_gal   = []
     best_outage_temp_delta_f = []
     best_max_delta: float    = -1.0
 
-    for peak_start in peak_start_minutes:
+    for peak_start, run_initial_hot_fract in candidates:
         primary_system.storage_tank.initialize(
-            primary_system.storage_temp_f, inlet_temp_f, initial_hot_fract=initial_hot_fract
+            primary_system.storage_temp_f, inlet_temp_f, initial_hot_fract=run_initial_hot_fract
         )
         run_volume_gal   = []
         run_temp_delta_f = []
@@ -345,7 +370,7 @@ def gas_backup_from_window(
     #   window_score = sum(outage_temp_delta_f[:w])
     #   ...
     #   window_score += outage_temp_delta_f[i + w - 1] - outage_temp_delta_f[i - 1]
-    heat_deficit = outage_temp_delta_f
+    heat_deficit = [v * d for v, d in zip(outage_volume_gal, outage_temp_delta_f)]
     window_score = sum(heat_deficit[:w])
     best_score   = window_score
     best_start   = 0
@@ -545,7 +570,8 @@ def set_dual_fuel_shed_controls(control_map: dict) -> dict:
         an ``AlwaysOffControls`` whose ``outlet_temp_f`` is copied from the
         ``'normal'`` entry if present, otherwise 140.0°F.
     """
-    shed = control_map.get("shed")
-    outlet_temp_f = shed.outlet_temp_f if shed is not None else 140.0
-    control_map["shed"] = AlwaysOffControls(outlet_temp_f=outlet_temp_f)
+    if 'shed' in control_map:
+        shed = control_map.get("shed")
+        outlet_temp_f = shed.outlet_temp_f if shed is not None else 140.0
+        control_map["shed"] = AlwaysOffControls(outlet_temp_f=outlet_temp_f)
     return control_map

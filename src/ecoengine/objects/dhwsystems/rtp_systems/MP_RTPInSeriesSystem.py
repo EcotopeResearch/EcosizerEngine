@@ -12,6 +12,7 @@ from ..utils import (
     gas_backup_from_window,
     get_ashrae_sizing_curve,
     plot_ashrae_sizing_curve,
+    set_dual_fuel_shed_controls,
 )
 from .MultiPassRTPSystem import MultiPassRTPSystem, _MPRTP_STRAT_SLOPE, _MPRTP_MAX_DAILY_RUN_HR
 
@@ -104,6 +105,9 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
         -------
         MP_RTPInSeriesSystem
         """
+        # ensure shed turns primary system completely off
+        control_map = set_dual_fuel_shed_controls(control_map)
+
         system = cls(
             water_heaters=[],
             storage_tank=None,

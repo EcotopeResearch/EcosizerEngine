@@ -15,6 +15,7 @@ from ecoengine.objects.dhwsystems.utils import (
     gas_backup_from_window,
     get_ashrae_sizing_curve,
     plot_ashrae_sizing_curve,
+    set_dual_fuel_shed_controls,
 )
 from .SwingSystem import SwingSystem, _ELEMENT_DEADBAND_F
 
@@ -162,15 +163,12 @@ class SwingDualFuelSystem(SwingSystem):
         load_shift_fract_total_vol: float = 1.0,
     ) -> SwingDualFuelSystem:
         """
-        Size the primary SwingSystem, cap it at the caller-supplied nominal
+        Build the primary HPWH and StratifiedTank at the caller-supplied nominal
         specs, then size the supplemental swing tank via the ASHRAE method.
 
-        The full SwingSystem sizing is always run first so that
-        ``_size_tm_system`` populates ``_minimum_tm_volume_gal`` and
-        ``_minimum_tm_capacity_kbtuh`` for the internal swing-tank simulation
-        used during primary capacity calculation.  The actual primary HPWH and
-        StratifiedTank are then built at the (typically smaller) nominal values,
-        creating a deliberate shortfall that the supplemental swing tank covers.
+        The primary components are deliberately undersized, creating a shortfall
+        that the supplemental gas swing tank covers.  The supplemental tank is
+        sized via a peak-aligned 2-day simulation on a primary-only proxy.
 
         Parameters
         ----------
@@ -206,6 +204,9 @@ class SwingDualFuelSystem(SwingSystem):
         -------
         SwingDualFuelSystem
         """
+        # ensure shed turns primary system completely off
+        control_map = set_dual_fuel_shed_controls(control_map)
+
         system = cls(
             water_heaters=[],
             storage_tank=None,
@@ -218,18 +219,7 @@ class SwingDualFuelSystem(SwingSystem):
             defrost_factor=defrost_factor,
         )
 
-        # Step 1: Run full SwingSystem sizing so _size_tm_system populates
-        # _minimum_tm_volume_gal/_minimum_tm_capacity_kbtuh for _sim_just_swing.
-        system.size(
-            building,
-            control_schedule=control_schedule,
-            control_map=control_map,
-            strat_slope=strat_slope,
-            load_shift_fract_total_vol=load_shift_fract_total_vol,
-        )
-
-        # Step 2: Build primary components capped at the caller-supplied nominal
-        # specs (deliberately undersized relative to the full swing sizing).
+        # Build primary components at the caller-supplied nominal specs.
         system.storage_tank = StratifiedTank(
             total_volume_gal=nominal_storage_gal,
             strat_slope=strat_slope,
@@ -239,9 +229,12 @@ class SwingDualFuelSystem(SwingSystem):
             control_schedule=control_schedule,
             control_map=control_map,
         )]
+        # Populate sizing-result attributes so public API methods can read them.
+        system._minimum_capacity_kbtuh       = nominal_capacity_kbtuh
+        system._minimum_storage_storageT_gal = nominal_storage_gal
+        system._sizing_strat_slope           = strat_slope
 
-        # Step 3: Build an initial swing tank (same controls as SwingSystem.from_size)
-        # so the proxy has a fully-initialized tm_storage_tank during the ASHRAE sizing.
+        # Size supplemental swing tank via the ASHRAE method using a primary-only proxy.
         tm_controls = Controls(
             on_sensor_fract  = 0.5,
             on_trigger_t_f   = supply_temp_f,
@@ -249,17 +242,6 @@ class SwingDualFuelSystem(SwingSystem):
             off_trigger_t_f  = supply_temp_f + _ELEMENT_DEADBAND_F,
             outlet_temp_f    = supply_temp_f + _ELEMENT_DEADBAND_F,
         )
-        system.tm_storage_tank = MixedStorageTank(
-            total_volume_gal=system._minimum_tm_volume_gal,
-        )
-        system.tm_water_heater = WaterHeater.from_nominal_capacity(
-            nominal_capacity_kbtuh=system._minimum_tm_capacity_kbtuh,
-            control_schedule=["normal"] * 24,
-            control_map={"normal": tm_controls},
-        )
-
-        # Step 4: Re-size swing tank and element via the ASHRAE method,
-        # replacing the table-lookup results from Step 3.
         system._size_supplemental(
             building=building,
             tm_controls=tm_controls,
