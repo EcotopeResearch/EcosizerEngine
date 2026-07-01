@@ -57,11 +57,13 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
     from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem
     from ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem import SwingERTrdOffSystem
     from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem import SP_RTPInSeriesSystem, _GAS_DEADBAND_F
+    from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem import SP_RTPInParallelSystem
     from ecoengine.objects.dhwsystems.rtp_systems.MP_RTPInSeriesSystem import MP_RTPInSeriesSystem
     _is_in_series = isinstance(dhw_system, (SP_RTPInSeriesSystem, MP_RTPInSeriesSystem))
     sim_run.show_tm_panel = (
         isinstance(dhw_system, SwingSystem)
         or isinstance(dhw_system, SwingERTrdOffSystem)
+        or isinstance(dhw_system, SP_RTPInParallelSystem)
         or _is_in_series
     )
     if _is_in_series:
@@ -112,7 +114,7 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
             tank_temps_f              = step["tank_temps_f"],
             mode                      = step.get("mode", "normal"),
             tm_tank_temp_f            = step.get("tm_tank_temp_f"),
-            tm_heater_output_kbtuh    = step.get("tm_heater_output_kbtuh"),
+            tm_heater_output_kbtuh    = step.get("tm_heater_output_kbtuh"), #TODO rename this for gas heating you know?
             tm_heater_input_kw    = step.get("tm_heater_input_kw"),
         )
 

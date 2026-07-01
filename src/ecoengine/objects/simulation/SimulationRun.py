@@ -486,7 +486,12 @@ class SimulationRun:
 
         # --- Row 2: TM (swing) tank panel ---
         if has_tm:
-            tm_time = [i * self.timestep_min for i in range(len(self.tm_tank_temp_f))]
+            # Length from tm_heater_output_kbtuh, not tm_tank_temp_f: systems
+            # with no separate TM/gas tank of their own (e.g.
+            # SP_RTPInParallelSystem, which heats directly into the shared
+            # primary tank) never populate tm_tank_temp_f, but always
+            # populate tm_heater_output_kbtuh.
+            tm_time = [i * self.timestep_min for i in range(len(self.tm_heater_output_kbtuh))]
             # Left Y2: TM heater output [kBTU/hr]
             fig.add_trace(
                 go.Scatter(x=tm_time, y=self.tm_heater_output_kbtuh,
@@ -495,13 +500,14 @@ class SimulationRun:
                            fill="tozeroy", fillcolor="rgba(255,165,0,0.15)"),
                 secondary_y=False, row=2, col=1,
             )
-            # Right Y2: TM tank temperature [°F]
-            fig.add_trace(
-                go.Scatter(x=tm_time, y=self.tm_tank_temp_f,
-                           name=f"{self.tm_panel_label} Tank Temp (°F)",
-                           line=dict(color="purple", width=1.5)),
-                secondary_y=True, row=2, col=1,
-            )
+            # Right Y2: TM tank temperature [°F] — only if a separate TM tank exists
+            if self.tm_tank_temp_f:
+                fig.add_trace(
+                    go.Scatter(x=tm_time, y=self.tm_tank_temp_f,
+                               name=f"{self.tm_panel_label} Tank Temp (°F)",
+                               line=dict(color="purple", width=1.5)),
+                    secondary_y=True, row=2, col=1,
+                )
 
         # --- Load-shift shading: blue=shed, green=loadUp ---
         if self.heater_mode:
