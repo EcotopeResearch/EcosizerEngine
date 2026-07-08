@@ -464,6 +464,14 @@ def get_sizing_curve_plot(
 
 _RECIRC_SCHEMATICS = {"parallel_loop", "swing_tank", "single_pass_rtp", "multi_pass_rtp"}
 
+# Dual-fuel schematics: the primary heater/tank is intentionally capped at
+# heating_capacity_kbtuh / storage_volume_storageT_gal (never auto-sized), and
+# a gas backup is always auto-sized on top via each class's from_size(). These
+# two params are therefore required (not optional) for these schematics, and
+# must bypass the generic "pre-sized" dispatch in _build_dhw_system(), which
+# has no notion of a gas backup to size.
+_DUAL_FUEL_SCHEMATICS = {"sprtp_in_series", "sprtp_in_parallel", "mprtp_in_series", "swing_dual_fuel"}
+
 
 class EcosizerEngine:
     """
@@ -569,6 +577,16 @@ class EcosizerEngine:
             * ``'single_pass_rtp'``  — single-pass return-to-primary
             * ``'multi_pass_rtp'``   — multi-pass return-to-primary
             * ``'instant_wh'``       — instantaneous (tankless) water heater, no storage
+            * ``'sprtp_in_series'``  — SP RTP + gas water heater/tank in series (dual fuel)
+            * ``'sprtp_in_parallel'`` — SP RTP + gas water heater feeding the primary tank (dual fuel)
+            * ``'mprtp_in_series'``  — MP RTP + gas water heater/tank in series (dual fuel)
+            * ``'swing_dual_fuel'``  — Swing tank + gas swing tank (dual fuel)
+
+            The four dual-fuel schematics always require both
+            ``heating_capacity_kbtuh`` and ``storage_volume_storageT_gal`` —
+            these cap the primary heater/tank (which is deliberately
+            undersized), and the gas backup is auto-sized on top. Unlike
+            other schematics, there is no auto-sized path for the primary.
 
         gpdpp : float, optional
             Gallons per person per day. If None, building-type defaults are used.
@@ -830,15 +848,21 @@ class EcosizerEngine:
         * ``'single_pass_rtp'``  → SinglePassRTPSystem
         * ``'multi_pass_rtp'``   → MultiPassRTPSystem
         * ``'instant_wh'``       → InstantWHSystem
+        * ``'sprtp_in_series'``  → SP_RTPInSeriesSystem (dual fuel)
+        * ``'sprtp_in_parallel'`` → SP_RTPInParallelSystem (dual fuel)
+        * ``'mprtp_in_series'``  → MP_RTPInSeriesSystem (dual fuel)
+        * ``'swing_dual_fuel'``  → SwingDualFuelSystem (dual fuel)
 
         Raises
         ------
         ValueError
-            If the schematic is not recognised or required recirc params are missing.
+            If the schematic is not recognised, required recirc params are
+            missing, or (for dual-fuel schematics) heating_capacity_kbtuh /
+            storage_volume_storageT_gal are missing.
         NotImplementedError
             If the schematic is recognised but not yet fully implemented.
         """
-        if self.storage_volume_storageT_gal is not None:
+        if self.storage_volume_storageT_gal is not None and self.schematic not in _DUAL_FUEL_SCHEMATICS:
             return self._build_presized_dhw_system()
 
         from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem, _load_shift_fract_total_vol
@@ -952,10 +976,102 @@ class EcosizerEngine:
                 defrost_factor = self.defrost_factor,
             )
 
+        if self.schematic == "sprtp_in_series":
+            from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem import SP_RTPInSeriesSystem
+            self._require_recirc_params()
+            self._require_dual_fuel_sizing_params()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return SP_RTPInSeriesSystem.from_size(
+                    building                   = self._building,
+                    supply_temp_f              = self.supply_temp_f,
+                    storage_temp_f             = self.storage_temp_f,
+                    return_temp_f              = self.return_temp_f,
+                    return_flow_gpm            = self.return_flow_gpm,
+                    nominal_capacity_kbtuh     = self.heating_capacity_kbtuh,
+                    nominal_storage_gal        = self.storage_volume_storageT_gal,
+                    max_daily_run_hr           = self.max_daily_run_hr,
+                    defrost_factor             = self.defrost_factor,
+                    tm_safety_factor           = self.tm_safety_factor,
+                    control_schedule           = control_schedule,
+                    control_map                = control_map,
+                    load_shift_fract_total_vol = ls_fract,
+                )
+
+        if self.schematic == "sprtp_in_parallel":
+            from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem import SP_RTPInParallelSystem
+            self._require_recirc_params()
+            self._require_dual_fuel_sizing_params()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return SP_RTPInParallelSystem.from_size(
+                    building                   = self._building,
+                    supply_temp_f              = self.supply_temp_f,
+                    storage_temp_f             = self.storage_temp_f,
+                    return_temp_f              = self.return_temp_f,
+                    return_flow_gpm            = self.return_flow_gpm,
+                    nominal_capacity_kbtuh     = self.heating_capacity_kbtuh,
+                    nominal_storage_gal        = self.storage_volume_storageT_gal,
+                    max_daily_run_hr           = self.max_daily_run_hr,
+                    defrost_factor             = self.defrost_factor,
+                    tm_safety_factor           = self.tm_safety_factor,
+                    control_schedule           = control_schedule,
+                    control_map                = control_map,
+                    load_shift_fract_total_vol = ls_fract,
+                )
+
+        if self.schematic == "mprtp_in_series":
+            from ecoengine.objects.dhwsystems.rtp_systems.MP_RTPInSeriesSystem import MP_RTPInSeriesSystem
+            self._require_recirc_params()
+            self._require_dual_fuel_sizing_params()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                # max_daily_run_hr intentionally omitted: MPRTP does not yet use the
+                # engine-level setting (see the plain 'multi_pass_rtp' branch above,
+                # which hardcodes 14); MP_RTPInSeriesSystem defaults to the same
+                # value via _MPRTP_MAX_DAILY_RUN_HR.
+                return MP_RTPInSeriesSystem.from_size(
+                    building               = self._building,
+                    supply_temp_f          = self.supply_temp_f,
+                    storage_temp_f         = self.storage_temp_f,
+                    return_temp_f          = self.return_temp_f,
+                    return_flow_gpm        = self.return_flow_gpm,
+                    nominal_capacity_kbtuh = self.heating_capacity_kbtuh,
+                    nominal_storage_gal    = self.storage_volume_storageT_gal,
+                    defrost_factor         = self.defrost_factor,
+                    tm_safety_factor       = self.tm_safety_factor,
+                    control_schedule       = control_schedule,
+                    control_map            = control_map,
+                    drawdown_fract         = self.drawdown_fract,
+                )
+
+        if self.schematic == "swing_dual_fuel":
+            from ecoengine.objects.dhwsystems.recirc_systems.SwingDualFuelSystem import SwingDualFuelSystem
+            self._require_recirc_params()
+            self._require_dual_fuel_sizing_params()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                return SwingDualFuelSystem.from_size(
+                    building                   = self._building,
+                    supply_temp_f              = self.supply_temp_f,
+                    storage_temp_f             = self.storage_temp_f,
+                    return_temp_f              = self.return_temp_f,
+                    return_flow_gpm            = self.return_flow_gpm,
+                    nominal_capacity_kbtuh     = self.heating_capacity_kbtuh,
+                    nominal_storage_gal        = self.storage_volume_storageT_gal,
+                    tm_safety_factor           = self.tm_safety_factor,
+                    max_daily_run_hr           = self.max_daily_run_hr,
+                    defrost_factor             = self.defrost_factor,
+                    control_schedule           = control_schedule,
+                    control_map                = control_map,
+                    load_shift_fract_total_vol = ls_fract,
+                )
+
         raise ValueError(
             f"Unknown schematic {self.schematic!r}. "
             "Supported values: 'primary_no_recirc', 'parallel_loop', 'swing_tank', "
-            "'single_pass_rtp', 'multi_pass_rtp', 'instant_wh'."
+            "'single_pass_rtp', 'multi_pass_rtp', 'instant_wh', 'sprtp_in_series', "
+            "'sprtp_in_parallel', 'mprtp_in_series', 'swing_dual_fuel'."
         )
 
     def _require_recirc_params(self) -> None:
@@ -963,6 +1079,28 @@ class EcosizerEngine:
             name for name, val in [
                 ("return_temp_f",   self.return_temp_f),
                 ("return_flow_gpm", self.return_flow_gpm),
+            ]
+            if val is None
+        ]
+        if missing:
+            raise ValueError(
+                f"Schematic '{self.schematic}' requires: {', '.join(missing)}."
+            )
+
+    def _require_dual_fuel_sizing_params(self) -> None:
+        """
+        Require heating_capacity_kbtuh and storage_volume_storageT_gal for
+        dual-fuel schematics (sprtp_in_series, sprtp_in_parallel,
+        mprtp_in_series, swing_dual_fuel).
+
+        Unlike other schematics, these two values are not optional: the
+        primary heater/tank is always built at exactly these caps (never
+        auto-sized), and the gas backup is always auto-sized on top.
+        """
+        missing = [
+            name for name, val in [
+                ("heating_capacity_kbtuh",      self.heating_capacity_kbtuh),
+                ("storage_volume_storageT_gal", self.storage_volume_storageT_gal),
             ]
             if val is None
         ]
