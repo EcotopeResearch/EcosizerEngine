@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.EnergyTank import EnergyTank
@@ -13,6 +15,9 @@ from ..utils import (
     set_dual_fuel_shed_controls,
 )
 from .SinglePassRTPSystem import SinglePassRTPSystem, _SPRTP_STRAT_SLOPE
+
+if TYPE_CHECKING:
+    from ecoengine.objects.building.Building import Building
 
 
 def _gas_capacity_from_peak_deficit(
@@ -244,11 +249,20 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
     # Gas backup sizing helpers
     # ------------------------------------------------------------------
 
-    def get_sizing_curve(self) -> dict:
+    def get_sizing_curve(
+        self,
+        building: Building,
+        strat_slope: float = 2.8,
+        step: float = 0.25,
+    ) -> dict:
         """
         TODO: revisit. Sizing is now a single peak-deficit capacity value
         rather than an ASHRAE window/storage trade-off, so there is no curve
         to compute yet.
+
+        ``building``, ``strat_slope``, and ``step`` are accepted for call-
+        signature parity with ``DHWSystem.get_sizing_curve()`` but have no
+        effect here.
         """
         pass
 

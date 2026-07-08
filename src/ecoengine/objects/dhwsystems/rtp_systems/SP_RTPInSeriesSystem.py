@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.EnergyTank import EnergyTank
@@ -14,6 +16,9 @@ from ..utils import (
     set_dual_fuel_shed_controls,
 )
 from .SinglePassRTPSystem import SinglePassRTPSystem, _SPRTP_STRAT_SLOPE
+
+if TYPE_CHECKING:
+    from ecoengine.objects.building.Building import Building
 
 _GAS_DEADBAND_F: float = 8.0
 
@@ -217,13 +222,24 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             self.outage_volume_gal, self.outage_temp_delta_f, window_min
         )
 
-    def get_sizing_curve(self) -> dict:
+    def get_sizing_curve(
+        self,
+        building: Building,
+        strat_slope: float = 2.8,
+        step: float = 0.25,
+    ) -> dict:
         """
         Return the gas backup sizing curve as a data dict.
 
         Keys: ``"window_sizes"``, ``"capacities_kbtuh"``, ``"storages_gal"``,
         ``"recommended_index"``.  Pass the result to ``plot_sizing_curve()``
         to get a Plotly figure.
+
+        ``building``, ``strat_slope``, and ``step`` are accepted for call-
+        signature parity with ``DHWSystem.get_sizing_curve()`` but have no
+        effect here — the gas backup curve is derived entirely from the
+        stored outage arrays (see ``_size_gas_backup``), not from the
+        building load or a run-hour sweep.
 
         Raises
         ------
@@ -238,6 +254,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
 
     def plot_sizing_curve(
         self,
+        building: Building,
         title: str = "Gas Backup Sizing Curve — SP RTP In-Series",
     ) -> "plotly.graph_objects.Figure":
         """
@@ -248,6 +265,9 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
 
         Parameters
         ----------
+        building : Building
+            Accepted for call-signature parity with ``get_sizing_curve()``;
+            has no effect here.
         title : str
             Figure title.
 
@@ -260,7 +280,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         RuntimeError
             If ``from_size()`` has not been called yet.
         """
-        return plot_ashrae_sizing_curve(self.get_sizing_curve(), title=title)
+        return plot_ashrae_sizing_curve(self.get_sizing_curve(building), title=title)
 
     # ------------------------------------------------------------------
     # Simulation

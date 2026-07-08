@@ -252,34 +252,41 @@ class TestGetSizingCurve:
 
     def test_raises_before_sizing(self):
         """get_sizing_curve() raises RuntimeError when outage arrays are absent."""
-        _, system = _build_system("multi_family", 100, 0.70)
+        building, system = _build_system("multi_family", 100, 0.70)
         del system.outage_volume_gal
         with pytest.raises(RuntimeError, match="outage data is not available"):
-            system.get_sizing_curve()
+            system.get_sizing_curve(building)
 
     def test_dict_keys(self):
         """Dict has the four expected keys."""
-        _, system = _build_system("multi_family", 100, 0.70)
-        curve = system.get_sizing_curve()
+        building, system = _build_system("multi_family", 100, 0.70)
+        curve = system.get_sizing_curve(building)
         assert set(curve.keys()) == {"window_sizes", "capacities_kbtuh", "storages_gal", "recommended_index"}
 
     def test_window_sizes(self):
         """window_sizes contains the four ASHRAE durations."""
-        _, system = _build_system("multi_family", 100, 0.70)
-        assert system.get_sizing_curve()["window_sizes"] == [5, 15, 30, 60]
+        building, system = _build_system("multi_family", 100, 0.70)
+        assert system.get_sizing_curve(building)["window_sizes"] == [5, 15, 30, 60]
 
     def test_recommended_index_is_30_min(self):
         """recommended_index points to the 30-minute window."""
-        _, system = _build_system("multi_family", 100, 0.70)
-        curve = system.get_sizing_curve()
+        building, system = _build_system("multi_family", 100, 0.70)
+        curve = system.get_sizing_curve(building)
         assert curve["window_sizes"][curve["recommended_index"]] == 30
 
     def test_capacities_and_storages_positive(self):
         """All capacities and storages are positive for a real undersized system."""
-        _, system = _build_system("multi_family", 100, 0.70)
-        curve = system.get_sizing_curve()
+        building, system = _build_system("multi_family", 100, 0.70)
+        curve = system.get_sizing_curve(building)
         assert all(c > 0.0 for c in curve["capacities_kbtuh"])
         assert all(s > 0.0 for s in curve["storages_gal"])
+
+    def test_dummy_params_have_no_effect(self):
+        """building/strat_slope/step are accepted for signature parity but change nothing."""
+        building, system = _build_system("multi_family", 100, 0.70)
+        default_curve = system.get_sizing_curve(building)
+        other_curve = system.get_sizing_curve(building, strat_slope=1.0, step=5.0)
+        assert default_curve == other_curve
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
@@ -288,19 +295,19 @@ class TestPlotSizingCurve:
 
     def test_trace_count(self):
         """Figure has 1 line trace + one marker per ASHRAE window (4 windows → 5 total)."""
-        _, system = _build_system("multi_family", 100, 0.70)
-        fig = system.plot_sizing_curve()
+        building, system = _build_system("multi_family", 100, 0.70)
+        fig = system.plot_sizing_curve(building)
         assert len(fig.data) == 5
 
     def test_slider_step_count(self):
         """Slider has one step per ASHRAE window size."""
-        _, system = _build_system("multi_family", 100, 0.70)
-        fig = system.plot_sizing_curve()
+        building, system = _build_system("multi_family", 100, 0.70)
+        fig = system.plot_sizing_curve(building)
         assert len(fig.layout.sliders[0].steps) == 4
 
     def test_recommended_slider_position(self):
         """The active slider position corresponds to the 30-minute window."""
-        _, system = _build_system("multi_family", 100, 0.70)
-        fig = system.plot_sizing_curve()
+        building, system = _build_system("multi_family", 100, 0.70)
+        fig = system.plot_sizing_curve(building)
         active = fig.layout.sliders[0].active
         assert [5, 15, 30, 60][active] == 30

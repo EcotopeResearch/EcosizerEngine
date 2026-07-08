@@ -324,12 +324,23 @@ class SwingDualFuelSystem(SwingSystem):
     # Supplemental sizing curve
     # ------------------------------------------------------------------
 
-    def get_sizing_curve(self) -> dict:
+    def get_sizing_curve(
+        self,
+        building: Building,
+        strat_slope: float = 2.8,
+        step: float = 0.25,
+    ) -> dict:
         """
         Return the supplemental swing tank sizing curve as a data dict.
 
         Keys: ``"window_sizes"``, ``"capacities_kbtuh"``, ``"storages_gal"``,
         ``"recommended_index"``.  Pass to ``plot_sizing_curve()`` for a figure.
+
+        ``building``, ``strat_slope``, and ``step`` are accepted for call-
+        signature parity with ``DHWSystem.get_sizing_curve()`` but have no
+        effect here — the supplemental curve is derived entirely from the
+        stored outage arrays (see ``_size_supplemental``), not from the
+        building load or a run-hour sweep.
 
         Raises
         ------
@@ -344,6 +355,7 @@ class SwingDualFuelSystem(SwingSystem):
 
     def plot_sizing_curve(
         self,
+        building: Building,
         title: str = "Supplemental Swing Tank Sizing Curve — Dual Fuel Swing",
     ) -> "plotly.graph_objects.Figure":
         """
@@ -351,6 +363,9 @@ class SwingDualFuelSystem(SwingSystem):
 
         Parameters
         ----------
+        building : Building
+            Accepted for call-signature parity with ``get_sizing_curve()``;
+            has no effect here.
         title : str
             Figure title.
 
@@ -363,7 +378,7 @@ class SwingDualFuelSystem(SwingSystem):
         RuntimeError
             If ``from_size()`` has not been called yet.
         """
-        return plot_ashrae_sizing_curve(self.get_sizing_curve(), title=title)
+        return plot_ashrae_sizing_curve(self.get_sizing_curve(building), title=title)
 
     # ------------------------------------------------------------------
     # Simulation
