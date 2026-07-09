@@ -1354,6 +1354,9 @@ class EcosizerEngine:
         if hasattr(sys, "_minimum_tm_volume_gal") and sys._minimum_tm_volume_gal is not None:
             result["min_tm_volume_gal"]      = sys._minimum_tm_volume_gal
             result["min_tm_capacity_kbtuh"]  = sys._minimum_tm_capacity_kbtuh
+        if hasattr(sys, "_in_series_storage_vol_gal") and sys._in_series_storage_vol_gal is not None:
+            result["in_series_volume_gal"] = sys._in_series_storage_vol_gal     
+            result["in_series_capacity_kbtuh"] = sys._in_series_capacity_kbtuh
         return result
 
     # ------------------------------------------------------------------
@@ -1491,16 +1494,27 @@ class EcosizerEngine:
         """
         Return a Plotly figure of the sizing curve for the built system.
 
-        For systems without load shifting, produces the primary sizing curve
-        (storage volume vs. heating capacity as a function of daily run hours).
+        For dual-fuel schematics (``self.schematic in _DUAL_FUEL_SCHEMATICS``),
+        the primary is capped at ``heating_capacity_kbtuh`` /
+        ``storage_volume_storageT_gal`` rather than auto-sized, so there is no
+        primary run-hours curve to show. Instead, this renders the gas backup
+        sizing curve (backup storage volume vs. backup heating capacity across
+        the four ASHRAE window durations) — the only sizing trade-off that
+        actually exists for these schematics, load-shifting or not.
 
-        For systems with load shifting (``load_shift_schedule`` was provided),
-        produces the load-shift sizing curve (storage volume vs. coverage
-        percentile), with a slider to explore the capacity/storage trade-off.
+        For non-dual-fuel systems without load shifting, produces the primary
+        sizing curve (storage volume vs. heating capacity as a function of
+        daily run hours).
 
-        The recommended point — corresponding to the ``max_daily_run_hr`` or
-        ``load_shift_percent`` passed to the engine — is highlighted on the
-        curve at page load.
+        For non-dual-fuel systems with load shifting (``load_shift_schedule``
+        was provided), produces the load-shift sizing curve (storage volume
+        vs. coverage percentile), with a slider to explore the capacity/
+        storage trade-off.
+
+        The recommended point — corresponding to the ``max_daily_run_hr`` /
+        ``load_shift_percent`` passed to the engine, or the 30-minute ASHRAE
+        window for dual-fuel schematics — is highlighted on the curve at page
+        load.
 
         Parameters
         ----------
@@ -1511,7 +1525,7 @@ class EcosizerEngine:
             HTML file.  The figure is also returned regardless.
         strat_slope : float
             Temperature gradient [°F / %-height] for stratification factor
-            calculation.  Default 2.8.
+            calculation.  Default 2.8.  Ignored for dual-fuel schematics.
         return_as_div : bool
             If True, return the figure as an HTML ``<div>`` string instead of
             a ``plotly.graph_objects.Figure``.  Default False.
@@ -1536,11 +1550,33 @@ class EcosizerEngine:
         ------
         ImportError
             If ``plotly`` is not installed.
+        NotImplementedError
+            If the schematic's ``get_sizing_curve()`` has no gas backup curve
+            implemented yet (currently true for ``'sprtp_in_parallel'``).
         """
         control_schedule, control_map = self._build_control_map()
         is_ls = "shed" in control_map
 
-        if is_ls:
+        if self.schematic in _DUAL_FUEL_SCHEMATICS:
+            # Gas backup curve has its own x/y semantics (backup storage vs.
+            # backup capacity across ASHRAE windows) — _build_sizing_curve_figure
+            # is built for the primary run-hours/load-shift curves and doesn't
+            # apply here, so we build the figure directly via the ASHRAE helper.
+            from ecoengine.objects.dhwsystems.utils import plot_ashrae_sizing_curve
+
+            curve = self._dhw_system.get_sizing_curve(self._building, strat_slope=strat_slope)
+            if curve is None:
+                raise NotImplementedError(
+                    f"Gas backup sizing curve is not yet implemented for schematic "
+                    f"{self.schematic!r} ({type(self._dhw_system).__name__})."
+                )
+            x_vals      = curve["storages_gal"]
+            y_vals      = curve["capacities_kbtuh"]
+            start_index = curve["recommended_index"]
+            fig = plot_ashrae_sizing_curve(curve, title=title)
+            if filepath is not None:
+                fig.write_html(filepath)
+        elif is_ls:
             curve = self._dhw_system.get_ls_sizing_curve(
                 self._building,
                 control_schedule   = control_schedule,
@@ -1551,13 +1587,14 @@ class EcosizerEngine:
             x_vals      = [p * 100.0 for p in curve["load_shift_percent"]]
             y_vals      = curve["storage_storageT_gal"]
             start_index = curve["recommended_index"]
+            fig = self._dhw_system._build_sizing_curve_figure(curve, is_ls, title, filepath)
         else:
             curve       = self._dhw_system.get_sizing_curve(self._building, strat_slope=strat_slope)
             x_vals      = curve["storage_storageT_gal"][::-1]
             y_vals      = curve["capacity_kbtuh"][::-1]
             start_index = len(x_vals) - 1 - curve["recommended_index"]
+            fig = self._dhw_system._build_sizing_curve_figure(curve, is_ls, title, filepath)
 
-        fig    = self._dhw_system._build_sizing_curve_figure(curve, is_ls, title, filepath)
         result = fig.to_html(full_html=False, include_plotlyjs=False) if return_as_div else fig
 
         if return_with_x_y_points:

@@ -160,6 +160,9 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             tm_safety_factor=tm_safety_factor,
         )
 
+        system._minimum_capacity_kbtuh = nominal_capacity_kbtuh
+        system._minimum_storage_storageT_gal = nominal_storage_gal
+
         # Primary HPWH: capped at caller-provided nominal specs
         system.storage_tank = EnergyTank(
             total_volume_gal=nominal_storage_gal,

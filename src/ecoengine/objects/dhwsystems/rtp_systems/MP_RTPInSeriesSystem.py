@@ -125,6 +125,9 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
             tm_safety_factor=tm_safety_factor,
         )
 
+        system._minimum_capacity_kbtuh = nominal_capacity_kbtuh
+        system._minimum_storage_storageT_gal = nominal_storage_gal
+
         # Primary HPWH: capped at caller-provided nominal specs
         cold_temp_f = building.get_design_inlet_water_temp_f()
         system.storage_tank = SlugOverlayTank(
@@ -199,6 +202,9 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
 
         gas_capacity_kbtuh, gas_storage_vol_gal = self._gas_backup_from_window(_WINDOW_MIN)
         # TODO add thermal efficiency
+
+        self._in_series_storage_vol_gal = gas_storage_vol_gal
+        self._in_series_capacity_kbtuh = gas_capacity_kbtuh
 
         self.gas_water_heater = WaterHeater.from_nominal_capacity(
             nominal_capacity_kbtuh=gas_capacity_kbtuh,
