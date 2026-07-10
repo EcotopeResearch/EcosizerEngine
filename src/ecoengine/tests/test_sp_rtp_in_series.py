@@ -8,7 +8,7 @@ logic into dhwsystems/utils.py as standalone functions.
 Test groups
 -----------
 TestFromSize            — construction and component sanity after from_size()
-TestOutageArrays        — outage_volume_gal / outage_temp_delta_f contract
+TestOutageArrays        — outage_volume_gal / outage_heat_required_kbtuh contract
 TestAdequatelySized     — ValueError when primary doesn't need gas backup
 TestThreeDaySim         — integration: sized system must pass 3-day simulation
 TestGasBackupFromWindow — unit tests for _gas_backup_from_window()
@@ -111,7 +111,7 @@ class TestFromSize:
 
 
 # ---------------------------------------------------------------------------
-# TestOutageArrays — outage_volume_gal / outage_temp_delta_f contract
+# TestOutageArrays — outage_volume_gal / outage_heat_required_kbtuh contract
 # ---------------------------------------------------------------------------
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
@@ -122,17 +122,17 @@ class TestOutageArrays:
         _, system = _build_system("multi_family", 100, 0.70)
         assert len(system.outage_volume_gal) == _TOTAL_STEPS
 
-    def test_outage_temp_delta_length(self):
+    def test_outage_heat_required_length(self):
         _, system = _build_system("multi_family", 100, 0.70)
-        assert len(system.outage_temp_delta_f) == _TOTAL_STEPS
+        assert len(system.outage_heat_required_kbtuh) == _TOTAL_STEPS
 
     def test_outage_volume_non_negative(self):
         _, system = _build_system("multi_family", 100, 0.70)
         assert all(v >= 0.0 for v in system.outage_volume_gal)
 
-    def test_outage_temp_delta_non_negative(self):
+    def test_outage_heat_required_non_negative(self):
         _, system = _build_system("multi_family", 100, 0.70)
-        assert all(d >= 0.0 for d in system.outage_temp_delta_f)
+        assert all(d >= 0.0 for d in system.outage_heat_required_kbtuh)
 
     def test_some_outage_minutes_exist(self):
         """At 70% primary the outage arrays must contain at least one non-zero entry."""
@@ -211,8 +211,8 @@ class TestGasBackupFromWindow:
     def test_all_zeros_returns_zero_capacity(self):
         """All-zero outage arrays produce zero capacity and volume."""
         _, system = _build_system("multi_family", 100, 0.70)
-        system.outage_volume_gal   = [0.0] * _TOTAL_STEPS
-        system.outage_temp_delta_f = [0.0] * _TOTAL_STEPS
+        system.outage_volume_gal          = [0.0] * _TOTAL_STEPS
+        system.outage_heat_required_kbtuh = [0.0] * _TOTAL_STEPS
         cap, vol = system._gas_backup_from_window(30)
         assert cap == pytest.approx(0.0)
         assert vol == pytest.approx(0.0)
@@ -234,8 +234,8 @@ class TestGasBackupFromWindow:
     def test_window_clamped_to_array_length(self):
         """window_min larger than the array does not raise; clamps to array length."""
         _, system = _build_system("multi_family", 100, 0.70)
-        system.outage_volume_gal   = [1.0] * 5
-        system.outage_temp_delta_f = [2.0] * 5
+        system.outage_volume_gal          = [1.0] * 5
+        system.outage_heat_required_kbtuh = [2.0] * 5
         # window_min=15 > len=5; should clamp and use a valid ASHRAE window
         cap, vol = system._gas_backup_from_window(15)
         assert cap >= 0.0

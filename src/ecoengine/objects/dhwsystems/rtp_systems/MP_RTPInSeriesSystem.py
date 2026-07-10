@@ -49,7 +49,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
     gas_water_heater: WaterHeater
     gas_storage_tank: MixedStorageTank
     outage_volume_gal: list[float]
-    outage_temp_delta_f: list[float]
+    outage_heat_required_kbtuh: list[float]
 
     # ------------------------------------------------------------------
     # Factory constructor
@@ -194,7 +194,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
         """
         _WINDOW_MIN = 30
 
-        self.outage_volume_gal, self.outage_temp_delta_f = size_supplemental_heating_and_storage(
+        self.outage_volume_gal, self.outage_heat_required_kbtuh = size_supplemental_heating_and_storage(
             primary_system=self,
             building=building,
             nominal_capacity_kbtuh=nominal_capacity_kbtuh,
@@ -223,7 +223,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
         window duration using the stored outage arrays.
         """
         return gas_backup_from_window(
-            self.outage_volume_gal, self.outage_temp_delta_f, window_min
+            self.outage_volume_gal, self.outage_heat_required_kbtuh, window_min
         )
 
     def get_sizing_curve(
@@ -253,7 +253,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
             raise RuntimeError(
                 "Gas backup outage data is not available. Call from_size() first."
             )
-        return get_ashrae_sizing_curve(self.outage_volume_gal, self.outage_temp_delta_f)
+        return get_ashrae_sizing_curve(self.outage_volume_gal, self.outage_heat_required_kbtuh)
 
     def plot_sizing_curve(
         self,

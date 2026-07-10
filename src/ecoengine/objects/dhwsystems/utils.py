@@ -228,8 +228,10 @@ def size_supplemental_heating_and_storage(
     Returns
     -------
     tuple[list[float], list[float]]
-        ``(outage_volume_gal, outage_temp_delta_f)`` — parallel lists of
-        length 2 × 24 × 60 = 2880.
+        ``(outage_volume_gal, outage_heat_required_kbtuh)`` — parallel lists
+        of length 2 × 24 × 60 = 2880. ``outage_heat_required_kbtuh[i]`` is the
+        instantaneous heating required [kBTU/hr] at minute ``i`` (sensible-heat
+        equation), not a raw temperature deficit.
 
     Raises
     ------
@@ -285,8 +287,9 @@ def size_supplemental_heating_and_storage(
             if _label == "shed" and (_h == 0 or _schedule[_h - 1] != "shed"):
                 candidates.append((_h * 60, shed_initial_hot_fract))
 
-    best_outage_volume_gal        = []
-    best_outage_temp_delta_f      = []
+    best_outage_volume_gal          = []
+    best_outage_heat_required_kbtuh = []
+    best_outage_temp_delta_f        = []   # local only — used for the adequacy check below, not returned
     best_max_heat_required_kbtuh: float = -1.0
 
     for peak_start, run_initial_hot_fract in candidates:
@@ -326,10 +329,13 @@ def size_supplemental_heating_and_storage(
         ]
         run_max_heat_required_kbtuh = max(run_heat_required_kbtuh)
         if run_max_heat_required_kbtuh > best_max_heat_required_kbtuh:
-            best_max_heat_required_kbtuh = run_max_heat_required_kbtuh
-            best_outage_volume_gal       = run_volume_gal
-            best_outage_temp_delta_f     = run_temp_delta_f
+            best_max_heat_required_kbtuh    = run_max_heat_required_kbtuh
+            best_outage_volume_gal          = run_volume_gal
+            best_outage_heat_required_kbtuh = run_heat_required_kbtuh
+            best_outage_temp_delta_f        = run_temp_delta_f
 
+    # Raw temperature deficit is only needed for this adequacy check — the
+    # public return value is volume + heat-required, not delta.
     best_max_delta   = max(best_outage_temp_delta_f) if best_outage_temp_delta_f else 0.0
     total_outage_min = sum(1 for v in best_outage_volume_gal if v > 0.0)
     if total_outage_min <= _MIN_OUTAGE_MIN and best_max_delta <= _MIN_DEFICIT_F:
@@ -341,30 +347,39 @@ def size_supplemental_heating_and_storage(
             "No gas backup is required."
         )
 
-    return best_outage_volume_gal, best_outage_temp_delta_f
+    return best_outage_volume_gal, best_outage_heat_required_kbtuh
 
 
 def gas_backup_from_window(
     outage_volume_gal: list[float],
-    outage_temp_delta_f: list[float],
+    outage_heat_required_kbtuh: list[float],
     window_min: int,
 ) -> tuple[float, float]:
     """
-    Find the worst contiguous ``window_min``-length stretch of the outage
-    arrays and return the implied gas backup capacity and storage volume.
+    Find the largest independent volume and heat-required minutes across the
+    outage arrays and return the implied gas backup capacity and storage
+    volume.
 
-    Uses the ASHRAE diversity ratio (via ``ashrae_method_water_use_ratio``)
-    to convert peak-window volume to a realistic hourly-equivalent storage
-    requirement.  ``window_min`` must be one of [5, 15, 30, 60].
+    Unlike a sliding contiguous-window search, ``outage_volume_gal`` and
+    ``outage_heat_required_kbtuh`` are each sorted independently (largest to
+    smallest) and the top ``window_min`` entries are taken from each — one
+    for the largest slug of water needing heating, the other for the largest
+    heating requirement — even if the two occur at different, unrelated
+    moments. Storage volume still goes through the ASHRAE diversity ratio
+    (via ``ashrae_method_water_use_ratio``); capacity is the plain average of
+    the top ``window_min`` heat-required minutes. ``window_min`` must be one
+    of [5, 15, 30, 60].
 
     Parameters
     ----------
     outage_volume_gal : list[float]
         Per-minute demand during primary outage (0 outside outage) [gal].
-    outage_temp_delta_f : list[float]
-        Per-minute temperature deficit during outage (0 outside) [°F].
+    outage_heat_required_kbtuh : list[float]
+        Per-minute instantaneous heating required during outage (0 outside)
+        [kBTU/hr], via the sensible-heat equation.
     window_min : int
-        Contiguous window length in minutes. Must be in [5, 15, 30, 60].
+        Number of (independently) worst minutes to consider from each array.
+        Must be in [5, 15, 30, 60].
 
     Returns
     -------
@@ -374,41 +389,18 @@ def gas_backup_from_window(
     total_steps = len(outage_volume_gal)
     w = min(window_min, total_steps)
 
-    # Per-minute instantaneous heating required [kBTU/hr], via the sensible-
-    # heat equation, rather than a dimensionless vol × delta product. Used
-    # both to score candidate windows (sliding sum, so a real high-volume
-    # demand peak beats a low-flow off-peak window even when delta is flat —
-    # e.g. SwingDualFuelSystem when nominal_capacity ≈ recirc_loss) and, within
-    # the winning window, to read off the true peak instantaneous capacity
-    # requirement directly, rather than reconstructing an average-based
-    # estimate (avg flow × avg delta) that can smooth over the actual worst
-    # moment in the window.
-    heat_required_kbtuh = [
-        _RHO_CP * v * 60.0 * d / 1000.0
-        for v, d in zip(outage_volume_gal, outage_temp_delta_f)
-    ]
-    window_score = sum(heat_required_kbtuh[:w])
-    best_score   = window_score
-    best_start   = 0
+    sorted_vol           = sorted(outage_volume_gal, reverse=True)
+    sorted_heat_required = sorted(outage_heat_required_kbtuh, reverse=True)
 
-    for i in range(1, total_steps - w + 1):
-        window_score += heat_required_kbtuh[i + w - 1] - heat_required_kbtuh[i - 1]
-        if window_score > best_score:
-            best_score = window_score
-            best_start = i
-
-    best_slice_vol      = outage_volume_gal[best_start : best_start + w]
-    best_slice_required = heat_required_kbtuh[best_start : best_start + w]
-
-    gas_storage_vol_gal = ashrae_method_water_use_ratio(window_min, sum(best_slice_vol))
-    gas_capacity_kbtuh  = max(best_slice_required)
+    gas_storage_vol_gal = ashrae_method_water_use_ratio(window_min, sum(sorted_vol[:w]))
+    gas_capacity_kbtuh  = sum(sorted_heat_required[:w]) / w if w > 0 else 0.0
 
     return gas_capacity_kbtuh, gas_storage_vol_gal
 
 
 def get_ashrae_sizing_curve(
     outage_volume_gal: list[float],
-    outage_temp_delta_f: list[float]
+    outage_heat_required_kbtuh: list[float]
 ) -> dict:
     """
     Compute the gas backup sizing curve across all ASHRAE window durations.
@@ -421,8 +413,9 @@ def get_ashrae_sizing_curve(
     ----------
     outage_volume_gal : list[float]
         Per-minute outage demand array from ``size_supplemental_heating_and_storage``.
-    outage_temp_delta_f : list[float]
-        Per-minute temperature deficit array from ``size_supplemental_heating_and_storage``.
+    outage_heat_required_kbtuh : list[float]
+        Per-minute instantaneous heating required array [kBTU/hr] from
+        ``size_supplemental_heating_and_storage``.
 
     Returns
     -------
@@ -445,7 +438,7 @@ def get_ashrae_sizing_curve(
     capacities = []
     storages   = []
     for w in _ASHRAE_WINDOWS:
-        cap, vol = gas_backup_from_window(outage_volume_gal, outage_temp_delta_f, w)
+        cap, vol = gas_backup_from_window(outage_volume_gal, outage_heat_required_kbtuh, w)
         capacities.append(cap)
         storages.append(vol)
 

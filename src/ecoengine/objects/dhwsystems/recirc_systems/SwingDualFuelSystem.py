@@ -138,7 +138,7 @@ class SwingDualFuelSystem(SwingSystem):
     """
 
     outage_volume_gal:   list[float]
-    outage_temp_delta_f: list[float]
+    outage_heat_required_kbtuh: list[float]
 
     # ------------------------------------------------------------------
     # Factory constructor
@@ -300,7 +300,7 @@ class SwingDualFuelSystem(SwingSystem):
             defrost_factor=self.defrost_factor,
         )
 
-        self.outage_volume_gal, self.outage_temp_delta_f = (
+        self.outage_volume_gal, self.outage_heat_required_kbtuh = (
             size_supplemental_heating_and_storage(
                 primary_system=proxy,
                 building=building,
@@ -310,7 +310,7 @@ class SwingDualFuelSystem(SwingSystem):
         )
 
         tm_capacity_kbtuh, tm_storage_vol_gal = gas_backup_from_window(
-            self.outage_volume_gal, self.outage_temp_delta_f, _WINDOW_MIN
+            self.outage_volume_gal, self.outage_heat_required_kbtuh, _WINDOW_MIN
         )
 
         self.tm_storage_tank = MixedStorageTank(total_volume_gal=tm_storage_vol_gal)
@@ -351,7 +351,7 @@ class SwingDualFuelSystem(SwingSystem):
             raise RuntimeError(
                 "Supplemental outage data not available. Call from_size() first."
             )
-        return get_ashrae_sizing_curve(self.outage_volume_gal, self.outage_temp_delta_f)
+        return get_ashrae_sizing_curve(self.outage_volume_gal, self.outage_heat_required_kbtuh)
 
     def plot_sizing_curve(
         self,

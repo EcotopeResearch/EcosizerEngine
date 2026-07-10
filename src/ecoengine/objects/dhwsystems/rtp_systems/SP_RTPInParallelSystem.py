@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.EnergyTank import EnergyTank
-from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
+from ecoengine.constants.constants import _W_TO_KBTUH
 from ..utils import (
     mixing_valve_behavior,
     size_supplemental_heating_and_storage,
@@ -21,38 +21,31 @@ if TYPE_CHECKING:
 
 
 def _gas_capacity_from_peak_deficit(
-    outage_volume_gal: list[float],
-    outage_temp_delta_f: list[float],
+    outage_heat_required_kbtuh: list[float],
 ) -> float:
     """
     Return the gas backup capacity [kBTU/hr] needed to cover the single
-    worst-minute heat deficit in the outage arrays.
+    worst-minute heating requirement in the outage array.
 
     Unlike ``gas_backup_from_window`` (which sizes a downstream storage
-    buffer by averaging over an ASHRAE window), the gas heater here has no
-    buffer of its own -- it heats directly into the shared primary tank --
-    so it must be able to cover the worst single minute directly:
-    ``outage_volume_gal[i]`` gallons raised ``outage_temp_delta_f[i]``
-    degrees, for whichever minute ``i`` makes that the largest.
+    buffer), the gas heater here has no buffer of its own -- it heats
+    directly into the shared primary tank -- so it must be able to cover the
+    worst single minute directly.
 
     Parameters
     ----------
-    outage_volume_gal : list[float]
-        Per-minute demand during primary outage (0 outside outage) [gal].
-    outage_temp_delta_f : list[float]
-        Per-minute temperature deficit during outage (0 outside) [°F].
+    outage_heat_required_kbtuh : list[float]
+        Per-minute instantaneous heating required during outage (0 outside)
+        [kBTU/hr], via the sensible-heat equation.
 
     Returns
     -------
     float
-        Gas backup capacity [kBTU/hr]. 0.0 if the arrays are empty.
+        Gas backup capacity [kBTU/hr]. 0.0 if the array is empty.
     """
-    if not outage_volume_gal:
+    if not outage_heat_required_kbtuh:
         return 0.0
-    return max(
-        _RHO_CP * v * 60.0 * d / 1000.0
-        for v, d in zip(outage_volume_gal, outage_temp_delta_f)
-    )
+    return max(outage_heat_required_kbtuh)
 
 
 class SP_RTPInParallelSystem(SinglePassRTPSystem):
@@ -82,7 +75,7 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
 
     gas_water_heater: WaterHeater
     outage_volume_gal: list[float]
-    outage_temp_delta_f: list[float]
+    outage_heat_required_kbtuh: list[float]
 
     # ------------------------------------------------------------------
     # Factory constructor
@@ -230,7 +223,7 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             and max deficit < 2 °F), meaning no gas backup is needed.
         """
         # --- 1 & 2. Sizing simulation → outage arrays (raises ValueError if no backup needed) ---
-        self.outage_volume_gal, self.outage_temp_delta_f = size_supplemental_heating_and_storage(
+        self.outage_volume_gal, self.outage_heat_required_kbtuh = size_supplemental_heating_and_storage(
             primary_system=self,
             building=building,
             nominal_capacity_kbtuh=nominal_capacity_kbtuh,
@@ -238,7 +231,7 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
 
         # --- 3. Size gas capacity to cover the single worst-minute deficit ---
         gas_capacity_kbtuh = _gas_capacity_from_peak_deficit(
-            self.outage_volume_gal, self.outage_temp_delta_f
+            self.outage_heat_required_kbtuh
         )
         # TODO add thermal efficiency
 

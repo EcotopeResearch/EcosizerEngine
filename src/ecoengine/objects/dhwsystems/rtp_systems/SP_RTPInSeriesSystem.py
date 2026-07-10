@@ -50,7 +50,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
     gas_water_heater: WaterHeater
     gas_storage_tank: MixedStorageTank
     outage_volume_gal: list[float]
-    outage_temp_delta_f: list[float]
+    outage_heat_required_kbtuh: list[float]
 
     # ------------------------------------------------------------------
     # Factory constructor
@@ -195,7 +195,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         _WINDOW_MIN = 30
 
         # --- 1 & 2. Sizing simulation → outage arrays (raises ValueError if no backup needed) ---
-        self.outage_volume_gal, self.outage_temp_delta_f = size_supplemental_heating_and_storage(
+        self.outage_volume_gal, self.outage_heat_required_kbtuh = size_supplemental_heating_and_storage(
             primary_system=self,
             building=building,
             nominal_capacity_kbtuh=nominal_capacity_kbtuh,
@@ -225,7 +225,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         window duration using the stored outage arrays.
         """
         return gas_backup_from_window(
-            self.outage_volume_gal, self.outage_temp_delta_f, window_min
+            self.outage_volume_gal, self.outage_heat_required_kbtuh, window_min
         )
 
     def get_sizing_curve(
@@ -256,7 +256,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             raise RuntimeError(
                 "Gas backup outage data is not available. Call from_size() first."
             )
-        return get_ashrae_sizing_curve(self.outage_volume_gal, self.outage_temp_delta_f)
+        return get_ashrae_sizing_curve(self.outage_volume_gal, self.outage_heat_required_kbtuh)
 
     def plot_sizing_curve(
         self,
