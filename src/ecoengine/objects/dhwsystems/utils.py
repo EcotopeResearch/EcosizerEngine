@@ -196,9 +196,15 @@ def size_supplemental_heating_and_storage(
     return the worst-case outage profile for supplemental heating/storage sizing.
 
     The simulation starts at each hour where the primary (net of recirc loss)
-    cannot keep up with demand.  The run producing the largest max temperature
-    deficit is kept.  No components are built; the caller uses the returned
-    arrays with ``gas_backup_from_window`` and ``get_ashrae_sizing_curve``.
+    cannot keep up with demand.  The run producing the largest peak
+    instantaneous heating required [kBTU/hr] (sensible-heat equation:
+    ``_RHO_CP × volume × 60 × deficit_f / 1000``, evaluated at every minute) is
+    kept — not the run with the largest raw temperature deficit alone, since a
+    low-volume moment (e.g. deep into a shed period, overnight, recirc-only
+    flow) can have a larger deficit than a real demand peak while requiring far
+    less actual heating capacity.  No components are built; the caller uses
+    the returned arrays with ``gas_backup_from_window`` and
+    ``get_ashrae_sizing_curve``.
 
     ``primary_system.simulate_step`` is called directly at each timestep.
     In-series subclasses (e.g. ``SP_RTPInSeriesSystem``) must detect that the
@@ -273,15 +279,15 @@ def size_supplemental_heating_and_storage(
             else []
         )
         shed_initial_hot_fract = primary_system.get_initial_hot_fract(
-            controls_setting="load_up", on_setpoint=False
+            controls_setting="loadUp", on_setpoint=False
         )
         for _h, _label in enumerate(_schedule):
             if _label == "shed" and (_h == 0 or _schedule[_h - 1] != "shed"):
                 candidates.append((_h * 60, shed_initial_hot_fract))
 
-    best_outage_volume_gal   = []
-    best_outage_temp_delta_f = []
-    best_max_delta: float    = -1.0
+    best_outage_volume_gal        = []
+    best_outage_temp_delta_f      = []
+    best_max_heat_required_kbtuh: float = -1.0
 
     for peak_start, run_initial_hot_fract in candidates:
         primary_system.storage_tank.initialize(
@@ -305,12 +311,26 @@ def size_supplemental_heating_and_storage(
                 run_volume_gal.append(0.0)
                 run_temp_delta_f.append(0.0)
 
-        run_max_delta = max(run_temp_delta_f)
-        if run_max_delta > best_max_delta:
-            best_max_delta           = run_max_delta
-            best_outage_volume_gal   = run_volume_gal
-            best_outage_temp_delta_f = run_temp_delta_f
+        # Select the worst candidate by peak instantaneous heating required
+        # [kBTU/hr] (sensible-heat equation), not by raw temperature deficit
+        # alone. A shed-period candidate can rack up a large temperature
+        # deficit simply by sitting idle for hours at very low (e.g.
+        # overnight recirc-only) flow; scoring by deficit alone can make that
+        # low-volume candidate "win" over a real demand-peak candidate that
+        # needs far more actual heating capacity. Heating required captures
+        # both volume and deficit together, matching what the backup must
+        # actually supply.
+        run_heat_required_kbtuh = [
+            _RHO_CP * v * 60.0 * d / 1000.0
+            for v, d in zip(run_volume_gal, run_temp_delta_f)
+        ]
+        run_max_heat_required_kbtuh = max(run_heat_required_kbtuh)
+        if run_max_heat_required_kbtuh > best_max_heat_required_kbtuh:
+            best_max_heat_required_kbtuh = run_max_heat_required_kbtuh
+            best_outage_volume_gal       = run_volume_gal
+            best_outage_temp_delta_f     = run_temp_delta_f
 
+    best_max_delta   = max(best_outage_temp_delta_f) if best_outage_temp_delta_f else 0.0
     total_outage_min = sum(1 for v in best_outage_volume_gal if v > 0.0)
     if total_outage_min <= _MIN_OUTAGE_MIN and best_max_delta <= _MIN_DEFICIT_F:
         raise ValueError(
@@ -354,40 +374,34 @@ def gas_backup_from_window(
     total_steps = len(outage_volume_gal)
     w = min(window_min, total_steps)
 
-    # Score windows by sum(vol × delta) — the per-minute heat-deficit rate
-    # integrated over the window — rather than sum(delta) alone.
-    #
-    # Using sum(delta) fails when the primary is fully depleted throughout the
-    # outage and delta is therefore constant (e.g. SwingDualFuelSystem when
-    # nominal_capacity ≈ recirc_loss): every window ties on delta and the
-    # algorithm keeps best_start = 0, which may fall in an off-peak, low-flow
-    # window where only recirc is flowing.  Scoring by vol × delta ensures a
-    # high-demand peak window (large vol AND large delta) beats a low-flow
-    # off-peak window regardless of whether delta is flat.
-    #
-    # To revert to the original delta-only scoring, replace the three lines
-    # below that reference `heat_deficit` with:
-    #   window_score = sum(outage_temp_delta_f[:w])
-    #   ...
-    #   window_score += outage_temp_delta_f[i + w - 1] - outage_temp_delta_f[i - 1]
-    heat_deficit = [v * d for v, d in zip(outage_volume_gal, outage_temp_delta_f)]
-    window_score = sum(heat_deficit[:w])
+    # Per-minute instantaneous heating required [kBTU/hr], via the sensible-
+    # heat equation, rather than a dimensionless vol × delta product. Used
+    # both to score candidate windows (sliding sum, so a real high-volume
+    # demand peak beats a low-flow off-peak window even when delta is flat —
+    # e.g. SwingDualFuelSystem when nominal_capacity ≈ recirc_loss) and, within
+    # the winning window, to read off the true peak instantaneous capacity
+    # requirement directly, rather than reconstructing an average-based
+    # estimate (avg flow × avg delta) that can smooth over the actual worst
+    # moment in the window.
+    heat_required_kbtuh = [
+        _RHO_CP * v * 60.0 * d / 1000.0
+        for v, d in zip(outage_volume_gal, outage_temp_delta_f)
+    ]
+    window_score = sum(heat_required_kbtuh[:w])
     best_score   = window_score
     best_start   = 0
 
     for i in range(1, total_steps - w + 1):
-        window_score += heat_deficit[i + w - 1] - heat_deficit[i - 1]
+        window_score += heat_required_kbtuh[i + w - 1] - heat_required_kbtuh[i - 1]
         if window_score > best_score:
             best_score = window_score
             best_start = i
 
-    best_slice_vol   = outage_volume_gal[best_start : best_start + w]
-    best_slice_delta = outage_temp_delta_f[best_start : best_start + w]
+    best_slice_vol      = outage_volume_gal[best_start : best_start + w]
+    best_slice_required = heat_required_kbtuh[best_start : best_start + w]
 
     gas_storage_vol_gal = ashrae_method_water_use_ratio(window_min, sum(best_slice_vol))
-    avg_peak_flow_gpm   = gas_storage_vol_gal / w
-    avg_delta_f = sum(best_slice_delta) / w if any(d > 0 for d in best_slice_delta) else 0.0
-    gas_capacity_kbtuh  = _RHO_CP * avg_peak_flow_gpm * avg_delta_f * 60.0 / 1000.0
+    gas_capacity_kbtuh  = max(best_slice_required)
 
     return gas_capacity_kbtuh, gas_storage_vol_gal
 
