@@ -357,6 +357,7 @@ def get_sizing_curve_plot(
     load_shifting: bool = False,
     er_sized: bool = False,
     return_as_div: bool = False,
+    title_override: str | None = None,
 ):
     """
     Build a Plotly sizing-curve figure from pre-computed x/y points.
@@ -391,6 +392,11 @@ def get_sizing_curve_plot(
     return_as_div : bool
         If True, return an HTML ``<div>`` string instead of a Figure.
         Default False.
+    title_override : str, optional
+        If provided, replaces the default "Primary Sizing Curve" title
+        for the normal-sizing case (ignored when ``load_shifting`` or
+        ``er_sized`` is True). Use ``get_sizing_curve_title(schematic)``
+        to match the title used by ``EcosizerEngine.plot_sizing_curve()``.
 
     Returns
     -------
@@ -424,7 +430,7 @@ def get_sizing_curve_plot(
     else:
         x_label  = "Primary Tank Volume (gal at Storage Temperature)"
         y_label  = "Heating Capacity (kBTU/hr)"
-        title    = "Primary Sizing Curve"
+        title    = title_override or "Primary Sizing Curve"
         hover    = "Storage: <b>%{x:.1f} gal</b><br>Capacity: <b>%{y:.1f} kBTU/hr</b><extra></extra>"
         def _label(i): return f"Storage: <b>{x[i]:.1f} gal</b>, Capacity: <b>{y[i]:.1f} kBTU/hr</b>"
 
@@ -471,6 +477,21 @@ _RECIRC_SCHEMATICS = {"parallel_loop", "swing_tank", "single_pass_rtp", "multi_p
 # must bypass the generic "pre-sized" dispatch in _build_dhw_system(), which
 # has no notion of a gas backup to size.
 _DUAL_FUEL_SCHEMATICS = {"sprtp_in_series", "sprtp_in_parallel", "mprtp_in_series", "swing_dual_fuel"}
+
+
+def get_sizing_curve_title(schematic: str) -> str:
+    """
+    Return the sizing-curve title for a given schematic.
+
+    Shared by ``EcosizerEngine.plot_sizing_curve()`` and
+    ``get_sizing_curve_plot()`` so the interactive web plot and the PDF
+    export always agree on the graph title.
+    """
+    if schematic in _DUAL_FUEL_SCHEMATICS:
+        if schematic == "swing_dual_fuel":
+            return "Swing Tank Sizing Curve"
+        return "In Series Sizing Curve"
+    return "Primary Sizing Curve"
 
 
 class EcosizerEngine:
@@ -1558,6 +1579,7 @@ class EcosizerEngine:
         is_ls = "shed" in control_map
 
         if self.schematic in _DUAL_FUEL_SCHEMATICS:
+            title = get_sizing_curve_title(self.schematic)
             # Gas backup curve has its own x/y semantics (backup storage vs.
             # backup capacity across ASHRAE windows) — _build_sizing_curve_figure
             # is built for the primary run-hours/load-shift curves and doesn't
