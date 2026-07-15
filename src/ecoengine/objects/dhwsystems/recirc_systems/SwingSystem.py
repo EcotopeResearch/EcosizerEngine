@@ -90,9 +90,9 @@ class SwingSystem(RecircSystem):
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
         )
-        if tm_safety_factor <= 1.0:
+        if tm_safety_factor < 1.0:
             raise ValueError(
-                "tm_safety_factor must be > 1.0 — the TM element must outpace recirc losses."
+                "tm_safety_factor must be >= 1.0 — the TM element must outpace recirc losses."
             )
         self.tm_safety_factor = tm_safety_factor
 

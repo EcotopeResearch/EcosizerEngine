@@ -76,7 +76,8 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
         dhw_system.storage_tank.initialize(
             storage_temp_f    = dhw_system.storage_temp_f,
             cold_temp_f       = inlet_temp_f,
-            initial_hot_fract = initial_hot_fract, # TODO I don't think this is right
+            initial_hot_fract = initial_hot_fract,
+            supply_temp_f     = dhw_system.supply_temp_f,
         )
     # Initialize TM tank if present (ParallelLoopSystem, SwingSystem)
     tm_tank = getattr(dhw_system, "tm_storage_tank", None)
@@ -86,6 +87,7 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
             storage_temp_f    = tm_off_temp_f,
             cold_temp_f       = inlet_temp_f,
             initial_hot_fract = 1.0,
+            supply_temp_f     = dhw_system.supply_temp_f,
         )
     # Initialize gas backup tank if present (SP_RTPInSeriesSystem)
     gas_tank = getattr(dhw_system, "gas_storage_tank", None)
@@ -94,6 +96,7 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
             storage_temp_f    = dhw_system.supply_temp_f + _GAS_DEADBAND_F,
             cold_temp_f       = inlet_temp_f,
             initial_hot_fract = 1.0,
+            supply_temp_f     = dhw_system.supply_temp_f,
         )
 
     sim_run.supply_temp_f = dhw_system.supply_temp_f

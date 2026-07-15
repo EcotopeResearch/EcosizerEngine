@@ -307,7 +307,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         """
         if not hasattr(self, "gas_storage_tank"):
             return SinglePassRTPSystem.simulate_step(
-                self, building, timestep_interval, interval_min, mode
+                self, building, timestep_interval, interval_min, mode, tm_safety_factor=self.tm_safety_factor
             )
         use_avg = any(wh.is_load_shifting() for wh in self.water_heaters)
         demand_supplyT_gal = building.get_dhw_load_supplyT_gal(

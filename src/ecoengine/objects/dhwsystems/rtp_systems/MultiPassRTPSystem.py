@@ -150,13 +150,13 @@ class MultiPassRTPSystem(RTPSystem):
         )]
         # Capacity Boost
         inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
-        ctrl = control_map.get("normal") or next(iter(control_map.values()), None)
-        starting_percent_usable = max(0.0, min(1.0, 1.0 - ctrl.on_sensor_fract))
+        starting_percent_usable = system.get_initial_hot_fract()
         for _ in range(capacity_boost_iterations):
             system.storage_tank.initialize(
                 storage_temp_f  = system.storage_temp_f,
                 cold_temp_f     = inlet_temp_f,
-                initial_hot_fract = starting_percent_usable
+                initial_hot_fract = starting_percent_usable,
+                supply_temp_f   = supply_temp_f,
             )
             minutes = 24 * 60 * capacity_boost_trial_days
             deficit_minutes = 0
@@ -535,6 +535,7 @@ class MultiPassRTPSystem(RTPSystem):
         timestep_interval: int,
         interval_min: int = 1,
         mode: str = "normal",
+        tm_safety_factor : float = 1.0
     ) -> dict:
         """
         Run one simulation timestep for a multi-pass RTP system.
@@ -627,6 +628,7 @@ class MultiPassRTPSystem(RTPSystem):
             self.supply_temp_f,
             self.return_temp_f,
             top_temp_f,
+            tm_safety_factor = tm_safety_factor
         )
         draw_gal       = result["storage_draw_gal"]
         mv_inlet_temp_f = result["inlet_temp_f"]

@@ -43,6 +43,7 @@ class _SwingDualFuelPrimary(DHWSystem):
         return_flow_gpm: float,
         max_daily_run_hr: float = 24.0,
         defrost_factor: float = 1.0,
+        tm_safety_factor: float = 1.0
     ) -> None:
         super().__init__(
             water_heaters=water_heaters,
@@ -55,6 +56,7 @@ class _SwingDualFuelPrimary(DHWSystem):
         self.return_temp_f   = return_temp_f
         self.return_flow_gpm = return_flow_gpm
         self.swing_tank_temp_f = supply_temp_f
+        self.tm_safety_factor = tm_safety_factor
 
     def get_recirc_loss_kbtuh(self) -> float:
         return (
@@ -100,6 +102,7 @@ class _SwingDualFuelPrimary(DHWSystem):
             self.return_temp_f,
             self.swing_tank_temp_f,
             avg_tank_temp_for_draw_f,
+            tm_safety_factor = self.tm_safety_factor
         )
 
         self.swing_tank_temp_f = max(result["inlet_temp_f"], self.supply_temp_f) # reset to supply to avoid large recirc hits
@@ -298,6 +301,7 @@ class SwingDualFuelSystem(SwingSystem):
             return_flow_gpm=self.return_flow_gpm,
             max_daily_run_hr=self.max_daily_run_hr,
             defrost_factor=self.defrost_factor,
+            tm_safety_factor = self.tm_safety_factor
         )
 
         self.outage_volume_gal, self.outage_temp_delta_f = (
@@ -309,13 +313,13 @@ class SwingDualFuelSystem(SwingSystem):
             )
         )
 
-        tm_capacity_kbtuh, tm_storage_vol_gal = gas_backup_from_window(
+        self._minimum_tm_capacity_kbtuh, self._minimum_tm_volume_gal = gas_backup_from_window(
             self.outage_volume_gal, self.outage_temp_delta_f, _WINDOW_MIN
         )
 
-        self.tm_storage_tank = MixedStorageTank(total_volume_gal=tm_storage_vol_gal)
+        self.tm_storage_tank = MixedStorageTank(total_volume_gal=self._minimum_tm_volume_gal)
         self.tm_water_heater = WaterHeater.from_nominal_capacity(
-            nominal_capacity_kbtuh=tm_capacity_kbtuh,
+            nominal_capacity_kbtuh=self._minimum_tm_capacity_kbtuh,
             control_schedule=["normal"] * 24,
             control_map={"normal": tm_controls},
         )

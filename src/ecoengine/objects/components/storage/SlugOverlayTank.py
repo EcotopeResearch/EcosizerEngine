@@ -90,6 +90,7 @@ class SlugOverlayTank(EnergyTank):
         storage_temp_f: float,
         cold_temp_f: float,
         initial_hot_fract: float,
+        supply_temp_f: float,
     ) -> None:
         """
         Set initial energy so that ``initial_hot_fract`` fraction of total tank
@@ -102,6 +103,10 @@ class SlugOverlayTank(EnergyTank):
 
             desired x_supply_pct = (1 − initial_hot_fract) × 100
             shift_pct = (supply_temp_f − cold_temp_f) / strat_slope − x_supply_pct
+
+        The ``supply_temp_f`` parameter here takes precedence over the value
+        stored at construction (``self._supply_temp_f``) -- callers should
+        pass the same value used to build the tank.
         """
         self._cold_temp_f    = cold_temp_f
         self._storage_temp_f = storage_temp_f
@@ -116,7 +121,7 @@ class SlugOverlayTank(EnergyTank):
             return
 
         x_supply_pct = (1.0 - initial_hot_fract) * 100.0
-        shift_pct    = (self._supply_temp_f - cold_temp_f) / self.strat_slope - x_supply_pct
+        shift_pct    = (supply_temp_f - cold_temp_f) / self.strat_slope - x_supply_pct
         self._energy_btu = max(0.0, min(
             self._energy_at_shift_pct(shift_pct),
             self._max_energy_btu(),
@@ -208,7 +213,6 @@ class SlugOverlayTank(EnergyTank):
             return
         heat_btu          = kbtuh * 1000.0 * duration_min / 60.0
         self._slug_temp_f += heat_btu / (self._slug_vol_gal * _RHO_CP)
-        self._slug_temp_f  = self._slug_temp_f
 
     @property
     def slug_temp_f(self) -> float:

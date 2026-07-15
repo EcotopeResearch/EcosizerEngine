@@ -1,8 +1,10 @@
 from ecoengine.constants.constants import _RHO_CP
-from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices
+from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices, DHWSystem
 from ecoengine.objects.components.heating.Controls import AlwaysOffControls
+from ecoengine.objects.building.Building import Building
 
-def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, cold_temp_f : float, supply_temp_f : float, return_temp_f : float, storage_temp_f : float) -> dict:
+def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, cold_temp_f : float, supply_temp_f : float, 
+                          return_temp_f : float, storage_temp_f : float, tm_safety_factor : float = 1.0) -> dict:
     """
     Calculate the storage draw volume and tank inlet temperature for one timestep
     given a thermostatic mixing valve serving both a DHW load and a recirculation loop.
@@ -34,6 +36,8 @@ def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, co
         Recirculation loop return temperature [°F].
     storage_temp_f : float
         Current temperature at the top of the storage (or swing) tank [°F].
+    tm_safety_factor : float
+        Factor larger than or equal to 1.0 artificially increase recirc load for conservative behavior
 
     Returns
     -------
@@ -46,13 +50,13 @@ def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, co
     # in swing tanks, cold inlet comes from the primary storage, is hot, and adds heat to swing tank (unless primary storage is out of hot water)
     if storage_temp_f <= supply_temp_f:
         storage_draw_gal = load_supplyT_gal + flow_returnT_gal
-        recirc_loop_delta_f = supply_temp_f - return_temp_f
+        recirc_loop_delta_f = (supply_temp_f - return_temp_f) * tm_safety_factor
         derated_recirc_temp_f = max(storage_temp_f - recirc_loop_delta_f, cold_temp_f)
         inlet_temp_f = ((load_supplyT_gal * cold_temp_f) + (flow_returnT_gal * derated_recirc_temp_f)) / storage_draw_gal
         cold_load_to_storage_gal = load_supplyT_gal
     else:
     # For minute intervals, storage_temp_f is whatever temperature is at the top of the storage tank, set point storage temperature or not
-        recirc_loss_btu = flow_returnT_gal * _RHO_CP * (supply_temp_f - return_temp_f)
+        recirc_loss_btu = flow_returnT_gal * _RHO_CP * (supply_temp_f - return_temp_f) * tm_safety_factor
         critical_flow_gal = recirc_loss_btu / (_RHO_CP * (storage_temp_f - supply_temp_f))
         # where all recirculation flows through the mixing valve back to the building, when flow is high 
         if load_supplyT_gal > critical_flow_gal:
@@ -73,7 +77,7 @@ def mixing_valve_behavior(load_supplyT_gal : float, flow_returnT_gal : float, co
     }
 
 def mixing_valve_behavior_swing(load_supplyT_gal : float, flow_returnT_gal : float, cold_temp_f : float, supply_temp_f : float, return_temp_f : float, swing_storage_temp_f : float,
-                                swing_inlet_temp : float) -> dict:
+                                swing_inlet_temp : float, tm_safety_factor : float = 1.0) -> dict:
     """
     Variant of ``mixing_valve_behavior`` for swing tank systems where the cold
     side of the mixing valve is fed from primary storage (not city water).
@@ -99,6 +103,8 @@ def mixing_valve_behavior_swing(load_supplyT_gal : float, flow_returnT_gal : flo
         Current temperature at the mid-point of the swing tank [°F].
     swing_inlet_temp : float
         Temperature of water entering the swing tank from the primary storage [°F].
+    tm_safety_factor : float
+        Factor larger than or equal to 1.0 artificially increase recirc load for conservative behavior
 
     Returns
     -------
@@ -111,13 +117,13 @@ def mixing_valve_behavior_swing(load_supplyT_gal : float, flow_returnT_gal : flo
     # in swing tanks, cold inlet comes from the primary storage, is hot, and adds heat to swing tank (unless primary storage is out of hot water)
     if swing_storage_temp_f <= supply_temp_f:
         storage_draw_gal = load_supplyT_gal + flow_returnT_gal
-        recirc_loop_delta_f = supply_temp_f - return_temp_f
+        recirc_loop_delta_f = (supply_temp_f - return_temp_f) * tm_safety_factor
         derated_recirc_temp_f = max(swing_storage_temp_f - recirc_loop_delta_f, cold_temp_f)
         inlet_temp_f = ((load_supplyT_gal * swing_inlet_temp) + (flow_returnT_gal * derated_recirc_temp_f)) / storage_draw_gal
         cold_load_to_storage_gal = load_supplyT_gal
     else:
         # For minute intervals, storage_temp_f is whatever temperature is at the top of the storage tank, set point storage temperature or not
-        recirc_loss_btu = flow_returnT_gal * _RHO_CP * (supply_temp_f - return_temp_f)
+        recirc_loss_btu = flow_returnT_gal * _RHO_CP * (supply_temp_f - return_temp_f) * tm_safety_factor
         critical_flow_gal = recirc_loss_btu / (_RHO_CP * (swing_storage_temp_f - supply_temp_f))
         # where all recirculation flows through the mixing valve back to the building, when flow is high 
         if load_supplyT_gal > critical_flow_gal:
@@ -185,8 +191,8 @@ _RECOMMENDED_WINDOW: int   = 30
 
 
 def size_supplemental_heating_and_storage(
-    primary_system,
-    building,
+    primary_system : DHWSystem,
+    building : Building,
     nominal_capacity_kbtuh: float,
     draw_variable: str = "draw_thru_system_gal",
     temperature_variable: str = None,
@@ -273,7 +279,7 @@ def size_supplemental_heating_and_storage(
             else []
         )
         shed_initial_hot_fract = primary_system.get_initial_hot_fract(
-            controls_setting="load_up", on_setpoint=False
+            controls_setting="loadUp", on_setpoint=False
         )
         for _h, _label in enumerate(_schedule):
             if _label == "shed" and (_h == 0 or _schedule[_h - 1] != "shed"):
@@ -285,7 +291,9 @@ def size_supplemental_heating_and_storage(
 
     for peak_start, run_initial_hot_fract in candidates:
         primary_system.storage_tank.initialize(
-            primary_system.storage_temp_f, inlet_temp_f, initial_hot_fract=run_initial_hot_fract
+            primary_system.storage_temp_f, inlet_temp_f,
+            initial_hot_fract=run_initial_hot_fract,
+            supply_temp_f=primary_system.supply_temp_f,
         )
         run_volume_gal   = []
         run_temp_delta_f = []

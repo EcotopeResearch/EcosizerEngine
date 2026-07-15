@@ -26,8 +26,24 @@ class StorageTank(ABC):
         storage_temp_f: float,
         cold_temp_f: float,
         initial_hot_fract: float,
+        supply_temp_f: float,
     ) -> None:
-        """Set initial tank thermal state before a simulation begins."""
+        """
+        Set initial tank thermal state before a simulation begins.
+
+        Parameters
+        ----------
+        storage_temp_f : float
+            Hot storage setpoint [°F].
+        cold_temp_f : float
+            Cold/incoming water temperature [°F].
+        initial_hot_fract : float
+            Physical fraction of tank volume at or above ``supply_temp_f``
+            (0-1) at simulation start.
+        supply_temp_f : float
+            DHW delivery temperature [°F] -- the reference temperature that
+            ``initial_hot_fract`` is measured against.
+        """
 
     @abstractmethod
     def get_temperature_at_fraction(self, fract: float) -> float:

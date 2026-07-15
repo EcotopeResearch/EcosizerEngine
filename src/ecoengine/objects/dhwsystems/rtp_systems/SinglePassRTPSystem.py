@@ -336,6 +336,7 @@ class SinglePassRTPSystem(RTPSystem):
         timestep_interval: int,
         interval_min: int = 1,
         mode: str = "normal",
+        tm_safety_factor : float = 1.0
     ) -> dict:
         """
         Run one timestep for a single-pass RTP system.
@@ -403,6 +404,7 @@ class SinglePassRTPSystem(RTPSystem):
                 self.supply_temp_f,
                 self.return_temp_f,
                 top_temp_f,
+                tm_safety_factor = tm_safety_factor
             )
             draw_gal       = result["storage_draw_gal"]
             mv_inlet_temp_f = result["inlet_temp_f"]
@@ -433,16 +435,3 @@ class SinglePassRTPSystem(RTPSystem):
             "mode":                      mode,
             "draw_thru_system_gal":      draw_gal,
         }
-        # if self.storage_tank is not None:
-        #     self.storage_tank.add_recirc_return(
-        #         self.return_flow_gpm, self.return_temp_f, interval_min,
-        #         supply_temp_f=self.supply_temp_f,
-        #     )
-        #     step["usable_volume_supplyT_gal"] = (
-        #         self.storage_tank.get_usable_volume_supplyT_gal(self.supply_temp_f)
-        #     )
-        #     step["tank_temps_f"] = [
-        #         self.storage_tank.get_temperature_at_fraction(f)
-        #         for f in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-        #     ]
-        # return step

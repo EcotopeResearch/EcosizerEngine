@@ -295,7 +295,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
         """
         if not hasattr(self, "gas_storage_tank"):
             return MultiPassRTPSystem.simulate_step(
-                self, building, timestep_interval, interval_min, mode
+                self, building, timestep_interval, interval_min, mode, tm_safety_factor = self.tm_safety_factor
             )
         tank: SlugOverlayTank = self.storage_tank
 

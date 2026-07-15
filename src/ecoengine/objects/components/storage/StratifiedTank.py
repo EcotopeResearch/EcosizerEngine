@@ -32,6 +32,20 @@ class StratifiedTank(StorageTank):
       the thermocline rises (less hot water available).
     * ``heat()`` increases ``_delta_gal`` — cold water is heated and moves to
       the top, the thermocline falls (more hot water available).
+
+    Known issue: divergence from EnergyTank once the cold zone is gone
+    --------------------------------------------------------------------
+    This ``_delta_gal`` bookkeeping does not conserve energy exactly once the
+    flat cold zone at the bottom of the tank has been fully drawn or heated
+    away (i.e. once the thermocline's lower bound would fall below the tank
+    bottom). In that regime, ``draw()``/``heat()`` implicitly assume the water
+    entering/leaving the bottom is at ``cold_temp_f``, when it is really a
+    continuation of the temperature ramp. ``EnergyTank``, which tracks stored
+    BTU directly, accounts for this correctly and will disagree with
+    ``StratifiedTank`` in that regime. This is a known, accepted
+    simplification rather than a bug to be fixed — the two models agree
+    exactly whenever a genuine cold zone is still present at the bottom of
+    the tank.
     """
 
     def __init__(
@@ -69,13 +83,16 @@ class StratifiedTank(StorageTank):
         storage_temp_f: float,
         cold_temp_f: float,
         initial_hot_fract: float,
+        supply_temp_f: float,
     ) -> None:
         """
         Set initial temperature stratification profile.
 
-        Places the cold boundary (where T = cold_temp_f) at
+        Places the boundary where T = supply_temp_f at
         ``(1 - initial_hot_fract) * 100`` percent height, so the top
-        ``initial_hot_fract`` fraction of the tank starts at storage temperature.
+        ``initial_hot_fract`` fraction of the tank starts at or above
+        supply temperature -- the physical usable-volume fraction, not an
+        abstract shift parameter.
 
         Parameters
         ----------
@@ -85,17 +102,20 @@ class StratifiedTank(StorageTank):
         cold_temp_f : float
             Cold/incoming water temperature [°F].
         initial_hot_fract : float
-            Fraction of tank volume that starts at or above storage temperature (0–1).
+            Physical fraction of tank volume at or above supply_temp_f (0-1).
+        supply_temp_f : float
+            DHW delivery temperature [°F] -- the reference temperature that
+            ``initial_hot_fract`` is measured against.
         """
         self._inlet_temp_f  = cold_temp_f
         self._outlet_temp_f = storage_temp_f
         self._delta_gal     = 0.0
 
-        # Solve for strat_inter so the ramp passes through cold_temp_f at
-        # x_cold_pct with delta_gal = 0:
-        #   strat_slope * x_cold_pct + strat_inter = cold_temp_f
-        x_cold_pct = (1.0 - initial_hot_fract) * 100.0
-        self._strat_inter = cold_temp_f - self.strat_slope * x_cold_pct
+        # Solve for strat_inter so the ramp passes through supply_temp_f at
+        # x_supply_pct with delta_gal = 0:
+        #   strat_slope * x_supply_pct + strat_inter = supply_temp_f
+        x_supply_pct = (1.0 - initial_hot_fract) * 100.0
+        self._strat_inter = supply_temp_f - self.strat_slope * x_supply_pct
 
     # ------------------------------------------------------------------
     # Temperature queries
@@ -187,7 +207,8 @@ class StratifiedTank(StorageTank):
         the physical volume whose actual supply-temp yield equals the demand.
 
         If even drawing the full tank cannot satisfy the demand (true outage),
-        the entire tank volume is drawn and the caller detects the shortfall via
+        the tank is drained to ``_delta_gal_floor()`` (every node at
+        ``cold_temp_f``) and the caller detects the shortfall via
         ``get_usable_volume_supplyT_gal() == 0``.
 
         Decreases ``_delta_gal`` (thermocline rises → less hot water).
@@ -229,6 +250,7 @@ class StratifiedTank(StorageTank):
         lo = physical_vol
         hi = self.total_volume_gal
 
+        yield_mid = 0.0
         for _ in range(52):
             mid = (lo + hi) * 0.5
             avg_t = self.get_average_draw_temp_f(mid)
@@ -242,6 +264,17 @@ class StratifiedTank(StorageTank):
                 hi = mid
             if hi - lo < 1e-6:
                 break
+
+        if yield_mid < volume_supplyT_gal - 1e-6:
+            # Even the largest physical draw the search explored (bounded at
+            # total_volume_gal) falls short of demand -- a true outage. The
+            # binary search's upper bound assumes one tank-volume of draw is
+            # always enough to reach _delta_gal_floor(), which is false when
+            # no real cold zone anchors the ramp at the bottom (see the
+            # known-issue note in this class's docstring). Drain fully
+            # instead of trusting the saturated `mid` value.
+            self._delta_gal = self._delta_gal_floor()
+            return
 
         self._delta_gal -= min((lo + hi) * 0.5, self.total_volume_gal)
         self._delta_gal = max(self._delta_gal, self._delta_gal_floor())
