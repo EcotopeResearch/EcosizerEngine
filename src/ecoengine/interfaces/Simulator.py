@@ -122,7 +122,8 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
         )
 
         if step["usable_volume_supplyT_gal"] <= 0.0:
-            if not sim_run.show_tm_panel or step.get("tm_tank_temp_f") < dhw_system.supply_temp_f:
+            tm_tank_temp_f = step.get("tm_tank_temp_f")
+            if not sim_run.show_tm_panel or tm_tank_temp_f is None or tm_tank_temp_f < dhw_system.supply_temp_f:
                 sim_run.record_outage(timestep_min)
 
         # Check outlet-deficit stop condition. For systems where the TM/swing

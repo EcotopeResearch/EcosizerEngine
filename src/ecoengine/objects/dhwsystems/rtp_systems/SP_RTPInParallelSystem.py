@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+import numpy as np
 
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
@@ -19,6 +20,12 @@ from .SinglePassRTPSystem import SinglePassRTPSystem, _SPRTP_STRAT_SLOPE
 if TYPE_CHECKING:
     from ecoengine.objects.building.Building import Building
 
+default_gas_controls = Controls(
+            on_sensor_fract=0.8,
+            on_trigger_t_f=125,
+            off_sensor_fract=0.4,
+            off_trigger_t_f=130,
+            outlet_temp_f=140,)
 
 def _gas_capacity_from_peak_deficit(
     outage_volume_gal: list[float],
@@ -105,6 +112,7 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
         control_map: dict[str, Controls] | None = None,
         strat_slope: float = _SPRTP_STRAT_SLOPE,
         load_shift_fract_total_vol: float = 1.0, # TODO make sure this is applied to LS dual fuel models
+        gas_controls : Controls = default_gas_controls,
     ) -> SP_RTPInParallelSystem:
         """
         Size the system for the given building, then build it.
@@ -177,13 +185,6 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
         )]
 
         # Gas backup controls: on at supply_temp, off at supply_temp + deadband
-        gas_controls = Controls(
-            on_sensor_fract=0.8,
-            on_trigger_t_f=supply_temp_f,
-            off_sensor_fract=0.4,
-            off_trigger_t_f=supply_temp_f + 5.0,
-            outlet_temp_f=storage_temp_f,
-        )
         system._size_gas_backup(
             building=building,
             nominal_capacity_kbtuh=nominal_capacity_kbtuh,
@@ -196,22 +197,48 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
     # Gas backup sizing
     # ------------------------------------------------------------------
 
+    _MIN_OUTAGE_MIN = 10
+    _MIN_DEFICIT_F  = 2.0
+
     def _size_gas_backup(
         self,
-        building,
+        building : Building,
         nominal_capacity_kbtuh: float,
         nominal_storage_gal: float,
         gas_controls: Controls,
     ) -> None:
         """
-        Size gas_water_heater by simulating 2 days as a plain
-        SinglePassRTPSystem (undersized primary only), then sizing gas
-        capacity to cover the single worst-minute heat deficit observed.
+        Size gas_water_heater from a load-shape-based running-volume
+        calculation, using the shared primary tank as the gas heater's own
+        storage buffer.
 
-        Unlike SP_RTPInSeriesSystem, there is no downstream gas storage tank
-        here -- the gas heater feeds the shared primary tank directly -- so
-        capacity is not derived from an ASHRAE window average. See
-        ``_gas_capacity_from_peak_deficit`` for the sizing formula.
+        First runs a plain 3-day simulation of the undersized primary alone
+        (no gas heater yet); if it already meets demand (outage <= 10 min and
+        max deficit <= 2 °F), no gas backup is built and a ValueError is
+        raised instead.
+
+        Otherwise, the primary's steady generation rate (``gen_rate_gph``,
+        net of its recirc-loss tax) is subtracted from the hourly demand
+        load shape to get ``hourly_diff_gph`` -- the residual load only the
+        gas heater must cover (surplus-positive convention, so recovery
+        hours can offset later deficit hours). ``accessible_gas_storage_gal``
+        (from the gas aquastat's on-position) is treated as the storage
+        buffer available to the gas heater, and the gas heater's own
+        constant generation rate is solved for directly: this is the inverse
+        of ``DHWSystem._calc_running_volume_supplyT_gal()`` -- there, a known
+        generation rate yields the required running volume; here, a known
+        running volume (the fixed physical storage) yields the required
+        generation rate. The required rate is the largest, over every
+        possible start hour and window length, of the additional rate needed
+        to keep that window's cumulative deficit within the available
+        storage, plus a long-run-average floor (for a primary undersized
+        enough that the residual never structurally recovers within a
+        couple of days).
+
+        If the primary's capacity can't even cover its own recirc loss, the
+        shortfall (``leftover_recirc_kbtuh``) is added directly onto the
+        final gas capacity, since recirc loss is a continuous 24/7 draw
+        independent of the load-shape/storage reasoning above.
 
         Parameters
         ----------
@@ -226,21 +253,73 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
         Raises
         ------
         ValueError
-            If the primary SPRTP is already adequately sized (outage < 10 min
-            and max deficit < 2 °F), meaning no gas backup is needed.
+            If the primary SPRTP is already adequately sized (outage <= 10 min
+            and max deficit <= 2 °F), meaning no gas backup is needed.
         """
-        # --- 1 & 2. Sizing simulation → outage arrays (raises ValueError if no backup needed) ---
-        self.outage_volume_gal, self.outage_temp_delta_f = size_supplemental_heating_and_storage(
-            primary_system=self,
-            building=building,
-            nominal_capacity_kbtuh=nominal_capacity_kbtuh,
-        )
+        from ecoengine.interfaces.Simulator import simulate_3day
 
-        # --- 3. Size gas capacity to cover the single worst-minute deficit ---
-        gas_capacity_kbtuh = _gas_capacity_from_peak_deficit(
-            self.outage_volume_gal, self.outage_temp_delta_f
+        sim_run = simulate_3day(self, building)
+        max_deficit_f = max(
+            0.0, max(self.supply_temp_f - t for t in sim_run.tank_temps_f[-1])
         )
-        # TODO add thermal efficiency
+        if sim_run.outage_minutes <= self._MIN_OUTAGE_MIN and max_deficit_f <= self._MIN_DEFICIT_F:
+            raise ValueError(
+                "The primary system is already adequately sized: "
+                f"outage duration was {sim_run.outage_minutes} min "
+                f"(threshold {self._MIN_OUTAGE_MIN} min) and max temperature deficit "
+                f"was {max_deficit_f:.2f} °F (threshold {self._MIN_DEFICIT_F:.1f} °F). "
+                "No gas backup is required."
+            )
+
+        # The amount of storage (supply temp gallons) the gas is able to keep in a worst case scenario
+        design_inlet    = self._require_design_inlet_temp(building)
+        delta_t         = self.supply_temp_f - design_inlet
+        recirc_loss     = self._get_sizing_recirc_loss_kbtuh()
+        accessible_gas_storage_gal = self._calc_stratification_factor({"normal" : gas_controls}, self.storage_tank.strat_slope,
+                                        design_inlet) * self._minimum_storage_storageT_gal
+        use_avg = any(wh.is_load_shifting() for wh in self.water_heaters)
+        gas_load_shape = building.avg_load_shape if use_avg else building.peak_load_shape
+
+        daily_gal  = building.daily_dhw_use_supplyT_gal
+
+        leftover_recirc_kbtuh = 0.0
+        gen_rate_gph = 0.0
+        if self._minimum_capacity_kbtuh > recirc_loss:
+            # TODO probably a quicker way to generate gen_rate_gph
+            _numerator      = (
+                building.daily_dhw_use_supplyT_gal * _RHO_CP * delta_t / 1000.0
+                + recirc_loss * 24.0
+            )
+            back_hr = round(
+                        _numerator / (self._minimum_capacity_kbtuh * self.defrost_factor), 1
+                    )
+            gen_rate_gph      = daily_gal / back_hr
+        else:
+            leftover_recirc_kbtuh = recirc_loss - self._minimum_capacity_kbtuh
+
+        # Residual load shape the primary can't cover on its own (surplus-positive,
+        # i.e. generation minus demand -- matches _get_peak_indices' convention).
+        hourly_demand_gph = daily_gal * gas_load_shape  # [gallons / hour] for each of 24 hours
+        hourly_diff_gph   = gen_rate_gph - hourly_demand_gph
+
+        # Tile to two days so cumulative sums wrap around midnight correctly.
+        tiled_diff = np.tile(hourly_diff_gph, 2)
+
+        # Reverse running-volume solve: for every possible start hour and window
+        # length, find the additional constant gas generation rate that would
+        # keep that window's cumulative deficit within accessible_gas_storage_gal,
+        # then take the worst (largest) one. The long-run average floor covers
+        # a primary so undersized the residual never structurally recovers.
+        gas_gen_rate_gph = max(0.0, -float(np.mean(hourly_diff_gph)))
+        for idx in range(24):
+            cum_diff        = np.cumsum(tiled_diff[idx:])
+            window_lengths  = np.arange(1, len(cum_diff) + 1)
+            candidates      = (-cum_diff - accessible_gas_storage_gal) / window_lengths
+            gas_gen_rate_gph = max(gas_gen_rate_gph, float(np.max(candidates)))
+
+        gas_capacity_kbtuh = (
+            gas_gen_rate_gph * _RHO_CP * delta_t / 1000.0 + leftover_recirc_kbtuh
+        )
 
         self.gas_water_heater = WaterHeater.from_nominal_capacity(
             nominal_capacity_kbtuh=gas_capacity_kbtuh,
