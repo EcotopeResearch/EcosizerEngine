@@ -87,6 +87,9 @@ class SimulationRun:
         self.show_tm_panel: bool = False
         # Label used for the TM subplot title and axis labels
         self.tm_panel_label: str = "Temperature Maintenance (TM)"
+        # True only for SP_RTPInParallelSystem — the gas heater has no tank of its
+        # own, so its output is plotted on the primary row instead of its own row
+        self.merge_tm_into_primary_panel: bool = False
 
         # Outlet deficit stop condition
         self.outlet_deficit_threshold_f   = outlet_deficit_threshold_f
@@ -414,9 +417,11 @@ class SimulationRun:
             )
 
         time_min = [i * self.timestep_min for i in range(len(self.dhw_demand_supplyT_gal))]
-        has_tm = self.show_tm_panel
+        has_tm_data       = self.show_tm_panel
+        merge_into_primary = has_tm_data and self.merge_tm_into_primary_panel
+        show_separate_row = has_tm_data and not self.merge_tm_into_primary_panel
 
-        if has_tm:
+        if show_separate_row:
             fig = make_subplots(
                 rows=2, cols=1,
                 specs=[[{"secondary_y": True}], [{"secondary_y": True}]],
@@ -434,13 +439,13 @@ class SimulationRun:
         fig.add_trace(
             go.Scatter(x=time_min, y=self.usable_volume_supplyT_gal,
                        name="Usable Volume (gal at or above Supply Temp)", line=dict(color="green", width=1.5)),
-            secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
+            secondary_y=False, **({} if not show_separate_row else {"row": 1, "col": 1}),
         )
         hourly_demand = [v * steps_per_hour for v in self.dhw_demand_supplyT_gal]
         fig.add_trace(
             go.Scatter(x=time_min, y=hourly_demand,
                        name="DHW Demand (gal/hr at Supply Temp)", line=dict(color="blue", width=1)),
-            secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
+            secondary_y=False, **({} if not show_separate_row else {"row": 1, "col": 1}),
         )
 
         if self.supply_temp_f is not None:
@@ -451,10 +456,31 @@ class SimulationRun:
                     self.heater_output_kbtuh, self.inlet_water_temp_f
                 )
             ]
+            heater_name = (
+                "Heat Pump Generation (gal/hr at Supply Temperature)" if merge_into_primary
+                else "Heater Generation (gal/hr at Supply Temperature)"
+            )
             fig.add_trace(
                 go.Scatter(x=time_min, y=heater_gph,
-                           name="Heater Generation (gal/hr at Supply Temperature)", line=dict(color="red", width=1)),
-                secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
+                           name=heater_name, line=dict(color="red", width=1)),
+                secondary_y=False, **({} if not show_separate_row else {"row": 1, "col": 1}),
+            )
+
+        # --- Gas heater generation merged onto the primary row (SP_RTPInParallelSystem) ---
+        if merge_into_primary and self.supply_temp_f is not None:
+            gas_time = [i * self.timestep_min for i in range(len(self.tm_heater_output_kbtuh))]
+            gas_gph = [
+                kbtuh * 1000.0
+                / (_RHO_CP * max(1.0, self.supply_temp_f - inlet_t))
+                for kbtuh, inlet_t in zip(
+                    self.tm_heater_output_kbtuh, self.inlet_water_temp_f
+                )
+            ]
+            fig.add_trace(
+                go.Scatter(x=gas_time, y=gas_gph,
+                           name="Gas Heater Generation (gal/hr at Supply Temperature)",
+                           line=dict(color="darkorange", width=1)),
+                secondary_y=False,
             )
 
         if include_temperatures:
@@ -462,12 +488,12 @@ class SimulationRun:
             fig.add_trace(
                 go.Scatter(x=time_min, y=self.oat_f,
                            name="OAT (°F)", line=dict(color="orange", width=1)),
-                secondary_y=True, **({} if not has_tm else {"row": 1, "col": 1}),
+                secondary_y=True, **({} if not show_separate_row else {"row": 1, "col": 1}),
             )
             fig.add_trace(
                 go.Scatter(x=time_min, y=self.inlet_water_temp_f,
                            name="Inlet Water (°F)", line=dict(color="steelblue", width=1)),
-                secondary_y=True, **({} if not has_tm else {"row": 1, "col": 1}),
+                secondary_y=True, **({} if not show_separate_row else {"row": 1, "col": 1}),
             )
 
             # --- Tank temperature traces (Y2, dashed, blue→red gradient) ---
@@ -481,11 +507,11 @@ class SimulationRun:
                         name=label,
                         line=dict(color=color, width=1, dash="dash"),
                     ),
-                    secondary_y=True, **({} if not has_tm else {"row": 1, "col": 1}),
+                    secondary_y=True, **({} if not show_separate_row else {"row": 1, "col": 1}),
                 )
 
         # --- Row 2: TM (swing) tank panel ---
-        if has_tm:
+        if show_separate_row:
             # Length from tm_heater_output_kbtuh, not tm_tank_temp_f: systems
             # with no separate TM/gas tank of their own (e.g.
             # SP_RTPInParallelSystem, which heats directly into the shared
@@ -539,8 +565,8 @@ class SimulationRun:
                 else:
                     i += 1
 
-        fig.update_xaxes(title_text="Time (minutes)", row=2 if has_tm else 1)
-        if has_tm:
+        fig.update_xaxes(title_text="Time (minutes)", row=2 if show_separate_row else 1)
+        if show_separate_row:
             fig.update_yaxes(title_text="Volume (gal) / Flow Rate (gal/hr)",
                              secondary_y=False, row=1, col=1)
             if include_temperatures:
@@ -556,7 +582,7 @@ class SimulationRun:
                 fig.update_yaxes(title_text="Temperature (°F)", secondary_y=True)
         fig.update_layout(
             title_text=title,
-            **({"height": 950} if has_tm else {}),
+            **({"height": 950} if show_separate_row else {}),
             legend=dict(
                 orientation="h",
                 yanchor="top",

@@ -68,6 +68,7 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
     )
     if _is_in_series:
         sim_run.tm_panel_label = "In Series Heating"
+    sim_run.merge_tm_into_primary_panel = isinstance(dhw_system, SP_RTPInParallelSystem)
 
     # Initialize storage tanks
     inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
