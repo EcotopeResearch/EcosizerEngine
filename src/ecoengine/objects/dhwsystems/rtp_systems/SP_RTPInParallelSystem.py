@@ -297,10 +297,23 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
         else:
             leftover_recirc_kbtuh = recirc_loss - self._minimum_capacity_kbtuh
 
+        # During shed hours the primary is forced fully off regardless of its
+        # capacity, so it contributes zero generation -- but the recirc loop
+        # keeps running and pulling heat out of the shared tank regardless.
+        # Represent that hour as a net loss (negative generation) so the gas
+        # heater must cover both the full hourly demand and the recirc loss.
+        recirc_loss_gph = recirc_loss * 1000.0 / (_RHO_CP * delta_t)
+        gen_rate_gph_per_hour = np.full(24, gen_rate_gph)
+        _schedule = self.water_heaters[0].control_schedule
+        if _schedule:
+            for h, label in enumerate(_schedule):
+                if label == "shed":
+                    gen_rate_gph_per_hour[h] = -recirc_loss_gph
+
         # Residual load shape the primary can't cover on its own (surplus-positive,
         # i.e. generation minus demand -- matches _get_peak_indices' convention).
         hourly_demand_gph = daily_gal * gas_load_shape  # [gallons / hour] for each of 24 hours
-        hourly_diff_gph   = gen_rate_gph - hourly_demand_gph
+        hourly_diff_gph   = gen_rate_gph_per_hour - hourly_demand_gph
 
         # Tile to two days so cumulative sums wrap around midnight correctly.
         tiled_diff = np.tile(hourly_diff_gph, 2)
@@ -350,6 +363,7 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
 
     def plot_sizing_curve(
         self,
+        building: Building,
         title: str = "Gas Backup Sizing Curve — SP RTP In-Parallel",
     ) -> "plotly.graph_objects.Figure":
         """
