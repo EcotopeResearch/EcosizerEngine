@@ -217,15 +217,22 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
         max deficit <= 2 °F), no gas backup is built and a ValueError is
         raised instead.
 
-        Otherwise, the primary's steady generation rate (``gen_rate_gph``,
-        net of its recirc-loss tax) is subtracted from the hourly demand
+        Otherwise, the primary's raw nameplate generation rate (net of its
+        continuous recirc-loss draw) is subtracted from the hourly demand
         load shape to get ``hourly_diff_gph`` -- the residual load only the
         gas heater must cover (surplus-positive convention, so recovery
-        hours can offset later deficit hours). ``accessible_gas_storage_gal``
-        (from the gas aquastat's on-position) is treated as the storage
-        buffer available to the gas heater, and the gas heater's own
-        constant generation rate is solved for directly: this is the inverse
-        of ``DHWSystem._calc_running_volume_supplyT_gal()`` -- there, a known
+        hours can offset later deficit hours). The true nameplate rate is
+        used rather than a "spread over the whole day" average, since the
+        primary actually runs continuously at full capacity whenever it's
+        below its off-setpoint, and a single peak-demand hour can exceed
+        what a daily average would suggest is needed. During shed hours the
+        primary contributes nothing but the recirc loop keeps running, so
+        those hours are represented as a net loss (negative rate) instead of
+        zero. ``accessible_gas_storage_gal`` (from the gas aquastat's
+        on-position) is treated as the storage buffer available to the gas
+        heater, and the gas heater's own constant generation rate is solved
+        for directly: this is the inverse of
+        ``DHWSystem._calc_running_volume_supplyT_gal()`` -- there, a known
         generation rate yields the required running volume; here, a known
         running volume (the fixed physical storage) yields the required
         generation rate. The required rate is the largest, over every
@@ -234,11 +241,6 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
         storage, plus a long-run-average floor (for a primary undersized
         enough that the residual never structurally recovers within a
         couple of days).
-
-        If the primary's capacity can't even cover its own recirc loss, the
-        shortfall (``leftover_recirc_kbtuh``) is added directly onto the
-        final gas capacity, since recirc loss is a continuous 24/7 draw
-        independent of the load-shape/storage reasoning above.
 
         Parameters
         ----------
@@ -282,28 +284,20 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
 
         daily_gal  = building.daily_dhw_use_supplyT_gal
 
-        leftover_recirc_kbtuh = 0.0
-        gen_rate_gph = 0.0
-        if self._minimum_capacity_kbtuh > recirc_loss:
-            # TODO probably a quicker way to generate gen_rate_gph
-            _numerator      = (
-                building.daily_dhw_use_supplyT_gal * _RHO_CP * delta_t / 1000.0
-                + recirc_loss * 24.0
-            )
-            back_hr = round(
-                        _numerator / (self._minimum_capacity_kbtuh * self.defrost_factor), 1
-                    )
-            gen_rate_gph      = daily_gal / back_hr
-        else:
-            leftover_recirc_kbtuh = recirc_loss - self._minimum_capacity_kbtuh
+        # Primary's raw nameplate generation rate, net of the recirc loop's
+        # continuous draw -- not a "spread over the whole day" average, since
+        # the primary actually runs continuously at full capacity whenever
+        # it's below its off-setpoint. The window search below needs the true
+        # hourly rate to correctly catch peak-demand-hour capacity shortfalls.
+        primary_capacity_gph = self._minimum_capacity_kbtuh * self.defrost_factor * 1000.0 / (_RHO_CP * delta_t)
+        recirc_loss_gph      = recirc_loss * 1000.0 / (_RHO_CP * delta_t)
 
         # During shed hours the primary is forced fully off regardless of its
         # capacity, so it contributes zero generation -- but the recirc loop
         # keeps running and pulling heat out of the shared tank regardless.
         # Represent that hour as a net loss (negative generation) so the gas
         # heater must cover both the full hourly demand and the recirc loss.
-        recirc_loss_gph = recirc_loss * 1000.0 / (_RHO_CP * delta_t)
-        gen_rate_gph_per_hour = np.full(24, gen_rate_gph)
+        gen_rate_gph_per_hour = np.full(24, primary_capacity_gph - recirc_loss_gph)
         _schedule = self.water_heaters[0].control_schedule
         if _schedule:
             for h, label in enumerate(_schedule):
@@ -330,9 +324,7 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             candidates      = (-cum_diff - accessible_gas_storage_gal) / window_lengths
             gas_gen_rate_gph = max(gas_gen_rate_gph, float(np.max(candidates)))
 
-        gas_capacity_kbtuh = (
-            gas_gen_rate_gph * _RHO_CP * delta_t / 1000.0 + leftover_recirc_kbtuh
-        )
+        gas_capacity_kbtuh = gas_gen_rate_gph * _RHO_CP * delta_t / 1000.0
 
         self.gas_water_heater = WaterHeater.from_nominal_capacity(
             nominal_capacity_kbtuh=gas_capacity_kbtuh,

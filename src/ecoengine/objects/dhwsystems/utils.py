@@ -245,6 +245,10 @@ def size_supplemental_heating_and_storage(
     default_initial_hot_fract = primary_system.get_initial_hot_fract()
     recirc_loss_kbtuh         = primary_system.get_recirc_loss_kbtuh()
 
+    # Force peaky loadshape for sizing
+    _original_avg_load_shape = building.avg_load_shape
+    building.avg_load_shape = building.peak_load_shape
+
     if nominal_capacity_kbtuh <= recirc_loss_kbtuh:
         peak_start_minutes = [0]
     else:
@@ -271,7 +275,7 @@ def size_supplemental_heating_and_storage(
     # primary turns off at the start of each shed period.
     # TODO: apply the same all-shed-blocks approach to load-shift sizing in
     #       SwingSystem.size() — currently only the first shed block is used there.
-    _cmap = primary_system.water_heaters[0].control_map if primary_system.water_heaters else None
+    _cmap = primary_system.water_heaters[0].control_map if primary_system.water_heaters else {}
     if _cmap and "shed" in _cmap:
         _schedule = (
             primary_system.water_heaters[0].control_schedule
@@ -319,6 +323,8 @@ def size_supplemental_heating_and_storage(
             best_outage_volume_gal   = run_volume_gal
             best_outage_temp_delta_f = run_temp_delta_f
 
+    building.avg_load_shape = _original_avg_load_shape
+    
     total_outage_min = sum(1 for v in best_outage_volume_gal if v > 0.0)
     if total_outage_min <= _MIN_OUTAGE_MIN and best_max_delta <= _MIN_DEFICIT_F:
         raise ValueError(
