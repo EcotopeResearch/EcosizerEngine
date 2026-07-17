@@ -577,6 +577,8 @@ class EcosizerEngine:
         tm_capacity_kbtuh: float | None = None,
         tm_model: str | None = None,
         num_tm_heaters: int = 1,
+        gas_capacity_kbtuh: float | None = None,
+        gas_storage_vol_gal: float | None = None,
         perf_map_dir: str | None = None,
         climate_data_dir: str | None = None,
         drawdown_fract: float = 1.0,
@@ -686,6 +688,24 @@ class EcosizerEngine:
             Max TM heater off-cycle duration [hr]. Default 0.5.
         tm_safety_factor : float
             TM capacity safety multiplier (> 1.0). Default 1.2.
+        gas_on_trigger_t_f : float, optional
+            ON trigger temperature for the gas backup heater
+            (``sprtp_in_parallel`` only). Defaults to
+            ``SP_RTPInParallelSystem.default_gas_controls.on_trigger_t_f``.
+        gas_off_trigger_t_f : float, optional
+            OFF trigger temperature for the gas backup heater
+            (``sprtp_in_parallel`` only). Defaults to
+            ``SP_RTPInParallelSystem.default_gas_controls.off_trigger_t_f``.
+        gas_aquastat_fract : float, optional
+            ON aquastat fraction for the gas backup heater
+            (``sprtp_in_parallel`` only). Defaults to
+            ``SP_RTPInParallelSystem.default_gas_controls.on_sensor_fract``.
+        gas_off_sensor_fract : float, optional
+            OFF aquastat fraction for the gas backup heater
+            (``sprtp_in_parallel`` only). Defaults to
+            ``SP_RTPInParallelSystem.default_gas_controls.off_sensor_fract``.
+            The gas controls' outlet temperature always matches
+            ``storage_temp_f``, regardless of the default.
         utility_cost_tracker : UtilityCostTracker, optional
             Attached to the building for annual cost estimates.
         storage_volume_storageT_gal : float, optional
@@ -699,11 +719,12 @@ class EcosizerEngine:
             each WaterHeater is assigned ``heating_capacity_kbtuh / num_heaters``.
             Ignored when ``hpwh_model`` is also provided.
         tm_storage_vol : float, optional
-            Pre-sized TM tank volume [gallons]. Required for ``parallel_loop``
-            and ``swing_tank`` when using the pre-sized path.
+            Pre-sized TM tank volume [gallons]. Required for ``parallel_loop``,
+            ``swing_tank``, and ``swing_dual_fuel`` (gas swing tank) when using
+            the pre-sized path.
         tm_capacity_kbtuh : float, optional
-            Pre-sized TM heater capacity [kBTU/hr]. Required for ``parallel_loop``
-            and ``swing_tank`` when ``tm_model`` is not provided.
+            Pre-sized TM heater capacity [kBTU/hr]. Required for ``parallel_loop``,
+            ``swing_tank``, and ``swing_dual_fuel`` when ``tm_model`` is not provided.
         tm_model : str, optional
             HPWH model name for the TM heater's performance map. When provided,
             ``tm_capacity_kbtuh`` is used only as the ER fallback capacity.
@@ -716,6 +737,15 @@ class EcosizerEngine:
             ``_minimum_tm_capacity_kbtuh / num_tm_heaters``; for the pre-sized
             path with ``tm_capacity_kbtuh``, per-unit =
             ``tm_capacity_kbtuh / num_tm_heaters``. Default 1.
+        gas_capacity_kbtuh : float, optional
+            Pre-sized gas backup heater capacity [kBTU/hr]. Required for
+            ``sprtp_in_series``, ``sprtp_in_parallel``, and ``mprtp_in_series``
+            when using the pre-sized path.
+        gas_storage_vol_gal : float, optional
+            Pre-sized gas storage tank volume [gallons]. Required for
+            ``sprtp_in_series`` and ``mprtp_in_series`` when using the pre-sized
+            path. Not used by ``sprtp_in_parallel``, which heats directly into
+            the shared primary tank.
         drawdown_fract : float
             Fraction of the primary storage tank volume above the cold-water
             inlet pipe (0–1). Only applies to ``'multi_pass_rtp'`` / ``'mprtp'``
@@ -759,6 +789,10 @@ class EcosizerEngine:
         self.tm_off_temp_f             = tm_off_temp_f if tm_off_temp_f is not None else supply_temp_f + 8.0
         self.tm_off_time_hr            = tm_off_time_hr
         self.tm_safety_factor          = tm_safety_factor
+        self.gas_on_trigger_t_f        = gas_on_trigger_t_f
+        self.gas_off_trigger_t_f       = gas_off_trigger_t_f
+        self.gas_aquastat_fract        = gas_aquastat_fract
+        self.gas_off_sensor_fract      = gas_off_sensor_fract
         self.utility_cost_tracker           = utility_cost_tracker
         self.storage_volume_storageT_gal    = storage_volume_storageT_gal
         self.heating_capacity_kbtuh         = heating_capacity_kbtuh
@@ -766,6 +800,8 @@ class EcosizerEngine:
         self.tm_capacity_kbtuh              = tm_capacity_kbtuh
         self.tm_model                       = tm_model
         self.num_tm_heaters                 = num_tm_heaters
+        self.gas_capacity_kbtuh             = gas_capacity_kbtuh
+        self.gas_storage_vol_gal            = gas_storage_vol_gal
         self.perf_map_dir                   = perf_map_dir
         self.climate_data_dir               = climate_data_dir
         self.drawdown_fract                 = drawdown_fract
@@ -888,6 +924,32 @@ class EcosizerEngine:
 
         return schedule, cmap
 
+    def _build_gas_controls(self):
+        """
+        Build the gas backup Controls object for SP_RTPInParallelSystem from
+        stored gas aquastat parameters.
+
+        Each field falls back independently to the corresponding field on
+        ``SP_RTPInParallelSystem.default_gas_controls`` when left as None.
+        ``outlet_temp_f`` always matches ``storage_temp_f`` (the normal-mode
+        outlet temperature), regardless of the default.
+        """
+        from ecoengine.objects.components.heating.Controls import Controls
+        from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem import default_gas_controls
+
+        on_fract  = self.gas_aquastat_fract   if self.gas_aquastat_fract   is not None else default_gas_controls.on_sensor_fract
+        off_fract = self.gas_off_sensor_fract if self.gas_off_sensor_fract is not None else default_gas_controls.off_sensor_fract
+        on_t      = self.gas_on_trigger_t_f   if self.gas_on_trigger_t_f   is not None else default_gas_controls.on_trigger_t_f
+        off_t     = self.gas_off_trigger_t_f  if self.gas_off_trigger_t_f  is not None else default_gas_controls.off_trigger_t_f
+
+        return Controls(
+            on_sensor_fract  = on_fract,
+            on_trigger_t_f   = on_t,
+            off_sensor_fract = off_fract,
+            off_trigger_t_f  = off_t,
+            outlet_temp_f    = self.storage_temp_f,
+        )
+
     def _build_dhw_system(self):
         """
         Construct and return the appropriate sized DHWSystem subclass based on
@@ -915,7 +977,23 @@ class EcosizerEngine:
         NotImplementedError
             If the schematic is recognised but not yet fully implemented.
         """
-        if self.storage_volume_storageT_gal is not None and self.schematic not in _DUAL_FUEL_SCHEMATICS:
+        if self.schematic in _DUAL_FUEL_SCHEMATICS:
+            # A single toggle signal routes to the pre-sized builder; any other
+            # still-missing required field (e.g. gas_storage_vol_gal for the
+            # in-series variants) is then caught by the _require_gas_*/_require_tm_
+            # checks inside _build_presized_dhw_system() itself, rather than being
+            # silently ignored by falling through to full auto-sizing here.
+            if self.schematic == "swing_dual_fuel":
+                presized_ready = (
+                    self.tm_storage_vol is not None
+                    or self.tm_capacity_kbtuh is not None
+                    or self.tm_model is not None
+                )
+            else:  # sprtp_in_series, sprtp_in_parallel, mprtp_in_series
+                presized_ready = self.gas_capacity_kbtuh is not None
+            if presized_ready:
+                return self._build_presized_dhw_system()
+        elif self.storage_volume_storageT_gal is not None:
             return self._build_presized_dhw_system()
 
         from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem, _load_shift_fract_total_vol
@@ -1071,6 +1149,7 @@ class EcosizerEngine:
                     control_schedule           = control_schedule,
                     control_map                = control_map,
                     load_shift_fract_total_vol = ls_fract,
+                    gas_controls               = self._build_gas_controls(),
                 )
 
         if self.schematic == "mprtp_in_series":
@@ -1173,6 +1252,18 @@ class EcosizerEngine:
                 "in pre-sized mode."
             )
 
+    def _require_gas_capacity_param(self) -> None:
+        if self.gas_capacity_kbtuh is None:
+            raise ValueError(
+                f"Schematic '{self.schematic}' requires gas_capacity_kbtuh in pre-sized mode."
+            )
+
+    def _require_gas_storage_param(self) -> None:
+        if self.gas_storage_vol_gal is None:
+            raise ValueError(
+                f"Schematic '{self.schematic}' requires gas_storage_vol_gal in pre-sized mode."
+            )
+
     def _build_tm_water_heater(self, tm_controls, force_electric_resistance : bool = False):
         """Build the TM WaterHeater (single unit) from tm_model or tm_capacity_kbtuh."""
         from ecoengine.objects.components.heating.WaterHeater import WaterHeater
@@ -1206,6 +1297,13 @@ class EcosizerEngine:
         For schematics with a TM sub-system (``parallel_loop``, ``swing_tank``),
         the TM is still auto-sized from recirc parameters since TM sizing does
         not depend on building load.
+
+        Dual-fuel schematics (``sprtp_in_series``, ``sprtp_in_parallel``,
+        ``mprtp_in_series``, ``swing_dual_fuel``) build the gas backup directly
+        from ``gas_capacity_kbtuh`` (and ``gas_storage_vol_gal`` for the two
+        in-series variants) instead of auto-sizing it via a peak-demand
+        simulation. ``swing_dual_fuel``'s gas swing tank reuses ``tm_storage_vol``
+        / ``tm_capacity_kbtuh`` / ``tm_model`` exactly like ``swing_tank``.
         """
         from ecoengine.objects.components.heating.WaterHeater import WaterHeater
         from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
@@ -1378,10 +1476,172 @@ class EcosizerEngine:
             system.water_heaters = water_heaters
             return system
 
+        if self.schematic == "sprtp_in_series":
+            from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem import (
+                SP_RTPInSeriesSystem, _GAS_DEADBAND_F,
+            )
+            from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import _SPRTP_STRAT_SLOPE
+            from ecoengine.objects.components.heating.Controls import Controls
+            from ecoengine.objects.components.storage.EnergyTank import EnergyTank
+            from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
+            self._require_recirc_params()
+            self._require_gas_capacity_param()
+            self._require_gas_storage_param()
+            cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
+            system = SP_RTPInSeriesSystem(
+                water_heaters=water_heaters,
+                storage_tank=EnergyTank(
+                    total_volume_gal=self.storage_volume_storageT_gal,
+                    cold_temp_f=cold_temp_f,
+                    storage_temp_f=self.storage_temp_f,
+                    strat_slope=_SPRTP_STRAT_SLOPE,
+                ),
+                supply_temp_f=self.supply_temp_f,
+                storage_temp_f=self.storage_temp_f,
+                return_temp_f=self.return_temp_f,
+                return_flow_gpm=self.return_flow_gpm,
+                max_daily_run_hr=self.max_daily_run_hr,
+                defrost_factor=self.defrost_factor,
+                tm_safety_factor=self.tm_safety_factor,
+            )
+            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
+            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
+            gas_controls = Controls(
+                on_sensor_fract=0.5,
+                on_trigger_t_f=self.supply_temp_f + 5.0,
+                off_sensor_fract=0.5,
+                off_trigger_t_f=self.supply_temp_f + 5.0 + _GAS_DEADBAND_F,
+                outlet_temp_f=self.supply_temp_f + 5.0 + _GAS_DEADBAND_F,
+            )
+            system.gas_water_heater = WaterHeater.from_nominal_capacity(
+                nominal_capacity_kbtuh=self.gas_capacity_kbtuh,
+                control_schedule=["normal"] * 24,
+                control_map={"normal": gas_controls},
+            )
+            system.gas_storage_tank = MixedStorageTank(total_volume_gal=self.gas_storage_vol_gal)
+            system._in_series_storage_vol_gal = self.gas_storage_vol_gal
+            system._in_series_capacity_kbtuh = self.gas_capacity_kbtuh
+            return system
+
+        if self.schematic == "sprtp_in_parallel":
+            from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem import SP_RTPInParallelSystem
+            from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import _SPRTP_STRAT_SLOPE
+            from ecoengine.objects.components.storage.EnergyTank import EnergyTank
+            self._require_recirc_params()
+            self._require_gas_capacity_param()
+            cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
+            system = SP_RTPInParallelSystem(
+                water_heaters=water_heaters,
+                storage_tank=EnergyTank(
+                    total_volume_gal=self.storage_volume_storageT_gal,
+                    cold_temp_f=cold_temp_f,
+                    storage_temp_f=self.storage_temp_f,
+                    strat_slope=_SPRTP_STRAT_SLOPE,
+                ),
+                supply_temp_f=self.supply_temp_f,
+                storage_temp_f=self.storage_temp_f,
+                return_temp_f=self.return_temp_f,
+                return_flow_gpm=self.return_flow_gpm,
+                max_daily_run_hr=self.max_daily_run_hr,
+                defrost_factor=self.defrost_factor,
+                tm_safety_factor=self.tm_safety_factor,
+            )
+            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
+            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
+            system.gas_water_heater = WaterHeater.from_nominal_capacity(
+                nominal_capacity_kbtuh=self.gas_capacity_kbtuh,
+                control_schedule=["normal"] * 24,
+                control_map={"normal": self._build_gas_controls()},
+            )
+            system._gas_capacity_kbtuh = self.gas_capacity_kbtuh
+            return system
+
+        if self.schematic == "mprtp_in_series":
+            from ecoengine.objects.dhwsystems.rtp_systems.MP_RTPInSeriesSystem import MP_RTPInSeriesSystem
+            from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem import _GAS_DEADBAND_F
+            from ecoengine.objects.dhwsystems.rtp_systems.MultiPassRTPSystem import (
+                _MPRTP_STRAT_SLOPE, _MPRTP_MAX_DAILY_RUN_HR,
+            )
+            from ecoengine.objects.components.heating.Controls import Controls
+            from ecoengine.objects.components.storage.SlugOverlayTank import SlugOverlayTank
+            from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
+            self._require_recirc_params()
+            self._require_gas_capacity_param()
+            self._require_gas_storage_param()
+            cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
+            system = MP_RTPInSeriesSystem(
+                water_heaters=water_heaters,
+                storage_tank=SlugOverlayTank(
+                    total_volume_gal=self.storage_volume_storageT_gal,
+                    cold_temp_f=cold_temp_f,
+                    storage_temp_f=self.storage_temp_f,
+                    supply_temp_f=self.supply_temp_f,
+                    strat_slope=_MPRTP_STRAT_SLOPE,
+                    drawdown_fract=self.drawdown_fract,
+                ),
+                supply_temp_f=self.supply_temp_f,
+                storage_temp_f=self.storage_temp_f,
+                return_temp_f=self.return_temp_f,
+                return_flow_gpm=self.return_flow_gpm,
+                max_daily_run_hr=_MPRTP_MAX_DAILY_RUN_HR,
+                defrost_factor=self.defrost_factor,
+                tm_safety_factor=self.tm_safety_factor,
+            )
+            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
+            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
+            gas_controls = Controls(
+                on_sensor_fract=0.5,
+                on_trigger_t_f=self.supply_temp_f + 5.0,
+                off_sensor_fract=0.5,
+                off_trigger_t_f=self.supply_temp_f + 5.0 + _GAS_DEADBAND_F,
+                outlet_temp_f=self.supply_temp_f + 5.0 + _GAS_DEADBAND_F,
+            )
+            system.gas_water_heater = WaterHeater.from_nominal_capacity(
+                nominal_capacity_kbtuh=self.gas_capacity_kbtuh,
+                control_schedule=["normal"] * 24,
+                control_map={"normal": gas_controls},
+            )
+            system.gas_storage_tank = MixedStorageTank(total_volume_gal=self.gas_storage_vol_gal)
+            system._in_series_storage_vol_gal = self.gas_storage_vol_gal
+            system._in_series_capacity_kbtuh = self.gas_capacity_kbtuh
+            return system
+
+        if self.schematic == "swing_dual_fuel":
+            from ecoengine.objects.dhwsystems.recirc_systems.SwingDualFuelSystem import SwingDualFuelSystem
+            from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import _ELEMENT_DEADBAND_F
+            from ecoengine.objects.components.heating.Controls import Controls
+            from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
+            self._require_recirc_params()
+            self._require_tm_params()
+            tm_controls = Controls(
+                on_sensor_fract=0.5,
+                on_trigger_t_f=self.supply_temp_f,
+                off_sensor_fract=0.5,
+                off_trigger_t_f=self.supply_temp_f + _ELEMENT_DEADBAND_F,
+                outlet_temp_f=self.supply_temp_f + _ELEMENT_DEADBAND_F,
+            )
+            system = SwingDualFuelSystem(
+                water_heaters=water_heaters,
+                storage_tank=_primary_tank(),
+                supply_temp_f=self.supply_temp_f,
+                storage_temp_f=self.storage_temp_f,
+                return_temp_f=self.return_temp_f,
+                return_flow_gpm=self.return_flow_gpm,
+                tm_safety_factor=self.tm_safety_factor,
+                max_daily_run_hr=self.max_daily_run_hr,
+                defrost_factor=self.defrost_factor,
+            )
+            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
+            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
+            system.tm_storage_tank = MixedStorageTank(total_volume_gal=self.tm_storage_vol)
+            system.tm_water_heater = self._build_tm_water_heater(tm_controls, force_electric_resistance=True)
+            return system
+
         raise ValueError(
             f"Unknown schematic {self.schematic!r}. "
             "Supported values: 'primary_no_recirc', 'parallel_loop', 'swing_tank', "
-            "'single_pass_rtp', 'multi_pass_rtp', 'instant_wh'."
+            "'single_pass_rtp', 'multi_pass_rtp', 'instant_wh', 'sprtp_in_series', "
+            "'sprtp_in_parallel', 'mprtp_in_series', 'swing_dual_fuel'."
         )
 
     # ------------------------------------------------------------------

@@ -279,8 +279,8 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
         recirc_loss     = self._get_sizing_recirc_loss_kbtuh()
         accessible_gas_storage_gal = self._calc_stratification_factor({"normal" : gas_controls}, self.storage_tank.strat_slope,
                                         design_inlet) * self._minimum_storage_storageT_gal
-        use_avg = any(wh.is_load_shifting() for wh in self.water_heaters)
-        gas_load_shape = building.avg_load_shape if use_avg else building.peak_load_shape
+        
+        gas_load_shape = building.peak_load_shape # force peaky load shape here
 
         daily_gal  = building.daily_dhw_use_supplyT_gal
 
@@ -426,7 +426,7 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             total_kw = sum(kw or 0.0 for kw in active_kws)
 
         self.storage_tank.heat(total_kbtuh, interval_min, outlet_temp_f)
-        self.storage_tank.heat(gas_kbtuh, interval_min, gas_outlet_temp_f)
+        self.storage_tank.heat(gas_kbtuh, interval_min, outlet_temp_f) # outlet temperature should always stay the same as HPWH settings
         top_temp_f     = self.storage_tank.get_temperature_at_fraction(1.0)
 
         # --- Mixing valve draw ---
