@@ -808,7 +808,7 @@ class EcosizerEngine:
             return ClimateZone.from_design_conditions(**czv)
         if isinstance(czv, str) and czv.isdigit() and len(czv) == 5:
             return ClimateZone.from_zip_code(czv, climate_data_dir=cdd)
-        if isinstance(czv, int) and 1 <= czv <= 21:
+        if isinstance(czv, int):
             return ClimateZone.from_zone_id(czv, climate_data_dir=cdd)
         if isinstance(czv, str):
             return ClimateZone.from_weather_station(czv, climate_data_dir=cdd)
