@@ -322,8 +322,10 @@
 
         <span class="c1"># Set by Simulator after construction; used for unit conversions in output methods</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="c1"># True only for SwingSystem / SwingERTrdOffSystem — enables the TM subplot</span>
+        <span class="c1"># True only for SwingSystem / SwingERTrdOffSystem / SP_RTPInSeriesSystem — enables the TM subplot</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">show_tm_panel</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># Label used for the TM subplot title and axis labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Temperature Maintenance (TM)&quot;</span>
 
         <span class="c1"># Outlet deficit stop condition</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">outlet_deficit_threshold_f</span>   <span class="o">=</span> <span class="n">outlet_deficit_threshold_f</span>
@@ -480,9 +482,21 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_successful</span><span class="p">():</span>
             <span class="k">return</span> <span class="s2">&quot;Simulation succeeded: no DHW outage detected.&quot;</span>
 
-        <span class="n">outage_steps</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">usable_volume_supplyT_gal</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="mf">0.0</span>
-        <span class="p">]</span>
+        <span class="n">supply_t_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="ow">or</span> <span class="mf">9999.0</span>
+
+        <span class="c1"># For systems with a secondary (TM/gas backup) panel, a true outage</span>
+        <span class="c1"># requires both the primary to be empty AND the secondary to be below</span>
+        <span class="c1"># supply temp — mirroring the Simulator&#39;s record_outage() guard.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">:</span>
+            <span class="n">outage_steps</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">usable_volume_supplyT_gal</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">supply_t_f</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">outage_steps</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">usable_volume_supplyT_gal</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="mf">0.0</span>
+            <span class="p">]</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">outage_steps</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Simulation failed: system was undersized. &quot;</span>
@@ -491,17 +505,29 @@
 
         <span class="n">first_step</span> <span class="o">=</span> <span class="n">outage_steps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">day</span> <span class="o">=</span> <span class="p">(</span><span class="n">first_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span><span class="p">)</span> <span class="o">//</span> <span class="p">(</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="c1"># For swing systems the delivery point is the swing tank, not the primary top.</span>
+
+        <span class="c1"># For swing/TM systems use the TM tank as the delivery point; for all others</span>
+        <span class="c1"># use the primary tank top node.  draw() no longer clamps _delta_gal at</span>
+        <span class="c1"># supply_temp_f, so the top node drops below supply_temp_f during a true</span>
+        <span class="c1"># temperature-limited outage and the reported temperature is meaningful.</span>
+        <span class="c1"># Volume-limited outages (primary depleted but TM still hot, or tank at</span>
+        <span class="c1"># exactly supply_temp_f) produce delivery temps &gt;= supply_temp_f, which</span>
+        <span class="c1"># are uninformative — suppress the clause in that case.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">:</span>
             <span class="n">delivery_temps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">delivery_temps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tank_temps_f</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
-        <span class="n">avg_delivery_temp</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">delivery_temps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">outage_steps</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">outage_steps</span><span class="p">)</span>
+        <span class="n">below_supply</span> <span class="o">=</span> <span class="p">[</span><span class="n">delivery_temps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">outage_steps</span> <span class="k">if</span> <span class="n">delivery_temps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">supply_t_f</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">below_supply</span><span class="p">:</span>
+            <span class="n">avg_delivery_temp_f</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">below_supply</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">below_supply</span><span class="p">)</span>
+            <span class="n">temp_clause</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; with an average delivered water temperature of </span><span class="si">{</span><span class="n">avg_delivery_temp_f</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">°F&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">temp_clause</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
         <span class="k">return</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Simulation failed: system was undersized. &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;DHW outage occurred for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outage_minutes</span><span class="si">}</span><span class="s2"> minutes on day </span><span class="si">{</span><span class="n">day</span><span class="si">}</span><span class="s2"> &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;of the simulation with an average delivered water temperature of </span><span class="si">{</span><span class="n">avg_delivery_temp</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">°F.&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outage_minutes</span><span class="si">}</span><span class="s2"> minutes of DHW outage had accrued by day </span><span class="si">{</span><span class="n">day</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;of the simulation</span><span class="si">{</span><span class="n">temp_clause</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="p">)</span></div>
 
 
@@ -666,7 +692,7 @@
                 <span class="n">shared_xaxes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">vertical_spacing</span><span class="o">=</span><span class="mf">0.18</span><span class="p">,</span>
                 <span class="n">row_heights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.35</span><span class="p">],</span>
-                <span class="n">subplot_titles</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Primary System&quot;</span><span class="p">,</span> <span class="s2">&quot;Temperature Maintenance (TM)&quot;</span><span class="p">],</span>
+                <span class="n">subplot_titles</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Primary System&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="p">],</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">fig</span> <span class="o">=</span> <span class="n">make_subplots</span><span class="p">(</span><span class="n">specs</span><span class="o">=</span><span class="p">[[{</span><span class="s2">&quot;secondary_y&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}]])</span>
@@ -733,7 +759,7 @@
             <span class="c1"># Left Y2: TM heater output [kBTU/hr]</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
                 <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">tm_time</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_output_kbtuh</span><span class="p">,</span>
-                           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;TM Heater Output (kBTU/hr)&quot;</span><span class="p">,</span>
+                           <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="si">}</span><span class="s2"> Heater Output (kBTU/hr)&quot;</span><span class="p">,</span>
                            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;darkorange&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
                            <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;tozeroy&quot;</span><span class="p">,</span> <span class="n">fillcolor</span><span class="o">=</span><span class="s2">&quot;rgba(255,165,0,0.15)&quot;</span><span class="p">),</span>
                 <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -741,7 +767,7 @@
             <span class="c1"># Right Y2: TM tank temperature [°F]</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
                 <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">tm_time</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">,</span>
-                           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Swing Tank Temp (°F)&quot;</span><span class="p">,</span>
+                           <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="si">}</span><span class="s2"> Tank Temp (°F)&quot;</span><span class="p">,</span>
                            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;purple&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)),</span>
                 <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
@@ -783,9 +809,9 @@
             <span class="k">if</span> <span class="n">include_temperatures</span><span class="p">:</span>
                 <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;Temperature (°F)&quot;</span><span class="p">,</span>
                                  <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;TM Output (kBTU/hr)&quot;</span><span class="p">,</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="si">}</span><span class="s2"> Output (kBTU/hr)&quot;</span><span class="p">,</span>
                              <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;Swing Tank Temp (°F)&quot;</span><span class="p">,</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="si">}</span><span class="s2"> Tank Temp (°F)&quot;</span><span class="p">,</span>
                              <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;Volume (gal) / Flow Rate (gal/hr)&quot;</span><span class="p">,</span> <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>

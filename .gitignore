@@ -29,3 +29,8 @@ docs/build/doctrees/
 
 # Local comparison / dev scripts
 compare_performance_maps.py
+demo_*.py
+
+# Generated outputs from comparison and simulation scripts
+*.html
+*.csv

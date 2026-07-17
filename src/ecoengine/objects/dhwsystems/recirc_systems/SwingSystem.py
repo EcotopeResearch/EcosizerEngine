@@ -90,9 +90,9 @@ class SwingSystem(RecircSystem):
             max_daily_run_hr=max_daily_run_hr,
             defrost_factor=defrost_factor,
         )
-        if tm_safety_factor <= 1.0:
+        if tm_safety_factor < 1.0:
             raise ValueError(
-                "tm_safety_factor must be > 1.0 — the TM element must outpace recirc losses."
+                "tm_safety_factor must be >= 1.0 — the TM element must outpace recirc losses."
             )
         self.tm_safety_factor = tm_safety_factor
 
@@ -987,15 +987,14 @@ class SwingSystem(RecircSystem):
         )
         # --- 7. TM element: update state and heat swing tank ---
         self.tm_water_heater.update_state(self.tm_storage_tank, hour_of_day)
-        tm_top_t    = self.tm_storage_tank.get_temperature_at_fraction(1.0)
-        tm_kbtuh    = self.tm_water_heater.get_output_kbtuh(oat_f, tm_top_t)
+        tm_ctrl     = self.tm_water_heater.get_controls_for_hour(hour_of_day)
+        tm_outlet_f = tm_ctrl.off_trigger_t_f
+        tm_kbtuh    = self.tm_water_heater.get_output_kbtuh(oat_f, tm_outlet_f)
         tm_kw_val   = (
-            self.tm_water_heater.get_power_in_kw(oat_f, tm_top_t)
+            self.tm_water_heater.get_power_in_kw(oat_f, tm_outlet_f)
             if self.tm_water_heater.is_active()
             else None
         )
-        tm_ctrl = self.tm_water_heater.get_controls_for_hour(hour_of_day)
-        tm_outlet_f = tm_ctrl.outlet_temp_f if tm_ctrl is not None else self.tm_off_temp_f
         self.tm_storage_tank.heat(tm_kbtuh, interval_min, tm_outlet_f)
         # --- 8. Draw computed volume from primary storage ---
         self.storage_tank.draw_physical_gal(hw_swing_gal, inlet_temp_f, self.supply_temp_f)

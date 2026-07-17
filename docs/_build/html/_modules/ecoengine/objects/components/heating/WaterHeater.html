@@ -368,6 +368,7 @@
         <span class="n">design_inlet_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">50.0</span><span class="p">,</span>
         <span class="n">nominal_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">fuel_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;electric&quot;</span><span class="p">,</span> <span class="s2">&quot;gas&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;electric&quot;</span><span class="p">,</span>
+        <span class="n">perf_map_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WaterHeater</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a WaterHeater by loading its PerformanceMap from the equipment</span>
@@ -390,6 +391,9 @@
 <span class="sd">            Total system capacity for ER fallback sizing. Default None.</span>
 <span class="sd">        fuel_type : &quot;electric&quot; | &quot;gas&quot;</span>
 <span class="sd">            Fuel source for this heater. Default is &quot;electric&quot;.</span>
+<span class="sd">        perf_map_dir : str | None</span>
+<span class="sd">            Path to directory containing ``maps.json`` and ``pkls/``.</span>
+<span class="sd">            Passed through to ``PerformanceMap.from_model_name()``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -401,6 +405,7 @@
                 <span class="n">num_units</span><span class="o">=</span><span class="n">num_units</span><span class="p">,</span>
                 <span class="n">design_inlet_temp_f</span><span class="o">=</span><span class="n">design_inlet_temp_f</span><span class="p">,</span>
                 <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">nominal_capacity_kbtuh</span><span class="p">,</span>
+                <span class="n">perf_map_dir</span><span class="o">=</span><span class="n">perf_map_dir</span><span class="p">,</span>
             <span class="p">),</span>
             <span class="n">control_schedule</span><span class="o">=</span><span class="n">control_schedule</span><span class="p">,</span>
             <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span>

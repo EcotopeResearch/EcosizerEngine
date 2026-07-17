@@ -7,25 +7,35 @@ import pickle
 
 from ecoengine.constants.constants import _W_TO_KBTUH
 
-# Absolute path to the performance maps data directory
-_DATA_DIR = os.path.normpath(
+# Bundled data directory — used as a fallback when perf_map_dir is not supplied.
+# Will be removed once the data is fully externalised.
+_BUNDLED_DATA_DIR = os.path.normpath(
     os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         "..", "..", "..", "data", "preformanceMaps",
     )
 )
 
-# Model names whose pkl interpolator takes only (inlet, OAT) — no outlet dimension
-_TWO_INPUT_PKL_NAMES = frozenset({})
+# Model names whose pkl interpolator takes only (inlet, OAT) — no outlet dimension.
+# MP-suffix models are automatically treated as two-input via the endswith("MP") check.
+# Add non-MP model names here when their pkl was built with a 2-input grid.
+_TWO_INPUT_PKL_NAMES = frozenset({
+    "MODELS_SANCO2_C_SP",
+    "MODELS_COLMAC_R454B_C_SP",
+    "MODELS_Droplet_C_SP",
+})
+
+# Per-directory cache so that different perf_map_dir values can coexist in one process.
+_maps_json_cache: dict[str, dict] = {}
 
 
-def _load_maps_json() -> dict:
-    """Return the parsed maps.json model registry (cached after first load)."""
-    if not hasattr(_load_maps_json, "_cache"):
-        path = os.path.join(_DATA_DIR, "maps.json")
+def _load_maps_json(perf_map_dir: str) -> dict:
+    """Return the parsed maps.json from perf_map_dir, cached per directory."""
+    if perf_map_dir not in _maps_json_cache:
+        path = os.path.join(perf_map_dir, "maps.json")
         with open(path) as f:
-            _load_maps_json._cache = json.load(f)
-    return _load_maps_json._cache
+            _maps_json_cache[perf_map_dir] = json.load(f)
+    return _maps_json_cache[perf_map_dir]
 
 
 class PerformanceMap:
@@ -71,6 +81,7 @@ class PerformanceMap:
         num_units: int = 1,
         design_inlet_temp_f: float = 50.0,
         nominal_capacity_kbtuh: float | None = None,
+        perf_map_dir: str | None = None,
     ) -> PerformanceMap:
         """
         Load a PerformanceMap from the equipment model registry by name.
@@ -82,6 +93,7 @@ class PerformanceMap:
         ----------
         model_name : str
             Equipment model identifier as it appears in ``maps.json``
+            (e.g. ``'MODELS_GenericHPWH3_C_SP'``).
         num_units : int
             Number of identical heat pump units deployed.  All capacity and
             power outputs are scaled by this factor.  Default 1.
@@ -93,6 +105,10 @@ class PerformanceMap:
             Total system output capacity at design conditions [kBTU/hr].
             Required for the ER fallback path (OAT below performance-map
             minimum); if None the fallback returns 0 kBTU/hr.
+        perf_map_dir : str | None
+            Path to the directory containing ``maps.json`` and a ``pkls/``
+            subdirectory.  When None, falls back to the bundled data directory
+            shipped with the package.
 
         Raises
         ------
@@ -100,7 +116,8 @@ class PerformanceMap:
             If ``model_name`` is not found in the registry, or the registry
             entry has neither pkl nor perfmap data.
         """
-        registry = _load_maps_json()
+        data_dir = perf_map_dir if perf_map_dir is not None else _BUNDLED_DATA_DIR
+        registry = _load_maps_json(data_dir)
         if model_name not in registry:
             raise ValueError(
                 f"Model '{model_name}' not found in the performance map registry. "
@@ -121,7 +138,7 @@ class PerformanceMap:
 
         if "pkl_prefix" in entry:
             prefix   = entry["pkl_prefix"]
-            pkls_dir = os.path.join(_DATA_DIR, "pkls")
+            pkls_dir = os.path.join(data_dir, "pkls")
 
             with open(os.path.join(pkls_dir, f"{prefix}_capacity_interpolator.pkl"), "rb") as f:
                 output_interp = pickle.load(f)
@@ -461,6 +478,14 @@ class PklPerformanceMap(PerformanceMap):
         inlet, outlet = self._resolve_temps(outlet_temp_f, inlet_temp_f)
         out_kw, _     = self._get_per_unit_kw(oat_f, inlet, outlet)
         return out_kw * self.num_units * _W_TO_KBTUH
+
+    def get_capacity_kw(
+        self,
+        oat_f: float,
+        outlet_temp_f: float,
+        inlet_temp_f: float | None = None,
+    ) -> float:
+        return self.get_capacity_kbtuh(oat_f, outlet_temp_f, inlet_temp_f) / _W_TO_KBTUH
 
     def get_power_in_kw(
         self,

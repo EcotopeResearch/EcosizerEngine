@@ -83,8 +83,13 @@ class SimulationRun:
 
         # Set by Simulator after construction; used for unit conversions in output methods
         self.supply_temp_f: float | None = None
-        # True only for SwingSystem / SwingERTrdOffSystem — enables the TM subplot
+        # True only for SwingSystem / SwingERTrdOffSystem / SP_RTPInSeriesSystem — enables the TM subplot
         self.show_tm_panel: bool = False
+        # Label used for the TM subplot title and axis labels
+        self.tm_panel_label: str = "Temperature Maintenance (TM)"
+        # True only for SP_RTPInParallelSystem — the gas heater has no tank of its
+        # own, so its output is plotted on the primary row instead of its own row
+        self.merge_tm_into_primary_panel: bool = False
 
         # Outlet deficit stop condition
         self.outlet_deficit_threshold_f   = outlet_deficit_threshold_f
@@ -226,17 +231,29 @@ class SimulationRun:
         if self.is_successful():
             return "Simulation succeeded: no DHW outage detected."
 
-        outage_steps = [
-            i for i, v in enumerate(self.usable_volume_supplyT_gal) if v <= 0.0
-        ]
+        supply_t_f = self.supply_temp_f or 9999.0
+
+        # For systems with a secondary (TM/gas backup) panel, a true outage
+        # requires both the primary to be empty AND the secondary to be below
+        # supply temp — mirroring the Simulator's record_outage() guard.
+        if self.show_tm_panel and self.tm_tank_temp_f:
+            outage_steps = [
+                i for i, v in enumerate(self.usable_volume_supplyT_gal)
+                if v <= 0.0 and self.tm_tank_temp_f[i] < supply_t_f
+            ]
+        else:
+            outage_steps = [
+                i for i, v in enumerate(self.usable_volume_supplyT_gal) if v <= 0.0
+            ]
+
         if not outage_steps:
             return (
                 f"Simulation failed: system was undersized. "
                 f"DHW outage occurred for {self.outage_minutes} minutes."
             )
 
-        first_step = outage_steps[0]
-        day = (first_step * self.timestep_min) // (24 * 60) + 1
+        last_step = outage_steps[-1]
+        day = (last_step * self.timestep_min) // (24 * 60) + 1
 
         # For swing/TM systems use the TM tank as the delivery point; for all others
         # use the primary tank top node.  draw() no longer clamps _delta_gal at
@@ -248,18 +265,17 @@ class SimulationRun:
         if self.show_tm_panel and self.tm_tank_temp_f:
             delivery_temps = self.tm_tank_temp_f
         else:
-            delivery_temps = self.tank_temps_f[5]
-        supply_t_f = self.supply_temp_f or 9999.0
-        below_supply = [delivery_temps[i] for i in outage_steps if delivery_temps[i] < supply_t_f - 0.5]
+            delivery_temps = self.tank_temps_f[-1]
+        below_supply = [delivery_temps[i] for i in outage_steps if delivery_temps[i] < supply_t_f - 1.0]
         if below_supply:
             avg_delivery_temp_f = sum(below_supply) / len(below_supply)
             temp_clause = f" with an average delivered water temperature of {avg_delivery_temp_f:.1f}°F"
         else:
-            temp_clause = ""
+            temp_clause = " with DHW delivery less than 1.0°F below expected temperature"
 
         return (
-            f"Simulation failed: system was undersized. "
-            f"DHW outage occurred for {self.outage_minutes} minutes on day {day} "
+            f"{'Simulation failed: system was undersized.' if below_supply else 'Partial success:'} "
+            f"{self.outage_minutes} minutes of DHW outage had accrued by the end of day {day} "
             f"of the simulation{temp_clause}."
         )
 
@@ -401,16 +417,18 @@ class SimulationRun:
             )
 
         time_min = [i * self.timestep_min for i in range(len(self.dhw_demand_supplyT_gal))]
-        has_tm = self.show_tm_panel
+        has_tm_data       = self.show_tm_panel
+        merge_into_primary = has_tm_data and self.merge_tm_into_primary_panel
+        show_separate_row = has_tm_data and not self.merge_tm_into_primary_panel
 
-        if has_tm:
+        if show_separate_row:
             fig = make_subplots(
                 rows=2, cols=1,
                 specs=[[{"secondary_y": True}], [{"secondary_y": True}]],
                 shared_xaxes=True,
                 vertical_spacing=0.18,
                 row_heights=[0.65, 0.35],
-                subplot_titles=["Primary System", "Temperature Maintenance (TM)"],
+                subplot_titles=["Primary System", self.tm_panel_label],
             )
         else:
             fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -421,13 +439,13 @@ class SimulationRun:
         fig.add_trace(
             go.Scatter(x=time_min, y=self.usable_volume_supplyT_gal,
                        name="Usable Volume (gal at or above Supply Temp)", line=dict(color="green", width=1.5)),
-            secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
+            secondary_y=False, **({} if not show_separate_row else {"row": 1, "col": 1}),
         )
         hourly_demand = [v * steps_per_hour for v in self.dhw_demand_supplyT_gal]
         fig.add_trace(
             go.Scatter(x=time_min, y=hourly_demand,
                        name="DHW Demand (gal/hr at Supply Temp)", line=dict(color="blue", width=1)),
-            secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
+            secondary_y=False, **({} if not show_separate_row else {"row": 1, "col": 1}),
         )
 
         if self.supply_temp_f is not None:
@@ -438,10 +456,31 @@ class SimulationRun:
                     self.heater_output_kbtuh, self.inlet_water_temp_f
                 )
             ]
+            heater_name = (
+                "Heat Pump Generation (gal/hr at Supply Temperature)" if merge_into_primary
+                else "Heater Generation (gal/hr at Supply Temperature)"
+            )
             fig.add_trace(
                 go.Scatter(x=time_min, y=heater_gph,
-                           name="Heater Generation (gal/hr at Supply Temperature)", line=dict(color="red", width=1)),
-                secondary_y=False, **({} if not has_tm else {"row": 1, "col": 1}),
+                           name=heater_name, line=dict(color="red", width=1)),
+                secondary_y=False, **({} if not show_separate_row else {"row": 1, "col": 1}),
+            )
+
+        # --- Gas heater generation merged onto the primary row (SP_RTPInParallelSystem) ---
+        if merge_into_primary and self.supply_temp_f is not None:
+            gas_time = [i * self.timestep_min for i in range(len(self.tm_heater_output_kbtuh))]
+            gas_gph = [
+                kbtuh * 1000.0
+                / (_RHO_CP * max(1.0, self.supply_temp_f - inlet_t))
+                for kbtuh, inlet_t in zip(
+                    self.tm_heater_output_kbtuh, self.inlet_water_temp_f
+                )
+            ]
+            fig.add_trace(
+                go.Scatter(x=gas_time, y=gas_gph,
+                           name="Gas Heater Generation (gal/hr at Supply Temperature)",
+                           line=dict(color="darkorange", width=1)),
+                secondary_y=False,
             )
 
         if include_temperatures:
@@ -449,12 +488,12 @@ class SimulationRun:
             fig.add_trace(
                 go.Scatter(x=time_min, y=self.oat_f,
                            name="OAT (°F)", line=dict(color="orange", width=1)),
-                secondary_y=True, **({} if not has_tm else {"row": 1, "col": 1}),
+                secondary_y=True, **({} if not show_separate_row else {"row": 1, "col": 1}),
             )
             fig.add_trace(
                 go.Scatter(x=time_min, y=self.inlet_water_temp_f,
                            name="Inlet Water (°F)", line=dict(color="steelblue", width=1)),
-                secondary_y=True, **({} if not has_tm else {"row": 1, "col": 1}),
+                secondary_y=True, **({} if not show_separate_row else {"row": 1, "col": 1}),
             )
 
             # --- Tank temperature traces (Y2, dashed, blue→red gradient) ---
@@ -468,27 +507,33 @@ class SimulationRun:
                         name=label,
                         line=dict(color=color, width=1, dash="dash"),
                     ),
-                    secondary_y=True, **({} if not has_tm else {"row": 1, "col": 1}),
+                    secondary_y=True, **({} if not show_separate_row else {"row": 1, "col": 1}),
                 )
 
         # --- Row 2: TM (swing) tank panel ---
-        if has_tm:
-            tm_time = [i * self.timestep_min for i in range(len(self.tm_tank_temp_f))]
+        if show_separate_row:
+            # Length from tm_heater_output_kbtuh, not tm_tank_temp_f: systems
+            # with no separate TM/gas tank of their own (e.g.
+            # SP_RTPInParallelSystem, which heats directly into the shared
+            # primary tank) never populate tm_tank_temp_f, but always
+            # populate tm_heater_output_kbtuh.
+            tm_time = [i * self.timestep_min for i in range(len(self.tm_heater_output_kbtuh))]
             # Left Y2: TM heater output [kBTU/hr]
             fig.add_trace(
                 go.Scatter(x=tm_time, y=self.tm_heater_output_kbtuh,
-                           name="TM Heater Output (kBTU/hr)",
+                           name=f"{self.tm_panel_label} Heater Output (kBTU/hr)",
                            line=dict(color="darkorange", width=1),
                            fill="tozeroy", fillcolor="rgba(255,165,0,0.15)"),
                 secondary_y=False, row=2, col=1,
             )
-            # Right Y2: TM tank temperature [°F]
-            fig.add_trace(
-                go.Scatter(x=tm_time, y=self.tm_tank_temp_f,
-                           name="Swing Tank Temp (°F)",
-                           line=dict(color="purple", width=1.5)),
-                secondary_y=True, row=2, col=1,
-            )
+            # Right Y2: TM tank temperature [°F] — only if a separate TM tank exists
+            if self.tm_tank_temp_f:
+                fig.add_trace(
+                    go.Scatter(x=tm_time, y=self.tm_tank_temp_f,
+                               name=f"{self.tm_panel_label} Tank Temp (°F)",
+                               line=dict(color="purple", width=1.5)),
+                    secondary_y=True, row=2, col=1,
+                )
 
         # --- Load-shift shading: blue=shed, green=loadUp ---
         if self.heater_mode:
@@ -520,16 +565,16 @@ class SimulationRun:
                 else:
                     i += 1
 
-        fig.update_xaxes(title_text="Time (minutes)", row=2 if has_tm else 1)
-        if has_tm:
+        fig.update_xaxes(title_text="Time (minutes)", row=2 if show_separate_row else 1)
+        if show_separate_row:
             fig.update_yaxes(title_text="Volume (gal) / Flow Rate (gal/hr)",
                              secondary_y=False, row=1, col=1)
             if include_temperatures:
                 fig.update_yaxes(title_text="Temperature (°F)",
                                  secondary_y=True, row=1, col=1)
-            fig.update_yaxes(title_text="TM Output (kBTU/hr)",
+            fig.update_yaxes(title_text=f"{self.tm_panel_label} Output (kBTU/hr)",
                              secondary_y=False, row=2, col=1)
-            fig.update_yaxes(title_text="Swing Tank Temp (°F)",
+            fig.update_yaxes(title_text=f"{self.tm_panel_label} Tank Temp (°F)",
                              secondary_y=True, row=2, col=1)
         else:
             fig.update_yaxes(title_text="Volume (gal) / Flow Rate (gal/hr)", secondary_y=False)
@@ -537,7 +582,7 @@ class SimulationRun:
                 fig.update_yaxes(title_text="Temperature (°F)", secondary_y=True)
         fig.update_layout(
             title_text=title,
-            **({"height": 950} if has_tm else {}),
+            **({"height": 950} if show_separate_row else {}),
             legend=dict(
                 orientation="h",
                 yanchor="top",

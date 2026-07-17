@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
-from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
+from ecoengine.objects.components.storage.EnergyTank import EnergyTank
 from ecoengine.constants.constants import _RHO_CP
 from .RTPSystem import RTPSystem
+from ..utils import mixing_valve_behavior
 
 _SPRTP_STRAT_SLOPE: float = 1.7
 
@@ -38,6 +39,8 @@ class SinglePassRTPSystem(RTPSystem):
             return_flow_gpm = 3.0,
         )
     """
+
+    storage_tank: EnergyTank
 
     # ------------------------------------------------------------------
     # Factory constructor
@@ -110,8 +113,10 @@ class SinglePassRTPSystem(RTPSystem):
             load_shift_fract_total_vol=load_shift_fract_total_vol,
         )
 
-        system.storage_tank = StratifiedTank(
+        system.storage_tank = EnergyTank(
             total_volume_gal=system._minimum_storage_storageT_gal,
+            cold_temp_f=building.get_design_inlet_water_temp_f(),
+            storage_temp_f=storage_temp_f,
             strat_slope=strat_slope,
         )
         system.water_heaters = [WaterHeater.from_nominal_capacity(
@@ -331,6 +336,7 @@ class SinglePassRTPSystem(RTPSystem):
         timestep_interval: int,
         interval_min: int = 1,
         mode: str = "normal",
+        tm_safety_factor : float = 1.0
     ) -> dict:
         """
         Run one timestep for a single-pass RTP system.
@@ -341,17 +347,91 @@ class SinglePassRTPSystem(RTPSystem):
         usable volume.  The returned dict is updated to reflect post-recirc
         tank state.
         """
-        step = super().simulate_step(building, timestep_interval, interval_min, mode)
+        # step = super().simulate_step(building, timestep_interval, interval_min, mode)
+        use_avg = any(wh.is_load_shifting() for wh in self.water_heaters)
+        demand_supplyT_gal = building.get_dhw_load_supplyT_gal(
+            timestep_interval, interval_min, use_avg=use_avg
+        )
+        # NOTE: The original EcosizerEngine scaled hwDemand by fract_total_vol
+        # (derived from load_shift_percent) in the simulation as well as sizing.
+        # This codebase intentionally does NOT do that. Sizing is scaled so the
+        # system is optimally sized for the target percentile of days, but the
+        # simulation always runs against the full unscaled average daily demand.
+        # The practical consequence: a system sized with load_shift_percent < 1.0
+        # may show the primary heater firing during shed on some simulated days,
+        # which is the expected and honest behavior for a design that accepts
+        # occasional shed violations in exchange for a smaller tank.
+        oat_f          = building.get_oat_f(timestep_interval, interval_min)
+        inlet_temp_f   = building.get_inlet_water_temp_f(timestep_interval, interval_min)
+        hour_of_day    = (timestep_interval * interval_min // 60) % 24
+        outlet_temp_f  = self._get_outlet_temp_f(hour_of_day)
+        mode = (
+            self.water_heaters[0].control_schedule[hour_of_day]
+            if self.water_heaters and self.water_heaters[0].control_schedule
+            else "normal"
+        )
+
+        draw_gal = 0.0
         if self.storage_tank is not None:
-            self.storage_tank.add_recirc_return(
-                self.return_flow_gpm, self.return_temp_f, interval_min,
-                supply_temp_f=self.supply_temp_f,
+            self.storage_tank.update_cold_temp_f(inlet_temp_f)
+            # Update on/off state for each heater based on current tank condition
+            for wh in self.water_heaters:
+                wh.update_state(self.storage_tank, hour_of_day)
+
+            # Apply heating from all active heaters to the tank
+            total_kbtuh    = sum(
+                wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
+                for wh in self.water_heaters
             )
-            step["usable_volume_supplyT_gal"] = (
-                self.storage_tank.get_usable_volume_supplyT_gal(self.supply_temp_f)
+            total_kw: float | None = None
+            active_kws = [
+                wh.get_power_in_kw(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
+                for wh in self.water_heaters
+                if wh.is_active()
+            ]
+            if any(kw is not None for kw in active_kws):
+                total_kw = sum(kw or 0.0 for kw in active_kws)
+
+            self.storage_tank.heat(total_kbtuh, interval_min, outlet_temp_f)
+            top_temp_f     = self.storage_tank.get_temperature_at_fraction(1.0)
+
+            # --- Mixing valve draw ---
+            flow_per_min_gal = self.return_flow_gpm * interval_min
+            result = mixing_valve_behavior(
+                demand_supplyT_gal,
+                flow_per_min_gal,
+                inlet_temp_f,
+                self.supply_temp_f,
+                self.return_temp_f,
+                top_temp_f,
+                tm_safety_factor = tm_safety_factor
             )
-            step["tank_temps_f"] = [
+            draw_gal       = result["storage_draw_gal"]
+            mv_inlet_temp_f = result["inlet_temp_f"]
+
+            self.storage_tank.draw_physical_gal(draw_gal, mv_inlet_temp_f, update_internal_cold_temp = False)
+
+            usable_vol_gal = self.storage_tank.get_usable_volume_supplyT_gal(
+                self.supply_temp_f
+            )
+            tank_temps_f = [
                 self.storage_tank.get_temperature_at_fraction(f)
                 for f in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
             ]
-        return step
+        else:
+            total_kbtuh    = 0.0
+            total_kw       = None
+            usable_vol_gal = 0.0
+            tank_temps_f   = [0.0] * 6
+
+        return {
+            "demand_supplyT_gal":        demand_supplyT_gal,
+            "usable_volume_supplyT_gal": usable_vol_gal,
+            "heater_output_kbtuh":       total_kbtuh,
+            "heater_power_in_kw":        total_kw,
+            "oat_f":                     oat_f,
+            "inlet_water_temp_f":        inlet_temp_f,
+            "tank_temps_f":              tank_temps_f,
+            "mode":                      mode,
+            "draw_thru_system_gal":      draw_gal,
+        }

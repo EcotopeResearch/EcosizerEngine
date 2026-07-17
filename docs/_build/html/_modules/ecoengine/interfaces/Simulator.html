@@ -292,11 +292,21 @@
     <span class="n">sim_run</span> <span class="o">=</span> <span class="n">SimulationRun</span><span class="p">(</span><span class="n">duration_min</span><span class="p">,</span> <span class="n">timestep_min</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.recirc_systems.SwingSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwingSystem</span>
-    <span class="n">sim_run</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SwingSystem</span><span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwingERTrdOffSystem</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SP_RTPInSeriesSystem</span><span class="p">,</span> <span class="n">_GAS_DEADBAND_F</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.rtp_systems.MP_RTPInSeriesSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">MP_RTPInSeriesSystem</span>
+    <span class="n">_is_in_series</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="p">(</span><span class="n">SP_RTPInSeriesSystem</span><span class="p">,</span> <span class="n">MP_RTPInSeriesSystem</span><span class="p">))</span>
+    <span class="n">sim_run</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SwingSystem</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SwingERTrdOffSystem</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">_is_in_series</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">_is_in_series</span><span class="p">:</span>
+        <span class="n">sim_run</span><span class="o">.</span><span class="n">tm_panel_label</span> <span class="o">=</span> <span class="s2">&quot;In Series Heating&quot;</span>
 
     <span class="c1"># Initialize storage tanks</span>
     <span class="n">inlet_temp_f</span>    <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_design_inlet_water_temp_f</span><span class="p">()</span> <span class="ow">or</span> <span class="mf">50.0</span>
-    <span class="n">percent_useable</span> <span class="o">=</span> <span class="n">_initial_percent_useable</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">)</span>
+    <span class="n">percent_useable</span> <span class="o">=</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">get_initial_percent_useable</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">storage_tank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">dhw_system</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
             <span class="n">storage_temp_f</span>  <span class="o">=</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
@@ -309,6 +319,14 @@
         <span class="n">tm_off_temp_f</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="s2">&quot;tm_off_temp_f&quot;</span><span class="p">,</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">)</span>
         <span class="n">tm_tank</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
             <span class="n">storage_temp_f</span>  <span class="o">=</span> <span class="n">tm_off_temp_f</span><span class="p">,</span>
+            <span class="n">cold_temp_f</span>     <span class="o">=</span> <span class="n">inlet_temp_f</span><span class="p">,</span>
+            <span class="n">percent_useable</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="c1"># Initialize gas backup tank if present (SP_RTPInSeriesSystem)</span>
+    <span class="n">gas_tank</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="s2">&quot;gas_storage_tank&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gas_tank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">gas_tank</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
+            <span class="n">storage_temp_f</span>  <span class="o">=</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_GAS_DEADBAND_F</span><span class="p">,</span>
             <span class="n">cold_temp_f</span>     <span class="o">=</span> <span class="n">inlet_temp_f</span><span class="p">,</span>
             <span class="n">percent_useable</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="p">)</span>
@@ -336,7 +354,8 @@
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;usable_volume_supplyT_gal&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="n">sim_run</span><span class="o">.</span><span class="n">record_outage</span><span class="p">(</span><span class="n">timestep_min</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sim_run</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="ow">or</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tm_tank_temp_f&quot;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span>
+                <span class="n">sim_run</span><span class="o">.</span><span class="n">record_outage</span><span class="p">(</span><span class="n">timestep_min</span><span class="p">)</span>
 
         <span class="c1"># Check outlet-deficit stop condition. For systems where the TM/swing</span>
         <span class="c1"># tank is the actual delivery point (e.g. SwingSystem), use its</span>
@@ -393,27 +412,6 @@
 <span class="c1"># ---------------------------------------------------------------------------</span>
 <span class="c1"># Private helpers</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_initial_percent_useable</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">:</span> <span class="n">DHWSystem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Determine the initial tank charge level (fraction hot) from the system&#39;s</span>
-<span class="sd">    &quot;normal&quot; Controls on-aquastat fraction.</span>
-
-<span class="sd">    Starting the tank at ``1 - on_sensor_fract`` matches the original</span>
-<span class="sd">    engine&#39;s initialisation: the tank begins at the on-trigger level so the</span>
-<span class="sd">    heater fires immediately on the first cold hour and the simulation</span>
-<span class="sd">    reaches steady state quickly.</span>
-
-<span class="sd">    Falls back to 1.0 (fully charged) when no Controls are configured.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">wh</span><span class="o">.</span><span class="n">control_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="c1"># Prefer &quot;normal&quot; key; otherwise take the first available Controls.</span>
-        <span class="n">ctrl</span> <span class="o">=</span> <span class="n">wh</span><span class="o">.</span><span class="n">control_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;normal&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">wh</span><span class="o">.</span><span class="n">control_map</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ctrl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">ctrl</span><span class="o">.</span><span class="n">on_sensor_fract</span><span class="p">))</span>
-    <span class="k">return</span> <span class="mf">1.0</span>
 </pre></div>
         </article>
       </div>

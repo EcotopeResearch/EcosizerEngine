@@ -241,7 +241,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.Simulator</span><span class="w"> </span><span class="kn">import</span> <span class="n">simulate_3day</span> <span class="k">as</span> <span class="n">_simulate_3day</span><span class="p">,</span> <span class="n">simulate_annual</span> <span class="k">as</span> <span class="n">_simulate_annual</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.building.ClimateZone</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClimateZone</span> <span class="k">as</span> <span class="n">_ClimateZone</span>
 
-<span class="n">_MAPS_PATH</span>    <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;../data/preformanceMaps/maps.json&quot;</span><span class="p">)</span>
+<span class="n">_BUNDLED_MAPS_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;../data/preformanceMaps/maps.json&quot;</span><span class="p">)</span>
 <span class="n">_WS_LOOKUP</span>    <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;../data/climate_data/WeatherStation_ClimateZone_Lookup.csv&quot;</span><span class="p">)</span>
 
 
@@ -306,6 +306,7 @@
     <span class="n">include_residential</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">exclude_models</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">sgip_models_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">perf_map_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return available HPWH model codes and display names.</span>
@@ -323,6 +324,9 @@
 <span class="sd">    sgip_models_only : bool</span>
 <span class="sd">        ``True`` (default) → restrict to models flagged ``SGIP_avail`` in</span>
 <span class="sd">        the performance-map database.</span>
+<span class="sd">    perf_map_dir : str | None</span>
+<span class="sd">        Path to directory containing ``maps.json``.  When None, falls back</span>
+<span class="sd">        to the bundled data shipped with the package.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -331,9 +335,14 @@
 <span class="sd">        is the string accepted by ``WaterHeater.from_model_name()`` and</span>
 <span class="sd">        ``display_name`` is the human-readable label.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maps_path</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">perf_map_dir</span><span class="p">,</span> <span class="s2">&quot;maps.json&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">perf_map_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="n">_BUNDLED_MAPS_PATH</span>
+    <span class="p">)</span>
     <span class="n">exclude</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude_models</span> <span class="ow">or</span> <span class="p">[])</span>
     <span class="n">result</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">_MAPS_PATH</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">maps_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">model_code</span><span class="p">,</span> <span class="n">meta</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">model_code</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
@@ -405,6 +414,7 @@
     <span class="n">num_heaters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">return_as_kw</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">defrost_derate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">perf_map_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the output capacity of an HPWH model at the given operating conditions.</span>
@@ -425,6 +435,9 @@
 <span class="sd">        If True (default), return output in kW. If False, return in kBTU/hr.</span>
 <span class="sd">    defrost_derate : float</span>
 <span class="sd">        Fractional capacity reduction due to defrost [0.0–1.0]. Default 0.0.</span>
+<span class="sd">    perf_map_dir : str | None</span>
+<span class="sd">        Path to directory containing ``maps.json`` and ``pkls/``.  When None,</span>
+<span class="sd">        falls back to the bundled data shipped with the package.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -443,7 +456,7 @@
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.PerformanceMap</span><span class="w"> </span><span class="kn">import</span> <span class="n">PerformanceMap</span>
 
-    <span class="n">perf_map</span> <span class="o">=</span> <span class="n">PerformanceMap</span><span class="o">.</span><span class="n">from_model_name</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">perf_map</span> <span class="o">=</span> <span class="n">PerformanceMap</span><span class="o">.</span><span class="n">from_model_name</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">perf_map_dir</span><span class="o">=</span><span class="n">perf_map_dir</span><span class="p">)</span>
     <span class="n">capacity_kbtuh</span> <span class="o">=</span> <span class="n">perf_map</span><span class="o">.</span><span class="n">get_capacity_kbtuh</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">outlet_water_temp_f</span><span class="p">,</span> <span class="n">inlet_water_temp_f</span><span class="p">)</span>
     <span class="n">capacity_kbtuh</span> <span class="o">*=</span> <span class="n">num_heaters</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">defrost_derate</span><span class="p">)</span>
 
@@ -766,6 +779,7 @@
         <span class="n">tm_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">tm_model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_tm_heaters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">perf_map_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
@@ -921,6 +935,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tm_capacity_kbtuh</span>              <span class="o">=</span> <span class="n">tm_capacity_kbtuh</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tm_model</span>                       <span class="o">=</span> <span class="n">tm_model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_tm_heaters</span>                 <span class="o">=</span> <span class="n">num_tm_heaters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">perf_map_dir</span>                   <span class="o">=</span> <span class="n">perf_map_dir</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_building</span>    <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span>  <span class="o">=</span> <span class="kc">None</span>
@@ -1139,6 +1154,7 @@
                     <span class="n">return_flow_gpm</span>            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
                     <span class="n">max_daily_run_hr</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
                     <span class="n">defrost_factor</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+                    <span class="n">tm_safety_factor</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span><span class="p">,</span>
                     <span class="n">control_schedule</span>           <span class="o">=</span> <span class="n">control_schedule</span><span class="p">,</span>
                     <span class="n">control_map</span>                <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
                     <span class="n">load_shift_fract_total_vol</span> <span class="o">=</span> <span class="n">ls_fract</span><span class="p">,</span>
@@ -1157,6 +1173,7 @@
                     <span class="n">return_flow_gpm</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
                     <span class="n">max_daily_run_hr</span> <span class="o">=</span> <span class="mi">14</span><span class="p">,</span>
                     <span class="n">defrost_factor</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+                    <span class="n">tm_safety_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span><span class="p">,</span>
                     <span class="n">control_schedule</span> <span class="o">=</span> <span class="n">control_schedule</span><span class="p">,</span>
                     <span class="n">control_map</span>      <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -1217,6 +1234,7 @@
                 <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
                 <span class="n">design_inlet_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">50.0</span><span class="p">,</span>
                 <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">per_unit_kbtuh</span><span class="p">,</span>  <span class="c1"># used by ER fallback when OAT &lt; map minimum</span>
+                <span class="n">perf_map_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">perf_map_dir</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
             <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">per_unit_kbtuh</span><span class="p">,</span>
@@ -1250,6 +1268,7 @@
                     <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span>
                     <span class="n">design_inlet_temp_f</span><span class="o">=</span><span class="n">design_inlet_temp_f</span><span class="p">,</span>
                     <span class="n">num_units</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heaters</span><span class="p">,</span>
+                    <span class="n">perf_map_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">perf_map_dir</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1347,16 +1366,24 @@
             <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
                 <span class="n">SinglePassRTPSystem</span><span class="p">,</span> <span class="n">_SPRTP_STRAT_SLOPE</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.EnergyTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnergyTank</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_require_recirc_params</span><span class="p">()</span>
+            <span class="n">cold_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="o">.</span><span class="n">get_design_inlet_water_temp_f</span><span class="p">()</span> <span class="ow">or</span> <span class="mf">50.0</span>
             <span class="k">return</span> <span class="n">SinglePassRTPSystem</span><span class="p">(</span>
                 <span class="n">water_heaters</span><span class="o">=</span><span class="n">water_heaters</span><span class="p">,</span>
-                <span class="n">storage_tank</span><span class="o">=</span><span class="n">_primary_tank</span><span class="p">(</span><span class="n">strat_slope</span><span class="o">=</span><span class="n">_SPRTP_STRAT_SLOPE</span><span class="p">),</span>
+                <span class="n">storage_tank</span><span class="o">=</span><span class="n">EnergyTank</span><span class="p">(</span>
+                    <span class="n">total_volume_gal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_volume_storageT_gal</span><span class="p">,</span>
+                    <span class="n">cold_temp_f</span><span class="o">=</span><span class="n">cold_temp_f</span><span class="p">,</span>
+                    <span class="n">storage_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                    <span class="n">strat_slope</span><span class="o">=</span><span class="n">_SPRTP_STRAT_SLOPE</span><span class="p">,</span>
+                <span class="p">),</span>
                 <span class="n">supply_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
                 <span class="n">storage_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
                 <span class="n">return_temp_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span>
                 <span class="n">return_flow_gpm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
                 <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
                 <span class="n">defrost_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+                <span class="n">tm_safety_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;multi_pass_rtp&quot;</span><span class="p">,</span> <span class="s2">&quot;mprtp&quot;</span><span class="p">]:</span>
@@ -1381,6 +1408,7 @@
                 <span class="n">return_flow_gpm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
                 <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="n">_MPRTP_MAX_DAILY_RUN_HR</span><span class="p">,</span>
                 <span class="n">defrost_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+                <span class="n">tm_safety_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schematic</span> <span class="o">==</span> <span class="s2">&quot;instant_wh&quot;</span><span class="p">:</span>
@@ -1629,24 +1657,10 @@
 <span class="sd">            If ``plotly`` is not installed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">control_schedule</span><span class="p">,</span> <span class="n">control_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_control_map</span><span class="p">()</span>
-        <span class="n">fig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span><span class="o">.</span><span class="n">plot_sizing_curve</span><span class="p">(</span>
-            <span class="n">building</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span>
-            <span class="n">control_schedule</span>   <span class="o">=</span> <span class="n">control_schedule</span><span class="p">,</span>
-            <span class="n">control_map</span>        <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
-            <span class="n">load_shift_percent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_shift_percent</span><span class="p">,</span>
-            <span class="n">strat_slope</span>        <span class="o">=</span> <span class="n">strat_slope</span><span class="p">,</span>
-            <span class="n">title</span>              <span class="o">=</span> <span class="n">title</span><span class="p">,</span>
-            <span class="n">filepath</span>           <span class="o">=</span> <span class="n">filepath</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">result</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span><span class="n">full_html</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_plotlyjs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">if</span> <span class="n">return_as_div</span> <span class="k">else</span> <span class="n">fig</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">return_with_x_y_points</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">result</span>
-
         <span class="n">is_ls</span> <span class="o">=</span> <span class="s2">&quot;shed&quot;</span> <span class="ow">in</span> <span class="n">control_map</span>
+
         <span class="k">if</span> <span class="n">is_ls</span><span class="p">:</span>
-            <span class="n">curve</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span><span class="o">.</span><span class="n">get_ls_sizing_curve</span><span class="p">(</span>
+            <span class="n">curve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span><span class="o">.</span><span class="n">get_ls_sizing_curve</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_building</span><span class="p">,</span>
                 <span class="n">control_schedule</span>   <span class="o">=</span> <span class="n">control_schedule</span><span class="p">,</span>
                 <span class="n">control_map</span>        <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
@@ -1662,7 +1676,12 @@
             <span class="n">y_vals</span>      <span class="o">=</span> <span class="n">curve</span><span class="p">[</span><span class="s2">&quot;capacity_kbtuh&quot;</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">start_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_vals</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">curve</span><span class="p">[</span><span class="s2">&quot;recommended_index&quot;</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="p">[</span><span class="n">result</span><span class="p">,</span> <span class="n">x_vals</span><span class="p">,</span> <span class="n">y_vals</span><span class="p">,</span> <span class="n">start_index</span><span class="p">]</span></div>
+        <span class="n">fig</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dhw_system</span><span class="o">.</span><span class="n">_build_sizing_curve_figure</span><span class="p">(</span><span class="n">curve</span><span class="p">,</span> <span class="n">is_ls</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span><span class="n">full_html</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_plotlyjs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">if</span> <span class="n">return_as_div</span> <span class="k">else</span> <span class="n">fig</span>
+
+        <span class="k">if</span> <span class="n">return_with_x_y_points</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">result</span><span class="p">,</span> <span class="n">x_vals</span><span class="p">,</span> <span class="n">y_vals</span><span class="p">,</span> <span class="n">start_index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span></div>
 </div>
 
 </pre></div>

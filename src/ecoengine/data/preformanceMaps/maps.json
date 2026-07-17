@@ -1,2 +1,184 @@
 {
+  "MODELS_GenericHPWH1_C_MP": {
+    "name": "Generic Commercial HPWH 1",
+    "perfmap": [
+      {
+        "T_F": 50,
+        "inputPower_coeffs": [
+          2010.5,
+          -4.2,
+          0.1
+        ],
+        "COP_coeffs": [
+          5.9,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "T_F": 67.5,
+        "inputPower_coeffs": [
+          2171.0,
+          -6.9,
+          0.1
+        ],
+        "COP_coeffs": [
+          7.3,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "T_F": 95,
+        "inputPower_coeffs": [
+          2276.1,
+          -7.1,
+          0.1
+        ],
+        "COP_coeffs": [
+          8.8,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "secondary_heat_exchanger": false,
+    "SGIP_avail": true
+  },
+  "MODELS_GenericHPWH2_R_SP": {
+    "name": "Generic Residential HPWH 2",
+    "perfmap": [
+      {
+        "T_F": 17,
+        "inputPower_coeffs": [
+          1650,
+          5.5,
+          0.0
+        ],
+        "COP_coeffs": [
+          3.2,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "T_F": 35,
+        "inputPower_coeffs": [
+          1100,
+          4.0,
+          0.0
+        ],
+        "COP_coeffs": [
+          3.7,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "T_F": 50,
+        "inputPower_coeffs": [
+          880,
+          3.1,
+          0.0
+        ],
+        "COP_coeffs": [
+          5.2,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "T_F": 67,
+        "inputPower_coeffs": [
+          740,
+          4.0,
+          0.0
+        ],
+        "COP_coeffs": [
+          6.2,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "T_F": 95,
+        "inputPower_coeffs": [
+          790,
+          2,
+          0.0
+        ],
+        "COP_coeffs": [
+          7.2,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "secondary_heat_exchanger": false,
+    "SGIP_avail": false
+  },
+  "MODELS_GenericHPWH3_C_SP": {
+    "name": "Generic Commercial HPWH 3",
+    "pkl_prefix": "GenericHPWH3_SP",
+    "perfmap": [
+      {
+        "T_F": 100,
+        "inputPower_coeffs": [
+          11.4,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "COP_coeffs": [
+          4.4,
+          0.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "secondary_heat_exchanger": false,
+    "SGIP_avail": true
+  },
+  "MODELS_GenericHPWH4_C_MP": {
+    "name": "Generic Commercial HPWH 4",
+    "pkl_prefix": "GenericHPWH4_MP",
+    "perfmap": [
+      {
+        "T_F": 100,
+        "inputPower_coeffs": [
+          14.6,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "COP_coeffs": [
+          2.7,
+          0.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "secondary_heat_exchanger": false,
+    "SGIP_avail": true
+  }
 }

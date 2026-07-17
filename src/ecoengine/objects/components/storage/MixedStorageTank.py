@@ -42,13 +42,15 @@ class MixedStorageTank(StorageTank):
         self,
         storage_temp_f: float,
         cold_temp_f: float,
-        percent_useable: float,
+        initial_hot_fract: float,
+        supply_temp_f: float,
     ) -> None:
         """
         Set the uniform tank temperature before a simulation begins.
 
-        For a fully-mixed tank, ``percent_useable`` does not have a spatial
-        meaning; the tank is simply initialized at ``storage_temp_f``.
+        For a fully-mixed tank, ``initial_hot_fract`` and ``supply_temp_f``
+        do not have a spatial meaning; the tank is simply initialized at
+        ``storage_temp_f``.
 
         Parameters
         ----------
@@ -56,8 +58,10 @@ class MixedStorageTank(StorageTank):
             Initial tank temperature [°F].
         cold_temp_f : float
             Cold water temperature — stored for energy-balance calculations.
-        percent_useable : float
+        initial_hot_fract : float
             Ignored for the mixed model (all volume is always at one temp).
+        supply_temp_f : float
+            Ignored for the mixed model.
         """
         self._temperature_f = storage_temp_f
         self._cold_temp_f   = cold_temp_f

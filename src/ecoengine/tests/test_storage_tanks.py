@@ -60,27 +60,27 @@ class TestStorageTankEquivalence:
 
     def test_initialize_fully_hot(self):
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 1.0)
-        et.initialize(150.0, 50.0, 1.0)
+        st.initialize(150.0, 50.0, 1.0, 120.0)
+        et.initialize(150.0, 50.0, 1.0, 120.0)
         _assert_temps_match(st, et)
 
     def test_initialize_eighty_percent(self):
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 0.8)
-        et.initialize(150.0, 50.0, 0.8)
+        st.initialize(150.0, 50.0, 0.8, 120.0)
+        et.initialize(150.0, 50.0, 0.8, 120.0)
         _assert_temps_match(st, et)
 
     def test_initialize_fifty_percent(self):
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 0.5)
-        et.initialize(150.0, 50.0, 0.5)
+        st.initialize(150.0, 50.0, 0.5, 120.0)
+        et.initialize(150.0, 50.0, 0.5, 120.0)
         _assert_temps_match(st, et)
 
     def test_initialize_non_default_slope(self):
         """Agreement holds for a non-default stratification slope (SPRTP uses 1.7)."""
         st, et = _make_tanks(300.0, 40.0, 160.0, strat_slope=1.7)
-        st.initialize(160.0, 40.0, 0.9)
-        et.initialize(160.0, 40.0, 0.9)
+        st.initialize(160.0, 40.0, 0.9, 130.0)
+        et.initialize(160.0, 40.0, 0.9, 130.0)
         _assert_temps_match(st, et)
 
     # ------------------------------------------------------------------
@@ -88,29 +88,34 @@ class TestStorageTankEquivalence:
     # ------------------------------------------------------------------
 
     def test_draw_from_full_tank(self):
-        """Draw within the hot zone keeps profiles in sync."""
+        """Draw with a genuine cold zone present at the bottom keeps profiles in sync.
+
+        StratifiedTank and EnergyTank only agree while a real cold zone (below
+        cold_temp_f-anchored) still exists at the bottom of the tank; see the
+        known-issue note in StratifiedTank's docstring.
+        """
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 1.0)
-        et.initialize(150.0, 50.0, 1.0)
-        st.draw(50.0, 50.0, 120.0, 150.0)
-        et.draw(50.0, 50.0, 120.0, 150.0)
+        st.initialize(150.0, 50.0, 0.6, 120.0)
+        et.initialize(150.0, 50.0, 0.6, 120.0)
+        st.draw_physical_gal(50.0, 50.0, 120.0)
+        et.draw_physical_gal(50.0, 50.0, 120.0)
         _assert_temps_match(st, et)
 
     def test_draw_repeated(self):
-        """Five sequential draws stay in sync."""
+        """Five sequential draws stay in sync while a cold zone remains present."""
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 1.0)
-        et.initialize(150.0, 50.0, 1.0)
+        st.initialize(150.0, 50.0, 0.6, 120.0)
+        et.initialize(150.0, 50.0, 0.6, 120.0)
         for _ in range(5):
             st.draw(30.0, 50.0, 120.0, 150.0)
             et.draw(30.0, 50.0, 120.0, 150.0)
         _assert_temps_match(st, et)
 
     def test_draw_from_partial_init(self):
-        """Draw from a tank initialized at 80% useable stays in sync."""
+        """Draw from a tank initialized with a cold zone present stays in sync."""
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 0.8)
-        et.initialize(150.0, 50.0, 0.8)
+        st.initialize(150.0, 50.0, 0.4, 120.0)
+        et.initialize(150.0, 50.0, 0.4, 120.0)
         st.draw(40.0, 50.0, 120.0, 150.0)
         et.draw(40.0, 50.0, 120.0, 150.0)
         _assert_temps_match(st, et)
@@ -122,8 +127,8 @@ class TestStorageTankEquivalence:
     def test_heat_partial_tank(self):
         """Heating a half-cold tank produces matching profiles."""
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 0.5)
-        et.initialize(150.0, 50.0, 0.5)
+        st.initialize(150.0, 50.0, 0.5, 120.0)
+        et.initialize(150.0, 50.0, 0.5, 120.0)
         st.heat(50.0, 30.0, 150.0)
         et.heat(50.0, 30.0, 150.0)
         _assert_temps_match(st, et)
@@ -131,8 +136,8 @@ class TestStorageTankEquivalence:
     def test_heat_to_full(self):
         """Excess heat clamps both tanks at storage temperature."""
         st, et = _make_tanks(200.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 0.3)
-        et.initialize(150.0, 50.0, 0.3)
+        st.initialize(150.0, 50.0, 0.3, 120.0)
+        et.initialize(150.0, 50.0, 0.3, 120.0)
         st.heat(500.0, 60.0, 150.0)
         et.heat(500.0, 60.0, 150.0)
         _assert_temps_match(st, et)
@@ -140,8 +145,8 @@ class TestStorageTankEquivalence:
     def test_heat_then_draw(self):
         """Heat followed by a draw stays in sync."""
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 0.6)
-        et.initialize(150.0, 50.0, 0.6)
+        st.initialize(150.0, 50.0, 0.6, 120.0)
+        et.initialize(150.0, 50.0, 0.6, 120.0)
         st.heat(80.0, 30.0, 150.0)
         et.heat(80.0, 30.0, 150.0)
         st.draw(60.0, 50.0, 120.0, 150.0)
@@ -153,29 +158,29 @@ class TestStorageTankEquivalence:
     # ------------------------------------------------------------------
 
     def test_recirc_return(self):
-        """Single recirc loss step produces matching profiles."""
+        """Single recirc loss step produces matching profiles while a cold zone remains present."""
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 1.0)
-        et.initialize(150.0, 50.0, 1.0)
+        st.initialize(150.0, 50.0, 0.6, 120.0)
+        et.initialize(150.0, 50.0, 0.6, 120.0)
         st.add_recirc_return(2.0, 110.0, 60.0)
         et.add_recirc_return(2.0, 110.0, 60.0)
         _assert_temps_match(st, et)
 
     def test_recirc_repeated(self):
-        """Ten recirc steps accumulate correctly in both tanks."""
+        """Ten recirc steps accumulate correctly in both tanks while a cold zone remains present."""
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 1.0)
-        et.initialize(150.0, 50.0, 1.0)
+        st.initialize(150.0, 50.0, 0.6, 120.0)
+        et.initialize(150.0, 50.0, 0.6, 120.0)
         for _ in range(10):
             st.add_recirc_return(2.0, 110.0, 6.0)
             et.add_recirc_return(2.0, 110.0, 6.0)
         _assert_temps_match(st, et)
 
     def test_recirc_then_heat(self):
-        """Recirc loss followed by heater recovery stays in sync."""
+        """Recirc loss followed by heater recovery stays in sync while a cold zone remains present."""
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 1.0)
-        et.initialize(150.0, 50.0, 1.0)
+        st.initialize(150.0, 50.0, 0.6, 120.0)
+        et.initialize(150.0, 50.0, 0.6, 120.0)
         st.add_recirc_return(3.0, 110.0, 30.0)
         et.add_recirc_return(3.0, 110.0, 30.0)
         st.heat(60.0, 30.0, 150.0)
@@ -187,19 +192,19 @@ class TestStorageTankEquivalence:
     # ------------------------------------------------------------------
 
     def test_draw_physical_gal_from_hot_zone(self):
-        """draw_physical_gal from the hot zone stays in sync."""
+        """draw_physical_gal from the hot zone stays in sync while a cold zone remains present at the bottom."""
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 1.0)
-        et.initialize(150.0, 50.0, 1.0)
+        st.initialize(150.0, 50.0, 0.6, 120.0)
+        et.initialize(150.0, 50.0, 0.6, 120.0)
         st.draw_physical_gal(30.0, 50.0)
         et.draw_physical_gal(30.0, 50.0)
         _assert_temps_match(st, et)
 
     def test_draw_physical_gal_partial_init(self):
-        """draw_physical_gal on a partially hot tank stays in sync."""
+        """draw_physical_gal on a partially hot tank stays in sync while a cold zone remains present."""
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 0.8)
-        et.initialize(150.0, 50.0, 0.8)
+        st.initialize(150.0, 50.0, 0.4, 120.0)
+        et.initialize(150.0, 50.0, 0.4, 120.0)
         st.draw_physical_gal(20.0, 50.0)
         et.draw_physical_gal(20.0, 50.0)
         _assert_temps_match(st, et)
@@ -209,10 +214,10 @@ class TestStorageTankEquivalence:
     # ------------------------------------------------------------------
 
     def test_full_simulation_sequence(self):
-        """Extended draw/heat/recirc sequence stays in sync."""
+        """Extended draw/heat/recirc sequence stays in sync while a cold zone remains present throughout."""
         st, et = _make_tanks(500.0, 50.0, 150.0)
-        st.initialize(150.0, 50.0, 0.8)
-        et.initialize(150.0, 50.0, 0.8)
+        st.initialize(150.0, 50.0, 0.6, 120.0)
+        et.initialize(150.0, 50.0, 0.6, 120.0)
 
         steps = [
             ("draw",   (20.0, 50.0, 120.0, 150.0)),
@@ -242,14 +247,14 @@ class TestStorageTankEquivalence:
 # SlugOverlayTank — slug energy conservation
 # ===========================================================================
 
-def _make_slug_tank(percent_useable: float = 1.0) -> SlugOverlayTank:
+def _make_slug_tank(drawdown_fract: float = 1.0) -> SlugOverlayTank:
     """100-gal tank with MPRTP-typical temperatures and strat_slope."""
     return SlugOverlayTank(
         total_volume_gal=100.0,
         cold_temp_f=50.0,
         storage_temp_f=140.0,
         supply_temp_f=125.0,
-        percent_useable=percent_useable,
+        drawdown_fract=drawdown_fract,
         strat_slope=0.8,
     )
 
@@ -264,12 +269,12 @@ class TestSlugEnergyConservation:
     """
 
     def test_energy_conserved_no_unusable_zone(self):
-        # percent_useable=1.0: cold inlet at the very bottom, no unusable zone.
+        # drawdown_fract=1.0: cold inlet at the very bottom, no unusable zone.
         # Initialize to 70% usable so there is a 30-gal sub-supply slug zone.
         # Slug spans 0–30 % of tank height, avg temp ≈ 113 °F.
         # Q=500 BTU is well below the storage-temp cap (~6765 BTU available).
-        tank = _make_slug_tank(percent_useable=1.0)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        tank = _make_slug_tank(drawdown_fract=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70, supply_temp_f=125.0)
 
         E0 = tank._energy_btu
 
@@ -285,8 +290,8 @@ class TestSlugEnergyConservation:
 
     def test_energy_conserved_larger_heat_addition(self):
         # Same setup but more heat added — still below the storage-temp cap.
-        tank = _make_slug_tank(percent_useable=1.0)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        tank = _make_slug_tank(drawdown_fract=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70, supply_temp_f=125.0)
 
         E0 = tank._energy_btu
 
@@ -301,11 +306,11 @@ class TestSlugEnergyConservation:
         assert tank._energy_btu == pytest.approx(E0 + Q, rel=1e-4)
 
     def test_energy_conserved_with_unusable_zone(self):
-        # percent_useable=0.85: 15 % of tank is below the cold inlet pipe.
+        # drawdown_fract=0.85: 15 % of tank is below the cold inlet pipe.
         # The unusable zone contains real BTUs that must survive deactivation.
         # Slug spans 15–30 % of tank height, avg temp ≈ 119 °F.
-        tank = _make_slug_tank(percent_useable=0.85)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        tank = _make_slug_tank(drawdown_fract=0.85)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70, supply_temp_f=125.0)
 
         E0 = tank._energy_btu
 
@@ -337,9 +342,9 @@ class TestSlugEnergyConservationWithDraw:
     """
 
     def test_draw_from_above_slug_no_unusable_zone(self):
-        # percent_useable=1.0; draw 20 gal from the hot zone above the slug.
-        tank = _make_slug_tank(percent_useable=1.0)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        # drawdown_fract=1.0; draw 20 gal from the hot zone above the slug.
+        tank = _make_slug_tank(drawdown_fract=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70, supply_temp_f=125.0)
 
         E0 = tank._energy_btu
 
@@ -360,9 +365,9 @@ class TestSlugEnergyConservationWithDraw:
         assert tank._energy_btu == pytest.approx(E0 + Q - E_removed, rel=1e-4)
 
     def test_draw_from_above_slug_with_unusable_zone(self):
-        # percent_useable=0.85; 15 % below inlet; draw 20 gal from hot zone.
-        tank = _make_slug_tank(percent_useable=0.85)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        # drawdown_fract=0.85; 15 % below inlet; draw 20 gal from hot zone.
+        tank = _make_slug_tank(drawdown_fract=0.85)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70, supply_temp_f=125.0)
 
         E0 = tank._energy_btu
 
@@ -384,8 +389,8 @@ class TestSlugEnergyConservationWithDraw:
 
     def test_multiple_draws_no_unusable_zone(self):
         # Three interleaved heat + draw cycles; cumulative accounting must balance.
-        tank = _make_slug_tank(percent_useable=1.0)
-        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, percent_useable=0.70)
+        tank = _make_slug_tank(drawdown_fract=1.0)
+        tank.initialize(storage_temp_f=140.0, cold_temp_f=50.0, initial_hot_fract=0.70, supply_temp_f=125.0)
 
         E0 = tank._energy_btu
         inlet_temp_f = 50.0
@@ -435,7 +440,7 @@ class TestStratifiedTankDepletion:
 
     def _full_tank(self) -> StratifiedTank:
         tank = StratifiedTank(total_volume_gal=self._VOLUME_GAL)
-        tank.initialize(self._STORAGE_T, self._INLET_T, percent_useable=1.0)
+        tank.initialize(self._STORAGE_T, self._INLET_T, initial_hot_fract=1.0, supply_temp_f=self._SUPPLY_T)
         return tank
 
     def test_massive_draw_empties_all_nodes_to_inlet(self):
@@ -464,6 +469,127 @@ class TestStratifiedTankDepletion:
         tank.draw(self._VOLUME_GAL * 100, self._INLET_T, self._SUPPLY_T, self._OUTLET_T)
 
         # Apply a modest 30-minute heat pulse at low capacity
+        tank.heat(kbtuh=5.0, duration_min=30.0, outlet_temp_f=self._OUTLET_T)
+
+        top_temp = tank.get_temperature_at_fraction(1.0)
+        assert top_temp > self._INLET_T, (
+            f"top node ({top_temp:.2f}°F) should be above inlet ({self._INLET_T}°F) "
+            "after heating a depleted tank"
+        )
+
+
+class TestEnergyTankDepletion:
+    """
+    Same guarantees as TestStratifiedTankDepletion, but for EnergyTank: a
+    massive draw must empty the tank to inlet temperature everywhere, zero
+    out usable volume, and still respond to a subsequent heat pulse.
+
+    EnergyTank tracks stored BTU directly and floors it at 0.0 in draw(), so
+    it does not share StratifiedTank's known issue with a delta_gal shift
+    that can undershoot the true "fully cold" floor (see the known-issue
+    note in StratifiedTank's docstring).
+    """
+
+    _VOLUME_GAL = 200.0
+    _STORAGE_T  = 150.0
+    _SUPPLY_T   = 120.0
+    _INLET_T    = 55.0
+    _OUTLET_T   = 150.0
+
+    def _full_tank(self) -> EnergyTank:
+        tank = EnergyTank(
+            total_volume_gal=self._VOLUME_GAL,
+            cold_temp_f=self._INLET_T,
+            storage_temp_f=self._STORAGE_T,
+        )
+        tank.initialize(self._STORAGE_T, self._INLET_T, initial_hot_fract=1.0, supply_temp_f=self._SUPPLY_T)
+        return tank
+
+    def test_massive_draw_empties_all_nodes_to_inlet(self):
+        """Drawing 100x tank volume leaves every node at inlet temperature."""
+        tank = self._full_tank()
+        tank.draw(
+            volume_supplyT_gal = self._VOLUME_GAL * 100,
+            cold_temp_f        = self._INLET_T,
+            supply_temp_f      = self._SUPPLY_T,
+            outlet_temp_f      = self._OUTLET_T,
+        )
+        for fract in _FRACTIONS:
+            assert tank.get_temperature_at_fraction(fract) == pytest.approx(
+                self._INLET_T, abs=0.1
+            ), f"node at {fract*100:.0f}% should be inlet temp after full depletion"
+
+    def test_massive_draw_zeros_usable_volume(self):
+        """After a full depletion draw usable volume is zero."""
+        tank = self._full_tank()
+        tank.draw(self._VOLUME_GAL * 100, self._INLET_T, self._SUPPLY_T, self._OUTLET_T)
+        assert tank.get_usable_volume_supplyT_gal(self._SUPPLY_T) == pytest.approx(0.0, abs=1e-6)
+
+    def test_small_heat_after_depletion_warms_top(self):
+        """A small heat pulse on a depleted tank raises the top node above inlet."""
+        tank = self._full_tank()
+        tank.draw(self._VOLUME_GAL * 100, self._INLET_T, self._SUPPLY_T, self._OUTLET_T)
+
+        tank.heat(kbtuh=5.0, duration_min=30.0, outlet_temp_f=self._OUTLET_T)
+
+        top_temp = tank.get_temperature_at_fraction(1.0)
+        assert top_temp > self._INLET_T, (
+            f"top node ({top_temp:.2f}°F) should be above inlet ({self._INLET_T}°F) "
+            "after heating a depleted tank"
+        )
+
+
+class TestSlugTankDepletion:
+    """
+    Same guarantees as TestStratifiedTankDepletion, but for SlugOverlayTank
+    with the slug inactive (draw() delegates straight to EnergyTank's
+    energy-floored accounting). Uses drawdown_fract < 1.0 so the permanent
+    below-inlet exclusion zone is also exercised.
+    """
+
+    _VOLUME_GAL      = 200.0
+    _STORAGE_T       = 150.0
+    _SUPPLY_T        = 120.0
+    _INLET_T         = 55.0
+    _OUTLET_T        = 150.0
+    _DRAWDOWN_FRACT  = 0.85
+
+    def _full_tank(self) -> SlugOverlayTank:
+        tank = SlugOverlayTank(
+            total_volume_gal=self._VOLUME_GAL,
+            cold_temp_f=self._INLET_T,
+            storage_temp_f=self._STORAGE_T,
+            supply_temp_f=self._SUPPLY_T,
+            drawdown_fract=self._DRAWDOWN_FRACT,
+        )
+        tank.initialize(self._STORAGE_T, self._INLET_T, initial_hot_fract=1.0, supply_temp_f=self._SUPPLY_T)
+        return tank
+
+    def test_massive_draw_empties_all_nodes_to_inlet(self):
+        """Drawing 100x tank volume leaves every node at inlet temperature."""
+        tank = self._full_tank()
+        tank.draw(
+            volume_supplyT_gal = self._VOLUME_GAL * 100,
+            cold_temp_f        = self._INLET_T,
+            supply_temp_f      = self._SUPPLY_T,
+            outlet_temp_f      = self._OUTLET_T,
+        )
+        for fract in _FRACTIONS:
+            assert tank.get_temperature_at_fraction(fract) == pytest.approx(
+                self._INLET_T, abs=0.1
+            ), f"node at {fract*100:.0f}% should be inlet temp after full depletion"
+
+    def test_massive_draw_zeros_usable_volume(self):
+        """After a full depletion draw usable volume is zero."""
+        tank = self._full_tank()
+        tank.draw(self._VOLUME_GAL * 100, self._INLET_T, self._SUPPLY_T, self._OUTLET_T)
+        assert tank.get_usable_volume_supplyT_gal(self._SUPPLY_T) == pytest.approx(0.0, abs=1e-6)
+
+    def test_small_heat_after_depletion_warms_top(self):
+        """A small heat pulse on a depleted tank raises the top node above inlet."""
+        tank = self._full_tank()
+        tank.draw(self._VOLUME_GAL * 100, self._INLET_T, self._SUPPLY_T, self._OUTLET_T)
+
         tank.heat(kbtuh=5.0, duration_min=30.0, outlet_temp_f=self._OUTLET_T)
 
         top_temp = tank.get_temperature_at_fraction(1.0)

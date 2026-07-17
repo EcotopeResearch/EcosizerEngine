@@ -51,6 +51,8 @@ class MultiPassRTPSystem(RTPSystem):
     Load-shift sizing is not supported.
     """
 
+    storage_tank: SlugOverlayTank
+
     # ------------------------------------------------------------------
     # Factory constructor
     # ------------------------------------------------------------------
@@ -69,7 +71,7 @@ class MultiPassRTPSystem(RTPSystem):
         control_schedule: list[str] | None = None,
         control_map: dict[str, Controls] | None = None,
         strat_slope: float = _MPRTP_STRAT_SLOPE,
-        percent_useable: float = 1.0,
+        drawdown_fract: float = 1.0,
         capacity_boost_trial_days: int = 3,
         capacity_boost_iterations: int = 3,
         default_to_min_volume: bool = True
@@ -95,29 +97,29 @@ class MultiPassRTPSystem(RTPSystem):
         control_map : dict[str, Controls] | None
         strat_slope : float
             SlugOverlayTank stratification slope [°F / %-height]. Default 0.8.
-        percent_useable : float
+        drawdown_fract : float
             Fraction of total tank volume above the cold-water inlet pipe (0–1).
-            Control on-sensors must sit above ``(1 - percent_useable)`` height.
+            Control on-sensors must sit above ``(1 - drawdown_fract)`` height.
 
         Raises
         ------
         ValueError
             If any on_sensor_fract in control_map falls inside the unusable zone.
         """
-        if control_map and percent_useable < 1.0:
-            cold_fract = 1.0 - percent_useable
+        if control_map and drawdown_fract < 1.0:
+            cold_fract = 1.0 - drawdown_fract
             for key, ctrl in control_map.items():
                 if ctrl.on_sensor_fract < cold_fract:
                     raise ValueError(
                         f"Control '{key}': on_sensor_fract={ctrl.on_sensor_fract:.3f} "
                         f"is in the unusable zone (must be >= {cold_fract:.3f} for "
-                        f"percent_useable={percent_useable:.3f})."
+                        f"drawdown_fract={drawdown_fract:.3f})."
                     )
                 if ctrl.off_sensor_fract < cold_fract:
                     raise ValueError(
                         f"Control '{key}': off_sensor_fract={ctrl.off_sensor_fract:.3f} "
                         f"is in the unusable zone (must be >= {cold_fract:.3f} for "
-                        f"percent_useable={percent_useable:.3f})."
+                        f"drawdown_fract={drawdown_fract:.3f})."
                     )
 
         system = cls(
@@ -132,14 +134,13 @@ class MultiPassRTPSystem(RTPSystem):
             tm_safety_factor=tm_safety_factor,
         )
         system.size(building, control_map=control_map, strat_slope=strat_slope, default_to_min_volume = default_to_min_volume)
-
         cold_temp_f = system._require_design_inlet_temp(building)
         system.storage_tank = SlugOverlayTank(
             total_volume_gal=system._minimum_storage_storageT_gal,
             cold_temp_f=cold_temp_f,
             storage_temp_f=storage_temp_f,
             supply_temp_f=supply_temp_f,
-            percent_useable=percent_useable,
+            drawdown_fract=drawdown_fract,
             strat_slope=strat_slope,
         )
         system.water_heaters = [WaterHeater.from_nominal_capacity(
@@ -149,13 +150,13 @@ class MultiPassRTPSystem(RTPSystem):
         )]
         # Capacity Boost
         inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
-        ctrl = control_map.get("normal") or next(iter(control_map.values()), None)
-        starting_percent_usable = max(0.0, min(1.0, 1.0 - ctrl.on_sensor_fract))
+        starting_percent_usable = system.get_initial_hot_fract()
         for _ in range(capacity_boost_iterations):
             system.storage_tank.initialize(
                 storage_temp_f  = system.storage_temp_f,
                 cold_temp_f     = inlet_temp_f,
-                percent_useable = starting_percent_usable
+                initial_hot_fract = starting_percent_usable,
+                supply_temp_f   = supply_temp_f,
             )
             minutes = 24 * 60 * capacity_boost_trial_days
             deficit_minutes = 0
@@ -181,8 +182,8 @@ class MultiPassRTPSystem(RTPSystem):
                         deficit_minutes = i - start_heat_min
                         min_tank_outlet_f = tank_outlet_f
             
-            if (deficit_minutes > 5 and supply_temp_f - min_tank_outlet_f > 2.0) or supply_temp_f - min_tank_outlet_f > 4.0: # criteria for outage
-                capacity_increase_kbtu = ((system.storage_tank.total_volume_gal * percent_useable) * _RHO_CP * (supply_temp_f - min_tank_outlet_f))/1000
+            if (deficit_minutes > 5 and supply_temp_f - min_tank_outlet_f > 1.0) or supply_temp_f - min_tank_outlet_f > 4.0: # criteria for outage
+                capacity_increase_kbtu = ((system.storage_tank.total_volume_gal * drawdown_fract) * _RHO_CP * (supply_temp_f - min_tank_outlet_f))/1000
                 if capacity_increase_kbtu > 0:
                     system._minimum_capacity_kbtuh = system._minimum_capacity_kbtuh + (capacity_increase_kbtu / (deficit_minutes/60))
                     system.water_heaters = [WaterHeater.from_nominal_capacity(
@@ -322,8 +323,8 @@ class MultiPassRTPSystem(RTPSystem):
         _cmap    = self.water_heaters[0].control_map     if self.water_heaters else None
         _sched   = self.water_heaters[0].control_schedule if self.water_heaters else None
         _pct_use = (
-            self.storage_tank.percent_useable
-            if self.storage_tank and hasattr(self.storage_tank, "percent_useable")
+            self.storage_tank.drawdown_fract
+            if self.storage_tank and hasattr(self.storage_tank, "drawdown_fract")
             else 1.0
         )
 
@@ -353,8 +354,8 @@ class MultiPassRTPSystem(RTPSystem):
             for h in heat_hours:
                 if h == self.max_daily_run_hr:
                     pt = self
-                elif h < 9:
-                    break
+                # elif h < 9: #TODO remove this
+                #     break
                 else:
                     try:
                         pt = MultiPassRTPSystem.from_size(
@@ -368,7 +369,7 @@ class MultiPassRTPSystem(RTPSystem):
                             control_schedule = _sched,
                             control_map      = _cmap,
                             strat_slope      = _strat_slope,
-                            percent_useable  = _pct_use,
+                            drawdown_fract   = _pct_use,
                             capacity_boost_trial_days= 2,
                             capacity_boost_iterations= 1,
                             default_to_min_volume = False,
@@ -533,6 +534,7 @@ class MultiPassRTPSystem(RTPSystem):
         timestep_interval: int,
         interval_min: int = 1,
         mode: str = "normal",
+        tm_safety_factor : float = 1.0
     ) -> dict:
         """
         Run one simulation timestep for a multi-pass RTP system.
@@ -580,7 +582,7 @@ class MultiPassRTPSystem(RTPSystem):
 
         # Keep cold baseline current (important for annual simulations where
         # inlet water temperature changes by month).
-        tank._cold_temp_f = inlet_water_temp_f
+        self.storage_tank.update_cold_temp_f(inlet_water_temp_f)
 
         was_heating = any(wh.is_active() for wh in self.water_heaters)
 
@@ -625,6 +627,7 @@ class MultiPassRTPSystem(RTPSystem):
             self.supply_temp_f,
             self.return_temp_f,
             top_temp_f,
+            tm_safety_factor = tm_safety_factor
         )
         draw_gal       = result["storage_draw_gal"]
         mv_inlet_temp_f = result["inlet_temp_f"]
@@ -659,4 +662,5 @@ class MultiPassRTPSystem(RTPSystem):
             "tank_temps_f":              tank_temps_f,
             "mode":                      mode,
             "delivery_temp_f":           delivery_temp_f,
+            "draw_thru_system_gal":      draw_gal,
         }

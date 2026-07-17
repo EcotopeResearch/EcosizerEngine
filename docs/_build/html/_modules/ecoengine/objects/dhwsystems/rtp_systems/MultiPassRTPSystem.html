@@ -243,6 +243,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_RHO_CP</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.RTPSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">RTPSystem</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">mixing_valve_behavior</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..DHWSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">StorageVolumeTooSmallError</span>
 
 <span class="n">_MPRTP_STRAT_SLOPE</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span>
 <span class="n">_MPRTP_MAX_DAILY_RUN_HR</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">14.0</span>
@@ -287,6 +288,8 @@
 <span class="sd">    Load-shift sizing is not supported.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">storage_tank</span><span class="p">:</span> <span class="n">SlugOverlayTank</span>
+
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="c1"># Factory constructor</span>
     <span class="c1"># ------------------------------------------------------------------</span>
@@ -303,12 +306,14 @@
         <span class="n">return_flow_gpm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">max_daily_run_hr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_MPRTP_MAX_DAILY_RUN_HR</span><span class="p">,</span>
         <span class="n">defrost_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">tm_safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">control_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Controls</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_MPRTP_STRAT_SLOPE</span><span class="p">,</span>
         <span class="n">percent_useable</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="n">capacity_boost_trial_days</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="n">capacity_boost_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">capacity_boost_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">default_to_min_volume</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultiPassRTPSystem</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Size the system for the given building, then build it.</span>
@@ -323,6 +328,8 @@
 <span class="sd">        max_daily_run_hr : float</span>
 <span class="sd">            Maximum hours the heater may run per day. Default 14.</span>
 <span class="sd">        defrost_factor : float</span>
+<span class="sd">        tm_safety_factor : float</span>
+<span class="sd">            Multiplier applied to recirculation loss during sizing only. Default 1.0.</span>
 <span class="sd">        control_schedule : list[str] | None</span>
 <span class="sd">            Passed to WaterHeater; load-shift sizing is not supported and</span>
 <span class="sd">            will raise if a ``&quot;shed&quot;`` key appears in control_map.</span>
@@ -363,9 +370,9 @@
             <span class="n">return_flow_gpm</span><span class="o">=</span><span class="n">return_flow_gpm</span><span class="p">,</span>
             <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
             <span class="n">defrost_factor</span><span class="o">=</span><span class="n">defrost_factor</span><span class="p">,</span>
+            <span class="n">tm_safety_factor</span><span class="o">=</span><span class="n">tm_safety_factor</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">system</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span> <span class="n">strat_slope</span><span class="o">=</span><span class="n">strat_slope</span><span class="p">)</span>
-
+        <span class="n">system</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span> <span class="n">strat_slope</span><span class="o">=</span><span class="n">strat_slope</span><span class="p">,</span> <span class="n">default_to_min_volume</span> <span class="o">=</span> <span class="n">default_to_min_volume</span><span class="p">)</span>
         <span class="n">cold_temp_f</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
         <span class="n">system</span><span class="o">.</span><span class="n">storage_tank</span> <span class="o">=</span> <span class="n">SlugOverlayTank</span><span class="p">(</span>
             <span class="n">total_volume_gal</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span><span class="p">,</span>
@@ -414,7 +421,7 @@
                         <span class="n">deficit_minutes</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="n">start_heat_min</span>
                         <span class="n">min_tank_outlet_f</span> <span class="o">=</span> <span class="n">tank_outlet_f</span>
             
-            <span class="k">if</span> <span class="n">deficit_minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">deficit_minutes</span> <span class="o">&gt;</span> <span class="mi">5</span> <span class="ow">and</span> <span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">min_tank_outlet_f</span> <span class="o">&gt;</span> <span class="mf">2.0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">min_tank_outlet_f</span> <span class="o">&gt;</span> <span class="mf">4.0</span><span class="p">:</span> <span class="c1"># criteria for outage</span>
                 <span class="n">capacity_increase_kbtu</span> <span class="o">=</span> <span class="p">((</span><span class="n">system</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">total_volume_gal</span> <span class="o">*</span> <span class="n">percent_useable</span><span class="p">)</span> <span class="o">*</span> <span class="n">_RHO_CP</span> <span class="o">*</span> <span class="p">(</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">min_tank_outlet_f</span><span class="p">))</span><span class="o">/</span><span class="mi">1000</span>
                 <span class="k">if</span> <span class="n">capacity_increase_kbtu</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">system</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span> <span class="o">+</span> <span class="p">(</span><span class="n">capacity_increase_kbtu</span> <span class="o">/</span> <span class="p">(</span><span class="n">deficit_minutes</span><span class="o">/</span><span class="mi">60</span><span class="p">))</span>
@@ -441,6 +448,7 @@
         <span class="n">control_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Controls</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_MPRTP_STRAT_SLOPE</span><span class="p">,</span>
         <span class="n">load_shift_fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">default_to_min_volume</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Size the multi-pass RTP system.</span>
@@ -488,6 +496,13 @@
             <span class="n">storage_vol_storageT_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_storage_volume_storageT_gal</span><span class="p">(</span>
                 <span class="n">running_vol_supplyT_gal</span><span class="p">,</span> <span class="n">strat_factor</span>
             <span class="p">)</span>
+
+            <span class="n">min_vol_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_minimum_running_volume_supplyT_gal</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">storage_vol_storageT_gal</span> <span class="o">&lt;</span> <span class="n">min_vol_gal</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">default_to_min_volume</span><span class="p">:</span>
+                    <span class="n">storage_vol_storageT_gal</span> <span class="o">=</span> <span class="n">min_vol_gal</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">StorageVolumeTooSmallError</span><span class="p">(</span><span class="n">storage_vol_storageT_gal</span><span class="p">,</span> <span class="n">min_vol_gal</span><span class="p">,</span> <span class="n">capacity_kbtuh</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span>       <span class="o">=</span> <span class="n">capacity_kbtuh</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span> <span class="o">=</span> <span class="n">storage_vol_storageT_gal</span>
@@ -564,7 +579,7 @@
             <span class="c1">#   → run_hr = numerator / (cap × defrost)</span>
             <span class="n">design_inlet</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
             <span class="n">delta_t</span>         <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">design_inlet</span>
-            <span class="n">recirc_loss</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_recirc_loss_kbtuh</span><span class="p">()</span>
+            <span class="n">recirc_loss</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sizing_recirc_loss_kbtuh</span><span class="p">()</span>
             <span class="n">_numerator</span>      <span class="o">=</span> <span class="p">(</span>
                 <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span> <span class="o">*</span> <span class="n">_RHO_CP</span> <span class="o">*</span> <span class="n">delta_t</span> <span class="o">/</span> <span class="mf">1000.0</span>
                 <span class="o">+</span> <span class="n">recirc_loss</span> <span class="o">*</span> <span class="mf">24.0</span>
@@ -584,8 +599,8 @@
             <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">heat_hours</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">h</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">:</span>
                     <span class="n">pt</span> <span class="o">=</span> <span class="bp">self</span>
-                <span class="k">elif</span> <span class="n">h</span> <span class="o">&lt;</span> <span class="mi">9</span><span class="p">:</span>
-                    <span class="k">break</span>
+                <span class="c1"># elif h &lt; 9: #TODO remove this</span>
+                <span class="c1">#     break</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">pt</span> <span class="o">=</span> <span class="n">MultiPassRTPSystem</span><span class="o">.</span><span class="n">from_size</span><span class="p">(</span>
@@ -601,7 +616,10 @@
                             <span class="n">strat_slope</span>      <span class="o">=</span> <span class="n">_strat_slope</span><span class="p">,</span>
                             <span class="n">percent_useable</span>  <span class="o">=</span> <span class="n">_pct_use</span><span class="p">,</span>
                             <span class="n">capacity_boost_trial_days</span><span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-                            <span class="n">capacity_boost_iterations</span><span class="o">=</span> <span class="mi">1</span>
+                            <span class="n">capacity_boost_iterations</span><span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                            <span class="n">default_to_min_volume</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                            <span class="n">tm_safety_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span>
+
                         <span class="p">)</span>
                     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">ZeroDivisionError</span><span class="p">):</span>
                         <span class="k">break</span>
@@ -743,13 +761,13 @@
             <span class="k">if</span> <span class="n">slug_vol_gal</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
                 <span class="n">slug_temp_f</span> <span class="o">+=</span> <span class="n">heat_kbtu_per_min</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">slug_vol_gal</span> <span class="o">*</span> <span class="n">_RHO_CP</span><span class="p">)</span>
 
-            <span class="c1"># Reset slug when it reaches supply temperature</span>
+            <span class="k">if</span> <span class="n">slug_vol_gal</span> <span class="o">&gt;</span> <span class="n">max_slug_vol_gal</span><span class="p">:</span>
+                <span class="n">max_slug_vol_gal</span> <span class="o">=</span> <span class="n">slug_vol_gal</span>
+
+            <span class="c1"># Reset slug when it reaches storage temperature</span>
             <span class="k">if</span> <span class="n">slug_vol_gal</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">slug_temp_f</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">:</span> <span class="c1"># Heres a place I messed with TODO</span>
                 <span class="n">slug_vol_gal</span> <span class="o">=</span> <span class="mf">0.0</span>
                 <span class="n">slug_temp_f</span>  <span class="o">=</span> <span class="n">cold_temp_f</span>
-
-            <span class="k">if</span> <span class="n">slug_vol_gal</span> <span class="o">&gt;</span> <span class="n">max_slug_vol_gal</span><span class="p">:</span>
-                <span class="n">max_slug_vol_gal</span> <span class="o">=</span> <span class="n">slug_vol_gal</span>
 
         <span class="k">return</span> <span class="n">max_slug_vol_gal</span>
 
@@ -812,7 +830,7 @@
 
         <span class="c1"># Keep cold baseline current (important for annual simulations where</span>
         <span class="c1"># inlet water temperature changes by month).</span>
-        <span class="n">tank</span><span class="o">.</span><span class="n">_cold_temp_f</span> <span class="o">=</span> <span class="n">inlet_water_temp_f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">update_cold_temp_f</span><span class="p">(</span><span class="n">inlet_water_temp_f</span><span class="p">)</span>
 
         <span class="n">was_heating</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">wh</span><span class="o">.</span><span class="n">is_active</span><span class="p">()</span> <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">)</span>
 
@@ -886,11 +904,12 @@
             <span class="s2">&quot;usable_volume_supplyT_gal&quot;</span><span class="p">:</span> <span class="n">usable_vol_gal</span><span class="p">,</span>
             <span class="s2">&quot;heater_output_kbtuh&quot;</span><span class="p">:</span>       <span class="n">total_kbtuh</span><span class="p">,</span>
             <span class="s2">&quot;heater_power_in_kw&quot;</span><span class="p">:</span>        <span class="n">total_kw</span><span class="p">,</span>
-            <span class="s2">&quot;oat_f&quot;</span><span class="p">:</span>                     <span class="n">top_temp_f</span><span class="p">,</span>
+            <span class="s2">&quot;oat_f&quot;</span><span class="p">:</span>                     <span class="n">oat_f</span><span class="p">,</span>
             <span class="s2">&quot;inlet_water_temp_f&quot;</span><span class="p">:</span>        <span class="n">inlet_water_temp_f</span><span class="p">,</span>
             <span class="s2">&quot;tank_temps_f&quot;</span><span class="p">:</span>              <span class="n">tank_temps_f</span><span class="p">,</span>
             <span class="s2">&quot;mode&quot;</span><span class="p">:</span>                      <span class="n">mode</span><span class="p">,</span>
             <span class="s2">&quot;delivery_temp_f&quot;</span><span class="p">:</span>           <span class="n">delivery_temp_f</span><span class="p">,</span>
+            <span class="s2">&quot;draw_thru_system_gal&quot;</span><span class="p">:</span>      <span class="n">draw_gal</span><span class="p">,</span>
         <span class="p">}</span></div>
 </div>
 

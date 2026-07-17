@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from .StorageTank import StorageTank
 from ecoengine.constants.constants import _RHO_CP
 
@@ -69,6 +71,10 @@ class EnergyTank(StorageTank):
         # means the full tank height is usable.
         self._cold_pct: float = 0.0
 
+    def update_cold_temp_f(self, cold_temp_f : float):
+        if self._cold_temp_f == cold_temp_f:
+            return
+        self._cold_temp_f = cold_temp_f
     # ------------------------------------------------------------------
     # Energy ↔ shift_pct helpers
     # ------------------------------------------------------------------
@@ -104,32 +110,70 @@ class EnergyTank(StorageTank):
     def _shift_pct_from_energy(self) -> float:
         """
         Inverse mapping: return shift_pct for the current ``_energy_btu`` via
-        binary search on ``_energy_at_shift_pct``.
+        a closed-form solve of ``_energy_at_shift_pct``'s inverse.
+
+        ``_energy_at_shift_pct`` is piecewise quadratic/linear in three
+        regions (cold, transition, hot), so each region is inverted
+        algebraically instead of via binary search:
+
+        * Cold region (``s <= min(s_h, s_c)``): E is quadratic in
+          ``(100+s)`` alone -> ``s = sqrt(E/k1) - 100``.
+        * Middle region: E is linear in ``s`` -> ``s = s_mid0 + (E-E_mid0)/k_mid``.
+        * Hot region (``s >= max(s_h, s_c)``): E is quadratic in
+          ``(cold_pct+s)`` -> solved via the quadratic formula.
+
+        where ``s_h = x_ramp - 100`` (shift at which the ramp's hot boundary
+        reaches the tank top) and ``s_c = -cold_pct`` (shift at which the
+        ramp's cold boundary reaches the excluded zone). Whichever of
+        ``s_h``/``s_c`` is smaller determines whether the middle region is
+        "narrow" (bounded by the ramp's own width) or "wide" (bounded by
+        ``usable_pct``).
 
         shift_pct ranges from −100 (fully cold) to x_ramp (fully hot).
-        30 iterations give sub-nanogallon precision on any physical tank.
         """
         dT = self._storage_temp_f - self._cold_temp_f
         if dT <= 0.0:
             return 0.0
-        E = max(0.0, min(self._energy_btu, self._max_energy_btu()))
+        E_max = self._max_energy_btu()
+        E = max(0.0, min(self._energy_btu, E_max))
         if E <= 0.0:
             return -100.0
-        if E >= self._max_energy_btu():
+        if E >= E_max:
             return dT / self.strat_slope
-        lo: float = -100.0
-        hi: float = dT / self.strat_slope
-        tol: float = 1e-6 * max(E, 1.0)
-        for _ in range(30):
-            mid = (lo + hi) * 0.5
-            e_mid = self._energy_at_shift_pct(mid)
-            if abs(e_mid - E) < tol:
-                break
-            if e_mid < E:
-                lo = mid
-            else:
-                hi = mid
-        return (lo + hi) * 0.5
+
+        x_ramp     = dT / self.strat_slope
+        usable_pct = 100.0 - self._cold_pct
+        k          = _RHO_CP * self.total_volume_gal * dT / 100.0
+        k1         = _RHO_CP * self.total_volume_gal * self.strat_slope / 200.0
+        s_h        = x_ramp - 100.0
+        s_c        = -self._cold_pct
+        narrow     = s_h <= s_c
+        lo         = min(s_h, s_c)
+        hi         = max(s_h, s_c)
+        E_ramp     = _RHO_CP * self.total_volume_gal * dT * dT / (200.0 * self.strat_slope)
+
+        if narrow:
+            E_mid0 = E_ramp
+            k_mid  = k
+            s_mid0 = s_h
+        else:
+            k2     = _RHO_CP * self.total_volume_gal * self.strat_slope * usable_pct / 100.0
+            E_mid0 = k2 * usable_pct / 2.0
+            k_mid  = k2
+            s_mid0 = s_c
+
+        E_at_lo = k1 * (100.0 + lo) ** 2
+        E_at_hi = E_mid0 + k_mid * (hi - s_mid0)
+
+        if E <= E_at_lo:
+            return math.sqrt(E / k1) - 100.0
+        if E <= E_at_hi:
+            return s_mid0 + (E - E_mid0) / k_mid
+
+        D = E_ramp + k * (100.0 - x_ramp - self._cold_pct)
+        disc = max(0.0, k * k - 4.0 * k1 * (E - D))
+        u = (k - math.sqrt(disc)) / (2.0 * k1)
+        return u - self._cold_pct
 
     # ------------------------------------------------------------------
     # Initialization
@@ -139,14 +183,18 @@ class EnergyTank(StorageTank):
         self,
         storage_temp_f: float,
         cold_temp_f: float,
-        percent_useable: float,
+        initial_hot_fract: float,
+        supply_temp_f: float,
     ) -> None:
         """
         Set initial energy state.
 
-        Places the cold boundary at ``(1 − percent_useable) × 100`` percent
-        height — identical to how StratifiedTank initializes its profile — then
-        converts that thermocline position to a stored energy value.
+        Places the boundary where T = supply_temp_f at
+        ``(1 − initial_hot_fract) × 100`` percent height — identical to how
+        StratifiedTank initializes its profile — so ``initial_hot_fract`` is
+        the physical fraction of tank volume at or above supply_temp_f, not
+        an abstract shift parameter. Then converts that thermocline position
+        to a stored energy value.
 
         Parameters
         ----------
@@ -154,13 +202,17 @@ class EnergyTank(StorageTank):
             Hot storage temperature [°F].
         cold_temp_f : float
             Cold / inlet water temperature [°F].
-        percent_useable : float
-            Fraction of tank volume that is above the cold inlet water inlet (0–1).
+        initial_hot_fract : float
+            Physical fraction of tank volume at or above supply_temp_f (0-1).
+        supply_temp_f : float
+            DHW delivery temperature [°F] -- the reference temperature that
+            ``initial_hot_fract`` is measured against.
         """
         self._cold_temp_f    = cold_temp_f
         self._storage_temp_f = storage_temp_f
-        s_init = (percent_useable - 1.0) * 100.0
-        self._energy_btu = self._energy_at_shift_pct(s_init)
+        x_supply_pct = (1.0 - initial_hot_fract) * 100.0
+        shift_pct = (supply_temp_f - cold_temp_f) / self.strat_slope - x_supply_pct
+        self._energy_btu = self._energy_at_shift_pct(shift_pct)
 
     # ------------------------------------------------------------------
     # Temperature queries

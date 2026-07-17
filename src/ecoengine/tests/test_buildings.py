@@ -312,7 +312,7 @@ def test_dhw_load_annual_shape_uses_yearly_index():
 
 @pytest.mark.parametrize("zip_code, expected_climate_zone, building_type, magnitude", [
     (94922,  1,    "apartment",                      100),
-    (94565,  12,   ["womens_dorm", "junior_high"],   [100, 50]),
+    (94565,  5,    ["womens_dorm", "junior_high"],   [100, 50]),
     (None,   None, "multi_family",                   100),
 ])
 def test_zip_codes_to_climate_zones(zip_code, expected_climate_zone, building_type, magnitude):
@@ -326,7 +326,7 @@ def test_zip_codes_to_climate_zones(zip_code, expected_climate_zone, building_ty
 
 
 @pytest.mark.parametrize("zip_code, design_oat, building_type, magnitude, expected_oat", [
-    # Real climate zone (zip 94565 → zone 12): design OAT is the annual minimum
+    # Real climate zone (zip 94565 → zone 5, Sacramento): design OAT is the annual minimum
     (94565, None, ["womens_dorm", "junior_high"], [100, 50], 26.96),
     # No climate zone, explicit design OAT: constant-value dummy zone is created
     (None,  17.0, "apartment",                    100,       17.0),
@@ -348,8 +348,8 @@ def test_design_oat(zip_code, design_oat, building_type, magnitude, expected_oat
 
 @pytest.mark.parametrize("climate_zone, jan_in_t, sep_in_t, oct_in_t", [
     (1,  50.108, 54.734, 54.59),
-    (6,  59.306, 65.876, 64.742),
-    (18, 46.9,   61.0,   58.6),
+    (4,  55.994, 69.17,  65.372),   # LA (new zone 4)
+    (17, 41.2,   58.9,   56.8),     # Billings MT (new zone 17)
 ])
 def test_climate_zone_temps(climate_zone, jan_in_t, sep_in_t, oct_in_t):
     cz = ClimateZone.from_zone_id(climate_zone)
@@ -432,7 +432,7 @@ def test_building_no_dummy_zone_when_real_zone_provided():
     When a real ClimateZone is given, design_oat_f is ignored — the real zone
     takes precedence and its data is used for both simulation and design queries.
     """
-    real_zone = ClimateZone.from_zip_code(94565)  # zone 12
+    real_zone = ClimateZone.from_zip_code(94565)  # zone 5 (Sacramento)
     building  = Building.from_building_type(
         'apartment', 100, climate_zone=real_zone, design_oat_f=999.0
     )
@@ -447,8 +447,8 @@ def test_building_no_dummy_zone_when_real_zone_provided():
 
 @pytest.mark.parametrize("climate_zone, h0_oat, h100_oat, h4380_oat", [
     (1,  35.06, 41.0,  64.04),
-    (6,  53.96, 46.04, 71.96),
-    (18, 37.4,  21.4,  68.0),
+    (4,  46.4,  44.6,  73.4),    # LA (new zone 4)
+    (17, 10.0,  -8.0,  79.7),    # Billings MT (new zone 17)
 ])
 def test_climate_zone_oat(climate_zone, h0_oat, h100_oat, h4380_oat):
     cz = ClimateZone.from_zone_id(climate_zone)
@@ -480,18 +480,19 @@ def test_get_oat_buckets_sums_to_365():
 
 def test_get_oat_buckets_known_values():
     """Spot-check bucket counts for two climate zones."""
-    # CZ 9 (zip 90210 → Beverly Hills, mild coastal climate)
-    cz9 = ClimateZone.from_zone_id(9)
-    b9 = cz9.get_oat_buckets()
-    assert b9[45.0] == 12
-    assert b9[50.0] == 47
-    assert b9[55.0] == 83
-    assert b9[65.0] == 51
+    # Zone 4 (zip 90210 → Beverly Hills / Los Angeles)
+    cz4 = ClimateZone.from_zone_id(4)
+    b4 = cz4.get_oat_buckets()
+    assert b4[45.0] == 12
+    assert b4[50.0] == 47
+    assert b4[55.0] == 83
+    assert b4[65.0] == 51
 
-    # CZ 19 (desert/mountain zone)
+    # Zone 19 (Kalispell, MT — mountain zone)
     cz19 = ClimateZone.from_zone_id(19)
     b19 = cz19.get_oat_buckets()
-    assert b19[65.0] == 25
+    assert b19[65.0] == 37
+    assert b19[55.0] == 25
 
 
 def test_get_oat_buckets_raises_for_design_conditions():
@@ -503,8 +504,8 @@ def test_get_oat_buckets_raises_for_design_conditions():
 
 def test_get_oat_buckets_via_zip_code():
     """Convenience: buckets via zip code should match direct zone lookup."""
-    cz_zip  = ClimateZone.from_zip_code(90210)
-    cz_zone = ClimateZone.from_zone_id(9)
+    cz_zip  = ClimateZone.from_zip_code(90210)   # 90210 → zone 4 (LA)
+    cz_zone = ClimateZone.from_zone_id(4)
     assert cz_zip.get_oat_buckets() == cz_zone.get_oat_buckets()
 
 

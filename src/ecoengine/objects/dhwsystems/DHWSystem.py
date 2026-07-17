@@ -896,6 +896,7 @@ class DHWSystem:
         design_inlet_temp_f = self._require_design_inlet_temp(building)
         gen_rate_gph        = building.daily_dhw_use_supplyT_gal / self.max_daily_run_hr
         delta_t             = self.supply_temp_f - design_inlet_temp_f
+
         return gen_rate_gph * _RHO_CP * delta_t / self.defrost_factor / 1000
 
     def _calc_running_volume_supplyT_gal(
@@ -1792,6 +1793,62 @@ class DHWSystem:
         ]
         return max(outlet_temps) if outlet_temps else self.storage_temp_f
 
+    def get_initial_hot_fract(self, controls_setting: str = "normal", on_setpoint: bool = True) -> float:
+        """
+        Return the initial tank charge level (physical fraction of tank
+        volume at or above supply temperature) for simulation.
+
+        Reads the aquastat sensor position and trigger temperature for the
+        specified operating mode, then uses the storage tank's own
+        ``strat_slope`` to work out where the resulting stratified profile
+        actually crosses ``supply_temp_f`` -- rather than assuming the sensor
+        height itself is the boundary (which ignores the thermocline ramp).
+        If ``on_setpoint`` is True, uses the ON-sensor/trigger pair (tank at
+        the on-trigger threshold, heater about to fire). If False, uses the
+        OFF-sensor/trigger pair (tank at the heater-off threshold).
+
+        Falls back to ``"normal"`` if ``controls_setting`` is absent, then to
+        the first available Controls entry.  Returns 1.0 (fully charged) when
+        no Controls are configured or the tank has no ``strat_slope``.
+
+        Parameters
+        ----------
+        controls_setting : str
+            Controls map key to read (e.g. ``"normal"``, ``"loadUp"``).
+            Default ``"normal"``.
+        on_setpoint : bool
+            If True, uses the ON sensor/trigger pair. If False, uses the OFF
+            sensor/trigger pair. Default True.
+
+        Returns
+        -------
+        float
+            Physical fraction of tank volume at or above supply_temp_f at
+            the start of simulation (0–1).
+        """
+        if self.storage_tank is None:
+            return 1.0
+        strat_slope = getattr(self.storage_tank, "strat_slope", None)
+        if not strat_slope:
+            return 1.0
+
+        for wh in self.water_heaters:
+            if wh.control_map is None:
+                continue
+            ctrl = (
+                wh.control_map.get(controls_setting)
+                or wh.control_map.get("normal")
+                or next(iter(wh.control_map.values()), None)
+            )
+            if ctrl is not None:
+                sensor_fract   = ctrl.on_sensor_fract  if on_setpoint else ctrl.off_sensor_fract
+                trigger_temp_f = ctrl.on_trigger_t_f   if on_setpoint else ctrl.off_trigger_t_f
+                sensor_pct   = sensor_fract * 100.0
+                x_supply_pct = sensor_pct + (self.supply_temp_f - trigger_temp_f) / strat_slope
+                x_supply_pct = max(0.0, min(100.0, x_supply_pct))
+                return max(0.0, min(1.0, (100.0 - x_supply_pct) / 100.0))
+        return 1.0
+
     def check_for_outage(self, demand_supplyT_gal: float) -> bool:
         """
         Return True if the storage tank cannot meet the given demand.
@@ -1810,3 +1867,7 @@ class DHWSystem:
         if self.storage_tank is None:
             return False
         return self.storage_tank.get_usable_volume_supplyT_gal(self.supply_temp_f) <= 0.0
+    
+    def get_recirc_loss_kbtuh(self) -> float:
+        "There is no recirc loss for this system"
+        return 0.0

@@ -56,25 +56,48 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
 
     from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem
     from ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem import SwingERTrdOffSystem
-    sim_run.show_tm_panel = isinstance(dhw_system, SwingSystem) or isinstance(dhw_system, SwingERTrdOffSystem)
+    from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem import SP_RTPInSeriesSystem, _GAS_DEADBAND_F
+    from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem import SP_RTPInParallelSystem
+    from ecoengine.objects.dhwsystems.rtp_systems.MP_RTPInSeriesSystem import MP_RTPInSeriesSystem
+    _is_in_series = isinstance(dhw_system, (SP_RTPInSeriesSystem, MP_RTPInSeriesSystem))
+    sim_run.show_tm_panel = (
+        isinstance(dhw_system, SwingSystem)
+        or isinstance(dhw_system, SwingERTrdOffSystem)
+        or isinstance(dhw_system, SP_RTPInParallelSystem)
+        or _is_in_series
+    )
+    if _is_in_series:
+        sim_run.tm_panel_label = "In Series Heating"
+    sim_run.merge_tm_into_primary_panel = isinstance(dhw_system, SP_RTPInParallelSystem)
 
     # Initialize storage tanks
     inlet_temp_f    = building.get_design_inlet_water_temp_f() or 50.0
-    percent_useable = _initial_percent_useable(dhw_system)
+    initial_hot_fract = dhw_system.get_initial_hot_fract()
     if dhw_system.storage_tank is not None:
         dhw_system.storage_tank.initialize(
-            storage_temp_f  = dhw_system.storage_temp_f,
-            cold_temp_f     = inlet_temp_f,
-            percent_useable = percent_useable, # TODO I don't think this is right
+            storage_temp_f    = dhw_system.storage_temp_f,
+            cold_temp_f       = inlet_temp_f,
+            initial_hot_fract = initial_hot_fract,
+            supply_temp_f     = dhw_system.supply_temp_f,
         )
     # Initialize TM tank if present (ParallelLoopSystem, SwingSystem)
     tm_tank = getattr(dhw_system, "tm_storage_tank", None)
     if tm_tank is not None:
         tm_off_temp_f = getattr(dhw_system, "tm_off_temp_f", dhw_system.storage_temp_f)
         tm_tank.initialize(
-            storage_temp_f  = tm_off_temp_f,
-            cold_temp_f     = inlet_temp_f,
-            percent_useable = 1.0,
+            storage_temp_f    = tm_off_temp_f,
+            cold_temp_f       = inlet_temp_f,
+            initial_hot_fract = 1.0,
+            supply_temp_f     = dhw_system.supply_temp_f,
+        )
+    # Initialize gas backup tank if present (SP_RTPInSeriesSystem)
+    gas_tank = getattr(dhw_system, "gas_storage_tank", None)
+    if gas_tank is not None:
+        gas_tank.initialize(
+            storage_temp_f    = dhw_system.supply_temp_f + _GAS_DEADBAND_F,
+            cold_temp_f       = inlet_temp_f,
+            initial_hot_fract = 1.0,
+            supply_temp_f     = dhw_system.supply_temp_f,
         )
 
     sim_run.supply_temp_f = dhw_system.supply_temp_f
@@ -95,12 +118,13 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
             tank_temps_f              = step["tank_temps_f"],
             mode                      = step.get("mode", "normal"),
             tm_tank_temp_f            = step.get("tm_tank_temp_f"),
-            tm_heater_output_kbtuh    = step.get("tm_heater_output_kbtuh"),
+            tm_heater_output_kbtuh    = step.get("tm_heater_output_kbtuh"), #TODO rename this for gas heating you know?
             tm_heater_input_kw    = step.get("tm_heater_input_kw"),
         )
 
         if step["usable_volume_supplyT_gal"] <= 0.0:
-            if not sim_run.show_tm_panel or step.get("tm_tank_temp_f") < dhw_system.supply_temp_f:
+            tm_tank_temp_f = step.get("tm_tank_temp_f")
+            if not sim_run.show_tm_panel or tm_tank_temp_f is None or tm_tank_temp_f < dhw_system.supply_temp_f:
                 sim_run.record_outage(timestep_min)
 
         # Check outlet-deficit stop condition. For systems where the TM/swing
@@ -151,24 +175,3 @@ def simulate_annual(dhw_system: DHWSystem, building: Building, **sim_run_kwargs)
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
-
-def _initial_percent_useable(dhw_system: DHWSystem) -> float:
-    """
-    Determine the initial tank charge level (fraction hot) from the system's
-    "normal" Controls on-aquastat fraction.
-
-    Starting the tank at ``1 - on_sensor_fract`` matches the original
-    engine's initialisation: the tank begins at the on-trigger level so the
-    heater fires immediately on the first cold hour and the simulation
-    reaches steady state quickly.
-
-    Falls back to 1.0 (fully charged) when no Controls are configured.
-    """
-    for wh in dhw_system.water_heaters:
-        if wh.control_map is None:
-            continue
-        # Prefer "normal" key; otherwise take the first available Controls.
-        ctrl = wh.control_map.get("normal") or next(iter(wh.control_map.values()), None)
-        if ctrl is not None:
-            return max(0.0, min(1.0, 1.0 - ctrl.on_sensor_fract))
-    return 1.0
