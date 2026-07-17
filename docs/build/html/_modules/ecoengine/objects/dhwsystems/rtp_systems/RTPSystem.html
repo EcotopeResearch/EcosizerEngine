@@ -262,6 +262,7 @@
         <span class="n">return_flow_gpm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">max_daily_run_hr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">16.0</span><span class="p">,</span>
         <span class="n">defrost_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">tm_safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
@@ -278,6 +279,10 @@
 <span class="sd">            Maximum hours the heating system may run per day. Default 16.</span>
 <span class="sd">        defrost_factor : float</span>
 <span class="sd">            Fraction of rated capacity available after defrost (0-1). Default 1.0.</span>
+<span class="sd">        tm_safety_factor : float</span>
+<span class="sd">            Multiplier applied to recirculation loss during sizing only (not</span>
+<span class="sd">            simulation). Increases sized capacity and volume to provide a</span>
+<span class="sd">            buffer above the bare steady-state recirc loss. Default 1.0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">water_heaters</span><span class="p">,</span>
@@ -287,13 +292,18 @@
             <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
             <span class="n">defrost_factor</span><span class="o">=</span><span class="n">defrost_factor</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span>   <span class="o">=</span> <span class="n">return_temp_f</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span> <span class="o">=</span> <span class="n">return_flow_gpm</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span>    <span class="o">=</span> <span class="n">return_temp_f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span>  <span class="o">=</span> <span class="n">return_flow_gpm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span> <span class="o">=</span> <span class="n">tm_safety_factor</span></div>
 
 
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="c1"># Recirc loss</span>
     <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_sizing_recirc_loss_kbtuh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return recirc loss scaled by tm_safety_factor for use during sizing only.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_recirc_loss_kbtuh</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span>
 
 <div class="viewcode-block" id="RTPSystem.get_recirc_loss_kbtuh">
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.rtp_systems.RTPSystem.RTPSystem.get_recirc_loss_kbtuh">[docs]</a>
@@ -346,7 +356,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dhw_cap</span>    <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_calc_required_capacity</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
         <span class="n">recirc_cap</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_recirc_loss_kbtuh</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_sizing_recirc_loss_kbtuh</span><span class="p">()</span>
             <span class="o">*</span> <span class="mf">24.0</span>
             <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span>
             <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span>
@@ -386,7 +396,7 @@
             <span class="n">control_schedule</span><span class="p">,</span> <span class="n">control_map</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">strat_slope</span><span class="p">,</span> <span class="n">fract_total_vol</span>
         <span class="p">)</span>
         <span class="n">recirc_cap</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_recirc_loss_kbtuh</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_sizing_recirc_loss_kbtuh</span><span class="p">()</span>
             <span class="o">*</span> <span class="mf">24.0</span>
             <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span>
             <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span>

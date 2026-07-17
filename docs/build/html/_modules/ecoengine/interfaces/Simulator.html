@@ -292,7 +292,8 @@
     <span class="n">sim_run</span> <span class="o">=</span> <span class="n">SimulationRun</span><span class="p">(</span><span class="n">duration_min</span><span class="p">,</span> <span class="n">timestep_min</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.recirc_systems.SwingSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwingSystem</span>
-    <span class="n">sim_run</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SwingSystem</span><span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwingERTrdOffSystem</span>
+    <span class="n">sim_run</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SwingSystem</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SwingERTrdOffSystem</span><span class="p">)</span>
 
     <span class="c1"># Initialize storage tanks</span>
     <span class="n">inlet_temp_f</span>    <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_design_inlet_water_temp_f</span><span class="p">()</span> <span class="ow">or</span> <span class="mf">50.0</span>
@@ -336,7 +337,8 @@
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;usable_volume_supplyT_gal&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="n">sim_run</span><span class="o">.</span><span class="n">record_outage</span><span class="p">(</span><span class="n">timestep_min</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sim_run</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="ow">or</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tm_tank_temp_f&quot;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span>
+                <span class="n">sim_run</span><span class="o">.</span><span class="n">record_outage</span><span class="p">(</span><span class="n">timestep_min</span><span class="p">)</span>
 
         <span class="c1"># Check outlet-deficit stop condition. For systems where the TM/swing</span>
         <span class="c1"># tank is the actual delivery point (e.g. SwingSystem), use its</span>
