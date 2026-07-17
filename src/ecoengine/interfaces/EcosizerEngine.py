@@ -542,20 +542,32 @@ class EcosizerEngine:
         # Load shift (optional)
         load_shift_schedule: list[int] | None = None,
         load_up_hours: int = 0,
-        shed_aquastat_fract: float | None = None,
-        load_up_aquastat_fract: float | None = None,
-        shed_off_sensor_fract: float | None = None,
-        load_up_off_sensor_fract: float | None = None,
-        load_up_off_trigger_t_f: float | None = None,
         load_shift_percent: float = 0.95,
+        
+        shed_aquastat_fract: float | None = None,
+        shed_off_sensor_fract: float | None = None,
+        shed_on_trigger_t_f: float | None = None,
+        shed_off_trigger_t_f: float | None = None,
+        shed_outlet_temp_f: float | None = None,
+        
+        load_up_aquastat_fract: float | None = None,
+        load_up_off_sensor_fract: float | None = None,
+        load_up_on_trigger_t_f: float | None = None,
+        load_up_off_trigger_t_f: float | None = None,
+        load_up_outlet_temp_f: float | None = None,
         # Recirculation (required for recirc schematics)
         return_temp_f: float | None = None,
         return_flow_gpm: float | None = None,
+        tm_safety_factor: float = 1.75,
         # ParallelLoop TM controls
         tm_on_temp_f: float | None = None,
         tm_off_temp_f: float | None = None,
         tm_off_time_hr: float = 0.5,
-        tm_safety_factor: float = 1.75,
+        # Gas in Parallel controls
+        gas_on_trigger_t_f: float | None = None,
+        gas_off_trigger_t_f: float | None = None,
+        gas_aquastat_fract: float | None = None,
+        gas_off_sensor_fract: float | None = None,
         # Utility cost (optional)
         utility_cost_tracker=None,
         # Pre-sized system (optional — skip sizing when capacity and volume are known)
@@ -643,10 +655,20 @@ class EcosizerEngine:
             ON aquastat fraction during load-up hours (lower → fires sooner).
         shed_off_sensor_fract : float, optional
             OFF aquastat fraction during shed hours. Defaults to off_sensor_fract.
+        shed_on_trigger_t_f : float, optional
+            ON trigger temperature during shed hours. Defaults to on_trigger_t_f.
+        shed_off_trigger_t_f : float, optional
+            OFF trigger temperature during shed hours. Defaults to off_trigger_t_f.
+        shed_outlet_temp_f : float, optional
+            Heater outlet temperature during shed hours. Defaults to storage_temp_f.
         load_up_off_sensor_fract : float, optional
             OFF aquastat fraction during load-up hours. Defaults to off_sensor_fract.
+        load_up_on_trigger_t_f : float, optional
+            ON trigger temperature during load-up hours. Defaults to on_trigger_t_f.
         load_up_off_trigger_t_f : float, optional
             OFF trigger temperature during load-up hours. Defaults to off_trigger_t_f.
+        load_up_outlet_temp_f : float, optional
+            Heater outlet temperature during load-up hours. Defaults to storage_temp_f.
         load_shift_percent : float
             Percentile of days the load-shift sizing must cover [0.25, 1.0].
             Default 0.95 — size for 95% of days, accepting that the highest-demand
@@ -723,8 +745,13 @@ class EcosizerEngine:
         self.shed_aquastat_fract       = shed_aquastat_fract
         self.load_up_aquastat_fract    = load_up_aquastat_fract
         self.shed_off_sensor_fract     = shed_off_sensor_fract
+        self.shed_on_trigger_t_f       = shed_on_trigger_t_f
+        self.shed_off_trigger_t_f      = shed_off_trigger_t_f
+        self.shed_outlet_temp_f        = shed_outlet_temp_f
         self.load_up_off_sensor_fract  = load_up_off_sensor_fract
+        self.load_up_on_trigger_t_f    = load_up_on_trigger_t_f
         self.load_up_off_trigger_t_f   = load_up_off_trigger_t_f
+        self.load_up_outlet_temp_f     = load_up_outlet_temp_f
         self.load_shift_percent        = load_shift_percent
         self.return_temp_f             = return_temp_f
         self.return_flow_gpm           = return_flow_gpm
@@ -835,23 +862,28 @@ class EcosizerEngine:
 
         shed_on_fract  = self.shed_aquastat_fract if self.shed_aquastat_fract is not None else self.aquastat_fract
         shed_off_fract = self.shed_off_sensor_fract if self.shed_off_sensor_fract is not None else self.off_sensor_fract
+        shed_on_t      = self.shed_on_trigger_t_f  if self.shed_on_trigger_t_f  is not None else on_t
+        shed_off_t     = self.shed_off_trigger_t_f if self.shed_off_trigger_t_f is not None else off_t
+        shed_outlet_t  = self.shed_outlet_temp_f   if self.shed_outlet_temp_f  is not None else self.storage_temp_f
         cmap["shed"] = Controls(
             on_sensor_fract  = shed_on_fract,
-            on_trigger_t_f   = on_t,
+            on_trigger_t_f   = shed_on_t,
             off_sensor_fract = shed_off_fract,
-            off_trigger_t_f  = off_t,
-            outlet_temp_f    = self.storage_temp_f,
+            off_trigger_t_f  = shed_off_t,
+            outlet_temp_f    = shed_outlet_t,
         )
 
         if self.load_up_hours > 0 and self.load_up_aquastat_fract is not None:
             lu_off_fract = self.load_up_off_sensor_fract if self.load_up_off_sensor_fract is not None else self.off_sensor_fract
+            lu_on_t      = self.load_up_on_trigger_t_f   if self.load_up_on_trigger_t_f   is not None else on_t
             lu_off_t     = self.load_up_off_trigger_t_f  if self.load_up_off_trigger_t_f  is not None else off_t
+            lu_outlet_t  = self.load_up_outlet_temp_f    if self.load_up_outlet_temp_f    is not None else self.storage_temp_f
             cmap["loadUp"] = Controls(
                 on_sensor_fract  = self.load_up_aquastat_fract,
-                on_trigger_t_f   = on_t,
+                on_trigger_t_f   = lu_on_t,
                 off_sensor_fract = lu_off_fract,
                 off_trigger_t_f  = lu_off_t,
-                outlet_temp_f    = self.storage_temp_f,
+                outlet_temp_f    = lu_outlet_t,
             )
 
         return schedule, cmap
@@ -1378,6 +1410,8 @@ class EcosizerEngine:
         if hasattr(sys, "_in_series_storage_vol_gal") and sys._in_series_storage_vol_gal is not None:
             result["in_series_volume_gal"] = sys._in_series_storage_vol_gal     
             result["in_series_capacity_kbtuh"] = sys._in_series_capacity_kbtuh
+        if hasattr(sys, "_gas_capacity_kbtuh") and sys._gas_capacity_kbtuh is not None:
+            result["gas_capacity_kbtuh"] = sys._gas_capacity_kbtuh
         return result
 
     # ------------------------------------------------------------------

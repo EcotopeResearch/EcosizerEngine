@@ -324,10 +324,10 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             candidates      = (-cum_diff - accessible_gas_storage_gal) / window_lengths
             gas_gen_rate_gph = max(gas_gen_rate_gph, float(np.max(candidates)))
 
-        gas_capacity_kbtuh = gas_gen_rate_gph * _RHO_CP * delta_t / 1000.0
+        self._gas_capacity_kbtuh = gas_gen_rate_gph * _RHO_CP * delta_t / 1000.0
 
         self.gas_water_heater = WaterHeater.from_nominal_capacity(
-            nominal_capacity_kbtuh=gas_capacity_kbtuh,
+            nominal_capacity_kbtuh=self._gas_capacity_kbtuh,
             control_schedule=["normal"] * 24,
             control_map={"normal": gas_controls},
         )
