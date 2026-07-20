@@ -1309,6 +1309,9 @@ class EcosizerEngine:
         from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 
         control_schedule, control_map = self._build_control_map()
+        if self.schematic in _DUAL_FUEL_SCHEMATICS:
+            from ecoengine.objects.dhwsystems.utils import set_dual_fuel_shed_controls
+            control_map = set_dual_fuel_shed_controls(control_map)
         if self.hpwh_model is not None:
             design_inlet_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
             # Use num_units instead of N separate objects — all units share the
