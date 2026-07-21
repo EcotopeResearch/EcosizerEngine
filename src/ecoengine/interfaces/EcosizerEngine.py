@@ -1916,7 +1916,7 @@ class EcosizerEngine:
             curve = self._dhw_system.get_sizing_curve(self._building, strat_slope=strat_slope)
             if curve is None:
                 raise NotImplementedError(
-                    f"Gas backup sizing curve is not yet implemented for schematic "
+                    f"Supplementary sizing curve is not yet implemented for schematic "
                     f"{self.schematic!r} ({type(self._dhw_system).__name__})."
                 )
             if highlight_x_value is not None:

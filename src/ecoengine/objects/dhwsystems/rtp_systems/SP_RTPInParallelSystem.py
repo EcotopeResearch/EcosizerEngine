@@ -356,7 +356,7 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
     def plot_sizing_curve(
         self,
         building: Building,
-        title: str = "Gas Backup Sizing Curve — SP RTP In-Parallel",
+        title: str = "Parallel Heating Sizing Curve — SP RTP In-Parallel",
     ) -> "plotly.graph_objects.Figure":
         """
         TODO: revisit. See ``get_sizing_curve``.
