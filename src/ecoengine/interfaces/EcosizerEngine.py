@@ -1351,7 +1351,7 @@ class EcosizerEngine:
 
         if self.schematic in ["primary_no_recirc", "singlepass_norecirc"]:
             from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem
-            return DHWSystem(
+            system = DHWSystem(
                 water_heaters=water_heaters,
                 storage_tank=_primary_tank(),
                 supply_temp_f=self.supply_temp_f,
@@ -1359,6 +1359,9 @@ class EcosizerEngine:
                 max_daily_run_hr=self.max_daily_run_hr,
                 defrost_factor=self.defrost_factor,
             )
+            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
+            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
+            return system
 
         if self.schematic in ["parallel_loop", "paralleltank"]:
             from ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem import ParallelLoopSystem
@@ -1373,7 +1376,7 @@ class EcosizerEngine:
                 off_trigger_t_f=self.tm_off_temp_f,
                 outlet_temp_f=self.tm_off_temp_f,
             )
-            return ParallelLoopSystem(
+            system = ParallelLoopSystem(
                 water_heaters=water_heaters,
                 storage_tank=_primary_tank(),
                 supply_temp_f=self.supply_temp_f,
@@ -1390,6 +1393,11 @@ class EcosizerEngine:
                 max_daily_run_hr=self.max_daily_run_hr,
                 defrost_factor=self.defrost_factor,
             )
+            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
+            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
+            system._minimum_tm_volume_gal = self.tm_storage_vol
+            system._minimum_tm_capacity_kbtuh = self.tm_capacity_kbtuh
+            return system
 
         if self.schematic in ["swing_tank", "swingtank"]:
             from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem, _ELEMENT_DEADBAND_F
@@ -1415,6 +1423,10 @@ class EcosizerEngine:
                 max_daily_run_hr=self.max_daily_run_hr,
                 defrost_factor=self.defrost_factor,
             )
+            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
+            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
+            system._minimum_tm_volume_gal = self.tm_storage_vol
+            system._minimum_tm_capacity_kbtuh = self.tm_capacity_kbtuh
             system.tm_storage_tank = MixedStorageTank(total_volume_gal=self.tm_storage_vol)
             system.tm_water_heater = self._build_tm_water_heater(tm_controls, force_electric_resistance = True)
             return system
@@ -1426,7 +1438,7 @@ class EcosizerEngine:
             from ecoengine.objects.components.storage.EnergyTank import EnergyTank
             self._require_recirc_params()
             cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
-            return SinglePassRTPSystem(
+            system = SinglePassRTPSystem(
                 water_heaters=water_heaters,
                 storage_tank=EnergyTank(
                     total_volume_gal=self.storage_volume_storageT_gal,
@@ -1442,6 +1454,9 @@ class EcosizerEngine:
                 defrost_factor=self.defrost_factor,
                 tm_safety_factor=self.tm_safety_factor,
             )
+            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
+            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
+            return system
 
         if self.schematic in ["multi_pass_rtp", "mprtp"]:
             from ecoengine.objects.dhwsystems.rtp_systems.MultiPassRTPSystem import (
@@ -1450,7 +1465,7 @@ class EcosizerEngine:
             from ecoengine.objects.components.storage.SlugOverlayTank import SlugOverlayTank
             self._require_recirc_params()
             cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
-            return MultiPassRTPSystem(
+            system = MultiPassRTPSystem(
                 water_heaters=water_heaters,
                 storage_tank=SlugOverlayTank(
                     total_volume_gal=self.storage_volume_storageT_gal,
@@ -1468,6 +1483,9 @@ class EcosizerEngine:
                 defrost_factor=self.defrost_factor,
                 tm_safety_factor=self.tm_safety_factor,
             )
+            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
+            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
+            return system
 
         if self.schematic == "instant_wh":
             from ecoengine.objects.dhwsystems.InstantWHSystem import InstantWHSystem
@@ -1636,6 +1654,8 @@ class EcosizerEngine:
             )
             system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
             system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
+            system._minimum_tm_volume_gal = self.tm_storage_vol
+            system._minimum_tm_capacity_kbtuh = self.tm_capacity_kbtuh
             system.tm_storage_tank = MixedStorageTank(total_volume_gal=self.tm_storage_vol)
             system.tm_water_heater = self._build_tm_water_heater(tm_controls, force_electric_resistance=True)
             return system
@@ -1808,6 +1828,7 @@ class EcosizerEngine:
         strat_slope: float = 2.8,
         return_as_div: bool = False,
         return_with_x_y_points: bool = False,
+        highlight_x_value: float | None = None,
     ):
         """
         Return a Plotly figure of the sizing curve for the built system.
@@ -1852,6 +1873,15 @@ class EcosizerEngine:
             instead of just the figure/div, where ``x_values`` and ``y_values``
             are the plot coordinates and ``start_index`` is the recommended
             slider position.  Default False.
+        highlight_x_value : float, optional
+            If provided, highlight the curve point whose x-value is closest
+            to this value instead of the engine's own recommended point.
+            Units match the returned ``x_values`` for the curve type being
+            plotted (storage gallons for normal and dual-fuel curves,
+            percent for load-shift curves). Useful for re-rendering a curve
+            for a point the caller already chose (e.g. from an earlier,
+            interactive rendering of the same curve). Default None (use the
+            engine's recommended point).
 
         Returns
         -------
@@ -1886,8 +1916,14 @@ class EcosizerEngine:
             curve = self._dhw_system.get_sizing_curve(self._building, strat_slope=strat_slope)
             if curve is None:
                 raise NotImplementedError(
-                    f"Gas backup sizing curve is not yet implemented for schematic "
+                    f"Supplementary sizing curve is not yet implemented for schematic "
                     f"{self.schematic!r} ({type(self._dhw_system).__name__})."
+                )
+            if highlight_x_value is not None:
+                curve = dict(curve)
+                curve["recommended_index"] = min(
+                    range(len(curve["storages_gal"])),
+                    key=lambda i: abs(curve["storages_gal"][i] - highlight_x_value),
                 )
             x_vals      = curve["storages_gal"]
             y_vals      = curve["capacities_kbtuh"]
@@ -1903,12 +1939,24 @@ class EcosizerEngine:
                 strat_slope        = strat_slope,
                 load_shift_percent = self.load_shift_percent,
             )
+            if highlight_x_value is not None:
+                curve = dict(curve)
+                curve["recommended_index"] = min(
+                    range(len(curve["load_shift_percent"])),
+                    key=lambda i: abs(curve["load_shift_percent"][i] * 100.0 - highlight_x_value),
+                )
             x_vals      = [p * 100.0 for p in curve["load_shift_percent"]]
             y_vals      = curve["storage_storageT_gal"]
             start_index = curve["recommended_index"]
             fig = self._dhw_system._build_sizing_curve_figure(curve, is_ls, title, filepath)
         else:
             curve       = self._dhw_system.get_sizing_curve(self._building, strat_slope=strat_slope)
+            if highlight_x_value is not None:
+                curve = dict(curve)
+                curve["recommended_index"] = min(
+                    range(len(curve["storage_storageT_gal"])),
+                    key=lambda i: abs(curve["storage_storageT_gal"][i] - highlight_x_value),
+                )
             x_vals      = curve["storage_storageT_gal"][::-1]
             y_vals      = curve["capacity_kbtuh"][::-1]
             start_index = len(x_vals) - 1 - curve["recommended_index"]

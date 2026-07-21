@@ -251,14 +251,14 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
         """
         if not getattr(self, "outage_volume_gal", None):
             raise RuntimeError(
-                "Gas backup outage data is not available. Call from_size() first."
+                "In Series outage data is not available. Call from_size() first."
             )
         return get_ashrae_sizing_curve(self.outage_volume_gal, self.outage_temp_delta_f)
 
     def plot_sizing_curve(
         self,
         building: Building,
-        title: str = "Gas Backup Sizing Curve — MP RTP In-Series",
+        title: str = "In Series Sizing Curve — MP RTP In-Series",
     ) -> "plotly.graph_objects.Figure":
         """
         Return a Plotly sizing-curve figure for the gas backup system.

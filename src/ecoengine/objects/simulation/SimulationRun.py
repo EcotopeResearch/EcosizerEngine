@@ -478,7 +478,7 @@ class SimulationRun:
             ]
             fig.add_trace(
                 go.Scatter(x=gas_time, y=gas_gph,
-                           name="Gas Heater Generation (gal/hr at Supply Temperature)",
+                           name="Suppl. Heater Generation (gal/hr at Supply Temperature)",
                            line=dict(color="darkorange", width=1)),
                 secondary_y=False,
             )

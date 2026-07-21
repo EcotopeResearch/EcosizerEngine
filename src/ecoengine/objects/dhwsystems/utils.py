@@ -324,7 +324,7 @@ def size_supplemental_heating_and_storage(
             best_outage_temp_delta_f = run_temp_delta_f
 
     building.avg_load_shape = _original_avg_load_shape
-    
+
     total_outage_min = sum(1 for v in best_outage_volume_gal if v > 0.0)
     if total_outage_min <= _MIN_OUTAGE_MIN and best_max_delta <= _MIN_DEFICIT_F:
         raise ValueError(
@@ -459,7 +459,7 @@ def get_ashrae_sizing_curve(
 
 def plot_ashrae_sizing_curve(
     curve: dict,
-    title: str = "Gas Backup Sizing Curve",
+    title: str = "Supplementary Sizing Curve",
 ) -> "plotly.graph_objects.Figure":
     """
     Build a Plotly sizing-curve figure from the dict returned by
@@ -500,8 +500,8 @@ def plot_ashrae_sizing_curve(
 
     hover = (
         "Window: <b>%{customdata} min</b><br>"
-        "Gas storage: <b>%{x:.1f} gal</b><br>"
-        "Gas capacity: <b>%{y:.1f} kBTU/hr</b>"
+        "Supplementary storage: <b>%{x:.1f} gal</b><br>"
+        "Supplementary capacity: <b>%{y:.1f} kBTU/hr</b>"
         "<extra></extra>"
     )
 
@@ -540,10 +540,14 @@ def plot_ashrae_sizing_curve(
             args=[{"visible": visibility}],
         ))
 
+    axis_label_type="Supplementary"
+    if "Swing Tank" in title:
+        axis_label_type="Swing Tank"
+
     fig.update_layout(
         title=title,
-        xaxis_title="Gas Storage Volume (gal)",
-        yaxis_title="Gas Heating Capacity (kBTU/hr)",
+        xaxis_title=f"{axis_label_type} Storage Volume (gal)",
+        yaxis_title=f"{axis_label_type} Heating Capacity (kBTU/hr)",
         showlegend=False,
         sliders=[dict(
             steps=steps,
