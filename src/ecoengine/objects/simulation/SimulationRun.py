@@ -332,7 +332,16 @@ class SimulationRun:
 
         Columns: timestep, time_min, dhw_demand_supplyT_gal,
         usable_volume_supplyT_gal, heater_output_kbtuh, heater_power_in_kw,
-        oat_f, inlet_water_temp_f, tank_temp_0pct, tank_temp_20pct, ..., tank_temp_100pct.
+        oat_f, inlet_water_temp_f, tank_temp_0pct, tank_temp_20pct, ...,
+        tank_temp_100pct, mode.
+
+        When applicable (non-empty for this run), also includes
+        tm_tank_temp_f, tm_heater_output_kbtuh, tm_heater_input_kw. These
+        columns cover the swing/TM tank for SwingSystem-family schematics,
+        the gas storage tank + gas heater for the in-series dual-fuel
+        schematics (SP_RTPInSeriesSystem, MP_RTPInSeriesSystem), and the gas
+        heater's output/input power for SP_RTPInParallelSystem (which has no
+        separate tank, so tm_tank_temp_f is omitted for that schematic).
 
         Parameters
         ----------
@@ -342,17 +351,31 @@ class SimulationRun:
         import csv as _csv
         n = len(self.dhw_demand_supplyT_gal)
         tank_col_names = [f"tank_temp_{int(f*100)}pct" for f in _TANK_NODE_FRACTS]
+
+        has_tm_temp   = len(self.tm_tank_temp_f)         == n
+        has_tm_output = len(self.tm_heater_output_kbtuh) == n
+        has_tm_kw     = len(self.tm_heater_input_kw)     == n
+
+        header = [
+            "timestep", "time_min",
+            "dhw_demand_supplyT_gal", "usable_volume_supplyT_gal",
+            "heater_output_kbtuh", "heater_power_in_kw",
+            "oat_f", "inlet_water_temp_f",
+            *tank_col_names,
+            "mode",
+        ]
+        if has_tm_temp:
+            header.append("tm_tank_temp_f")
+        if has_tm_output:
+            header.append("tm_heater_output_kbtuh")
+        if has_tm_kw:
+            header.append("tm_heater_input_kw")
+
         with open(filepath, "w", newline="") as f:
             writer = _csv.writer(f)
-            writer.writerow([
-                "timestep", "time_min",
-                "dhw_demand_supplyT_gal", "usable_volume_supplyT_gal",
-                "heater_output_kbtuh", "heater_power_in_kw",
-                "oat_f", "inlet_water_temp_f",
-                *tank_col_names,
-            ])
+            writer.writerow(header)
             for i in range(n):
-                writer.writerow([
+                row = [
                     i,
                     i * self.timestep_min,
                     self.dhw_demand_supplyT_gal[i],
@@ -362,7 +385,15 @@ class SimulationRun:
                     self.oat_f[i],
                     self.inlet_water_temp_f[i],
                     *(self.tank_temps_f[node][i] for node in range(len(_TANK_NODE_FRACTS))),
-                ])
+                    self.heater_mode[i],
+                ]
+                if has_tm_temp:
+                    row.append(self.tm_tank_temp_f[i])
+                if has_tm_output:
+                    row.append(self.tm_heater_output_kbtuh[i])
+                if has_tm_kw:
+                    row.append(self.tm_heater_input_kw[i])
+                writer.writerow(row)
 
     def to_plotly(
         self,
