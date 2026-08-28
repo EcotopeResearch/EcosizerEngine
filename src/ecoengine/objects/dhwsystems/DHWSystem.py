@@ -1188,95 +1188,6 @@ class DHWSystem:
 
         return (transition_temp_sum + fully_hot_temp_sum) / total_phys_gal
 
-    def _strat_factor_for_on_params(
-        self,
-        on_fract: float,
-        on_temp_f: float,
-        strat_slope: float,
-    ) -> float:
-        """
-        Compute the stratification factor for a single (on_fract, on_temp_f) pair.
-
-        The tank temperature profile is modeled as a linear gradient in the
-        transition zone between cold and fully-hot layers. The slope of that
-        gradient is strat_slope [°F / %-height].
-
-        Parameters
-        ----------
-        on_fract : float
-            Fractional height of the aquastat ON sensor (0 = bottom, 1 = top).
-        on_temp_f : float
-            Temperature at the aquastat sensor when the heater turns on [°F].
-        strat_slope : float
-            Temperature gradient [°F per percentage-point of tank height].
-
-        Returns
-        -------
-        float
-            Stratification factor (0-1). A value of 1.0 means all storage
-            above the aquastat is at full storage temperature (ideal).
-        """
-        on_pct  = on_fract * 100
-        delta_t = self.storage_temp_f - self.supply_temp_f
-
-        # Tank height (%) where temperature profile crosses supply and storage setpoints
-        supply_height_pct  = on_pct + (self.supply_temp_f  - on_temp_f) / strat_slope
-        storage_height_pct = on_pct + (self.storage_temp_f - on_temp_f) / strat_slope
-        storage_height_pct = min(storage_height_pct, 100.0)
-        # TODO : if storage_height_pct is 100, shouldn't we realculate 
-        #   delta_t based off of what temperature is actually at the top
-
-        # Clamp supply_height_pct so the transition zone stays within [on_pct, 100].
-        # If on_temp_f >= storage_temp_f the whole tank above the aquastat is fully
-        # hot, which gives a factor of 1.0 — the clamp produces that naturally.
-        supply_height_pct = max(supply_height_pct, on_pct)
-        # TODO: shouldn't supply_height_pct always just be where supply temp percentage height is on the tank?
-        #   If there is some water that is supply temp under on_pct, it is still usable water
-
-        # Volume above supply temp = fully-hot zone + trapezoidal transition zone
-        vol_fully_hot    = (100 - storage_height_pct) * delta_t
-        vol_transition   = (storage_height_pct - supply_height_pct) * delta_t / 2
-        # TODO : delta T in the above two lines should, I am pretty sure, be the difference between supply temp (or lowest emp in tank if whole tank is above supply)
-        #   and true top of tank temperature
-        vol_above_supply = vol_fully_hot + vol_transition
-
-        # Ideal case: all volume above the aquastat is at full storage temp
-        ideal_vol = (100 - on_pct) * delta_t
-        # TODO : delta_t in this case is actually the difference between storage and supply as this is a perfectly stratified tank
-
-        return vol_above_supply / ideal_vol
-
-    def _strat_pct_of_tank(
-        self,
-        on_fract: float,
-        on_temp_f: float,
-        strat_slope: float,
-    ) -> float:
-        """
-        Return the fraction of the *total* tank volume that is at or above
-        supply temperature when the ON sensor is at on_fract and reads
-        on_temp_f.
-
-        This is the "percent of whole tank" form of the stratification factor:
-
-            strat_pct = strat_factor * (1 - on_fract)
-
-        Used in load-shift sizing where the effective storage band is the
-        difference between two aquastat levels expressed as fractions of the
-        entire tank volume, not just the volume above one aquastat.
-
-        Parameters
-        ----------
-        on_fract : float
-        on_temp_f : float
-        strat_slope : float
-
-        Returns
-        -------
-        float
-        """
-        return self._strat_factor_for_on_params(on_fract, on_temp_f, strat_slope) * (1.0 - on_fract)
-
     @staticmethod
     def _is_load_shifting(control_map: dict[str, Controls] | None) -> bool:
         """Return True if the control_map has a ``"shed"`` key."""
@@ -1398,6 +1309,7 @@ class DHWSystem:
             Generation rate [gal/hr at supplyT].
         """
         daily_gal           = building.daily_dhw_use_supplyT_gal
+        inlet_temp_f      = self._require_design_inlet_temp(building)
         normal_gen_rate_gph = daily_gal / self.max_daily_run_hr #TODO min of this and number of non-shed hours?
 
         _, load_up_hours = self._get_first_shed_block_and_load_up_hours(control_schedule)
@@ -1412,15 +1324,15 @@ class DHWSystem:
         lu_ctrl     = control_map.get("loadUp", normal_ctrl)
         shed_ctrl   = control_map["shed"]
 
-        normal_strat_pct = self._strat_pct_of_tank(
-            normal_ctrl.on_sensor_fract, normal_ctrl.on_trigger_t_f, strat_slope
-        )
-        lu_strat_pct = self._strat_pct_of_tank(
-            lu_ctrl.on_sensor_fract, lu_ctrl.on_trigger_t_f, strat_slope
-        )
-        shed_strat_pct = self._strat_pct_of_tank(
-            shed_ctrl.on_sensor_fract, shed_ctrl.on_trigger_t_f, strat_slope
-        )
+        normal_strat_pct = self._calc_supply_temp_gal_from_100gal_tank(
+                normal_ctrl.on_sensor_fract, normal_ctrl.on_trigger_t_f, strat_slope, inlet_temp_f
+            ) / 100.0
+        lu_strat_pct = self._calc_supply_temp_gal_from_100gal_tank(
+                lu_ctrl.off_sensor_fract, lu_ctrl.off_trigger_t_f, strat_slope, inlet_temp_f
+            ) / 100.0
+        shed_strat_pct = self._calc_supply_temp_gal_from_100gal_tank(
+                shed_ctrl.on_sensor_fract, shed_ctrl.on_trigger_t_f, strat_slope, inlet_temp_f
+            ) / 100.0
 
         ls_band = lu_strat_pct - shed_strat_pct
         if ls_band <= 0:

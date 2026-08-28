@@ -585,6 +585,7 @@ class SwingSystem(RecircSystem):
         Returns the maximum.
         """
         daily_gal           = building.daily_dhw_use_supplyT_gal
+        inlet_temp_f      = self._require_design_inlet_temp(building)
         normal_gen_rate_gph = daily_gal * self._eff_mix_fraction / self.max_daily_run_hr
 
         _, load_up_hours = self._get_first_shed_block_and_load_up_hours(control_schedule)
@@ -598,10 +599,15 @@ class SwingSystem(RecircSystem):
         normal_ctrl = control_map["normal"]
         lu_ctrl     = control_map.get("loadUp", normal_ctrl)
         shed_ctrl   = control_map["shed"]
-
-        lu_strat     = self._strat_pct_of_tank(lu_ctrl.on_sensor_fract,     lu_ctrl.on_trigger_t_f,     strat_slope)
-        normal_strat = self._strat_pct_of_tank(normal_ctrl.on_sensor_fract, normal_ctrl.on_trigger_t_f, strat_slope)
-        shed_strat   = self._strat_pct_of_tank(shed_ctrl.on_sensor_fract,   shed_ctrl.on_trigger_t_f,   strat_slope)
+        normal_strat = self._calc_supply_temp_gal_from_100gal_tank(
+                normal_ctrl.on_sensor_fract, normal_ctrl.on_trigger_t_f, strat_slope, inlet_temp_f
+            ) / 100.0
+        lu_strat = self._calc_supply_temp_gal_from_100gal_tank(
+                lu_ctrl.off_sensor_fract, lu_ctrl.off_trigger_t_f, strat_slope, inlet_temp_f
+            ) / 100.0
+        shed_strat = self._calc_supply_temp_gal_from_100gal_tank(
+                shed_ctrl.on_sensor_fract, shed_ctrl.on_trigger_t_f, strat_slope, inlet_temp_f
+            ) / 100.0
 
         ls_band = lu_strat - shed_strat
         if ls_band <= 0:
