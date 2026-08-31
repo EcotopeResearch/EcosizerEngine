@@ -264,8 +264,8 @@ class StratifiedTank(StorageTank):
                 hi = mid
             if hi - lo < 1e-6:
                 break
-
-        if yield_mid < volume_supplyT_gal - 1e-6:
+            
+        if yield_mid < volume_supplyT_gal - 1e-6 and hi == self.total_volume_gal and hi - lo < 1e-6:
             # Even the largest physical draw the search explored (bounded at
             # total_volume_gal) falls short of demand -- a true outage. The
             # binary search's upper bound assumes one tank-volume of draw is
