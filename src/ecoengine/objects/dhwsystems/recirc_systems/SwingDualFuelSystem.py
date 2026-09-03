@@ -480,9 +480,6 @@ class SwingDualFuelSystem(SwingSystem):
         )
 
         # --- 7. Usable volume ---
-        # if swing_t < self.supply_temp_f:
-        #     usable_vol_gal = 0.0
-        # else:
         usable_vol_gal = self.storage_tank.get_usable_volume_supplyT_gal(
             self.supply_temp_f
         )
