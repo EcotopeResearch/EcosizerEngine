@@ -78,6 +78,15 @@ class SimulationRun:
         self.tm_heater_output_kbtuh:   list[float] = []
         self.tm_heater_input_kw:   list[float] = []
 
+        # Temperature of the water actually delivered to the mixing valve, from
+        # the last tank in the series.  Only populated for schematics whose
+        # simulate_step() emits "delivery_temp_f" (swing_tank, swing_dual_fuel,
+        # multi_pass_rtp, mprtp_in_series, sprtp_in_series).  A system must emit
+        # the key on every timestep or on none: output methods gate on
+        # len(delivery_temp_f) == n, so a conditionally-emitted key would
+        # silently drop the column or misalign it.
+        self.delivery_temp_f:          list[float] = []
+
         # Cumulative outage counter [minutes]
         self.outage_minutes: int = 0
 
@@ -110,6 +119,7 @@ class SimulationRun:
         tm_tank_temp_f: float | None = None,
         tm_heater_output_kbtuh: float | None = None,
         tm_heater_input_kw: float | None = None,
+        delivery_temp_f: float | None = None,
     ) -> None:
         """
         Append one timestep's worth of data to the run record.
@@ -141,6 +151,10 @@ class SimulationRun:
         tm_heater_input_kw : float | None
             Electrical power consumed by TM element [kW]. None when no
             real performance map is available (e.g. NominalPerformanceMap).
+        delivery_temp_f : float | None
+            Temperature of the water leaving the last tank in the series and
+            reaching the mixing valve [°F]. None for schematics whose
+            simulate_step() does not report one.
         """
         self.dhw_demand_supplyT_gal.append(dhw_demand_supplyT_gal)
         self.usable_volume_supplyT_gal.append(usable_volume_supplyT_gal)
@@ -157,6 +171,8 @@ class SimulationRun:
             self.tm_heater_output_kbtuh.append(tm_heater_output_kbtuh)
         if tm_heater_input_kw is not None:
             self.tm_heater_input_kw.append(tm_heater_input_kw)
+        if delivery_temp_f is not None:
+            self.delivery_temp_f.append(delivery_temp_f)
 
     def check_outlet_deficit(self, top_tank_temp_f: float, supply_temp_f: float) -> bool:
         """
@@ -255,14 +271,18 @@ class SimulationRun:
         last_step = outage_steps[-1]
         day = (last_step * self.timestep_min) // (24 * 60) + 1
 
-        # For swing/TM systems use the TM tank as the delivery point; for all others
-        # use the primary tank top node.  draw() no longer clamps _delta_gal at
+        # Prefer the delivery temperature the system itself reported — the water
+        # leaving the last tank in the series for the mixing valve.  Fall back to
+        # the TM tank for swing/TM schematics that report none, then to the
+        # primary tank top node.  draw() no longer clamps _delta_gal at
         # supply_temp_f, so the top node drops below supply_temp_f during a true
         # temperature-limited outage and the reported temperature is meaningful.
         # Volume-limited outages (primary depleted but TM still hot, or tank at
         # exactly supply_temp_f) produce delivery temps >= supply_temp_f, which
         # are uninformative — suppress the clause in that case.
-        if self.show_tm_panel and self.tm_tank_temp_f:
+        if len(self.delivery_temp_f) == len(self.usable_volume_supplyT_gal):
+            delivery_temps = self.delivery_temp_f
+        elif self.show_tm_panel and self.tm_tank_temp_f:
             delivery_temps = self.tm_tank_temp_f
         else:
             delivery_temps = self.tank_temps_f[-1]
@@ -343,6 +363,11 @@ class SimulationRun:
         heater's output/input power for SP_RTPInParallelSystem (which has no
         separate tank, so tm_tank_temp_f is omitted for that schematic).
 
+        Also includes delivery_temp_f — the temperature of the water leaving the
+        last tank in the series for the mixing valve — for the schematics whose
+        simulate_step() reports one (swing_tank, swing_dual_fuel, multi_pass_rtp,
+        mprtp_in_series, sprtp_in_series).
+
         Parameters
         ----------
         filepath : str
@@ -355,6 +380,7 @@ class SimulationRun:
         has_tm_temp   = len(self.tm_tank_temp_f)         == n
         has_tm_output = len(self.tm_heater_output_kbtuh) == n
         has_tm_kw     = len(self.tm_heater_input_kw)     == n
+        has_delivery  = len(self.delivery_temp_f)         == n
 
         header = [
             "timestep", "time_min",
@@ -370,6 +396,8 @@ class SimulationRun:
             header.append("tm_heater_output_kbtuh")
         if has_tm_kw:
             header.append("tm_heater_input_kw")
+        if has_delivery:
+            header.append("delivery_temp_to_mixing_valve_f")
 
         with open(filepath, "w", newline="") as f:
             writer = _csv.writer(f)
@@ -393,6 +421,8 @@ class SimulationRun:
                     row.append(self.tm_heater_output_kbtuh[i])
                 if has_tm_kw:
                     row.append(self.tm_heater_input_kw[i])
+                if has_delivery:
+                    row.append(self.delivery_temp_f[i])
                 writer.writerow(row)
 
     def to_plotly(

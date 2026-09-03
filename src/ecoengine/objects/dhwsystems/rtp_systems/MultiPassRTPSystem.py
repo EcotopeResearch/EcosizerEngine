@@ -637,6 +637,16 @@ class MultiPassRTPSystem(RTPSystem):
             if tank.is_slug_active() and tank._slug_vol_gal > 0:
                 # Sub-supply water exists: heat it via the slug.
                 tank.heat_slug(total_kbtuh, interval_min)
+
+        # Temperature of the water that actually leaves the tank this timestep and
+        # reaches the mixing valve.  top_temp_f is the valve's sensed hot-side
+        # temperature (a point reading that sizes draw_gal); this is the
+        # volume-weighted average over the block that is drawn, which is
+        # slug-aware.  Sampled after this timestep's slug heating and before
+        # draw_physical_gal mutates the tank.  With draw_gal == 0 nothing is
+        # delivered and get_average_draw_temp_f returns storage temp.
+        delivery_temp_f = tank.get_average_draw_temp_f(draw_gal)
+
         if draw_gal > 0:
             tank.draw_physical_gal(
                 draw_gal, mv_inlet_temp_f, update_internal_cold_temp=False
@@ -647,11 +657,6 @@ class MultiPassRTPSystem(RTPSystem):
             tank.get_temperature_at_fraction(f)
             for f in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
         ]
-        # During slug heating top_temp_f may be at cold_temp_f (EnergyTank drained
-        # into slug), which would falsely trip the outlet-deficit early-stop.  The
-        # system is working normally while the heater is on, so suppress the check.
-        delivery_temp_f = self.supply_temp_f if is_heating else top_temp_f
-
         return {
             "demand_supplyT_gal":        demand_supplyT_gal,
             "usable_volume_supplyT_gal": usable_vol_gal,
