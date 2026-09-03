@@ -120,9 +120,13 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
             tm_tank_temp_f            = step.get("tm_tank_temp_f"),
             tm_heater_output_kbtuh    = step.get("tm_heater_output_kbtuh"), #TODO rename this for gas heating you know?
             tm_heater_input_kw    = step.get("tm_heater_input_kw"),
+            # Raw, not the fallback-resolved value below: only schematics that
+            # actually report a delivery temperature get the recorded series.
+            delivery_temp_f           = step.get("delivery_temp_f"),
         )
-
-        if step["usable_volume_supplyT_gal"] <= 0.0:
+        
+        delivery_temp_f = step.get("delivery_temp_f", step["tank_temps_f"][-1])
+        if step["usable_volume_supplyT_gal"] <= 0.0 or delivery_temp_f < dhw_system.supply_temp_f:
             tm_tank_temp_f = step.get("tm_tank_temp_f")
             if not sim_run.show_tm_panel or tm_tank_temp_f is None or tm_tank_temp_f < dhw_system.supply_temp_f:
                 sim_run.record_outage(timestep_min)
@@ -130,7 +134,6 @@ def simulate(dhw_system: DHWSystem, building: Building, duration: str = "3day", 
         # Check outlet-deficit stop condition. For systems where the TM/swing
         # tank is the actual delivery point (e.g. SwingSystem), use its
         # temperature; for all others fall back to the primary tank top.
-        delivery_temp_f = step.get("delivery_temp_f", step["tank_temps_f"][-1])
         if sim_run.check_outlet_deficit(delivery_temp_f, dhw_system.supply_temp_f):
             break
     return sim_run

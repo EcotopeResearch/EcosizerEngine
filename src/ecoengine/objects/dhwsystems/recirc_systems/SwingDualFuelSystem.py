@@ -480,12 +480,9 @@ class SwingDualFuelSystem(SwingSystem):
         )
 
         # --- 7. Usable volume ---
-        if swing_t < self.supply_temp_f:
-            usable_vol_gal = 0.0
-        else:
-            usable_vol_gal = self.storage_tank.get_usable_volume_supplyT_gal(
-                self.supply_temp_f
-            )
+        usable_vol_gal = self.storage_tank.get_usable_volume_supplyT_gal(
+            self.supply_temp_f
+        )
 
         # --- 8. Tank temperature profile (primary stratified tank) ---
         tank_temps_f = [
@@ -508,7 +505,7 @@ class SwingDualFuelSystem(SwingSystem):
             "mode":                      step_mode,
             # Swing tank is the actual delivery point — its temperature drives
             # the outlet-deficit early-stop check.
-            "delivery_temp_f":           swing_mid_temp_f,
+            "delivery_temp_f":           swing_t,
             # TM panel data (consumed by SimulationRun for the swing-tank subplot)
             "tm_tank_temp_f":            swing_mid_temp_f,
             "tm_heater_output_kbtuh":    tm_kbtuh,
