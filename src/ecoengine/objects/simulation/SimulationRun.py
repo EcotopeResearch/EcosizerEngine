@@ -363,7 +363,7 @@ class SimulationRun:
         heater's output/input power for SP_RTPInParallelSystem (which has no
         separate tank, so tm_tank_temp_f is omitted for that schematic).
 
-        Also includes delivery_temp_f — the temperature of the water leaving the
+        Also includes delivery_temp_to_mixing_valve_f — the temperature of the water leaving the
         last tank in the series for the mixing valve — for the schematics whose
         simulate_step() reports one (swing_tank, swing_dual_fuel, multi_pass_rtp,
         mprtp_in_series, sprtp_in_series).
