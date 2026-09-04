@@ -1,18 +1,50 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecoengine"
-version = "3.1.5"
-requires-python = ">=3.11"
-dependencies = ["numpy~=1.24.1", "scipy", "plotly>=4.12.0"]
+version = "3.1.6"
+requires-python = ">=3.11,<3.12"
+
+# Upper bounds are deliberate, and match the bounds in ecopipeline
+# (DataPipelinePackage).  Coworkers install both packages into the same
+# long-lived environments, so an unbounded range lets a routine `pip install`
+# pull in a release that satisfies one package and breaks the other (numpy 2.x
+# against pandas 1.5.x being the recurring case there).  The Python cap exists
+# for the same reason: ecopipeline is capped at <3.12, so an uncapped ecoengine
+# would allow a 3.12 environment that ecopipeline cannot join.
+#
+# scipy is not imported anywhere in this source tree.  It is required at runtime
+# to unpickle the LinearNDInterpolator objects in data/preformanceMaps/pkls/,
+# which PklPerformanceMap loads.  Do not remove it on the basis of an import
+# scan.  The <2.0 ceiling is not precautionary: scipy.interpolate.interpnd is
+# deprecated and is removed in SciPy 2.0, which will break those pickles.  The
+# range has been exercised at 1.10.0, 1.11.1, and 1.15.3 against numpy 1.24.x.
+#
+# plotly is pinned exactly rather than ranged, to match rcc-dash-viewer
+# (RCCDashViewer), which depends on ecoengine directly and hard-pins
+# plotly==5.19.0.  Keeping the two identical means the figures this package
+# generates render against the same plotly the dashboard ships.  Bump both
+# together or not at all.
+dependencies = [
+    "numpy~=1.24.1",
+    "scipy>=1.10,<2.0",
+    "plotly==5.19.0",
+]
 
 [project.optional-dependencies]
 docs = ["sphinx>=6", "furo"]
 
+[dependency-groups]
+dev = ["pytest", "build"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
+# The test suite imports pytest, which is a dev dependency.  Keep it out of the
+# wheel so a production install does not carry a pytest-importing subpackage.
+# Tests still run from the source tree (`uv run pytest`), which is what CI uses.
+exclude = ["ecoengine.tests*"]
 
 [tool.setuptools.package-data]
 "ecoengine.data.climate_data" = ["*.csv"]

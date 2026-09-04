@@ -1,4 +1,5 @@
-# Publishes the package to PyPI when a GitHub release is created.
+# This workflow builds and uploads a Python Package when a release is created.
+# Dependencies come from uv.lock so the tested tree matches the published one.
 
 name: Upload Python Package
 
@@ -16,19 +17,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10.0.1
       with:
-        python-version: '3.11'
+        enable-cache: true
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .
-        pip install pytest build
-    - name: Test with pytest
-      run: pytest
+      # --locked fails the build if uv.lock has drifted from pyproject.toml
+      # rather than silently re-resolving.
+      run: uv sync --locked
+    - name: test package
+      run: uv run pytest
     - name: Build package
-      run: python -m build
+      run: uv build
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
