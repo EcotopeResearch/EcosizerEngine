@@ -4,22 +4,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-```bash
-# Install in editable mode (required before running tests)
-pip install -e .
+Dependencies are managed with [uv](https://docs.astral.sh/uv/). `uv.lock` is
+committed; `uv sync` creates/updates `.venv` from it.
 
-# Run all tests
-pytest src/ecoengine/tests/
+```bash
+# Create the environment from uv.lock (replaces `pip install -e .`)
+uv sync
+
+# Run all tests (testpaths in pyproject.toml points at the suite)
+uv run pytest
 
 # Run a single test file
-pytest src/ecoengine/tests/test_buildings.py
+uv run pytest src/ecoengine/tests/test_buildings.py
 
 # Run a single test by name
-pytest src/ecoengine/tests/test_buildings.py::test_name
+uv run pytest src/ecoengine/tests/test_buildings.py::test_name
 
 # Run demo/example
-python run_simulation.py
+uv run python run_simulation.py
+
+# After changing dependencies in pyproject.toml
+uv lock
 ```
+
+Version pins are deliberately bounded so ecoengine can share an environment with
+`ecopipeline` (DataPipelinePackage) — see the comments in `pyproject.toml` before
+loosening them.
 
 ## Reference Codebase
 
