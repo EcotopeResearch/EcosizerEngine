@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecoengine"
-version = "3.1.5"
+version = "3.1.6"
 requires-python = ">=3.11,<3.12"
 
 # Upper bounds are deliberate, and match the bounds in ecopipeline
