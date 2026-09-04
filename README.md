@@ -5,19 +5,42 @@ This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you a
 
 A Python simulation engine for sizing and simulating domestic hot water (DHW) systems in multi-family and commercial buildings, with a focus on heat pump water heater (HPWH) technology.
 
-Requires Python 3.11+. Dependencies: `numpy`, `scipy`, `plotly`.
+Requires Python 3.11 (capped below 3.12). Dependencies: `numpy`, `scipy`, `plotly`.
+
+Version bounds are deliberate. `ecoengine` is installed into the same environments as `ecopipeline` (DataPipelinePackage) and `rcc-dash-viewer` (RCCDashViewer, which depends on `ecoengine` directly), so the pins are set to resolve alongside both. See the comments in `pyproject.toml` before loosening them.
 
 ---
 
 ## Installation
 
-To make the package available to other local apps without publishing it to PyPI, install it in editable mode from the repo root:
+Dependencies are managed with [uv](https://docs.astral.sh/uv/). `uv.lock` is committed, so `uv sync` reproduces the exact environment CI and the published package are built against:
 
 ```bash
-pip install -e .
+uv sync
 ```
 
-Any app that shares the same Python environment can then import from `ecoengine` directly. Changes made to the source files take effect immediately without reinstalling.
+That creates `.venv` and installs `ecoengine` in editable mode — changes to the source files take effect immediately without reinstalling. Prefix commands with `uv run` to use it (`uv run python your_script.py`).
+
+Consumers who are not using uv can still install normally; the pins in `pyproject.toml` are what a plain `pip install` resolves against:
+
+```bash
+pip install -e .        # from the repo root
+pip install ecoengine   # from PyPI
+```
+
+---
+
+## Changing the version or dependencies
+
+`uv.lock` records the project's own version alongside its dependency graph, so **any edit to `pyproject.toml` needs a `uv lock` in the same commit** — including a bare version bump. The release workflow runs `uv sync --locked`, which fails the build if the two have drifted rather than silently re-resolving.
+
+```bash
+uv version 3.1.7        # bumps pyproject.toml and updates uv.lock together
+git add pyproject.toml uv.lock
+git commit -m "version bump to 3.1.7"
+```
+
+Editing `pyproject.toml` by hand works too — just run `uv lock` afterward and commit both files. Never hand-edit `uv.lock`.
 
 ---
 
@@ -182,5 +205,11 @@ For a full working example including load-shift scheduling across multiple syste
 ## Running tests
 
 ```bash
-pytest src/ecoengine/tests/
+uv run pytest
+```
+
+`testpaths` in `pyproject.toml` points at the suite, so no path argument is needed. Pass one to narrow the run:
+
+```bash
+uv run pytest src/ecoengine/tests/test_buildings.py
 ```
