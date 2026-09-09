@@ -5,7 +5,7 @@ This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you a
 
 A Python simulation engine for sizing and simulating domestic hot water (DHW) systems in multi-family and commercial buildings, with a focus on heat pump water heater (HPWH) technology.
 
-Requires Python 3.11 (capped below 3.12). Dependencies: `numpy`, `scipy`, `plotly`.
+Requires Python 3.11 or newer. Dependencies: `numpy`, `scipy`, `plotly`.
 
 Version bounds are deliberate. `ecoengine` is installed into the same environments as `ecopipeline` (DataPipelinePackage) and `rcc-dash-viewer` (RCCDashViewer, which depends on `ecoengine` directly), so the pins are set to resolve alongside both. See the comments in `pyproject.toml` before loosening them.
 

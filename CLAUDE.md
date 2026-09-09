@@ -45,7 +45,7 @@ Key mappings old → new:
 
 ## Project Overview
 
-EcosizerEngine2 is a Python 3.11+ simulation engine for sizing and simulating domestic hot water (DHW) systems in multi-family and commercial buildings, focused on heat pump water heater (HPWH) technology. It has **no external dependencies** except numpy and pytest.
+EcosizerEngine2 is a Python 3.11+ simulation engine for sizing and simulating domestic hot water (DHW) systems in multi-family and commercial buildings, focused on heat pump water heater (HPWH) technology. Runtime dependencies are `numpy`, `scipy` (needed only to unpickle the performance-map files), and `plotly`; `pytest` is a dev dependency.
 
 The engine performs three core functions:
 1. **Sizing** — calculates minimum heating capacity (kBTU/hr) and storage volume (gallons) required to meet peak demand
