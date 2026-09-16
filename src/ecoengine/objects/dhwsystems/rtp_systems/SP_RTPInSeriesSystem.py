@@ -114,7 +114,10 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         SP_RTPInSeriesSystem
         """
         # ensure shed turns primary system completely off
-        control_map = set_dual_fuel_shed_controls(control_map)
+        saved_shed_state = None
+        if 'shed' in control_map:
+            saved_shed_state = control_map.get("shed")
+            control_map = set_dual_fuel_shed_controls(control_map)
 
         system = cls(
             water_heaters=[],
@@ -127,6 +130,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             defrost_factor=defrost_factor,
             tm_safety_factor=tm_safety_factor,
         )
+        system.saved_shed_state = saved_shed_state
         system.fallback_system = None
 
         system._minimum_capacity_kbtuh = nominal_capacity_kbtuh
@@ -207,6 +211,9 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             # TODO add thermal efficiency
         except ValueError as e:
             # Compare against base class to cover window where system is undersized but still passing the simulation
+            control_map = self.water_heaters[0].control_map
+            if 'shed' in control_map:
+                control_map['shed'] = self.saved_shed_state
             comparison_system = SinglePassRTPSystem.from_size(
                     building                   = building,
                     supply_temp_f              = self.supply_temp_f,
@@ -217,7 +224,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
                     defrost_factor             = self.defrost_factor,
                     tm_safety_factor           = self.tm_safety_factor,
                     control_schedule           = self.water_heaters[0].control_schedule,
-                    control_map                = self.water_heaters[0].control_map,
+                    control_map                = control_map,
                     load_shift_fract_total_vol = 1.0,
                 )
             result = {

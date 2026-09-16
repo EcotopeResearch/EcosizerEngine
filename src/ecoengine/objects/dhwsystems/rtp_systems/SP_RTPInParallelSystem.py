@@ -154,7 +154,10 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
         SP_RTPInParallelSystem
         """
         # ensure shed turns primary system completely off
-        control_map = set_dual_fuel_shed_controls(control_map)
+        saved_shed_state = None
+        if 'shed' in control_map:
+            saved_shed_state = control_map.get("shed")
+            control_map = set_dual_fuel_shed_controls(control_map)
 
         system = cls(
             water_heaters=[],
@@ -184,6 +187,7 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             control_map=control_map,
         )]
 
+        system.saved_shed_state = saved_shed_state
         system.fallback_system = None
 
         # Gas backup controls: on at supply_temp, off at supply_temp + deadband
@@ -267,6 +271,9 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             0.0, max(self.supply_temp_f - t for t in sim_run.tank_temps_f[-1])
         )
         if sim_run.outage_minutes <= self._MIN_OUTAGE_MIN and max_deficit_f <= self._MIN_DEFICIT_F:
+            control_map = self.water_heaters[0].control_map
+            if 'shed' in control_map:
+                control_map['shed'] = self.saved_shed_state
             comparison_system = SinglePassRTPSystem.from_size(
                     building                   = building,
                     supply_temp_f              = self.supply_temp_f,
@@ -277,7 +284,7 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
                     defrost_factor             = self.defrost_factor,
                     tm_safety_factor           = self.tm_safety_factor,
                     control_schedule           = self.water_heaters[0].control_schedule,
-                    control_map                = self.water_heaters[0].control_map,
+                    control_map                = control_map,
                     load_shift_fract_total_vol = 1.0,
                 )
             result = {

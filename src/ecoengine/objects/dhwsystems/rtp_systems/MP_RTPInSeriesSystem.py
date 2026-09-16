@@ -111,7 +111,10 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
         MP_RTPInSeriesSystem
         """
         # ensure shed turns primary system completely off
-        control_map = set_dual_fuel_shed_controls(control_map)
+        saved_shed_state = None
+        if 'shed' in control_map:
+            saved_shed_state = control_map.get("shed")
+            control_map = set_dual_fuel_shed_controls(control_map)
 
         system = cls(
             water_heaters=[],
@@ -124,6 +127,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
             defrost_factor=defrost_factor,
             tm_safety_factor=tm_safety_factor,
         )
+        system.saved_shed_state = saved_shed_state
         system.fallback_system = None
         system._minimum_capacity_kbtuh = nominal_capacity_kbtuh
         system._minimum_storage_storageT_gal = nominal_storage_gal
@@ -214,7 +218,9 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
             self.gas_storage_tank = MixedStorageTank(total_volume_gal=gas_storage_vol_gal)
         except ValueError as e:
             # Compare against base class to cover window where system is undersized but still passing the simulation
-            
+            control_map = self.water_heaters[0].control_map
+            if 'shed' in control_map:
+                control_map['shed'] = self.saved_shed_state
             comparison_system = MultiPassRTPSystem.from_size(
                     building         = building,
                     supply_temp_f    = self.supply_temp_f,
@@ -225,7 +231,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
                     defrost_factor   = self.defrost_factor,
                     tm_safety_factor = self.tm_safety_factor,
                     control_schedule = self.water_heaters[0].control_schedule,
-                    control_map      = self.water_heaters[0].control_map,
+                    control_map      = control_map,
                     drawdown_fract   = self.storage_tank.drawdown_fract,
                 )
             result = {
