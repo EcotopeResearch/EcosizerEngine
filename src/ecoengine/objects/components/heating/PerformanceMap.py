@@ -5,7 +5,7 @@ import math
 import os
 import pickle
 
-from ecoengine.constants.constants import _W_TO_KBTUH
+from ecoengine.constants.constants import _BTUH_PER_W
 
 # Bundled data directory — used as a fallback when perf_map_dir is not supplied.
 # Will be removed once the data is fully externalised.
@@ -221,7 +221,7 @@ class PerformanceMap:
         pwr_kw    = self.get_power_in_kw(oat_f, outlet_temp_f, inlet_temp_f)
         if cap_kbtuh is None or pwr_kw is None or pwr_kw <= 0:
             return None
-        return (cap_kbtuh / _W_TO_KBTUH) / pwr_kw
+        return (cap_kbtuh / _BTUH_PER_W) / pwr_kw
 
     def is_within_operating_bounds(self, oat_f: float) -> bool:
         """Return True if the conditions are within the map's valid operating range."""
@@ -427,7 +427,7 @@ class PklPerformanceMap(PerformanceMap):
     def _er_per_unit_kw(self) -> float:
         """kW per unit at COP=1 (Electric Resistance fallback)."""
         if self._nominal_kbtuh is not None:
-            return (self._nominal_kbtuh / self.num_units) / _W_TO_KBTUH
+            return (self._nominal_kbtuh / self.num_units) / _BTUH_PER_W
         return self._default_out_low_kw
 
     def _get_per_unit_kw(
@@ -477,7 +477,7 @@ class PklPerformanceMap(PerformanceMap):
     ) -> float:
         inlet, outlet = self._resolve_temps(outlet_temp_f, inlet_temp_f)
         out_kw, _     = self._get_per_unit_kw(oat_f, inlet, outlet)
-        return out_kw * self.num_units * _W_TO_KBTUH
+        return out_kw * self.num_units * _BTUH_PER_W
 
     def get_capacity_kw(
         self,
@@ -485,7 +485,7 @@ class PklPerformanceMap(PerformanceMap):
         outlet_temp_f: float,
         inlet_temp_f: float | None = None,
     ) -> float:
-        return self.get_capacity_kbtuh(oat_f, outlet_temp_f, inlet_temp_f) / _W_TO_KBTUH
+        return self.get_capacity_kbtuh(oat_f, outlet_temp_f, inlet_temp_f) / _BTUH_PER_W
 
     def get_power_in_kw(
         self,
@@ -589,7 +589,7 @@ class HPWHsimPerformanceMap(PerformanceMap):
             entry    = self._perfmap[0]
             input_kw = self._quad(entry["inputPower_coeffs"], self._design_inlet_f) / 1000.0
             cop      = max(self._quad(entry["COP_coeffs"], self._design_inlet_f), 0.0)
-            return max(cop * input_kw * _W_TO_KBTUH, 0.0)
+            return max(cop * input_kw * _BTUH_PER_W, 0.0)
         return 0.0
 
     def _get_per_unit_kbtuh(
@@ -642,7 +642,7 @@ class HPWHsimPerformanceMap(PerformanceMap):
 
         output_kw = cop * input_kw
         # Convert kW to kBTU/hr
-        return output_kw * _W_TO_KBTUH, input_kw * _W_TO_KBTUH
+        return output_kw * _BTUH_PER_W, input_kw * _BTUH_PER_W
 
     # ------------------------------------------------------------------
     # Public interface
@@ -666,7 +666,7 @@ class HPWHsimPerformanceMap(PerformanceMap):
     ) -> float:
         inlet_temp_f  = inlet_temp_f if inlet_temp_f is not None else self._design_inlet_f
         _, inp_kbtuh = self._get_per_unit_kbtuh(oat_f, inlet_temp_f, outlet_temp_f)
-        return inp_kbtuh / _W_TO_KBTUH * self.num_units
+        return inp_kbtuh / _BTUH_PER_W * self.num_units
 
     def is_within_operating_bounds(self, oat_f: float) -> bool:
         return oat_f >= self.oat_min
