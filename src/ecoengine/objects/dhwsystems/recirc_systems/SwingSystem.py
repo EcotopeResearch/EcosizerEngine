@@ -9,7 +9,7 @@ from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
 from ecoengine.objects.dhwsystems.DHWSystem import _get_peak_indices, StorageVolumeTooSmallError
 from .RecircSystem import RecircSystem
-from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
+from ecoengine.constants.constants import _RHO_CP, _BTUH_PER_W
 
 if TYPE_CHECKING:
     from ecoengine.objects.building.Building import Building
@@ -373,7 +373,7 @@ class SwingSystem(RecircSystem):
             tm_safety_factor × recirc_loss_kbtuh
         """
         recirc_loss_btuhr = self.get_recirc_loss_kbtuh() * 1000.0
-        vol_required = recirc_loss_btuhr / (_WATTS_PER_GAL * _W_TO_KBTUH)
+        vol_required = recirc_loss_btuhr / (_WATTS_PER_GAL * _BTUH_PER_W)
 
         if building is not None:
             peak_draw_gal_per_min = (
@@ -1038,5 +1038,5 @@ class SwingSystem(RecircSystem):
             # TM panel data (consumed by SimulationRun for the swing-tank subplot)
             "tm_tank_temp_f":            swing_mid_temp_f,
             "tm_heater_output_kbtuh":    tm_kbtuh,
-            "tm_heater_input_kw":        tm_kbtuh / _W_TO_KBTUH, # assume COP of 1
+            "tm_heater_input_kw":        tm_kbtuh / _BTUH_PER_W, # assume COP of 1
         }

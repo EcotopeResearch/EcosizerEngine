@@ -5,6 +5,7 @@ import os
 import warnings
 from .Simulator import simulate_3day as _simulate_3day, simulate_annual as _simulate_annual
 from ecoengine.objects.building.ClimateZone import ClimateZone as _ClimateZone
+from ecoengine.constants.constants import _BTUH_PER_W
 
 _BUNDLED_MAPS_PATH = os.path.join(os.path.dirname(__file__), "../data/preformanceMaps/maps.json")
 _WS_LOOKUP    = os.path.join(os.path.dirname(__file__), "../data/climate_data/WeatherStation_ClimateZone_Lookup.csv")
@@ -229,7 +230,7 @@ def get_hpwh_output_capacity(
     capacity_kbtuh *= num_heaters * (1.0 - defrost_derate)
 
     if return_as_kw:
-        return capacity_kbtuh / 3.41214  # kBTU/hr → kW
+        return capacity_kbtuh / _BTUH_PER_W  # kBTU/hr → kW
     return capacity_kbtuh
 
 
@@ -810,6 +811,7 @@ class EcosizerEngine:
         self._dhw_system  = None
 
         # Build and size immediately
+        self.fallback = False
         self.build()
 
     # ------------------------------------------------------------------
@@ -1113,7 +1115,7 @@ class EcosizerEngine:
             self._require_dual_fuel_sizing_params()
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                return SP_RTPInSeriesSystem.from_size(
+                sprtp_in_series_system = SP_RTPInSeriesSystem.from_size(
                     building                   = self._building,
                     supply_temp_f              = self.supply_temp_f,
                     storage_temp_f             = self.storage_temp_f,
@@ -1128,6 +1130,11 @@ class EcosizerEngine:
                     control_map                = control_map,
                     load_shift_fract_total_vol = ls_fract,
                 )
+                if not sprtp_in_series_system.fallback_system is None:
+                    self.fallback = True
+                    return sprtp_in_series_system.fallback_system
+                else:
+                    return sprtp_in_series_system
 
         if self.schematic == "sprtp_in_parallel":
             from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem import SP_RTPInParallelSystem
@@ -1135,7 +1142,7 @@ class EcosizerEngine:
             self._require_dual_fuel_sizing_params()
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                return SP_RTPInParallelSystem.from_size(
+                sprtp_in_parallel_system = SP_RTPInParallelSystem.from_size(
                     building                   = self._building,
                     supply_temp_f              = self.supply_temp_f,
                     storage_temp_f             = self.storage_temp_f,
@@ -1151,6 +1158,11 @@ class EcosizerEngine:
                     load_shift_fract_total_vol = ls_fract,
                     gas_controls               = self._build_gas_controls(),
                 )
+                if not sprtp_in_parallel_system.fallback_system is None:
+                    self.fallback = True
+                    return sprtp_in_parallel_system.fallback_system
+                else:
+                    return sprtp_in_parallel_system
 
         if self.schematic == "mprtp_in_series":
             from ecoengine.objects.dhwsystems.rtp_systems.MP_RTPInSeriesSystem import MP_RTPInSeriesSystem
@@ -1162,7 +1174,7 @@ class EcosizerEngine:
                 # engine-level setting (see the plain 'multi_pass_rtp' branch above,
                 # which hardcodes 14); MP_RTPInSeriesSystem defaults to the same
                 # value via _MPRTP_MAX_DAILY_RUN_HR.
-                return MP_RTPInSeriesSystem.from_size(
+                mprtp_in_series_system = MP_RTPInSeriesSystem.from_size(
                     building               = self._building,
                     supply_temp_f          = self.supply_temp_f,
                     storage_temp_f         = self.storage_temp_f,
@@ -1176,6 +1188,11 @@ class EcosizerEngine:
                     control_map            = control_map,
                     drawdown_fract         = self.drawdown_fract,
                 )
+                if not mprtp_in_series_system.fallback_system is None:
+                    self.fallback = True
+                    return mprtp_in_series_system.fallback_system
+                else:
+                    return mprtp_in_series_system
 
         if self.schematic == "swing_dual_fuel":
             from ecoengine.objects.dhwsystems.recirc_systems.SwingDualFuelSystem import SwingDualFuelSystem
@@ -1696,6 +1713,18 @@ class EcosizerEngine:
         if hasattr(sys, "_gas_capacity_kbtuh") and sys._gas_capacity_kbtuh is not None:
             result["gas_capacity_kbtuh"] = sys._gas_capacity_kbtuh
         return result
+    
+    def was_fallback_operation(self) -> bool:
+        """
+        Returns if flag for fallback operation was set (only applicable for supplemental heating systems that were undersized but still 
+        successfully completed a simulation)
+
+        Returns
+        -------
+        bool
+            True if an undersized base system succesfully passed simulation and sized no additional heating
+        """
+        return self.fallback
 
     # ------------------------------------------------------------------
     # Simulation
@@ -1905,7 +1934,7 @@ class EcosizerEngine:
         control_schedule, control_map = self._build_control_map()
         is_ls = "shed" in control_map
 
-        if self.schematic in _DUAL_FUEL_SCHEMATICS:
+        if self.schematic in _DUAL_FUEL_SCHEMATICS and not self.fallback:
             title = get_sizing_curve_title(self.schematic)
             # Gas backup curve has its own x/y semantics (backup storage vs.
             # backup capacity across ASHRAE windows) — _build_sizing_curve_figure

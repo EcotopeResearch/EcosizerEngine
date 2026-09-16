@@ -7,7 +7,7 @@ from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
 from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem
-from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
+from ecoengine.constants.constants import _RHO_CP, _BTUH_PER_W
 from ecoengine.objects.dhwsystems.utils import (
     mixing_valve_behavior,
     mixing_valve_behavior_swing,
@@ -509,5 +509,5 @@ class SwingDualFuelSystem(SwingSystem):
             # TM panel data (consumed by SimulationRun for the swing-tank subplot)
             "tm_tank_temp_f":            swing_mid_temp_f,
             "tm_heater_output_kbtuh":    tm_kbtuh,
-            "tm_heater_input_kw":        tm_kbtuh / _W_TO_KBTUH,
+            "tm_heater_input_kw":        tm_kbtuh / _BTUH_PER_W,
         }

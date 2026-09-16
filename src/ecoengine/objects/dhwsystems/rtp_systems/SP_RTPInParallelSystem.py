@@ -6,7 +6,7 @@ import numpy as np
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.EnergyTank import EnergyTank
-from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
+from ecoengine.constants.constants import _RHO_CP, _BTUH_PER_W
 from ..utils import (
     mixing_valve_behavior,
     size_supplemental_heating_and_storage,
@@ -184,6 +184,8 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             control_map=control_map,
         )]
 
+        system.fallback_system = None
+
         # Gas backup controls: on at supply_temp, off at supply_temp + deadband
         system._size_gas_backup(
             building=building,
@@ -265,13 +267,36 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             0.0, max(self.supply_temp_f - t for t in sim_run.tank_temps_f[-1])
         )
         if sim_run.outage_minutes <= self._MIN_OUTAGE_MIN and max_deficit_f <= self._MIN_DEFICIT_F:
-            raise ValueError(
-                "The primary system is already adequately sized: "
-                f"outage duration was {sim_run.outage_minutes} min "
-                f"(threshold {self._MIN_OUTAGE_MIN} min) and max temperature deficit "
-                f"was {max_deficit_f:.2f} °F (threshold {self._MIN_DEFICIT_F:.1f} °F). "
-                "No gas backup is required."
-            )
+            comparison_system = SinglePassRTPSystem.from_size(
+                    building                   = building,
+                    supply_temp_f              = self.supply_temp_f,
+                    storage_temp_f             = self.storage_temp_f,
+                    return_temp_f              = self.return_temp_f,
+                    return_flow_gpm            = self.return_flow_gpm,
+                    max_daily_run_hr           = self.max_daily_run_hr,
+                    defrost_factor             = self.defrost_factor,
+                    tm_safety_factor           = self.tm_safety_factor,
+                    control_schedule           = self.water_heaters[0].control_schedule,
+                    control_map                = self.water_heaters[0].control_map,
+                    load_shift_fract_total_vol = 1.0,
+                )
+            result = {
+                "min_capacity_kbtuh":      comparison_system._minimum_capacity_kbtuh,
+                "min_storage_storageT_gal": comparison_system._minimum_storage_storageT_gal,
+            }
+            if result["min_capacity_kbtuh"] >= nominal_capacity_kbtuh and result["min_storage_storageT_gal"] >= nominal_storage_gal:
+                # redirect user to base model
+                self.fallback_system = comparison_system
+                return
+            else:
+
+                raise ValueError(
+                    "The primary system is already adequately sized: "
+                    f"outage duration was {sim_run.outage_minutes} min "
+                    f"(threshold {self._MIN_OUTAGE_MIN} min) and max temperature deficit "
+                    f"was {max_deficit_f:.2f} °F (threshold {self._MIN_DEFICIT_F:.1f} °F). "
+                    "No gas backup is required."
+                )
 
         # The amount of storage (supply temp gallons) the gas is able to keep in a worst case scenario
         design_inlet    = self._require_design_inlet_temp(building)
@@ -462,6 +487,6 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             "tank_temps_f":              tank_temps_f,
             "mode":                      mode,
             "tm_heater_output_kbtuh":    gas_kbtuh,
-            "tm_heater_input_kw":        gas_kbtuh / _W_TO_KBTUH,
+            "tm_heater_input_kw":        gas_kbtuh / _BTUH_PER_W,
             "draw_thru_system_gal":      draw_gal,
         }

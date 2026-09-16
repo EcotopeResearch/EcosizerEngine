@@ -6,7 +6,7 @@ from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.EnergyTank import EnergyTank
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
-from ecoengine.constants.constants import _RHO_CP, _W_TO_KBTUH
+from ecoengine.constants.constants import _RHO_CP, _BTUH_PER_W
 from ..utils import (
     mixing_valve_behavior,
     size_supplemental_heating_and_storage,
@@ -127,6 +127,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             defrost_factor=defrost_factor,
             tm_safety_factor=tm_safety_factor,
         )
+        system.fallback_system = None
 
         system._minimum_capacity_kbtuh = nominal_capacity_kbtuh
         system._minimum_storage_storageT_gal = nominal_storage_gal
@@ -180,9 +181,9 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         ----------
         building : Building
         nominal_capacity_kbtuh : float
-            Primary HPWH capacity ceiling [kBTU/hr].
+            Primary HPWH capacity of the original undersized system [kBTU/hr].
         nominal_storage_gal : float
-            Primary storage volume ceiling [gal at storageT].
+            Primary storage volume of the original undersized system [gal at storageT].
         gas_controls : Controls
             Controls for the gas backup water heater.
 
@@ -193,17 +194,44 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             and max deficit < 2 °F), meaning no gas backup is needed.
         """
         _WINDOW_MIN = 30
+        try:
+            # --- 1 & 2. Sizing simulation → outage arrays (raises ValueError if no backup needed) ---
+            self.outage_volume_gal, self.outage_temp_delta_f = size_supplemental_heating_and_storage(
+                primary_system=self,
+                building=building,
+                nominal_capacity_kbtuh=nominal_capacity_kbtuh,
+            )
 
-        # --- 1 & 2. Sizing simulation → outage arrays (raises ValueError if no backup needed) ---
-        self.outage_volume_gal, self.outage_temp_delta_f = size_supplemental_heating_and_storage(
-            primary_system=self,
-            building=building,
-            nominal_capacity_kbtuh=nominal_capacity_kbtuh,
-        )
+            # --- 3. Size gas backup components at the default 30-minute window ---
+            gas_capacity_kbtuh, gas_storage_vol_gal = self._gas_backup_from_window(_WINDOW_MIN)
+            # TODO add thermal efficiency
+        except ValueError as e:
+            # Compare against base class to cover window where system is undersized but still passing the simulation
+            comparison_system = SinglePassRTPSystem.from_size(
+                    building                   = building,
+                    supply_temp_f              = self.supply_temp_f,
+                    storage_temp_f             = self.storage_temp_f,
+                    return_temp_f              = self.return_temp_f,
+                    return_flow_gpm            = self.return_flow_gpm,
+                    max_daily_run_hr           = self.max_daily_run_hr,
+                    defrost_factor             = self.defrost_factor,
+                    tm_safety_factor           = self.tm_safety_factor,
+                    control_schedule           = self.water_heaters[0].control_schedule,
+                    control_map                = self.water_heaters[0].control_map,
+                    load_shift_fract_total_vol = 1.0,
+                )
+            result = {
+                "min_capacity_kbtuh":      comparison_system._minimum_capacity_kbtuh,
+                "min_storage_storageT_gal": comparison_system._minimum_storage_storageT_gal,
+            }
+            if result["min_capacity_kbtuh"] >= nominal_capacity_kbtuh and result["min_storage_storageT_gal"] >= nominal_storage_gal:
+                # redirect user to base model
+                self.fallback_system = comparison_system
+                return
+            else:
+                raise e
 
-        # --- 3. Size gas backup components at the default 30-minute window ---
-        gas_capacity_kbtuh, gas_storage_vol_gal = self._gas_backup_from_window(_WINDOW_MIN)
-        # TODO add thermal efficiency
+            
 
         self._in_series_storage_vol_gal = gas_storage_vol_gal
         self._in_series_capacity_kbtuh = gas_capacity_kbtuh
@@ -393,6 +421,6 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             "mode":                      mode,
             "tm_tank_temp_f":          self.gas_storage_tank.get_temperature_at_fraction(1.0),
             "tm_heater_output_kbtuh":  gas_kbtuh,
-            "tm_heater_input_kw":      gas_kbtuh / _W_TO_KBTUH,
+            "tm_heater_input_kw":      gas_kbtuh / _BTUH_PER_W,
             "delivery_temp_f":         gas_top_t,
         }
