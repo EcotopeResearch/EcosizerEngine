@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecoengine"
-version = "3.2.1"
+version = "3.2.2"
 requires-python = ">=3.11"
 
 # Ranges are bounded on purpose, and the shared ones are kept in sync with
@@ -32,6 +32,7 @@ dependencies = [
     "numpy>=2.4,<3.0",
     "scipy>=1.17,<2.0",
     "plotly>=7.0,<8.0",
+    "kaleido>=1.3.0",
 ]
 
 [project.optional-dependencies]
