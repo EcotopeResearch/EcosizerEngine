@@ -287,23 +287,17 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
                     control_map                = control_map,
                     load_shift_fract_total_vol = 1.0,
                 )
-            result = {
-                "min_capacity_kbtuh":      comparison_system._minimum_capacity_kbtuh,
-                "min_storage_storageT_gal": comparison_system._minimum_storage_storageT_gal,
-            }
-            if result["min_capacity_kbtuh"] >= nominal_capacity_kbtuh and result["min_storage_storageT_gal"] >= nominal_storage_gal:
-                # redirect user to base model
-                self.fallback_system = comparison_system
-                return
-            else:
+            
+            self.fallback_system = comparison_system
+            return
 
-                raise ValueError(
-                    "The primary system is already adequately sized: "
-                    f"outage duration was {sim_run.outage_minutes} min "
-                    f"(threshold {self._MIN_OUTAGE_MIN} min) and max temperature deficit "
-                    f"was {max_deficit_f:.2f} °F (threshold {self._MIN_DEFICIT_F:.1f} °F). "
-                    "No gas backup is required."
-                )
+            # raise ValueError(
+            #     "The primary system is already adequately sized: "
+            #     f"outage duration was {sim_run.outage_minutes} min "
+            #     f"(threshold {self._MIN_OUTAGE_MIN} min) and max temperature deficit "
+            #     f"was {max_deficit_f:.2f} °F (threshold {self._MIN_DEFICIT_F:.1f} °F). "
+            #     "No gas backup is required."
+            # )
 
         # The amount of storage (supply temp gallons) the gas is able to keep in a worst case scenario
         design_inlet    = self._require_design_inlet_temp(building)
