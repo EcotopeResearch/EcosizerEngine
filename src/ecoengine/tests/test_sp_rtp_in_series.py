@@ -148,7 +148,7 @@ class TestOutageArrays:
 class TestAdequatelySized:
     """from_size() raises ValueError when the primary is not actually undersized."""
 
-    def test_raises_for_oversized_primary(self):
+    def test_fallback_for_oversized_primary(self):
         """A 200%-capacity primary clearly needs no gas backup."""
         zone     = _zone()
         building = Building.from_building_type("multi_family", 100, zone)
@@ -162,8 +162,7 @@ class TestAdequatelySized:
             control_schedule=["normal"] * 24,
             control_map={"normal": ctrl},
         )
-        with pytest.raises(ValueError, match="already adequately sized"):
-            SP_RTPInSeriesSystem.from_size(
+        adequate_sprtp = SP_RTPInSeriesSystem.from_size(
                 building=building,
                 supply_temp_f=_SUPPLY_T_F,
                 storage_temp_f=_STORAGE_T_F,
@@ -174,6 +173,7 @@ class TestAdequatelySized:
                 control_schedule=["normal"] * 24,
                 control_map={"normal": ctrl},
             )
+        assert not adequate_sprtp.fallback_system is None 
 
 
 # ---------------------------------------------------------------------------

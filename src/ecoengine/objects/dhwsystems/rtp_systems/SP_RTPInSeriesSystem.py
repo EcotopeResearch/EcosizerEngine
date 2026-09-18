@@ -227,16 +227,9 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
                     control_map                = control_map,
                     load_shift_fract_total_vol = 1.0,
                 )
-            result = {
-                "min_capacity_kbtuh":      comparison_system._minimum_capacity_kbtuh,
-                "min_storage_storageT_gal": comparison_system._minimum_storage_storageT_gal,
-            }
-            if result["min_capacity_kbtuh"] >= nominal_capacity_kbtuh and result["min_storage_storageT_gal"] >= nominal_storage_gal:
-                # redirect user to base model
-                self.fallback_system = comparison_system
-                return
-            else:
-                raise e
+            
+            self.fallback_system = comparison_system
+            return
 
             
 
