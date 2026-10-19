@@ -339,6 +339,8 @@ class PklPerformanceMap(PerformanceMap):
         if self._secondary_hx:
             inlet  += self._hx_increase
             outlet += self._hx_increase
+        if inlet > self._inlet_max:
+            print("Warning: Inlet water temperature simulated exceeds performance map boundaries. Simulation accuracy may be impacted.")
         inlet = min(inlet, self._inlet_max)
         return inlet, outlet
 
