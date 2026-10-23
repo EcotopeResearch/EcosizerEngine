@@ -239,7 +239,7 @@ wheels = [
 
 [[package]]
 name = "ecoengine"
-version = "3.2.5"
+version = "3.2.6"
 source = { editable = "." }
 dependencies = [
     { name = "kaleido" },
