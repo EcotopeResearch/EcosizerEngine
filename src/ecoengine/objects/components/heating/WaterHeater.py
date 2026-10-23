@@ -330,6 +330,14 @@ class WaterHeater:
         controls = self.get_controls_for_hour(hour_of_day)
         if controls is None:
             raise ValueError(f"No Controls configured for hour {hour_of_day}.")
+        
+        # QPL Alignment block : QPL states Upon change of load shift operation, disable all heaters if “on sensor” is warmer than “on temperature”.
+        # To do this in EcosizerEngine, we simply turn off water heaters at the beginning of a mode change
+        previous_hour = 23 if hour_of_day == 0 else hour_of_day - 1
+        if self.control_schedule[hour_of_day] != self.control_schedule[previous_hour]:
+            self.turn_off()
+
+        # control logic
         if self._active:
             if controls.should_turn_off(storage_tank):
                 self.turn_off()
