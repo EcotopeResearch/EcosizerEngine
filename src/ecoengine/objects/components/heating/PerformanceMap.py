@@ -25,6 +25,13 @@ _TWO_INPUT_PKL_NAMES = frozenset({
     "MODELS_Droplet_C_SP",
 })
 
+# Snap tolerances for PklPerformanceMap._force_closest [°F]. A grid point in the
+# conservative direction (lower OAT, higher inlet, higher outlet) is chosen over
+# the overall nearest point if it is no more than this much further away.
+_SNAP_TOL_OAT_F    = 10.0
+_SNAP_TOL_INLET_F  = 15.0
+_SNAP_TOL_OUTLET_F = 20.0
+
 # Per-directory cache so that different perf_map_dir values can coexist in one process.
 _maps_json_cache: dict[str, dict] = {}
 
@@ -276,8 +283,10 @@ class PklPerformanceMap(PerformanceMap):
     * OAT ≥ oat_max  → use stored default high-OAT capacity/power values.
     * OAT < oat_min  → Electric Resistance fallback: output = input =
       ``nominal_capacity_kbtuh / num_units`` (COP = 1).
-    * NaN in range   → attempt to snap inlet/outlet to nearest valid grid
-      point (``_force_closest``); if still NaN, assume COP = 1.5.
+    * NaN in range   → snap to a nearby valid grid point, preferring the
+      conservative direction (lower OAT, higher inlet, higher outlet) within
+      ``_SNAP_TOL_*`` of the nearest point (``_force_closest``); if still
+      NaN, assume COP = 1.5.
     """
 
     def __init__(
@@ -357,51 +366,68 @@ class PklPerformanceMap(PerformanceMap):
             float(self._input_interp(arr)[0][0]),
         )
 
+    @staticmethod
+    def _pick_biased(
+        values: list[float], target: float, prefer_above: bool, tol: float
+    ) -> int:
+        """
+        Return the index of the grid value to snap ``target`` to.
+
+        An exact match wins. Otherwise the nearest value in the preferred
+        direction (above when ``prefer_above``, else below) is chosen if it is
+        no more than ``tol`` further away than the overall nearest value;
+        failing that, the overall nearest value is chosen.
+        """
+        nearest_i = min(range(len(values)), key=lambda i: abs(values[i] - target))
+        if values[nearest_i] == target:
+            return nearest_i
+
+        if prefer_above:
+            preferred = [i for i, v in enumerate(values) if v > target]
+        else:
+            preferred = [i for i, v in enumerate(values) if v < target]
+        if not preferred:
+            return nearest_i
+
+        pref_i = min(preferred, key=lambda i: abs(values[i] - target))
+        if abs(values[pref_i] - target) <= abs(values[nearest_i] - target) + tol:
+            return pref_i
+        return nearest_i
+
     def _idx_nearest_oat(self, oat_f: float) -> int:
-        best, idx = abs(self._unique_oats[0] - oat_f), 0
-        for i in range(1, len(self._unique_oats)):
-            d = abs(self._unique_oats[i] - oat_f)
-            if d < best:
-                best, idx = d, i
-        return idx
+        """Index of the OAT to snap to, preferring lower OATs."""
+        return self._pick_biased(
+            self._unique_oats, oat_f, prefer_above=False, tol=_SNAP_TOL_OAT_F
+        )
 
     def _idx_nearest_inlet(self, oat_idx: int, inlet_t: float) -> int:
-        """
-        Find the index of the nearest available inlet temp that is >= inlet_t.
-        Returns -1 (last element) when none qualifies.
-        """
-        entries = self._inTs_outTs[oat_idx]
-        best    = abs(entries[-1][0] - inlet_t)
-        closest = -1
-        for i, (t_in, _) in enumerate(entries):
-            d = abs(t_in - inlet_t)
-            if d < best and t_in >= inlet_t:
-                best, closest = d, i
-        return closest
+        """Index of the inlet temp (at oat_idx) to snap to, preferring higher inlets."""
+        inlets = [t_in for t_in, _ in self._inTs_outTs[oat_idx]]
+        return self._pick_biased(
+            inlets, inlet_t, prefer_above=True, tol=_SNAP_TOL_INLET_F
+        )
 
     def _nearest_outlet(self, oat_idx: int, inlet_idx: int, outlet_t: float) -> float:
-        """Return the outlet temp in the bounds grid nearest to outlet_t."""
+        """Outlet temp (at oat_idx, inlet_idx) to snap to, preferring higher outlets."""
         outlets = self._inTs_outTs[oat_idx][inlet_idx][1]
-        best    = abs(self._unique_oats[0] - outlet_t)   # mirrors original init
-        best_i  = 0
-        for i, o in enumerate(outlets):
-            d = abs(o - outlet_t)
-            if d < best:
-                best, best_i = d, i
-        return outlets[best_i]
+        return outlets[self._pick_biased(
+            outlets, outlet_t, prefer_above=True, tol=_SNAP_TOL_OUTLET_F
+        )]
 
     def _force_closest(
         self, inlet_t: float, outlet_t: float, oat_f: float
     ) -> tuple[float, float] | None:
         """
-        Attempt to recover a valid interpolation result by snapping inlet and
-        outlet to the nearest valid grid points. Returns (out_kw, inp_kw) per
-        unit, or None when the inputs are too far outside the map.
+        Attempt to recover a valid interpolation result by snapping OAT, inlet
+        and outlet to nearby valid grid points, preferring the conservative
+        direction (see ``_pick_biased``). Returns (out_kw, inp_kw) per unit,
+        or None when the inputs are too far outside the map.
         """
         oat_idx = self._idx_nearest_oat(oat_f)
         try:
             inlet_idx = self._idx_nearest_inlet(oat_idx, inlet_t)
-        except Exception:
+        except Exception as e:
+            print(e)
             return None
 
         snapped_oat   = self._unique_oats[oat_idx]
@@ -416,12 +442,14 @@ class PklPerformanceMap(PerformanceMap):
         out_kw, inp_kw = self._raw_query(snapped_inlet, snapped_outlet, snapped_oat)
         if not (math.isnan(out_kw) or math.isnan(inp_kw)):
             if snapped_outlet < outlet_t and outlet_t > snapped_inlet:
-                # Proportional capacity adjustment for lower outlet temperature
+                # Proportional capacity adjustment for lower outlet temperature,
+                # holding the snapped point's COP constant
                 adj = out_kw * (
                     (outlet_t - snapped_inlet) - (snapped_outlet - snapped_inlet)
                 ) / (outlet_t - snapped_inlet)
+                if out_kw > 0:
+                    inp_kw *= (out_kw + adj) / out_kw
                 out_kw += adj
-                inp_kw += adj
             return out_kw, inp_kw
 
         return None

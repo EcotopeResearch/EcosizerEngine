@@ -157,6 +157,94 @@ class TestPklMultiPass:
 
 
 # ---------------------------------------------------------------------------
+# PklPerformanceMap — conservative snapping fallback (_force_closest)
+# ---------------------------------------------------------------------------
+
+class _GridInterp:
+    """Stub interpolator: returns a value only at exact grid points, else NaN."""
+    def __init__(self, points: dict):
+        self._points = points
+
+    def __call__(self, arr):
+        return [[self._points.get(tuple(arr[0]), float("nan"))]]
+
+
+def _make_grid_map(unique_oats, inTs_outTs, out_pts, in_pts):
+    return PklPerformanceMap(
+        model_name="grid_stub",
+        output_interpolator=_GridInterp(out_pts),
+        input_interpolator=_GridInterp(in_pts),
+        unique_oats=unique_oats,
+        inTs_and_outTs_by_oat=inTs_outTs,
+        inlet_min=40.0,
+        inlet_max=70.0,
+        default_out_high_kw=0.0,
+        default_in_high_kw=0.0,
+        default_out_low_kw=0.0,
+        default_in_low_kw=0.0,
+        num_units=1,
+        is_two_input=False,
+        secondary_hx=False,
+        hx_increase=0.0,
+        nominal_capacity_kbtuh=None,
+        design_inlet_temp_f=50.0,
+    )
+
+
+class TestPklConservativeSnap:
+    def test_exact_match_wins(self):
+        assert PklPerformanceMap._pick_biased([90.0, 100.0, 101.0], 100.0, False, 10.0) == 1
+
+    def test_lower_oat_preferred_within_tol(self):
+        # 98 is lower and within 10 °F of the nearest point (101)
+        assert PklPerformanceMap._pick_biased([98.0, 101.0], 100.0, False, 10.0) == 0
+
+    def test_lower_oat_rejected_outside_tol(self):
+        # 80 is 20 °F away; nearest (101) is 1 °F away → 20 > 1 + 10
+        assert PklPerformanceMap._pick_biased([80.0, 101.0], 100.0, False, 10.0) == 1
+
+    def test_no_lower_oat_uses_nearest(self):
+        assert PklPerformanceMap._pick_biased([101.0, 105.0], 100.0, False, 10.0) == 0
+
+    def test_higher_inlet_preferred_within_tol(self):
+        assert PklPerformanceMap._pick_biased([50.0, 60.0, 70.0], 64.4, True, 15.0) == 2
+
+    def test_higher_inlet_rejected_outside_tol(self):
+        # 80 is 28 °F away; nearest (50) is 2 °F away → 28 > 2 + 15
+        assert PklPerformanceMap._pick_biased([40.0, 50.0, 80.0], 52.0, True, 15.0) == 1
+
+    def test_higher_outlet_preferred_within_tol(self):
+        assert PklPerformanceMap._pick_biased([140.0, 160.0, 180.0], 165.0, True, 20.0) == 2
+
+    def test_force_closest_snaps_conservatively(self):
+        # Mirrors the sparse high-OAT tail of the Laars eTherm map
+        pm = _make_grid_map(
+            unique_oats=[97.1, 98.3, 101.1],
+            inTs_outTs=[
+                [[50.0, [160.0]]],
+                [[70.0, [160.0]]],
+                [[50.0, [140.0]]],
+            ],
+            out_pts={(50.0, 160.0, 97.1): 120.0, (70.0, 160.0, 98.3): 100.0, (50.0, 140.0, 101.1): 111.9},
+            in_pts ={(50.0, 160.0, 97.1): 30.0,  (70.0, 160.0, 98.3): 40.0,  (50.0, 140.0, 101.1): 27.0},
+        )
+        # Lower OAT 98.3 (within 10 °F), higher inlet 70, exact outlet 160
+        assert pm._force_closest(64.4, 160.0, 100.94) == (100.0, 40.0)
+
+    def test_lower_outlet_adjustment_keeps_cop(self):
+        pm = _make_grid_map(
+            unique_oats=[100.0],
+            inTs_outTs=[[[50.0, [140.0]]]],
+            out_pts={(50.0, 140.0, 100.0): 111.9},
+            in_pts ={(50.0, 140.0, 100.0): 27.0},
+        )
+        out_kw, inp_kw = pm._force_closest(50.0, 160.0, 100.0)
+        expected_out = 111.9 * (1 + (160.0 - 140.0) / (160.0 - 50.0))
+        assert out_kw == pytest.approx(expected_out)
+        assert out_kw / inp_kw == pytest.approx(111.9 / 27.0)
+
+
+# ---------------------------------------------------------------------------
 # HPWHsimPerformanceMap — factory construction
 # ---------------------------------------------------------------------------
 
