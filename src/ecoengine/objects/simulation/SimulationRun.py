@@ -1,3 +1,5 @@
+import numbers
+
 from ecoengine.constants.constants import _RHO_CP
 
 _ANNUAL_DURATION_MIN = 365 * 24 * 60   # 525600
@@ -17,6 +19,14 @@ def _step_to_month(step: int, timestep_min: int) -> int:
         if hour >= _MONTH_HOUR_START_SR[m]:
             return m
     return 0
+
+
+def _csv_value(v):
+    """Round non-integer numbers to at most 2 decimals for CSV output; whole numbers print without decimals."""
+    if isinstance(v, numbers.Real) and not isinstance(v, numbers.Integral):
+        r = round(float(v), 2)
+        return int(r) if r.is_integer() else r
+    return v
 
 # Tank temperature nodes: fractional heights from bottom (0) to top (1)
 _TANK_NODE_FRACTS = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
@@ -363,6 +373,9 @@ class SimulationRun:
         heater's output/input power for SP_RTPInParallelSystem (which has no
         separate tank, so tm_tank_temp_f is omitted for that schematic).
 
+        Numeric values are rounded to at most 2 decimal places; whole
+        numbers are written without decimals.
+
         Also includes delivery_temp_to_mixing_valve_f — the temperature of the water leaving the
         last tank in the series for the mixing valve — for the schematics whose
         simulate_step() reports one (swing_tank, swing_dual_fuel, multi_pass_rtp,
@@ -423,7 +436,7 @@ class SimulationRun:
                     row.append(self.tm_heater_input_kw[i])
                 if has_delivery:
                     row.append(self.delivery_temp_f[i])
-                writer.writerow(row)
+                writer.writerow([_csv_value(v) for v in row])
 
     def to_plotly(
         self,

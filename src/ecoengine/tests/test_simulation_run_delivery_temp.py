@@ -172,3 +172,12 @@ class TestDeliveryTempEndToEnd:
         assert run.delivery_temp_f == []
         header, _ = _read_csv(run)
         assert _CSV_COL not in header
+
+
+class TestCsvRounding:
+
+    def test_values_rounded_to_two_decimals(self):
+        temps = [121.0, 122.456, 123.1, 124.004, 125.5]
+        header, rows = _read_csv(_make_run(5, temps))
+        col = header.index(_CSV_COL)
+        assert [r[col] for r in rows] == ["121", "122.46", "123.1", "124", "125.5"]
