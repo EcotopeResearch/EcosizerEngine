@@ -33,4 +33,18 @@ demo_*.py
 
 # Generated outputs from comparison and simulation scripts
 *.html
+!docs/build/html/**/*.html
 *.csv
+
+# Local scripts and their outputs (not part of the package)
+scripts/
+
+# Local documents, notes and temp files
+C*UsersnolanDocumentsEcosizerEngine2doc_content.txt
+Ecosizer Documentation Old Codebase.docx
+Ecosizer.docx
+EcosizerEngine2_Documentation.docx
+EcosizerEngine2_Documentation.pdf
+doc_text_out.txt
+todo.txt
+~WRL*.tmp

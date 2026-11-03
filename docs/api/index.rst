@@ -5,6 +5,7 @@ API Reference
    :maxdepth: 1
 
    ecosizerengine
+   ecobuilder
    building
    dhwsystems
    components

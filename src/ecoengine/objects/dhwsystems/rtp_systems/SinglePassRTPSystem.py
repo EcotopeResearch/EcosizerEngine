@@ -181,7 +181,7 @@ class SinglePassRTPSystem(RTPSystem):
             If size() has not been called yet.
         """
         if not hasattr(self, "_recirc_capacity_kbtuh") or self._recirc_capacity_kbtuh is None:
-            raise RuntimeError("size() must be called before get_recirc_capacity_kbtuh().")
+            raise RuntimeError("System was built, not sized: call size() before get_recirc_capacity_kbtuh().")
         return self._recirc_capacity_kbtuh
 
     # ------------------------------------------------------------------

@@ -515,7 +515,7 @@ class SwingERTrdOffSystem(SwingSystem):
     def get_er_capacity_kbtuh(self) -> float:
         """Return the additional ER capacity added to the TM element [kBTU/hr]."""
         if self._er_capacity_kbtuh is None:
-            raise RuntimeError("size() must be called before get_er_capacity_kbtuh().")
+            raise RuntimeError("System was built, not sized: call size() before get_er_capacity_kbtuh().")
         return self._er_capacity_kbtuh
 
     def get_er_capacity_kw(self) -> float:

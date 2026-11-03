@@ -194,6 +194,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quick Start</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/ecobuilder.html">EcoBuilder (Component-by-Component API)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/building.html">Building &amp; Climate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/dhwsystems.html">DHW Systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/components.html">Equipment Components</a></li>
@@ -233,7 +234,9 @@
         </div>
         <article role="main" id="furo-main-content">
           <h1>Source code for ecoengine.objects.simulation.SimulationRun</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_RHO_CP</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_RHO_CP</span>
 
 <span class="n">_ANNUAL_DURATION_MIN</span> <span class="o">=</span> <span class="mi">365</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span>   <span class="c1"># 525600</span>
 <span class="n">_DAYS_IN_MONTH</span> <span class="o">=</span> <span class="p">[</span><span class="mi">31</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">31</span><span class="p">]</span>
@@ -246,30 +249,38 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_step_to_month</span><span class="p">(</span><span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">timestep_min</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return 0-based calendar month for simulation step *step*.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return 0-based calendar month for simulation step *step*."""</span>
     <span class="n">hour</span> <span class="o">=</span> <span class="n">step</span> <span class="o">*</span> <span class="n">timestep_min</span> <span class="o">//</span> <span class="mi">60</span>
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">hour</span> <span class="o">&gt;=</span> <span class="n">_MONTH_HOUR_START_SR</span><span class="p">[</span><span class="n">m</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">m</span>
     <span class="k">return</span> <span class="mi">0</span>
 
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_csv_value</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Round non-integer numbers to at most 2 decimals for CSV output; whole numbers print without decimals."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">is_integer</span><span class="p">()</span> <span class="k">else</span> <span class="n">r</span>
+    <span class="k">return</span> <span class="n">v</span>
+
 <span class="c1"># Tank temperature nodes: fractional heights from bottom (0) to top (1)</span>
 <span class="n">_TANK_NODE_FRACTS</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
-<span class="n">_TANK_NODE_LABELS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Tank 0% (bottom)&quot;</span><span class="p">,</span> <span class="s2">&quot;Tank 20%&quot;</span><span class="p">,</span> <span class="s2">&quot;Tank 40%&quot;</span><span class="p">,</span> <span class="s2">&quot;Tank 60%&quot;</span><span class="p">,</span> <span class="s2">&quot;Tank 80%&quot;</span><span class="p">,</span> <span class="s2">&quot;Tank 100% (top)&quot;</span><span class="p">]</span>
-<span class="c1"># Blue→red gradient avoiding CSS &#39;blue&#39; (#0000FF) and &#39;red&#39; (#FF0000)</span>
-<span class="n">_TANK_NODE_COLORS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#003f88&quot;</span><span class="p">,</span> <span class="s2">&quot;#0077b6&quot;</span><span class="p">,</span> <span class="s2">&quot;#00b4d8&quot;</span><span class="p">,</span> <span class="s2">&quot;#f4a261&quot;</span><span class="p">,</span> <span class="s2">&quot;#e76f51&quot;</span><span class="p">,</span> <span class="s2">&quot;#9b2226&quot;</span><span class="p">]</span>
+<span class="n">_TANK_NODE_LABELS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Tank 0% (bottom)"</span><span class="p">,</span> <span class="s2">"Tank 20%"</span><span class="p">,</span> <span class="s2">"Tank 40%"</span><span class="p">,</span> <span class="s2">"Tank 60%"</span><span class="p">,</span> <span class="s2">"Tank 80%"</span><span class="p">,</span> <span class="s2">"Tank 100% (top)"</span><span class="p">]</span>
+<span class="c1"># Blue→red gradient avoiding CSS 'blue' (#0000FF) and 'red' (#FF0000)</span>
+<span class="n">_TANK_NODE_COLORS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"#003f88"</span><span class="p">,</span> <span class="s2">"#0077b6"</span><span class="p">,</span> <span class="s2">"#00b4d8"</span><span class="p">,</span> <span class="s2">"#f4a261"</span><span class="p">,</span> <span class="s2">"#e76f51"</span><span class="p">,</span> <span class="s2">"#9b2226"</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="SimulationRun">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SimulationRun</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Holds all per-timestep outputs from a simulation of a DHWSystem in a Building.</span>
 
 <span class="sd">    Stores time-series data (energy use, tank volume, DHW demand, capacity) and</span>
 <span class="sd">    provides methods to assess whether the system successfully met demand and to</span>
 <span class="sd">    compute summary metrics for visualization and cost/emissions comparisons.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="SimulationRun.__init__">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.__init__">[docs]</a>
@@ -280,7 +291,7 @@
         <span class="n">outlet_deficit_threshold_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
         <span class="n">outlet_deficit_max_min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        duration_min : int</span>
@@ -293,7 +304,7 @@
 <span class="sd">        outlet_deficit_max_min : int</span>
 <span class="sd">            Maximum consecutive minutes of outlet deficit before the simulation</span>
 <span class="sd">            is halted early. Default 10 minutes.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">duration_min</span>  <span class="o">=</span> <span class="n">duration_min</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span>  <span class="o">=</span> <span class="n">timestep_min</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span>     <span class="o">=</span> <span class="n">duration_min</span> <span class="o">//</span> <span class="n">timestep_min</span>
@@ -305,7 +316,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">heater_power_in_kw</span><span class="p">:</span>        <span class="nb">list</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">oat_f</span><span class="p">:</span>                     <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inlet_water_temp_f</span><span class="p">:</span>        <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">heater_mode</span><span class="p">:</span>               <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[]</span>   <span class="c1"># &quot;normal&quot;, &quot;shed&quot;, &quot;loadUp&quot;, etc.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heater_mode</span><span class="p">:</span>               <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[]</span>   <span class="c1"># "normal", "shed", "loadUp", etc.</span>
 
         <span class="c1"># Tank temperature nodes — one list per fractional height</span>
         <span class="c1"># Indexed as: tank_temps_f[node_idx][timestep]</span>
@@ -317,13 +328,27 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_output_kbtuh</span><span class="p">:</span>   <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_input_kw</span><span class="p">:</span>   <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
+        <span class="c1"># Temperature of the water actually delivered to the mixing valve, from</span>
+        <span class="c1"># the last tank in the series.  Only populated for schematics whose</span>
+        <span class="c1"># simulate_step() emits "delivery_temp_f" (swing_tank, swing_dual_fuel,</span>
+        <span class="c1"># multi_pass_rtp, mprtp_in_series, sprtp_in_series).  A system must emit</span>
+        <span class="c1"># the key on every timestep or on none: output methods gate on</span>
+        <span class="c1"># len(delivery_temp_f) == n, so a conditionally-emitted key would</span>
+        <span class="c1"># silently drop the column or misalign it.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delivery_temp_f</span><span class="p">:</span>          <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
         <span class="c1"># Cumulative outage counter [minutes]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">outage_minutes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="c1"># Set by Simulator after construction; used for unit conversions in output methods</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="c1"># True only for SwingSystem / SwingERTrdOffSystem — enables the TM subplot</span>
+        <span class="c1"># True only for SwingSystem / SwingERTrdOffSystem / SP_RTPInSeriesSystem — enables the TM subplot</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">show_tm_panel</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># Label used for the TM subplot title and axis labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Temperature Maintenance (TM)"</span>
+        <span class="c1"># True only for SP_RTPInParallelSystem — the gas heater has no tank of its</span>
+        <span class="c1"># own, so its output is plotted on the primary row instead of its own row</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merge_tm_into_primary_panel</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="c1"># Outlet deficit stop condition</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">outlet_deficit_threshold_f</span>   <span class="o">=</span> <span class="n">outlet_deficit_threshold_f</span>
@@ -343,13 +368,14 @@
         <span class="n">oat_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">inlet_water_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">tank_temps_f</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
-        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"normal"</span><span class="p">,</span>
         <span class="n">tm_tank_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">tm_heater_output_kbtuh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">tm_heater_input_kw</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">delivery_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Append one timestep&#39;s worth of data to the run record.</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Append one timestep's worth of data to the run record.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -378,7 +404,11 @@
 <span class="sd">        tm_heater_input_kw : float | None</span>
 <span class="sd">            Electrical power consumed by TM element [kW]. None when no</span>
 <span class="sd">            real performance map is available (e.g. NominalPerformanceMap).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        delivery_temp_f : float | None</span>
+<span class="sd">            Temperature of the water leaving the last tank in the series and</span>
+<span class="sd">            reaching the mixing valve [°F]. None for schematics whose</span>
+<span class="sd">            simulate_step() does not report one.</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dhw_demand_supplyT_gal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dhw_demand_supplyT_gal</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">usable_volume_supplyT_gal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">usable_volume_supplyT_gal</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">heater_output_kbtuh</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">heater_output_kbtuh</span><span class="p">)</span>
@@ -393,13 +423,15 @@
         <span class="k">if</span> <span class="n">tm_heater_output_kbtuh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_output_kbtuh</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tm_heater_output_kbtuh</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">tm_heater_input_kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_input_kw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tm_heater_input_kw</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_input_kw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tm_heater_input_kw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">delivery_temp_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delivery_temp_f</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">delivery_temp_f</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SimulationRun.check_outlet_deficit">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.check_outlet_deficit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">check_outlet_deficit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_tank_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Track consecutive minutes where the top-of-tank temperature is more than</span>
 <span class="sd">        ``outlet_deficit_threshold_f`` degrees below ``supply_temp_f``.</span>
 
@@ -418,7 +450,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        bool</span>
 <span class="sd">            True if the simulation should stop immediately.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">top_tank_temp_f</span> <span class="o">&lt;</span> <span class="n">supply_temp_f</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">outlet_deficit_threshold_f</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_outlet_deficit_consec_min</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outlet_deficit_consec_min</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">outlet_deficit_max_min</span><span class="p">:</span>
@@ -432,21 +464,21 @@
 <div class="viewcode-block" id="SimulationRun.record_outage">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.record_outage">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">record_outage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration_min</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Record a DHW outage (demand could not be met from tank).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        duration_min : int</span>
 <span class="sd">            Duration of this outage event [minutes].</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">outage_minutes</span> <span class="o">+=</span> <span class="n">duration_min</span></div>
 
 
 <div class="viewcode-block" id="SimulationRun.is_successful">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.is_successful">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_successful</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_outage_min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return True if total outage time is within the acceptable threshold.</span>
 
 <span class="sd">        Parameters</span>
@@ -457,14 +489,14 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        bool</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">outage_minutes</span> <span class="o">&lt;=</span> <span class="n">max_outage_min</span></div>
 
 
 <div class="viewcode-block" id="SimulationRun.get_failure_message">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.get_failure_message">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_failure_message</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return a human-readable description of a simulation failure.</span>
 
 <span class="sd">        Finds the first timestep with zero usable volume to identify the day</span>
@@ -476,52 +508,67 @@
 <span class="sd">        str</span>
 <span class="sd">            A descriptive failure message, or a success message if no outage</span>
 <span class="sd">            occurred.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_successful</span><span class="p">():</span>
-            <span class="k">return</span> <span class="s2">&quot;Simulation succeeded: no DHW outage detected.&quot;</span>
+            <span class="k">return</span> <span class="s2">"Simulation succeeded: no DHW outage detected."</span>
 
-        <span class="n">outage_steps</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">usable_volume_supplyT_gal</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="mf">0.0</span>
-        <span class="p">]</span>
+        <span class="n">supply_t_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="ow">or</span> <span class="mf">9999.0</span>
+
+        <span class="c1"># For systems with a secondary (TM/gas backup) panel, a true outage</span>
+        <span class="c1"># requires both the primary to be empty AND the secondary to be below</span>
+        <span class="c1"># supply temp — mirroring the Simulator's record_outage() guard.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">:</span>
+            <span class="n">outage_steps</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">usable_volume_supplyT_gal</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">supply_t_f</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">outage_steps</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">usable_volume_supplyT_gal</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="mf">0.0</span>
+            <span class="p">]</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">outage_steps</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Simulation failed: system was undersized. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;DHW outage occurred for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outage_minutes</span><span class="si">}</span><span class="s2"> minutes.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Simulation failed: system was undersized. "</span>
+                <span class="sa">f</span><span class="s2">"DHW outage occurred for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outage_minutes</span><span class="si">}</span><span class="s2"> minutes."</span>
             <span class="p">)</span>
 
-        <span class="n">first_step</span> <span class="o">=</span> <span class="n">outage_steps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">day</span> <span class="o">=</span> <span class="p">(</span><span class="n">first_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span><span class="p">)</span> <span class="o">//</span> <span class="p">(</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">last_step</span> <span class="o">=</span> <span class="n">outage_steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="p">(</span><span class="n">last_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span><span class="p">)</span> <span class="o">//</span> <span class="p">(</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 
-        <span class="c1"># For swing/TM systems use the TM tank as the delivery point; for all others</span>
-        <span class="c1"># use the primary tank top node.  draw() no longer clamps _delta_gal at</span>
+        <span class="c1"># Prefer the delivery temperature the system itself reported — the water</span>
+        <span class="c1"># leaving the last tank in the series for the mixing valve.  Fall back to</span>
+        <span class="c1"># the TM tank for swing/TM schematics that report none, then to the</span>
+        <span class="c1"># primary tank top node.  draw() no longer clamps _delta_gal at</span>
         <span class="c1"># supply_temp_f, so the top node drops below supply_temp_f during a true</span>
         <span class="c1"># temperature-limited outage and the reported temperature is meaningful.</span>
         <span class="c1"># Volume-limited outages (primary depleted but TM still hot, or tank at</span>
         <span class="c1"># exactly supply_temp_f) produce delivery temps &gt;= supply_temp_f, which</span>
         <span class="c1"># are uninformative — suppress the clause in that case.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delivery_temp_f</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">usable_volume_supplyT_gal</span><span class="p">):</span>
+            <span class="n">delivery_temps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delivery_temp_f</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">:</span>
             <span class="n">delivery_temps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">delivery_temps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tank_temps_f</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
-        <span class="n">supply_t_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="ow">or</span> <span class="mf">9999.0</span>
-        <span class="n">below_supply</span> <span class="o">=</span> <span class="p">[</span><span class="n">delivery_temps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">outage_steps</span> <span class="k">if</span> <span class="n">delivery_temps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">supply_t_f</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">]</span>
+            <span class="n">delivery_temps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tank_temps_f</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">below_supply</span> <span class="o">=</span> <span class="p">[</span><span class="n">delivery_temps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">outage_steps</span> <span class="k">if</span> <span class="n">delivery_temps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">supply_t_f</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">below_supply</span><span class="p">:</span>
             <span class="n">avg_delivery_temp_f</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">below_supply</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">below_supply</span><span class="p">)</span>
-            <span class="n">temp_clause</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; with an average delivered water temperature of </span><span class="si">{</span><span class="n">avg_delivery_temp_f</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">°F&quot;</span>
+            <span class="n">temp_clause</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" with an average delivered water temperature of </span><span class="si">{</span><span class="n">avg_delivery_temp_f</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">°F"</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">temp_clause</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">temp_clause</span> <span class="o">=</span> <span class="s2">" with DHW delivery less than 1.0°F below expected temperature"</span>
 
         <span class="k">return</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Simulation failed: system was undersized. &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;DHW outage occurred for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outage_minutes</span><span class="si">}</span><span class="s2"> minutes on day </span><span class="si">{</span><span class="n">day</span><span class="si">}</span><span class="s2"> &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;of the simulation</span><span class="si">{</span><span class="n">temp_clause</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'Simulation failed: system was undersized.'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">below_supply</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'Partial success:'</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outage_minutes</span><span class="si">}</span><span class="s2"> minutes of DHW outage had accrued by the end of day </span><span class="si">{</span><span class="n">day</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="sa">f</span><span class="s2">"of the simulation</span><span class="si">{</span><span class="n">temp_clause</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SimulationRun.get_total_energy_kwh">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.get_total_energy_kwh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_total_energy_kwh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return total electrical energy consumed over the simulation [kWh].</span>
 
 <span class="sd">        Includes primary heater energy and, when present, TM heater energy</span>
@@ -531,7 +578,7 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        float</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">hours_per_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span> <span class="o">/</span> <span class="mf">60.0</span>
         <span class="n">primary_kwh</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">p</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">hours_per_step</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heater_power_in_kw</span><span class="p">)</span>
         <span class="n">tm_kwh</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">p</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">hours_per_step</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_input_kw</span><span class="p">)</span>
@@ -541,13 +588,13 @@
 <div class="viewcode-block" id="SimulationRun.get_peak_demand_kw">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.get_peak_demand_kw">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_peak_demand_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return peak instantaneous power draw observed during the simulation [kW].</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        float</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">non_none</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heater_power_in_kw</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
         <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">non_none</span><span class="p">)</span> <span class="k">if</span> <span class="n">non_none</span> <span class="k">else</span> <span class="mf">0.0</span></div>
 
@@ -555,54 +602,88 @@
 <div class="viewcode-block" id="SimulationRun.get_summary">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.get_summary">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return a dict summarizing key simulation metrics.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
-<span class="sd">            Keys: &#39;successful&#39;, &#39;total_outage_min&#39;, &#39;total_energy_kwh&#39;,</span>
-<span class="sd">            &#39;peak_demand_kw&#39;, &#39;num_steps_recorded&#39;, &#39;stopped_early&#39;.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            Keys: 'successful', 'total_outage_min', 'total_energy_kwh',</span>
+<span class="sd">            'peak_demand_kw', 'num_steps_recorded', 'stopped_early'.</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;successful&quot;</span><span class="p">:</span>          <span class="bp">self</span><span class="o">.</span><span class="n">is_successful</span><span class="p">(),</span>
-            <span class="s2">&quot;total_outage_min&quot;</span><span class="p">:</span>    <span class="bp">self</span><span class="o">.</span><span class="n">outage_minutes</span><span class="p">,</span>
-            <span class="s2">&quot;total_energy_kwh&quot;</span><span class="p">:</span>    <span class="bp">self</span><span class="o">.</span><span class="n">get_total_energy_kwh</span><span class="p">(),</span>
-            <span class="s2">&quot;peak_demand_kw&quot;</span><span class="p">:</span>      <span class="bp">self</span><span class="o">.</span><span class="n">get_peak_demand_kw</span><span class="p">(),</span>
-            <span class="s2">&quot;num_steps_recorded&quot;</span><span class="p">:</span>  <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dhw_demand_supplyT_gal</span><span class="p">),</span>
-            <span class="s2">&quot;stopped_early&quot;</span><span class="p">:</span>       <span class="bp">self</span><span class="o">.</span><span class="n">stopped_early</span><span class="p">,</span>
+            <span class="s2">"successful"</span><span class="p">:</span>          <span class="bp">self</span><span class="o">.</span><span class="n">is_successful</span><span class="p">(),</span>
+            <span class="s2">"total_outage_min"</span><span class="p">:</span>    <span class="bp">self</span><span class="o">.</span><span class="n">outage_minutes</span><span class="p">,</span>
+            <span class="s2">"total_energy_kwh"</span><span class="p">:</span>    <span class="bp">self</span><span class="o">.</span><span class="n">get_total_energy_kwh</span><span class="p">(),</span>
+            <span class="s2">"peak_demand_kw"</span><span class="p">:</span>      <span class="bp">self</span><span class="o">.</span><span class="n">get_peak_demand_kw</span><span class="p">(),</span>
+            <span class="s2">"num_steps_recorded"</span><span class="p">:</span>  <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dhw_demand_supplyT_gal</span><span class="p">),</span>
+            <span class="s2">"stopped_early"</span><span class="p">:</span>       <span class="bp">self</span><span class="o">.</span><span class="n">stopped_early</span><span class="p">,</span>
         <span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="SimulationRun.to_csv">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.to_csv">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Write all per-timestep values to a CSV file.</span>
 
 <span class="sd">        Columns: timestep, time_min, dhw_demand_supplyT_gal,</span>
 <span class="sd">        usable_volume_supplyT_gal, heater_output_kbtuh, heater_power_in_kw,</span>
-<span class="sd">        oat_f, inlet_water_temp_f, tank_temp_0pct, tank_temp_20pct, ..., tank_temp_100pct.</span>
+<span class="sd">        oat_f, inlet_water_temp_f, tank_temp_0pct, tank_temp_20pct, ...,</span>
+<span class="sd">        tank_temp_100pct, mode.</span>
+
+<span class="sd">        When applicable (non-empty for this run), also includes</span>
+<span class="sd">        tm_tank_temp_f, tm_heater_output_kbtuh, tm_heater_input_kw. These</span>
+<span class="sd">        columns cover the swing/TM tank for SwingSystem-family schematics,</span>
+<span class="sd">        the gas storage tank + gas heater for the in-series dual-fuel</span>
+<span class="sd">        schematics (SP_RTPInSeriesSystem, MP_RTPInSeriesSystem), and the gas</span>
+<span class="sd">        heater's output/input power for SP_RTPInParallelSystem (which has no</span>
+<span class="sd">        separate tank, so tm_tank_temp_f is omitted for that schematic).</span>
+
+<span class="sd">        Numeric values are rounded to at most 2 decimal places; whole</span>
+<span class="sd">        numbers are written without decimals.</span>
+
+<span class="sd">        Also includes delivery_temp_to_mixing_valve_f — the temperature of the water leaving the</span>
+<span class="sd">        last tank in the series for the mixing valve — for the schematics whose</span>
+<span class="sd">        simulate_step() reports one (swing_tank, swing_dual_fuel, multi_pass_rtp,</span>
+<span class="sd">        mprtp_in_series, sprtp_in_series).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        filepath : str</span>
-<span class="sd">            Destination file path (e.g. ``&#39;simulation_output.csv&#39;``).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            Destination file path (e.g. ``'simulation_output.csv'``).</span>
+<span class="sd">        """</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">csv</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_csv</span>
         <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dhw_demand_supplyT_gal</span><span class="p">)</span>
-        <span class="n">tank_col_names</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;tank_temp_</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s2">pct&quot;</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">_TANK_NODE_FRACTS</span><span class="p">]</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">tank_col_names</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"tank_temp_</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s2">pct"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">_TANK_NODE_FRACTS</span><span class="p">]</span>
+
+        <span class="n">has_tm_temp</span>   <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">)</span>         <span class="o">==</span> <span class="n">n</span>
+        <span class="n">has_tm_output</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_output_kbtuh</span><span class="p">)</span> <span class="o">==</span> <span class="n">n</span>
+        <span class="n">has_tm_kw</span>     <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_input_kw</span><span class="p">)</span>     <span class="o">==</span> <span class="n">n</span>
+        <span class="n">has_delivery</span>  <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delivery_temp_f</span><span class="p">)</span>         <span class="o">==</span> <span class="n">n</span>
+
+        <span class="n">header</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">"timestep"</span><span class="p">,</span> <span class="s2">"time_min"</span><span class="p">,</span>
+            <span class="s2">"dhw_demand_supplyT_gal"</span><span class="p">,</span> <span class="s2">"usable_volume_supplyT_gal"</span><span class="p">,</span>
+            <span class="s2">"heater_output_kbtuh"</span><span class="p">,</span> <span class="s2">"heater_power_in_kw"</span><span class="p">,</span>
+            <span class="s2">"oat_f"</span><span class="p">,</span> <span class="s2">"inlet_water_temp_f"</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">tank_col_names</span><span class="p">,</span>
+            <span class="s2">"mode"</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">has_tm_temp</span><span class="p">:</span>
+            <span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"tm_tank_temp_f"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_tm_output</span><span class="p">:</span>
+            <span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"tm_heater_output_kbtuh"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_tm_kw</span><span class="p">:</span>
+            <span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"tm_heater_input_kw"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_delivery</span><span class="p">:</span>
+            <span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"delivery_temp_to_mixing_valve_f"</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">writer</span> <span class="o">=</span> <span class="n">_csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span>
-                <span class="s2">&quot;timestep&quot;</span><span class="p">,</span> <span class="s2">&quot;time_min&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;dhw_demand_supplyT_gal&quot;</span><span class="p">,</span> <span class="s2">&quot;usable_volume_supplyT_gal&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;heater_output_kbtuh&quot;</span><span class="p">,</span> <span class="s2">&quot;heater_power_in_kw&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;oat_f&quot;</span><span class="p">,</span> <span class="s2">&quot;inlet_water_temp_f&quot;</span><span class="p">,</span>
-                <span class="o">*</span><span class="n">tank_col_names</span><span class="p">,</span>
-            <span class="p">])</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="n">i</span><span class="p">,</span>
                     <span class="n">i</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">dhw_demand_supplyT_gal</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
@@ -612,18 +693,28 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">oat_f</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">inlet_water_temp_f</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                     <span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tank_temps_f</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_TANK_NODE_FRACTS</span><span class="p">))),</span>
-                <span class="p">])</span></div>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">heater_mode</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="p">]</span>
+                <span class="k">if</span> <span class="n">has_tm_temp</span><span class="p">:</span>
+                    <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">has_tm_output</span><span class="p">:</span>
+                    <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_output_kbtuh</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">has_tm_kw</span><span class="p">:</span>
+                    <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_input_kw</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">has_delivery</span><span class="p">:</span>
+                    <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delivery_temp_f</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">_csv_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="SimulationRun.to_plotly">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.to_plotly">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_plotly</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Simulation Results&quot;</span><span class="p">,</span>
+        <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Simulation Results"</span><span class="p">,</span>
         <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include_temperatures</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;plotly.graph_objects.Figure&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"plotly.graph_objects.Figure"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return a Plotly figure with gallons/flow on the left Y axis and</span>
 <span class="sd">        temperature on the right Y axis, both plotted against time (minutes).</span>
 
@@ -649,7 +740,7 @@
 <span class="sd">            Figure title.</span>
 <span class="sd">        filepath : str | None</span>
 <span class="sd">            If provided, write the figure to this path as a self-contained</span>
-<span class="sd">            HTML file (e.g. ``&#39;output/simulation.html&#39;``). The figure is</span>
+<span class="sd">            HTML file (e.g. ``'output/simulation.html'``). The figure is</span>
 <span class="sd">            also returned regardless.</span>
 <span class="sd">        include_temperatures : bool</span>
 <span class="sd">            If True, add a right Y axis with OAT, inlet water temperature, and</span>
@@ -659,44 +750,46 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        plotly.graph_objects.Figure</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">plotly.subplots</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_subplots</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-                <span class="s2">&quot;plotly is required for to_plotly(). &quot;</span>
-                <span class="s2">&quot;Install it with: pip install plotly&quot;</span>
+                <span class="s2">"plotly is required for to_plotly(). "</span>
+                <span class="s2">"Install it with: pip install plotly"</span>
             <span class="p">)</span>
 
         <span class="n">time_min</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dhw_demand_supplyT_gal</span><span class="p">))]</span>
-        <span class="n">has_tm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_tm_panel</span>
+        <span class="n">has_tm_data</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_tm_panel</span>
+        <span class="n">merge_into_primary</span> <span class="o">=</span> <span class="n">has_tm_data</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge_tm_into_primary_panel</span>
+        <span class="n">show_separate_row</span> <span class="o">=</span> <span class="n">has_tm_data</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge_tm_into_primary_panel</span>
 
-        <span class="k">if</span> <span class="n">has_tm</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">show_separate_row</span><span class="p">:</span>
             <span class="n">fig</span> <span class="o">=</span> <span class="n">make_subplots</span><span class="p">(</span>
                 <span class="n">rows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">specs</span><span class="o">=</span><span class="p">[[{</span><span class="s2">&quot;secondary_y&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}],</span> <span class="p">[{</span><span class="s2">&quot;secondary_y&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}]],</span>
+                <span class="n">specs</span><span class="o">=</span><span class="p">[[{</span><span class="s2">"secondary_y"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}],</span> <span class="p">[{</span><span class="s2">"secondary_y"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}]],</span>
                 <span class="n">shared_xaxes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">vertical_spacing</span><span class="o">=</span><span class="mf">0.18</span><span class="p">,</span>
                 <span class="n">row_heights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.35</span><span class="p">],</span>
-                <span class="n">subplot_titles</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Primary System&quot;</span><span class="p">,</span> <span class="s2">&quot;Temperature Maintenance (TM)&quot;</span><span class="p">],</span>
+                <span class="n">subplot_titles</span><span class="o">=</span><span class="p">[</span><span class="s2">"Primary System"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="p">],</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">make_subplots</span><span class="p">(</span><span class="n">specs</span><span class="o">=</span><span class="p">[[{</span><span class="s2">&quot;secondary_y&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}]])</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">make_subplots</span><span class="p">(</span><span class="n">specs</span><span class="o">=</span><span class="p">[[{</span><span class="s2">"secondary_y"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}]])</span>
 
         <span class="n">steps_per_hour</span> <span class="o">=</span> <span class="mi">60</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span>
 
         <span class="c1"># --- Row 1: Volume traces (Y1, left axis) ---</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
             <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">time_min</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">usable_volume_supplyT_gal</span><span class="p">,</span>
-                       <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Usable Volume (gal at or above Supply Temp)&quot;</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)),</span>
-            <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">has_tm</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;row&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;col&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s2">"Usable Volume (gal at or above Supply Temp)"</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"green"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)),</span>
+            <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">show_separate_row</span> <span class="k">else</span> <span class="p">{</span><span class="s2">"row"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"col"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
         <span class="p">)</span>
         <span class="n">hourly_demand</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="o">*</span> <span class="n">steps_per_hour</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dhw_demand_supplyT_gal</span><span class="p">]</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
             <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">time_min</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">hourly_demand</span><span class="p">,</span>
-                       <span class="n">name</span><span class="o">=</span><span class="s2">&quot;DHW Demand (gal/hr at Supply Temp)&quot;</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
-            <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">has_tm</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;row&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;col&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s2">"DHW Demand (gal/hr at Supply Temp)"</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"blue"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
+            <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">show_separate_row</span> <span class="k">else</span> <span class="p">{</span><span class="s2">"row"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"col"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -707,23 +800,44 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">heater_output_kbtuh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inlet_water_temp_f</span>
                 <span class="p">)</span>
             <span class="p">]</span>
+            <span class="n">heater_name</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">"Heat Pump Generation (gal/hr at Supply Temperature)"</span> <span class="k">if</span> <span class="n">merge_into_primary</span>
+                <span class="k">else</span> <span class="s2">"Heater Generation (gal/hr at Supply Temperature)"</span>
+            <span class="p">)</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
                 <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">time_min</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">heater_gph</span><span class="p">,</span>
-                           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heater Generation (gal/hr at Supply Temperature)&quot;</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
-                <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">has_tm</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;row&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;col&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
+                           <span class="n">name</span><span class="o">=</span><span class="n">heater_name</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"red"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
+                <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">show_separate_row</span> <span class="k">else</span> <span class="p">{</span><span class="s2">"row"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"col"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
+            <span class="p">)</span>
+
+        <span class="c1"># --- Gas heater generation merged onto the primary row (SP_RTPInParallelSystem) ---</span>
+        <span class="k">if</span> <span class="n">merge_into_primary</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gas_time</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_output_kbtuh</span><span class="p">))]</span>
+            <span class="n">gas_gph</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">kbtuh</span> <span class="o">*</span> <span class="mf">1000.0</span>
+                <span class="o">/</span> <span class="p">(</span><span class="n">_RHO_CP</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">inlet_t</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">kbtuh</span><span class="p">,</span> <span class="n">inlet_t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_output_kbtuh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inlet_water_temp_f</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">gas_time</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">gas_gph</span><span class="p">,</span>
+                           <span class="n">name</span><span class="o">=</span><span class="s2">"Suppl. Heater Generation (gal/hr at Supply Temperature)"</span><span class="p">,</span>
+                           <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"darkorange"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
+                <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">include_temperatures</span><span class="p">:</span>
             <span class="c1"># --- Temperature traces (Y2, right axis, row 1) ---</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
                 <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">time_min</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">oat_f</span><span class="p">,</span>
-                           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;OAT (°F)&quot;</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
-                <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">has_tm</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;row&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;col&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
+                           <span class="n">name</span><span class="o">=</span><span class="s2">"OAT (°F)"</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"orange"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
+                <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">show_separate_row</span> <span class="k">else</span> <span class="p">{</span><span class="s2">"row"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"col"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
             <span class="p">)</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
                 <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">time_min</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inlet_water_temp_f</span><span class="p">,</span>
-                           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Inlet Water (°F)&quot;</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;steelblue&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
-                <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">has_tm</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;row&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;col&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
+                           <span class="n">name</span><span class="o">=</span><span class="s2">"Inlet Water (°F)"</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"steelblue"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
+                <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">show_separate_row</span> <span class="k">else</span> <span class="p">{</span><span class="s2">"row"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"col"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
             <span class="p">)</span>
 
             <span class="c1"># --- Tank temperature traces (Y2, dashed, blue→red gradient) ---</span>
@@ -735,33 +849,39 @@
                         <span class="n">x</span><span class="o">=</span><span class="n">time_min</span><span class="p">,</span>
                         <span class="n">y</span><span class="o">=</span><span class="n">temps</span><span class="p">,</span>
                         <span class="n">name</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-                        <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dash</span><span class="o">=</span><span class="s2">&quot;dash&quot;</span><span class="p">),</span>
+                        <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dash</span><span class="o">=</span><span class="s2">"dash"</span><span class="p">),</span>
                     <span class="p">),</span>
-                    <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">has_tm</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;row&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;col&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
+                    <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">show_separate_row</span> <span class="k">else</span> <span class="p">{</span><span class="s2">"row"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"col"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
                 <span class="p">)</span>
 
         <span class="c1"># --- Row 2: TM (swing) tank panel ---</span>
-        <span class="k">if</span> <span class="n">has_tm</span><span class="p">:</span>
-            <span class="n">tm_time</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">))]</span>
+        <span class="k">if</span> <span class="n">show_separate_row</span><span class="p">:</span>
+            <span class="c1"># Length from tm_heater_output_kbtuh, not tm_tank_temp_f: systems</span>
+            <span class="c1"># with no separate TM/gas tank of their own (e.g.</span>
+            <span class="c1"># SP_RTPInParallelSystem, which heats directly into the shared</span>
+            <span class="c1"># primary tank) never populate tm_tank_temp_f, but always</span>
+            <span class="c1"># populate tm_heater_output_kbtuh.</span>
+            <span class="n">tm_time</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_output_kbtuh</span><span class="p">))]</span>
             <span class="c1"># Left Y2: TM heater output [kBTU/hr]</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
                 <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">tm_time</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_heater_output_kbtuh</span><span class="p">,</span>
-                           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;TM Heater Output (kBTU/hr)&quot;</span><span class="p">,</span>
-                           <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;darkorange&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
-                           <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;tozeroy&quot;</span><span class="p">,</span> <span class="n">fillcolor</span><span class="o">=</span><span class="s2">&quot;rgba(255,165,0,0.15)&quot;</span><span class="p">),</span>
+                           <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="si">}</span><span class="s2"> Heater Output (kBTU/hr)"</span><span class="p">,</span>
+                           <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"darkorange"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                           <span class="n">fill</span><span class="o">=</span><span class="s2">"tozeroy"</span><span class="p">,</span> <span class="n">fillcolor</span><span class="o">=</span><span class="s2">"rgba(255,165,0,0.15)"</span><span class="p">),</span>
                 <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="c1"># Right Y2: TM tank temperature [°F]</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
-                <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">tm_time</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">,</span>
-                           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Swing Tank Temp (°F)&quot;</span><span class="p">,</span>
-                           <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;purple&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)),</span>
-                <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="c1"># Right Y2: TM tank temperature [°F] — only if a separate TM tank exists</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">:</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                    <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">tm_time</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_tank_temp_f</span><span class="p">,</span>
+                               <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="si">}</span><span class="s2"> Tank Temp (°F)"</span><span class="p">,</span>
+                               <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"purple"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)),</span>
+                    <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
 
         <span class="c1"># --- Load-shift shading: blue=shed, green=loadUp ---</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">heater_mode</span><span class="p">:</span>
-            <span class="n">_LS_COLORS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;shed&quot;</span><span class="p">:</span> <span class="s2">&quot;rgba(0,0,255,0.2)&quot;</span><span class="p">,</span> <span class="s2">&quot;loadUp&quot;</span><span class="p">:</span> <span class="s2">&quot;rgba(0,200,0,0.2)&quot;</span><span class="p">}</span>
+            <span class="n">_LS_COLORS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"shed"</span><span class="p">:</span> <span class="s2">"rgba(0,0,255,0.2)"</span><span class="p">,</span> <span class="s2">"loadUp"</span><span class="p">:</span> <span class="s2">"rgba(0,200,0,0.2)"</span><span class="p">}</span>
             <span class="n">_LS_LEGEND_ADDED</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">heater_mode</span><span class="p">)</span>
@@ -774,14 +894,14 @@
                         <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
                     <span class="n">x0</span> <span class="o">=</span> <span class="n">time_min</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                     <span class="n">x1</span> <span class="o">=</span> <span class="n">time_min</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span>
-                    <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Shed&quot;</span> <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="s2">&quot;shed&quot;</span> <span class="k">else</span> <span class="s2">&quot;Load-Up&quot;</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="s2">"Shed"</span> <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="s2">"shed"</span> <span class="k">else</span> <span class="s2">"Load-Up"</span>
                     <span class="n">fig</span><span class="o">.</span><span class="n">add_vrect</span><span class="p">(</span>
                         <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="o">=</span><span class="n">x1</span><span class="p">,</span>
                         <span class="n">fillcolor</span><span class="o">=</span><span class="n">_LS_COLORS</span><span class="p">[</span><span class="n">m</span><span class="p">],</span>
-                        <span class="n">layer</span><span class="o">=</span><span class="s2">&quot;below&quot;</span><span class="p">,</span>
+                        <span class="n">layer</span><span class="o">=</span><span class="s2">"below"</span><span class="p">,</span>
                         <span class="n">line_width</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                        <span class="n">annotation_text</span><span class="o">=</span><span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_LS_LEGEND_ADDED</span> <span class="k">else</span> <span class="n">label</span><span class="p">,</span>
-                        <span class="n">annotation_position</span><span class="o">=</span><span class="s2">&quot;top left&quot;</span><span class="p">,</span>
+                        <span class="n">annotation_text</span><span class="o">=</span><span class="s2">""</span> <span class="k">if</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_LS_LEGEND_ADDED</span> <span class="k">else</span> <span class="n">label</span><span class="p">,</span>
+                        <span class="n">annotation_position</span><span class="o">=</span><span class="s2">"top left"</span><span class="p">,</span>
                         <span class="n">annotation_font_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                     <span class="p">)</span>
                     <span class="n">_LS_LEGEND_ADDED</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
@@ -789,32 +909,32 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
 
-        <span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;Time (minutes)&quot;</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span> <span class="k">if</span> <span class="n">has_tm</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">has_tm</span><span class="p">:</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;Volume (gal) / Flow Rate (gal/hr)&quot;</span><span class="p">,</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Time (minutes)"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span> <span class="k">if</span> <span class="n">show_separate_row</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">show_separate_row</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Volume (gal) / Flow Rate (gal/hr)"</span><span class="p">,</span>
                              <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">include_temperatures</span><span class="p">:</span>
-                <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;Temperature (°F)&quot;</span><span class="p">,</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Temperature (°F)"</span><span class="p">,</span>
                                  <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;TM Output (kBTU/hr)&quot;</span><span class="p">,</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="si">}</span><span class="s2"> Output (kBTU/hr)"</span><span class="p">,</span>
                              <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;Swing Tank Temp (°F)&quot;</span><span class="p">,</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_panel_label</span><span class="si">}</span><span class="s2"> Tank Temp (°F)"</span><span class="p">,</span>
                              <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;Volume (gal) / Flow Rate (gal/hr)&quot;</span><span class="p">,</span> <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Volume (gal) / Flow Rate (gal/hr)"</span><span class="p">,</span> <span class="n">secondary_y</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">include_temperatures</span><span class="p">:</span>
-                <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;Temperature (°F)&quot;</span><span class="p">,</span> <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Temperature (°F)"</span><span class="p">,</span> <span class="n">secondary_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
             <span class="n">title_text</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
-            <span class="o">**</span><span class="p">({</span><span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="mi">950</span><span class="p">}</span> <span class="k">if</span> <span class="n">has_tm</span> <span class="k">else</span> <span class="p">{}),</span>
+            <span class="o">**</span><span class="p">({</span><span class="s2">"height"</span><span class="p">:</span> <span class="mi">950</span><span class="p">}</span> <span class="k">if</span> <span class="n">show_separate_row</span> <span class="k">else</span> <span class="p">{}),</span>
             <span class="n">legend</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
-                <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="p">,</span>
-                <span class="n">yanchor</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                <span class="n">orientation</span><span class="o">=</span><span class="s2">"h"</span><span class="p">,</span>
+                <span class="n">yanchor</span><span class="o">=</span><span class="s2">"top"</span><span class="p">,</span>
                 <span class="n">y</span><span class="o">=-</span><span class="mf">0.25</span><span class="p">,</span>
-                <span class="n">xanchor</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="n">xanchor</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span>
                 <span class="n">x</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                <span class="n">bgcolor</span><span class="o">=</span><span class="s2">&quot;rgba(255,255,255,0.8)&quot;</span><span class="p">,</span>
-                <span class="n">bordercolor</span><span class="o">=</span><span class="s2">&quot;rgba(0,0,0,0.2)&quot;</span><span class="p">,</span>
+                <span class="n">bgcolor</span><span class="o">=</span><span class="s2">"rgba(255,255,255,0.8)"</span><span class="p">,</span>
+                <span class="n">bordercolor</span><span class="o">=</span><span class="s2">"rgba(0,0,0,0.2)"</span><span class="p">,</span>
                 <span class="n">borderwidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">),</span>
             <span class="n">margin</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="mi">160</span><span class="p">),</span>
@@ -829,7 +949,7 @@
 <div class="viewcode-block" id="SimulationRun.get_annual_utility_cost">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.get_annual_utility_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_annual_utility_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uc</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Compute total annual utility cost from this simulation run.</span>
 
 <span class="sd">        Cost = energy charges + demand charges (max kW per period) + yearly base.</span>
@@ -843,7 +963,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        float</span>
 <span class="sd">            Total annual cost [$].</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">hours_per_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span> <span class="o">/</span> <span class="mf">60.0</span>
         <span class="n">energy_cost</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="n">max_kw_by_period</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -869,7 +989,7 @@
 <div class="viewcode-block" id="SimulationRun.get_monthly_cost_breakdown">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.get_monthly_cost_breakdown">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_monthly_cost_breakdown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uc</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Break down annual utility costs by month and charge type.</span>
 
 <span class="sd">        Parameters</span>
@@ -879,10 +999,10 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
-<span class="sd">            ``{&#39;energy&#39;: [12 floats], &#39;demand&#39;: [12 floats], &#39;base&#39;: float}``</span>
+<span class="sd">            ``{'energy': [12 floats], 'demand': [12 floats], 'base': float}``</span>
 <span class="sd">            Indices 0–11 correspond to January–December.</span>
-<span class="sd">            ``&#39;base&#39;`` is the per-month base charge (same for all months).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            ``'base'`` is the per-month base charge (same for all months).</span>
+<span class="sd">        """</span>
         <span class="n">hours_per_step</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span> <span class="o">/</span> <span class="mf">60.0</span>
         <span class="n">energy_by_month</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">12</span>
         <span class="n">max_kw_by_period</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -897,7 +1017,7 @@
             <span class="k">if</span> <span class="n">period</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">max_kw_by_period</span> <span class="ow">or</span> <span class="n">kw</span> <span class="o">&gt;</span> <span class="n">max_kw_by_period</span><span class="p">[</span><span class="n">period</span><span class="p">]:</span>
                 <span class="n">max_kw_by_period</span><span class="p">[</span><span class="n">period</span><span class="p">]</span> <span class="o">=</span> <span class="n">kw</span>
 
-        <span class="c1"># Assign each period&#39;s demand charge to its calendar month.</span>
+        <span class="c1"># Assign each period's demand charge to its calendar month.</span>
         <span class="c1"># Period key = month * num_periods + offset → month = key // num_periods.</span>
         <span class="n">num_periods</span>     <span class="o">=</span> <span class="mi">3</span> <span class="k">if</span> <span class="n">uc</span><span class="o">.</span><span class="n">include_discount</span> <span class="k">else</span> <span class="mi">2</span>
         <span class="n">demand_by_month</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">12</span>
@@ -907,16 +1027,16 @@
                 <span class="n">demand_by_month</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">+=</span> <span class="n">uc</span><span class="o">.</span><span class="n">get_demand_charge_for_period</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">max_kw</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="n">energy_by_month</span><span class="p">,</span>
-            <span class="s2">&quot;demand&quot;</span><span class="p">:</span> <span class="n">demand_by_month</span><span class="p">,</span>
-            <span class="s2">&quot;base&quot;</span><span class="p">:</span>   <span class="n">uc</span><span class="o">.</span><span class="n">monthly_base_charge</span><span class="p">,</span>
+            <span class="s2">"energy"</span><span class="p">:</span> <span class="n">energy_by_month</span><span class="p">,</span>
+            <span class="s2">"demand"</span><span class="p">:</span> <span class="n">demand_by_month</span><span class="p">,</span>
+            <span class="s2">"base"</span><span class="p">:</span>   <span class="n">uc</span><span class="o">.</span><span class="n">monthly_base_charge</span><span class="p">,</span>
         <span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="SimulationRun.get_monthly_cost_breakdown_detailed">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.get_monthly_cost_breakdown_detailed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_monthly_cost_breakdown_detailed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uc</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Like get_monthly_cost_breakdown but splits energy and demand charges</span>
 <span class="sd">        into peak and off-peak components.</span>
 
@@ -925,7 +1045,7 @@
 <span class="sd">        dict</span>
 <span class="sd">            Keys: ``energy_peak``, ``energy_off_peak``, ``demand_peak``,</span>
 <span class="sd">            ``demand_off_peak`` (each a 12-element list) and ``base`` (float).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">hours_per_step</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_min</span> <span class="o">/</span> <span class="mf">60.0</span>
         <span class="n">energy_peak</span>         <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">12</span>
         <span class="n">energy_off_peak</span>     <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">12</span>
@@ -959,18 +1079,18 @@
                     <span class="n">demand_off_peak</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">+=</span> <span class="n">charge</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;energy_peak&quot;</span><span class="p">:</span>     <span class="n">energy_peak</span><span class="p">,</span>
-            <span class="s2">&quot;energy_off_peak&quot;</span><span class="p">:</span> <span class="n">energy_off_peak</span><span class="p">,</span>
-            <span class="s2">&quot;demand_peak&quot;</span><span class="p">:</span>     <span class="n">demand_peak</span><span class="p">,</span>
-            <span class="s2">&quot;demand_off_peak&quot;</span><span class="p">:</span> <span class="n">demand_off_peak</span><span class="p">,</span>
-            <span class="s2">&quot;base&quot;</span><span class="p">:</span>            <span class="n">uc</span><span class="o">.</span><span class="n">monthly_base_charge</span><span class="p">,</span>
+            <span class="s2">"energy_peak"</span><span class="p">:</span>     <span class="n">energy_peak</span><span class="p">,</span>
+            <span class="s2">"energy_off_peak"</span><span class="p">:</span> <span class="n">energy_off_peak</span><span class="p">,</span>
+            <span class="s2">"demand_peak"</span><span class="p">:</span>     <span class="n">demand_peak</span><span class="p">,</span>
+            <span class="s2">"demand_off_peak"</span><span class="p">:</span> <span class="n">demand_off_peak</span><span class="p">,</span>
+            <span class="s2">"base"</span><span class="p">:</span>            <span class="n">uc</span><span class="o">.</span><span class="n">monthly_base_charge</span><span class="p">,</span>
         <span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="SimulationRun.get_monthly_energy_kwh">
 <a class="viewcode-back" href="../../../../api/simulation.html#ecoengine.objects.simulation.SimulationRun.SimulationRun.get_monthly_energy_kwh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_monthly_energy_kwh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Break down energy consumption by calendar month (annual runs only).</span>
 
 <span class="sd">        For non-annual simulations, returns a 12-element list of zeros.</span>
@@ -979,7 +1099,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        list[float]</span>
 <span class="sd">            12-element list of energy [kWh] per month, January through December.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">monthly</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">12</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration_min</span> <span class="o">!=</span> <span class="n">_ANNUAL_DURATION_MIN</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">monthly</span>
@@ -1029,7 +1149,7 @@
       
     </aside>
   </div>
-</div><script src="../../../../_static/documentation_options.js?v=acc74ff5"></script>
+</div><script src="../../../../_static/documentation_options.js?v=3eb8911e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/scripts/furo.js?v=46bd48cc"></script>

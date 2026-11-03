@@ -194,6 +194,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../quickstart.html">Quick Start</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecobuilder.html">EcoBuilder (Component-by-Component API)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/building.html">Building &amp; Climate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/dhwsystems.html">DHW Systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/components.html">Equipment Components</a></li>
@@ -233,35 +234,512 @@
         </div>
         <article role="main" id="furo-main-content">
           <h1>Source code for ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">.SinglePassRTPSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SinglePassRTPSystem</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.Controls</span><span class="w"> </span><span class="kn">import</span> <span class="n">Controls</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.heating.WaterHeater</span><span class="w"> </span><span class="kn">import</span> <span class="n">WaterHeater</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.EnergyTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnergyTank</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_RHO_CP</span><span class="p">,</span> <span class="n">_BTUH_PER_W</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">mixing_valve_behavior</span><span class="p">,</span>
+    <span class="n">size_supplemental_heating_and_storage</span><span class="p">,</span>
+    <span class="n">gas_backup_from_window</span><span class="p">,</span>
+    <span class="n">get_ashrae_sizing_curve</span><span class="p">,</span>
+    <span class="n">plot_ashrae_sizing_curve</span><span class="p">,</span>
+    <span class="n">set_dual_fuel_shed_controls</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.SinglePassRTPSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SinglePassRTPSystem</span><span class="p">,</span> <span class="n">_SPRTP_STRAT_SLOPE</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.building.Building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
+
+<span class="n">default_gas_controls</span> <span class="o">=</span> <span class="n">Controls</span><span class="p">(</span>
+            <span class="n">on_sensor_fract</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+            <span class="n">on_trigger_t_f</span><span class="o">=</span><span class="mi">125</span><span class="p">,</span>
+            <span class="n">off_sensor_fract</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+            <span class="n">off_trigger_t_f</span><span class="o">=</span><span class="mi">130</span><span class="p">,</span>
+            <span class="n">outlet_temp_f</span><span class="o">=</span><span class="mi">140</span><span class="p">,)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gas_capacity_from_peak_deficit</span><span class="p">(</span>
+    <span class="n">outage_volume_gal</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">outage_temp_delta_f</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the gas backup capacity [kBTU/hr] needed to cover the single</span>
+<span class="sd">    worst-minute heat deficit in the outage arrays.</span>
+
+<span class="sd">    Unlike ``gas_backup_from_window`` (which sizes a downstream storage</span>
+<span class="sd">    buffer by averaging over an ASHRAE window), the gas heater here has no</span>
+<span class="sd">    buffer of its own -- it heats directly into the shared primary tank --</span>
+<span class="sd">    so it must be able to cover the worst single minute directly:</span>
+<span class="sd">    ``outage_volume_gal[i]`` gallons raised ``outage_temp_delta_f[i]``</span>
+<span class="sd">    degrees, for whichever minute ``i`` makes that the largest.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    outage_volume_gal : list[float]</span>
+<span class="sd">        Per-minute demand during primary outage (0 outside outage) [gal].</span>
+<span class="sd">    outage_temp_delta_f : list[float]</span>
+<span class="sd">        Per-minute temperature deficit during outage (0 outside) [°F].</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Gas backup capacity [kBTU/hr]. 0.0 if the arrays are empty.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">outage_volume_gal</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="n">_RHO_CP</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="mf">60.0</span> <span class="o">*</span> <span class="n">d</span> <span class="o">/</span> <span class="mf">1000.0</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">outage_volume_gal</span><span class="p">,</span> <span class="n">outage_temp_delta_f</span><span class="p">)</span>
+    <span class="p">)</span>
 
 
 <div class="viewcode-block" id="SP_RTPInParallelSystem">
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem.SP_RTPInParallelSystem">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SP_RTPInParallelSystem</span><span class="p">(</span><span class="n">SinglePassRTPSystem</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Single-pass RTP system where the recirculation return is fed in parallel</span>
-<span class="sd">    (mixed into the tank rather than routed through the heat pump inlet).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Single-pass RTP system with a supplementary gas water heater connected to the primary storage tank in addition to the heat pumps.</span>
 
-<div class="viewcode-block" id="SP_RTPInParallelSystem.size">
-<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem.SP_RTPInParallelSystem.size">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Size an SP RTP in-parallel system.</span>
+<span class="sd">    The primary HPWH (EnergyTank + WaterHeater) is intentionally capped at</span>
+<span class="sd">    caller-supplied nominal specs.  ``gas_water_heater`` heats directly into</span>
+<span class="sd">    that same primary tank (no storage buffer of its own) and is sized to</span>
+<span class="sd">    cover the single worst-minute heat deficit observed while running the</span>
+<span class="sd">    undersized primary alone.</span>
+
+<span class="sd">    Construction</span>
+<span class="sd">    ------------</span>
+<span class="sd">    Use the factory classmethod rather than calling __init__ directly::</span>
+
+<span class="sd">        system = SP_RTPInParallelSystem.from_size(</span>
+<span class="sd">            building               = building,</span>
+<span class="sd">            supply_temp_f          = 120.0,</span>
+<span class="sd">            storage_temp_f         = 150.0,</span>
+<span class="sd">            return_temp_f          = 110.0,</span>
+<span class="sd">            return_flow_gpm        = 3.0,</span>
+<span class="sd">            nominal_capacity_kbtuh = 50.0,</span>
+<span class="sd">            nominal_storage_gal    = 200.0,</span>
+<span class="sd">        )</span>
+<span class="sd">    """</span>
+
+    <span class="n">gas_water_heater</span><span class="p">:</span> <span class="n">WaterHeater</span>
+    <span class="n">outage_volume_gal</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">outage_temp_delta_f</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Factory constructor</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SP_RTPInParallelSystem.from_size">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem.SP_RTPInParallelSystem.from_size">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_size</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">,</span>
+        <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">storage_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">return_flow_gpm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">nominal_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">nominal_storage_gal</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">max_daily_run_hr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">16.0</span><span class="p">,</span>
+        <span class="n">defrost_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">tm_safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">control_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Controls</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_SPRTP_STRAT_SLOPE</span><span class="p">,</span>
+        <span class="n">load_shift_fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="c1"># TODO make sure this is applied to LS dual fuel models</span>
+        <span class="n">gas_controls</span> <span class="p">:</span> <span class="n">Controls</span> <span class="o">=</span> <span class="n">default_gas_controls</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SP_RTPInParallelSystem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Size the system for the given building, then build it.</span>
+
+<span class="sd">        The primary HPWH is capped at ``nominal_capacity_kbtuh`` and</span>
+<span class="sd">        ``nominal_storage_gal``; the gas backup is sized to cover the</span>
+<span class="sd">        remainder via ``_size_gas_backup``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        building : Building</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        supply_temp_f : float</span>
+<span class="sd">            DHW delivery temperature [°F].</span>
+<span class="sd">        storage_temp_f : float</span>
+<span class="sd">            Hot water storage setpoint [°F].</span>
+<span class="sd">        return_temp_f : float</span>
+<span class="sd">            Recirculation loop return temperature [°F].</span>
+<span class="sd">        return_flow_gpm : float</span>
+<span class="sd">            Recirculation loop flow rate [GPM].</span>
+<span class="sd">        nominal_capacity_kbtuh : float</span>
+<span class="sd">            Primary HPWH heating capacity ceiling [kBTU/hr].</span>
+<span class="sd">        nominal_storage_gal : float</span>
+<span class="sd">            Primary storage tank volume ceiling [gal at storageT].</span>
+<span class="sd">        max_daily_run_hr : float</span>
+<span class="sd">            Maximum hours the primary heater may run per day. Default 16.</span>
+<span class="sd">        defrost_factor : float</span>
+<span class="sd">            Fraction of rated capacity available after defrost (0–1). Default 1.0.</span>
+<span class="sd">        control_schedule : list[str] | None</span>
+<span class="sd">            24-element list of control keys. None for no load-shifting.</span>
+<span class="sd">        control_map : dict[str, Controls] | None</span>
+<span class="sd">            Controls objects keyed by schedule label.</span>
+<span class="sd">        strat_slope : float</span>
+<span class="sd">            Temperature gradient [°F per %-height] for stratification factor.</span>
+<span class="sd">        load_shift_fract_total_vol : float</span>
+<span class="sd">            Demand scaling factor for load-shift sizing (0–1). Default 1.0.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SP_RTPInParallelSystem</span>
+<span class="sd">        """</span>
+        <span class="c1"># ensure shed turns primary system completely off</span>
+        <span class="n">saved_shed_state</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s1">'shed'</span> <span class="ow">in</span> <span class="n">control_map</span><span class="p">:</span>
+            <span class="n">saved_shed_state</span> <span class="o">=</span> <span class="n">control_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"shed"</span><span class="p">)</span>
+            <span class="n">control_map</span> <span class="o">=</span> <span class="n">set_dual_fuel_shed_controls</span><span class="p">(</span><span class="n">control_map</span><span class="p">)</span>
+
+        <span class="n">system</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">water_heaters</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">storage_tank</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">supply_temp_f</span><span class="o">=</span><span class="n">supply_temp_f</span><span class="p">,</span>
+            <span class="n">storage_temp_f</span><span class="o">=</span><span class="n">storage_temp_f</span><span class="p">,</span>
+            <span class="n">return_temp_f</span><span class="o">=</span><span class="n">return_temp_f</span><span class="p">,</span>
+            <span class="n">return_flow_gpm</span><span class="o">=</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+            <span class="n">max_daily_run_hr</span><span class="o">=</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+            <span class="n">defrost_factor</span><span class="o">=</span><span class="n">defrost_factor</span><span class="p">,</span>
+            <span class="n">tm_safety_factor</span><span class="o">=</span><span class="n">tm_safety_factor</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">system</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span> <span class="o">=</span> <span class="n">nominal_capacity_kbtuh</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span> <span class="o">=</span> <span class="n">nominal_storage_gal</span>
+
+        <span class="c1"># Primary HPWH: capped at caller-provided nominal specs</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">storage_tank</span> <span class="o">=</span> <span class="n">EnergyTank</span><span class="p">(</span>
+            <span class="n">total_volume_gal</span><span class="o">=</span><span class="n">nominal_storage_gal</span><span class="p">,</span>
+            <span class="n">cold_temp_f</span><span class="o">=</span><span class="n">building</span><span class="o">.</span><span class="n">get_design_inlet_water_temp_f</span><span class="p">(),</span>
+            <span class="n">storage_temp_f</span><span class="o">=</span><span class="n">storage_temp_f</span><span class="p">,</span>
+            <span class="n">strat_slope</span><span class="o">=</span><span class="n">strat_slope</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">water_heaters</span> <span class="o">=</span> <span class="p">[</span><span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
+            <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">nominal_capacity_kbtuh</span><span class="p">,</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="n">control_schedule</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="n">control_map</span><span class="p">,</span>
+        <span class="p">)]</span>
+
+        <span class="n">system</span><span class="o">.</span><span class="n">saved_shed_state</span> <span class="o">=</span> <span class="n">saved_shed_state</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">fallback_system</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Gas backup controls: on at supply_temp, off at supply_temp + deadband</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">_size_gas_backup</span><span class="p">(</span>
+            <span class="n">building</span><span class="o">=</span><span class="n">building</span><span class="p">,</span>
+            <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">nominal_capacity_kbtuh</span><span class="p">,</span>
+            <span class="n">nominal_storage_gal</span><span class="o">=</span><span class="n">nominal_storage_gal</span><span class="p">,</span>
+            <span class="n">gas_controls</span><span class="o">=</span><span class="n">gas_controls</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">system</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Gas backup sizing</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="n">_MIN_OUTAGE_MIN</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">_MIN_DEFICIT_F</span>  <span class="o">=</span> <span class="mf">2.0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_size_gas_backup</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building</span> <span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">nominal_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">nominal_storage_gal</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">gas_controls</span><span class="p">:</span> <span class="n">Controls</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Size gas_water_heater from a load-shape-based running-volume</span>
+<span class="sd">        calculation, using the shared primary tank as the gas heater's own</span>
+<span class="sd">        storage buffer.</span>
+
+<span class="sd">        First runs a plain 3-day simulation of the undersized primary alone</span>
+<span class="sd">        (no gas heater yet); if it already meets demand (outage &lt;= 10 min and</span>
+<span class="sd">        max deficit &lt;= 2 °F), no gas backup is built and a ValueError is</span>
+<span class="sd">        raised instead.</span>
+
+<span class="sd">        Otherwise, the primary's raw nameplate generation rate (net of its</span>
+<span class="sd">        continuous recirc-loss draw) is subtracted from the hourly demand</span>
+<span class="sd">        load shape to get ``hourly_diff_gph`` -- the residual load only the</span>
+<span class="sd">        gas heater must cover (surplus-positive convention, so recovery</span>
+<span class="sd">        hours can offset later deficit hours). The true nameplate rate is</span>
+<span class="sd">        used rather than a "spread over the whole day" average, since the</span>
+<span class="sd">        primary actually runs continuously at full capacity whenever it's</span>
+<span class="sd">        below its off-setpoint, and a single peak-demand hour can exceed</span>
+<span class="sd">        what a daily average would suggest is needed. During shed hours the</span>
+<span class="sd">        primary contributes nothing but the recirc loop keeps running, so</span>
+<span class="sd">        those hours are represented as a net loss (negative rate) instead of</span>
+<span class="sd">        zero. ``accessible_gas_storage_gal`` (from the gas aquastat's</span>
+<span class="sd">        on-position) is treated as the storage buffer available to the gas</span>
+<span class="sd">        heater, and the gas heater's own constant generation rate is solved</span>
+<span class="sd">        for directly: this is the inverse of</span>
+<span class="sd">        ``DHWSystem._calc_running_volume_supplyT_gal()`` -- there, a known</span>
+<span class="sd">        generation rate yields the required running volume; here, a known</span>
+<span class="sd">        running volume (the fixed physical storage) yields the required</span>
+<span class="sd">        generation rate. The required rate is the largest, over every</span>
+<span class="sd">        possible start hour and window length, of the additional rate needed</span>
+<span class="sd">        to keep that window's cumulative deficit within the available</span>
+<span class="sd">        storage, plus a long-run-average floor (for a primary undersized</span>
+<span class="sd">        enough that the residual never structurally recovers within a</span>
+<span class="sd">        couple of days).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        building : Building</span>
+<span class="sd">        nominal_capacity_kbtuh : float</span>
+<span class="sd">            Primary HPWH capacity ceiling [kBTU/hr].</span>
+<span class="sd">        nominal_storage_gal : float</span>
+<span class="sd">            Primary storage volume ceiling [gal at storageT].</span>
+<span class="sd">        gas_controls : Controls</span>
+<span class="sd">            Controls for the gas backup water heater.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the primary SPRTP is already adequately sized (outage &lt;= 10 min</span>
+<span class="sd">            and max deficit &lt;= 2 °F), meaning no gas backup is needed.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.interfaces.Simulator</span><span class="w"> </span><span class="kn">import</span> <span class="n">simulate_3day</span>
+
+        <span class="n">sim_run</span> <span class="o">=</span> <span class="n">simulate_3day</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">)</span>
+        <span class="n">max_deficit_f</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="mf">0.0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">sim_run</span><span class="o">.</span><span class="n">tank_temps_f</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">sim_run</span><span class="o">.</span><span class="n">outage_minutes</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_MIN_OUTAGE_MIN</span> <span class="ow">and</span> <span class="n">max_deficit_f</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_MIN_DEFICIT_F</span><span class="p">:</span>
+            <span class="n">control_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">control_map</span>
+            <span class="k">if</span> <span class="s1">'shed'</span> <span class="ow">in</span> <span class="n">control_map</span><span class="p">:</span>
+                <span class="n">control_map</span><span class="p">[</span><span class="s1">'shed'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saved_shed_state</span>
+            <span class="n">comparison_system</span> <span class="o">=</span> <span class="n">SinglePassRTPSystem</span><span class="o">.</span><span class="n">from_size</span><span class="p">(</span>
+                    <span class="n">building</span>                   <span class="o">=</span> <span class="n">building</span><span class="p">,</span>
+                    <span class="n">supply_temp_f</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+                    <span class="n">storage_temp_f</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+                    <span class="n">return_temp_f</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span>
+                    <span class="n">return_flow_gpm</span>            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span>
+                    <span class="n">max_daily_run_hr</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_daily_run_hr</span><span class="p">,</span>
+                    <span class="n">defrost_factor</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span><span class="p">,</span>
+                    <span class="n">tm_safety_factor</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span><span class="p">,</span>
+                    <span class="n">control_schedule</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">control_schedule</span><span class="p">,</span>
+                    <span class="n">control_map</span>                <span class="o">=</span> <span class="n">control_map</span><span class="p">,</span>
+                    <span class="n">load_shift_fract_total_vol</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                <span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">fallback_system</span> <span class="o">=</span> <span class="n">comparison_system</span>
+            <span class="k">return</span>
+
+            <span class="c1"># raise ValueError(</span>
+            <span class="c1">#     "The primary system is already adequately sized: "</span>
+            <span class="c1">#     f"outage duration was {sim_run.outage_minutes} min "</span>
+            <span class="c1">#     f"(threshold {self._MIN_OUTAGE_MIN} min) and max temperature deficit "</span>
+            <span class="c1">#     f"was {max_deficit_f:.2f} °F (threshold {self._MIN_DEFICIT_F:.1f} °F). "</span>
+            <span class="c1">#     "No gas backup is required."</span>
+            <span class="c1"># )</span>
+
+        <span class="c1"># The amount of storage (supply temp gallons) the gas is able to keep in a worst case scenario</span>
+        <span class="n">design_inlet</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+        <span class="n">delta_t</span>         <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">design_inlet</span>
+        <span class="n">recirc_loss</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sizing_recirc_loss_kbtuh</span><span class="p">()</span>
+        <span class="n">accessible_gas_storage_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_stratification_factor</span><span class="p">({</span><span class="s2">"normal"</span> <span class="p">:</span> <span class="n">gas_controls</span><span class="p">},</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">strat_slope</span><span class="p">,</span>
+                                        <span class="n">design_inlet</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_storage_storageT_gal</span>
+        
+        <span class="n">gas_load_shape</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">peak_load_shape</span> <span class="c1"># force peaky load shape here</span>
+
+        <span class="n">daily_gal</span>  <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span>
+
+        <span class="c1"># Primary's raw nameplate generation rate, net of the recirc loop's</span>
+        <span class="c1"># continuous draw -- not a "spread over the whole day" average, since</span>
+        <span class="c1"># the primary actually runs continuously at full capacity whenever</span>
+        <span class="c1"># it's below its off-setpoint. The window search below needs the true</span>
+        <span class="c1"># hourly rate to correctly catch peak-demand-hour capacity shortfalls.</span>
+        <span class="n">primary_capacity_gph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_capacity_kbtuh</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">defrost_factor</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">_RHO_CP</span> <span class="o">*</span> <span class="n">delta_t</span><span class="p">)</span>
+        <span class="n">recirc_loss_gph</span>      <span class="o">=</span> <span class="n">recirc_loss</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">_RHO_CP</span> <span class="o">*</span> <span class="n">delta_t</span><span class="p">)</span>
+
+        <span class="c1"># During shed hours the primary is forced fully off regardless of its</span>
+        <span class="c1"># capacity, so it contributes zero generation -- but the recirc loop</span>
+        <span class="c1"># keeps running and pulling heat out of the shared tank regardless.</span>
+        <span class="c1"># Represent that hour as a net loss (negative generation) so the gas</span>
+        <span class="c1"># heater must cover both the full hourly demand and the recirc loss.</span>
+        <span class="n">gen_rate_gph_per_hour</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="n">primary_capacity_gph</span> <span class="o">-</span> <span class="n">recirc_loss_gph</span><span class="p">)</span>
+        <span class="n">_schedule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">control_schedule</span>
+        <span class="k">if</span> <span class="n">_schedule</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_schedule</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="s2">"shed"</span><span class="p">:</span>
+                    <span class="n">gen_rate_gph_per_hour</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">recirc_loss_gph</span>
+
+        <span class="c1"># Residual load shape the primary can't cover on its own (surplus-positive,</span>
+        <span class="c1"># i.e. generation minus demand -- matches _get_peak_indices' convention).</span>
+        <span class="n">hourly_demand_gph</span> <span class="o">=</span> <span class="n">daily_gal</span> <span class="o">*</span> <span class="n">gas_load_shape</span>  <span class="c1"># [gallons / hour] for each of 24 hours</span>
+        <span class="n">hourly_diff_gph</span>   <span class="o">=</span> <span class="n">gen_rate_gph_per_hour</span> <span class="o">-</span> <span class="n">hourly_demand_gph</span>
+
+        <span class="c1"># Tile to two days so cumulative sums wrap around midnight correctly.</span>
+        <span class="n">tiled_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">hourly_diff_gph</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Reverse running-volume solve: for every possible start hour and window</span>
+        <span class="c1"># length, find the additional constant gas generation rate that would</span>
+        <span class="c1"># keep that window's cumulative deficit within accessible_gas_storage_gal,</span>
+        <span class="c1"># then take the worst (largest) one. The long-run average floor covers</span>
+        <span class="c1"># a primary so undersized the residual never structurally recovers.</span>
+        <span class="n">gas_gen_rate_gph</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">hourly_diff_gph</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">24</span><span class="p">):</span>
+            <span class="n">cum_diff</span>        <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">tiled_diff</span><span class="p">[</span><span class="n">idx</span><span class="p">:])</span>
+            <span class="n">window_lengths</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cum_diff</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">candidates</span>      <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">cum_diff</span> <span class="o">-</span> <span class="n">accessible_gas_storage_gal</span><span class="p">)</span> <span class="o">/</span> <span class="n">window_lengths</span>
+            <span class="n">gas_gen_rate_gph</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">gas_gen_rate_gph</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">candidates</span><span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gas_capacity_kbtuh</span> <span class="o">=</span> <span class="n">gas_gen_rate_gph</span> <span class="o">*</span> <span class="n">_RHO_CP</span> <span class="o">*</span> <span class="n">delta_t</span> <span class="o">/</span> <span class="mf">1000.0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gas_water_heater</span> <span class="o">=</span> <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
+            <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gas_capacity_kbtuh</span><span class="p">,</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">"normal"</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">"normal"</span><span class="p">:</span> <span class="n">gas_controls</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Gas backup sizing helpers</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SP_RTPInParallelSystem.get_sizing_curve">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem.SP_RTPInParallelSystem.get_sizing_curve">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_sizing_curve</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.8</span><span class="p">,</span>
+        <span class="n">step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        TODO: revisit. Sizing is now a single peak-deficit capacity value</span>
+<span class="sd">        rather than an ASHRAE window/storage trade-off, so there is no curve</span>
+<span class="sd">        to compute yet.</span>
+
+<span class="sd">        ``building``, ``strat_slope``, and ``step`` are accepted for call-</span>
+<span class="sd">        signature parity with ``DHWSystem.get_sizing_curve()`` but have no</span>
+<span class="sd">        effect here.</span>
+<span class="sd">        """</span>
         <span class="k">pass</span></div>
 
+
+<div class="viewcode-block" id="SP_RTPInParallelSystem.plot_sizing_curve">
+<a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem.SP_RTPInParallelSystem.plot_sizing_curve">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_sizing_curve</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
+        <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Parallel Heating Sizing Curve — SP RTP In-Parallel"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"plotly.graph_objects.Figure"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        TODO: revisit. See ``get_sizing_curve``.</span>
+<span class="sd">        """</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Simulation</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
 
 <div class="viewcode-block" id="SP_RTPInParallelSystem.simulate_step">
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem.SP_RTPInParallelSystem.simulate_step">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">timestep_min</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run one timestep for an SP RTP in-parallel system.&quot;&quot;&quot;</span>
-        <span class="k">pass</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_step</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">building</span><span class="p">,</span>
+        <span class="n">timestep_interval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">interval_min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"normal"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Run one timestep for a single-pass RTP system.</span>
+
+<span class="sd">        Delegates the DHW draw and heater logic to the base class, then</span>
+<span class="sd">        applies recirculation losses to the storage tank.  The recirc</span>
+<span class="sd">        return flow cools the bottom of the tank every minute, reducing</span>
+<span class="sd">        usable volume.  The returned dict is updated to reflect post-recirc</span>
+<span class="sd">        tank state.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"gas_water_heater"</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">SinglePassRTPSystem</span><span class="o">.</span><span class="n">simulate_step</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">timestep_interval</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">,</span> <span class="n">mode</span>
+            <span class="p">)</span>
+        <span class="n">use_avg</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">wh</span><span class="o">.</span><span class="n">is_load_shifting</span><span class="p">()</span> <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">)</span>
+        <span class="n">demand_supplyT_gal</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_dhw_load_supplyT_gal</span><span class="p">(</span>
+            <span class="n">timestep_interval</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">,</span> <span class="n">use_avg</span><span class="o">=</span><span class="n">use_avg</span>
+        <span class="p">)</span>
+
+        <span class="n">oat_f</span>          <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_oat_f</span><span class="p">(</span><span class="n">timestep_interval</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">)</span>
+        <span class="n">inlet_temp_f</span>   <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_inlet_water_temp_f</span><span class="p">(</span><span class="n">timestep_interval</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">)</span>
+        <span class="n">hour_of_day</span>    <span class="o">=</span> <span class="p">(</span><span class="n">timestep_interval</span> <span class="o">*</span> <span class="n">interval_min</span> <span class="o">//</span> <span class="mi">60</span><span class="p">)</span> <span class="o">%</span> <span class="mi">24</span>
+        <span class="n">outlet_temp_f</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_outlet_temp_f</span><span class="p">(</span><span class="n">hour_of_day</span><span class="p">)</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">control_schedule</span><span class="p">[</span><span class="n">hour_of_day</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">control_schedule</span>
+            <span class="k">else</span> <span class="s2">"normal"</span>
+        <span class="p">)</span>
+
+        <span class="n">draw_gal</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">update_cold_temp_f</span><span class="p">(</span><span class="n">inlet_temp_f</span><span class="p">)</span>
+        <span class="c1"># Update on/off state for each heater based on current tank condition</span>
+        <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">:</span>
+            <span class="n">wh</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="p">,</span> <span class="n">hour_of_day</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gas_water_heater</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="p">,</span> <span class="n">hour_of_day</span><span class="p">)</span>
+        <span class="c1"># Apply heating from all active heaters to the tank</span>
+        <span class="n">total_kbtuh</span>    <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">wh</span><span class="o">.</span><span class="n">get_output_kbtuh</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">wh</span><span class="o">.</span><span class="n">get_outlet_temp_f</span><span class="p">(</span><span class="n">hour_of_day</span><span class="p">),</span> <span class="n">inlet_temp_f</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span>
+        <span class="p">)</span>
+        <span class="n">gas_outlet_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gas_water_heater</span><span class="o">.</span><span class="n">get_controls_for_hour</span><span class="p">(</span><span class="n">hour_of_day</span><span class="p">)</span><span class="o">.</span><span class="n">outlet_temp_f</span>
+        <span class="n">gas_kbtuh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gas_water_heater</span><span class="o">.</span><span class="n">get_output_kbtuh</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">gas_outlet_temp_f</span><span class="p">,</span> <span class="n">inlet_temp_f</span><span class="p">)</span>
+        <span class="n">total_kw</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">active_kws</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">wh</span><span class="o">.</span><span class="n">get_power_in_kw</span><span class="p">(</span><span class="n">oat_f</span><span class="p">,</span> <span class="n">wh</span><span class="o">.</span><span class="n">get_outlet_temp_f</span><span class="p">(</span><span class="n">hour_of_day</span><span class="p">),</span> <span class="n">inlet_temp_f</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_heaters</span>
+            <span class="k">if</span> <span class="n">wh</span><span class="o">.</span><span class="n">is_active</span><span class="p">()</span>
+        <span class="p">]</span>
+        <span class="c1"># TODO track gas use</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">active_kws</span><span class="p">):</span>
+            <span class="n">total_kw</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">kw</span> <span class="ow">or</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">active_kws</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">heat</span><span class="p">(</span><span class="n">total_kbtuh</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">,</span> <span class="n">outlet_temp_f</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">heat</span><span class="p">(</span><span class="n">gas_kbtuh</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">,</span> <span class="n">outlet_temp_f</span><span class="p">)</span> <span class="c1"># outlet temperature should always stay the same as HPWH settings</span>
+        <span class="n">top_temp_f</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">get_temperature_at_fraction</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="c1"># --- Mixing valve draw ---</span>
+        <span class="n">flow_per_min_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span> <span class="o">*</span> <span class="n">interval_min</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">mixing_valve_behavior</span><span class="p">(</span>
+            <span class="n">demand_supplyT_gal</span><span class="p">,</span>
+            <span class="n">flow_per_min_gal</span><span class="p">,</span>
+            <span class="n">inlet_temp_f</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span>
+            <span class="n">top_temp_f</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">draw_gal</span>       <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">"storage_draw_gal"</span><span class="p">]</span>
+        <span class="n">mv_inlet_temp_f</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">"inlet_temp_f"</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">draw_physical_gal</span><span class="p">(</span><span class="n">draw_gal</span><span class="p">,</span> <span class="n">mv_inlet_temp_f</span><span class="p">,</span> <span class="n">update_internal_cold_temp</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">usable_vol_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">get_usable_volume_supplyT_gal</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span>
+        <span class="p">)</span>
+        <span class="n">tank_temps_f</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">get_temperature_at_fraction</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"demand_supplyT_gal"</span><span class="p">:</span>        <span class="n">demand_supplyT_gal</span><span class="p">,</span>
+            <span class="s2">"usable_volume_supplyT_gal"</span><span class="p">:</span> <span class="n">usable_vol_gal</span><span class="p">,</span>
+            <span class="s2">"heater_output_kbtuh"</span><span class="p">:</span>       <span class="n">total_kbtuh</span><span class="p">,</span>
+            <span class="s2">"heater_power_in_kw"</span><span class="p">:</span>        <span class="n">total_kw</span><span class="p">,</span>
+            <span class="s2">"oat_f"</span><span class="p">:</span>                     <span class="n">oat_f</span><span class="p">,</span>
+            <span class="s2">"inlet_water_temp_f"</span><span class="p">:</span>        <span class="n">inlet_temp_f</span><span class="p">,</span>
+            <span class="s2">"tank_temps_f"</span><span class="p">:</span>              <span class="n">tank_temps_f</span><span class="p">,</span>
+            <span class="s2">"mode"</span><span class="p">:</span>                      <span class="n">mode</span><span class="p">,</span>
+            <span class="s2">"tm_heater_output_kbtuh"</span><span class="p">:</span>    <span class="n">gas_kbtuh</span><span class="p">,</span>
+            <span class="s2">"tm_heater_input_kw"</span><span class="p">:</span>        <span class="n">gas_kbtuh</span> <span class="o">/</span> <span class="n">_BTUH_PER_W</span><span class="p">,</span>
+            <span class="s2">"draw_thru_system_gal"</span><span class="p">:</span>      <span class="n">draw_gal</span><span class="p">,</span>
+        <span class="p">}</span></div>
 </div>
 
 </pre></div>
@@ -296,7 +774,7 @@
       
     </aside>
   </div>
-</div><script src="../../../../../_static/documentation_options.js?v=acc74ff5"></script>
+</div><script src="../../../../../_static/documentation_options.js?v=3eb8911e"></script>
     <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../_static/scripts/furo.js?v=46bd48cc"></script>

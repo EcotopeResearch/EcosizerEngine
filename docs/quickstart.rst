@@ -90,6 +90,37 @@ Available Schematics
    * - ``instant_wh``
      - Instantaneous (tankless) water heater; no storage
 
+Building a System Component by Component
+----------------------------------------
+
+:class:`~ecoengine.EcoBuilder` builds a pre-sized system from components you
+define, so each heater can have its own controls and schedule. It does no
+sizing. Simulate the result with
+:func:`~ecoengine.interfaces.Simulator.simulate_3day`.
+
+.. code-block:: python
+
+   from ecoengine import EcoBuilder
+   from ecoengine.interfaces.Simulator import simulate_3day
+
+   eb = EcoBuilder()
+   eb.define_temperatures(supply_temp_f=120.0, storage_temp_f=150.0)
+   eb.define_storage_volume(800.0)
+
+   # Heater locked out 16:00-20:00
+   schedule = eb.build_control_schedule([["normal", 0], ["shed", 16], ["normal", 20]])
+   cmap = {
+       "normal": eb.build_control_setting(0.5, 120.0, 0.1, 150.0, 150.0),
+       "shed":   eb.build_control_setting(None, None, None, None, 150.0),
+   }
+   eb.build_water_heater(eb.build_performance_map(nominal_capacity_kbtuh=300.0),
+                         schedule, cmap)
+
+   system   = eb.build_system("primary_no_recirc")
+   building = eb.build_building("multi_family", 100, "94103", gpdpp=25)
+   run      = simulate_3day(system, building)
+   print(run.get_summary())
+
 Annual Simulation & Cost Analysis
 ----------------------------------
 

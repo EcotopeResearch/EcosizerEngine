@@ -194,6 +194,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quick Start</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/ecobuilder.html">EcoBuilder (Component-by-Component API)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/building.html">Building &amp; Climate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/dhwsystems.html">DHW Systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/components.html">Equipment Components</a></li>
@@ -236,7 +237,7 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.resources</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pkg_resources</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
 <span class="c1"># ---------------------------------------------------------------------------</span>
 <span class="c1"># Module-level helpers</span>
@@ -246,23 +247,23 @@
 <span class="c1"># Used to convert a day-of-year into a month index for inlet-water lookups.</span>
 <span class="n">_MONTH_START_DAY</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">59</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">151</span><span class="p">,</span> <span class="mi">181</span><span class="p">,</span> <span class="mi">212</span><span class="p">,</span> <span class="mi">243</span><span class="p">,</span> <span class="mi">273</span><span class="p">,</span> <span class="mi">304</span><span class="p">,</span> <span class="mi">334</span><span class="p">]</span>
 
-<span class="n">_CLIMATE_DATA_PKG</span> <span class="o">=</span> <span class="s1">&#39;ecoengine.data.climate_data&#39;</span>
+<span class="n">_BUNDLED_CLIMATE_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">"../../data/climate_data"</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_open_climate_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an open text stream for a file in the climate_data package.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">pkg_resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="n">_CLIMATE_DATA_PKG</span><span class="p">)</span> <span class="o">/</span> <span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_open_climate_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return an open text stream for a climate CSV file in data_dir."""</span>
+    <span class="k">return</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span> <span class="s1">'r'</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_day_of_year_to_month</span><span class="p">(</span><span class="n">day_of_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert a 0-indexed day-of-year (0-364) to a 0-indexed month (0-11).</span>
 <span class="sd">    January = 0, December = 11.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">for</span> <span class="n">month</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">day_of_year</span> <span class="o">&gt;=</span> <span class="n">_MONTH_START_DAY</span><span class="p">[</span><span class="n">month</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">month</span>
-    <span class="k">return</span> <span class="mi">0</span>  <span class="c1"># shouldn&#39;t be reached for valid input</span>
+    <span class="k">return</span> <span class="mi">0</span>  <span class="c1"># shouldn't be reached for valid input</span>
 
 
 <span class="c1"># ---------------------------------------------------------------------------</span>
@@ -272,16 +273,16 @@
 <div class="viewcode-block" id="ClimateZone">
 <a class="viewcode-back" href="../../../../api/building.html#ecoengine.objects.building.ClimateZone.ClimateZone">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ClimateZone</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Stores outdoor air temperature (OAT) and cold/inlet water temperature for a</span>
-<span class="sd">    building&#39;s location over a typical meteorological year.</span>
+<span class="sd">    building's location over a typical meteorological year.</span>
 
 <span class="sd">    OAT is stored hourly  (8,760 values — one per hour of the year).</span>
 <span class="sd">    Inlet water temp is stored monthly (12 values — one per month).</span>
 
 <span class="sd">    The simulator queries this object at every timestep to obtain ambient</span>
 <span class="sd">    conditions for heat-pump performance and load calculations.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="ClimateZone.__init__">
 <a class="viewcode-back" href="../../../../api/building.html#ecoengine.objects.building.ClimateZone.ClimateZone.__init__">[docs]</a>
@@ -293,7 +294,7 @@
         <span class="n">constant_oat_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">constant_inlet_water_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        zone_id : int | None</span>
@@ -312,7 +313,7 @@
 <span class="sd">            If set, all inlet water temp queries return this value instead of</span>
 <span class="sd">            reading from inlet_water_temp_f_by_month. Set automatically by</span>
 <span class="sd">            from_design_conditions().</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">zone_id</span> <span class="o">=</span> <span class="n">zone_id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_oat_f_by_hour</span> <span class="o">=</span> <span class="n">oat_f_by_hour</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_inlet_water_temp_f_by_month</span> <span class="o">=</span> <span class="n">inlet_water_temp_f_by_month</span>
@@ -327,8 +328,8 @@
 <div class="viewcode-block" id="ClimateZone.from_zip_code">
 <a class="viewcode-back" href="../../../../api/building.html#ecoengine.objects.building.ClimateZone.ClimateZone.from_zip_code">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_zip_code</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zip_code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClimateZone</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_zip_code</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zip_code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">climate_data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClimateZone</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Construct a ClimateZone by looking up the CA climate zone for a zip code</span>
 <span class="sd">        and loading the corresponding weather data.</span>
 
@@ -336,6 +337,9 @@
 <span class="sd">        ----------</span>
 <span class="sd">        zip_code : str | int</span>
 <span class="sd">            A California 5-digit zip code.</span>
+<span class="sd">        climate_data_dir : str | None</span>
+<span class="sd">            Path to a directory containing the climate CSV files.  When None,</span>
+<span class="sd">            falls back to the bundled data shipped with the package.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -345,23 +349,27 @@
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If the zip code is not found in the CA lookup table.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">zone_id</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_lookup_zone_for_zip</span><span class="p">(</span><span class="n">zip_code</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_zone_id</span><span class="p">(</span><span class="n">zone_id</span><span class="p">)</span></div>
+<span class="sd">        """</span>
+        <span class="n">data_dir</span> <span class="o">=</span> <span class="n">climate_data_dir</span> <span class="k">if</span> <span class="n">climate_data_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_BUNDLED_CLIMATE_DATA_DIR</span>
+        <span class="n">zone_id</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_lookup_zone_for_zip</span><span class="p">(</span><span class="n">zip_code</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_zone_id</span><span class="p">(</span><span class="n">zone_id</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ClimateZone.from_weather_station">
 <a class="viewcode-back" href="../../../../api/building.html#ecoengine.objects.building.ClimateZone.ClimateZone.from_weather_station">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_weather_station</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClimateZone</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_weather_station</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">climate_data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClimateZone</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Construct a ClimateZone from a named weather station.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        station_id : str</span>
 <span class="sd">            Weather station name exactly as it appears in the lookup CSV</span>
-<span class="sd">            (e.g. ``&#39;ID - Boise Air Terminal&#39;``).</span>
+<span class="sd">            (e.g. ``'ID - Boise Air Terminal'``).</span>
+<span class="sd">        climate_data_dir : str | None</span>
+<span class="sd">            Path to a directory containing the climate CSV files.  When None,</span>
+<span class="sd">            falls back to the bundled data shipped with the package.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -371,35 +379,41 @@
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If the station name is not found in the lookup table.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">zone_id</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_lookup_zone_for_station</span><span class="p">(</span><span class="n">station_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_zone_id</span><span class="p">(</span><span class="n">zone_id</span><span class="p">)</span></div>
+<span class="sd">        """</span>
+        <span class="n">data_dir</span> <span class="o">=</span> <span class="n">climate_data_dir</span> <span class="k">if</span> <span class="n">climate_data_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_BUNDLED_CLIMATE_DATA_DIR</span>
+        <span class="n">zone_id</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_lookup_zone_for_station</span><span class="p">(</span><span class="n">station_id</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_zone_id</span><span class="p">(</span><span class="n">zone_id</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ClimateZone.from_zone_id">
 <a class="viewcode-back" href="../../../../api/building.html#ecoengine.objects.building.ClimateZone.ClimateZone.from_zone_id">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_zone_id</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zone_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClimateZone</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_zone_id</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zone_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">climate_data_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClimateZone</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Construct a ClimateZone directly from a numeric climate zone ID.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        zone_id : int</span>
-<span class="sd">            Climate zone number (1-96 for OAT data; 1-19 for full CA data).</span>
+<span class="sd">            Climate zone number (1–21 in the bundled data; 1–8 are CA zones</span>
+<span class="sd">            with full kG/kWh data; 9–21 are weather-station zones).</span>
+<span class="sd">        climate_data_dir : str | None</span>
+<span class="sd">            Path to a directory containing the climate CSV files.  When None,</span>
+<span class="sd">            falls back to the bundled data shipped with the package.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        ClimateZone</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">oat_f_by_hour</span>               <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_load_oat_data</span><span class="p">(</span><span class="n">zone_id</span><span class="p">)</span>
-        <span class="n">inlet_water_temp_f_by_month</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_load_inlet_water_data</span><span class="p">(</span><span class="n">zone_id</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="n">data_dir</span> <span class="o">=</span> <span class="n">climate_data_dir</span> <span class="k">if</span> <span class="n">climate_data_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_BUNDLED_CLIMATE_DATA_DIR</span>
+        <span class="n">oat_f_by_hour</span>               <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_load_oat_data</span><span class="p">(</span><span class="n">zone_id</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
+        <span class="n">inlet_water_temp_f_by_month</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_load_inlet_water_data</span><span class="p">(</span><span class="n">zone_id</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">zone_id</span><span class="p">,</span> <span class="n">oat_f_by_hour</span><span class="p">,</span> <span class="n">inlet_water_temp_f_by_month</span><span class="p">)</span></div>
 
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_from_zone_id</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zone_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClimateZone</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Internal alias for from_zone_id, used by from_zip_code / from_weather_station.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Internal alias for from_zone_id, used by from_zip_code / from_weather_station."""</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_zone_id</span><span class="p">(</span><span class="n">zone_id</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ClimateZone.from_design_conditions">
@@ -410,7 +424,7 @@
         <span class="n">design_oat_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">design_inlet_water_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClimateZone</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Create a constant-condition ClimateZone for use when real climate data</span>
 <span class="sd">        is unavailable.</span>
 
@@ -428,7 +442,7 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        ClimateZone</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">zone_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">oat_f_by_hour</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -445,7 +459,7 @@
 <div class="viewcode-block" id="ClimateZone.get_oat_f">
 <a class="viewcode-back" href="../../../../api/building.html#ecoengine.objects.building.ClimateZone.ClimateZone.get_oat_f">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_oat_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestep_interval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return outdoor air temperature at the given simulation timestep.</span>
 
 <span class="sd">        OAT data is stored hourly, so this rounds down to the nearest hour.</span>
@@ -464,7 +478,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        float</span>
 <span class="sd">            Outdoor air temperature [°F].</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant_oat_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant_oat_f</span>
         <span class="n">actual_minute</span> <span class="o">=</span> <span class="n">timestep_interval</span> <span class="o">*</span> <span class="n">interval_min</span>
@@ -475,7 +489,7 @@
 <div class="viewcode-block" id="ClimateZone.get_inlet_water_temp_f">
 <a class="viewcode-back" href="../../../../api/building.html#ecoengine.objects.building.ClimateZone.ClimateZone.get_inlet_water_temp_f">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_inlet_water_temp_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestep_interval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return cold/inlet water temperature at the given simulation timestep.</span>
 
 <span class="sd">        Inlet water temperature is stored as a monthly average, so the</span>
@@ -493,7 +507,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        float</span>
 <span class="sd">            Inlet water temperature [°F].</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant_inlet_water_temp_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant_inlet_water_temp_f</span>
         <span class="n">actual_minute</span> <span class="o">=</span> <span class="n">timestep_interval</span> <span class="o">*</span> <span class="n">interval_min</span>
@@ -509,13 +523,13 @@
 <div class="viewcode-block" id="ClimateZone.get_design_oat_f">
 <a class="viewcode-back" href="../../../../api/building.html#ecoengine.objects.building.ClimateZone.ClimateZone.get_design_oat_f">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_design_oat_f</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the design-day outdoor air temperature [°F].</span>
 
 <span class="sd">        For real climate zones: the annual minimum OAT (worst-case heating</span>
 <span class="sd">        condition for heat-pump sizing).</span>
 <span class="sd">        For design-condition zones: the constant value set at construction.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant_oat_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant_oat_f</span>
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_oat_f_by_hour</span><span class="p">)</span></div>
@@ -524,13 +538,13 @@
 <div class="viewcode-block" id="ClimateZone.get_design_inlet_water_temp_f">
 <a class="viewcode-back" href="../../../../api/building.html#ecoengine.objects.building.ClimateZone.ClimateZone.get_design_inlet_water_temp_f">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_design_inlet_water_temp_f</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the design-day cold water inlet temperature [°F].</span>
 
 <span class="sd">        For real climate zones: the coldest monthly average (worst-case</span>
 <span class="sd">        sizing condition).</span>
 <span class="sd">        For design-condition zones: the constant value set at construction.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant_inlet_water_temp_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant_inlet_water_temp_f</span>
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inlet_water_temp_f_by_month</span><span class="p">)</span></div>
@@ -539,7 +553,7 @@
 <div class="viewcode-block" id="ClimateZone.get_oat_buckets">
 <a class="viewcode-back" href="../../../../api/building.html#ecoengine.objects.building.ClimateZone.ClimateZone.get_oat_buckets">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_oat_buckets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the distribution of daily average outdoor air temperatures</span>
 <span class="sd">        across 5°F buckets for the full typical meteorological year.</span>
 
@@ -558,12 +572,12 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            If this ClimateZone was created with</span>
 <span class="sd">            ``from_design_conditions()`` and has no real hourly OAT data.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oat_f_by_hour</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;get_oat_buckets() requires real hourly OAT data. &quot;</span>
-                <span class="s2">&quot;This ClimateZone was constructed from design conditions &quot;</span>
-                <span class="s2">&quot;and has no annual weather data to bucket.&quot;</span>
+                <span class="s2">"get_oat_buckets() requires real hourly OAT data. "</span>
+                <span class="s2">"This ClimateZone was constructed from design conditions "</span>
+                <span class="s2">"and has no annual weather data to bucket."</span>
             <span class="p">)</span>
 
         <span class="n">buckets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -581,8 +595,8 @@
     <span class="c1"># ------------------------------------------------------------------</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_lookup_zone_for_zip</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zip_code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_lookup_zone_for_zip</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zip_code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Search ZipCode_ClimateZone_Lookup.csv for the given zip code.</span>
 
 <span class="sd">        Returns</span>
@@ -594,21 +608,21 @@
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If the zip code is not in the table.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">zip_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">zip_code</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="k">with</span> <span class="n">_open_climate_csv</span><span class="p">(</span><span class="s1">&#39;ZipCode_ClimateZone_Lookup.csv&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">_open_climate_csv</span><span class="p">(</span><span class="s1">'ZipCode_ClimateZone_Lookup.csv'</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Zip Code&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="n">zip_str</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Building CZ&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">'Zip Code'</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="n">zip_str</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'Building CZ'</span><span class="p">])</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Zip code &#39;</span><span class="si">{</span><span class="n">zip_code</span><span class="si">}</span><span class="s2">&#39; was not found in the CA climate zone lookup. &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;Only California zip codes are supported.&quot;</span>
+            <span class="sa">f</span><span class="s2">"Zip code '</span><span class="si">{</span><span class="n">zip_code</span><span class="si">}</span><span class="s2">' was not found in the CA climate zone lookup. "</span>
+            <span class="sa">f</span><span class="s2">"Only California zip codes are supported."</span>
         <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_lookup_zone_for_station</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_lookup_zone_for_station</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">station_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Search WeatherStation_ClimateZone_Lookup.csv for the given station name.</span>
 
 <span class="sd">        Returns</span>
@@ -620,20 +634,20 @@
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If the station name is not in the table.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">station_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">station_id</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="k">with</span> <span class="n">_open_climate_csv</span><span class="p">(</span><span class="s1">&#39;WeatherStation_ClimateZone_Lookup.csv&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">_open_climate_csv</span><span class="p">(</span><span class="s1">'WeatherStation_ClimateZone_Lookup.csv'</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Weather Station&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="n">station_str</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Building CZ&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">'Weather Station'</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="n">station_str</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'Building CZ'</span><span class="p">])</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Weather station &#39;</span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s2">&#39; was not found in the lookup table.&quot;</span>
+            <span class="sa">f</span><span class="s2">"Weather station '</span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s2">' was not found in the lookup table."</span>
         <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_load_oat_data</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zone_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_oat_data</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zone_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Load the full-year hourly OAT sequence for the given zone from</span>
 <span class="sd">        DryBulbTemperatures_ByClimateZone.csv.</span>
 
@@ -644,11 +658,11 @@
 <span class="sd">        -------</span>
 <span class="sd">        list[float]</span>
 <span class="sd">            8,760 hourly OAT values [°F].</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">col_index</span> <span class="o">=</span> <span class="n">zone_id</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># CSV columns are 1-indexed</span>
 
         <span class="n">oat_values</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">with</span> <span class="n">_open_climate_csv</span><span class="p">(</span><span class="s1">&#39;DryBulbTemperatures_ByClimateZone.csv&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">_open_climate_csv</span><span class="p">(</span><span class="s1">'DryBulbTemperatures_ByClimateZone.csv'</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>  <span class="c1"># skip header row</span>
             <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
@@ -657,8 +671,8 @@
         <span class="k">return</span> <span class="n">oat_values</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_load_inlet_water_data</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zone_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_inlet_water_data</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zone_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Load the 12 monthly average inlet-water temperatures for the given zone</span>
 <span class="sd">        from InletWaterTemperatures_ByClimateZone.csv.</span>
 
@@ -670,11 +684,11 @@
 <span class="sd">        list[float]</span>
 <span class="sd">            12 monthly average inlet water temperatures [°F],</span>
 <span class="sd">            index 0 = January, index 11 = December.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">col_index</span> <span class="o">=</span> <span class="n">zone_id</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># CSV columns are 1-indexed</span>
 
         <span class="n">monthly_temps</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">with</span> <span class="n">_open_climate_csv</span><span class="p">(</span><span class="s1">&#39;InletWaterTemperatures_ByClimateZone.csv&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">_open_climate_csv</span><span class="p">(</span><span class="s1">'InletWaterTemperatures_ByClimateZone.csv'</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>  <span class="c1"># skip header row</span>
             <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
@@ -714,7 +728,7 @@
       
     </aside>
   </div>
-</div><script src="../../../../_static/documentation_options.js?v=acc74ff5"></script>
+</div><script src="../../../../_static/documentation_options.js?v=3eb8911e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/scripts/furo.js?v=46bd48cc"></script>

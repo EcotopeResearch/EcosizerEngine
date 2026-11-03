@@ -194,6 +194,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../quickstart.html">Quick Start</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecobuilder.html">EcoBuilder (Component-by-Component API)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/building.html">Building &amp; Climate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/dhwsystems.html">DHW Systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/components.html">Equipment Components</a></li>
@@ -242,7 +243,7 @@
 <div class="viewcode-block" id="MixedStorageTank">
 <a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.storage.MixedStorageTank.MixedStorageTank">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MixedStorageTank</span><span class="p">(</span><span class="n">StorageTank</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Fully-mixed (uniform temperature) storage tank model.</span>
 
 <span class="sd">    Unlike the stratified StratifiedTank, the entire volume is assumed to be</span>
@@ -259,17 +260,17 @@
 <span class="sd">    * ``draw()`` cools the tank proportionally to cold make-up water added.</span>
 <span class="sd">    * ``add_recirc_return()`` applies a net temperature drop equal to the</span>
 <span class="sd">      recirc heat loss for the timestep.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="MixedStorageTank.__init__">
 <a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.storage.MixedStorageTank.MixedStorageTank.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">total_volume_gal</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        total_volume_gal : float</span>
 <span class="sd">            Total physical tank volume [gallons].</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">total_volume_gal</span> <span class="o">=</span> <span class="n">total_volume_gal</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_temperature_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>   <span class="c1"># set by initialize()</span></div>
 
@@ -284,13 +285,15 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">storage_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">cold_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">percent_useable</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">initial_hot_fract</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Set the uniform tank temperature before a simulation begins.</span>
 
-<span class="sd">        For a fully-mixed tank, ``percent_useable`` does not have a spatial</span>
-<span class="sd">        meaning; the tank is simply initialized at ``storage_temp_f``.</span>
+<span class="sd">        For a fully-mixed tank, ``initial_hot_fract`` and ``supply_temp_f``</span>
+<span class="sd">        do not have a spatial meaning; the tank is simply initialized at</span>
+<span class="sd">        ``storage_temp_f``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -298,9 +301,11 @@
 <span class="sd">            Initial tank temperature [°F].</span>
 <span class="sd">        cold_temp_f : float</span>
 <span class="sd">            Cold water temperature — stored for energy-balance calculations.</span>
-<span class="sd">        percent_useable : float</span>
+<span class="sd">        initial_hot_fract : float</span>
 <span class="sd">            Ignored for the mixed model (all volume is always at one temp).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        supply_temp_f : float</span>
+<span class="sd">            Ignored for the mixed model.</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_temperature_f</span> <span class="o">=</span> <span class="n">storage_temp_f</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cold_temp_f</span>   <span class="o">=</span> <span class="n">cold_temp_f</span></div>
 
@@ -312,14 +317,14 @@
 <div class="viewcode-block" id="MixedStorageTank.get_temperature_at_fraction">
 <a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.storage.MixedStorageTank.MixedStorageTank.get_temperature_at_fraction">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_temperature_at_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fract</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the uniform tank temperature (identical at all heights).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the uniform tank temperature (identical at all heights)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temperature_f</span></div>
 
 
 <div class="viewcode-block" id="MixedStorageTank.get_usable_volume_supplyT_gal">
 <a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.storage.MixedStorageTank.MixedStorageTank.get_usable_volume_supplyT_gal">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_usable_volume_supplyT_gal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return full tank volume if at or above supply temperature, else 0.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return full tank volume if at or above supply temperature, else 0."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_volume_gal</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temperature_f</span> <span class="o">&gt;=</span> <span class="n">supply_temp_f</span> <span class="k">else</span> <span class="mf">0.0</span></div>
 
 
@@ -336,7 +341,7 @@
         <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">outlet_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Remove DHW demand from the tank and replace with cold make-up water.</span>
 
 <span class="sd">        Uses a simple energy-balance mix: physically removes hot water at the</span>
@@ -357,7 +362,7 @@
 <span class="sd">        outlet_temp_f : float</span>
 <span class="sd">            Current hot water delivery temperature — used for physical-volume</span>
 <span class="sd">            conversion (same formula as StratifiedTank).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cold_temp_f</span> <span class="o">=</span> <span class="n">cold_temp_f</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temperature_f</span> <span class="o">&lt;=</span> <span class="n">cold_temp_f</span> <span class="ow">or</span> <span class="n">volume_supplyT_gal</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">return</span>
@@ -384,7 +389,7 @@
         <span class="n">duration_min</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">outlet_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Apply heat from active water heaters for one timestep.</span>
 
 <span class="sd">        Raises the uniform tank temperature proportionally to heat added,</span>
@@ -398,7 +403,7 @@
 <span class="sd">            Length of the timestep [minutes].</span>
 <span class="sd">        outlet_temp_f : float</span>
 <span class="sd">            Maximum temperature the heater can deliver [°F].</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">kbtuh</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="n">heat_kbtu</span> <span class="o">=</span> <span class="n">kbtuh</span> <span class="o">*</span> <span class="n">duration_min</span> <span class="o">/</span> <span class="mf">60.0</span>   <span class="c1"># kBTU</span>
@@ -415,7 +420,7 @@
         <span class="n">return_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">duration_min</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Apply the net temperature drop from recirc loop losses.</span>
 
 <span class="sd">        The recirc loop continuously draws hot water from the tank at the</span>
@@ -435,7 +440,7 @@
 <span class="sd">            Temperature of water returning from the recirc loop [°F].</span>
 <span class="sd">        duration_min : float</span>
 <span class="sd">            Length of the timestep [minutes].</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">vol_circulated_gal</span> <span class="o">=</span> <span class="n">flow_gpm</span> <span class="o">*</span> <span class="n">duration_min</span>
         <span class="n">delta_t</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">vol_circulated_gal</span>
@@ -448,7 +453,7 @@
 <div class="viewcode-block" id="MixedStorageTank.apply_fixed_heat_loss_kbtuh">
 <a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.storage.MixedStorageTank.MixedStorageTank.apply_fixed_heat_loss_kbtuh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">apply_fixed_heat_loss_kbtuh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kbtuh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">duration_min</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Apply a fixed heat loss rate to the tank regardless of current temperature.</span>
 
 <span class="sd">        Used by the swing tank simulation to apply recirculation heat loss at the</span>
@@ -461,7 +466,7 @@
 <span class="sd">            Heat loss rate [kBTU/hr].</span>
 <span class="sd">        duration_min : float</span>
 <span class="sd">            Timestep duration [minutes].</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">kbtuh</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">duration_min</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="n">heat_kbtu</span> <span class="o">=</span> <span class="n">kbtuh</span> <span class="o">*</span> <span class="n">duration_min</span> <span class="o">/</span> <span class="mf">60.0</span>
@@ -472,7 +477,7 @@
 <div class="viewcode-block" id="MixedStorageTank.mix_primary_inflow">
 <a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.storage.MixedStorageTank.MixedStorageTank.mix_primary_inflow">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">mix_primary_inflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gal</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">primary_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Model primary hot water flowing into the swing tank while the same volume</span>
 <span class="sd">        exits to the building.</span>
 
@@ -488,7 +493,7 @@
 <span class="sd">            Volume of primary hot water flowing into the tank this timestep [gal].</span>
 <span class="sd">        primary_temp_f : float</span>
 <span class="sd">            Temperature of water entering from the primary storage [°F].</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">gal</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="n">vol_remaining</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_volume_gal</span> <span class="o">-</span> <span class="n">gal</span>
@@ -505,7 +510,7 @@
 <div class="viewcode-block" id="MixedStorageTank.get_average_draw_temp_f">
 <a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.storage.MixedStorageTank.MixedStorageTank.get_average_draw_temp_f">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_average_draw_temp_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">draw_gal</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the uniform tank temperature (fully mixed — no stratification).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the uniform tank temperature (fully mixed — no stratification)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temperature_f</span></div>
 
 
@@ -517,14 +522,14 @@
         <span class="n">inlet_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Remove ``gal`` physical gallons and replace with cold make-up water.</span>
 
 <span class="sd">        For a fully-mixed tank this is an energy-balance mix: the removed hot</span>
 <span class="sd">        water is replaced by ``gal`` gallons of cold water at ``inlet_temp_f``.</span>
 <span class="sd">        ``supply_temp_f`` is accepted for interface compatibility but unused —</span>
 <span class="sd">        a fully-mixed tank has no thermocline to floor.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">gal</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="n">remaining_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_volume_gal</span> <span class="o">-</span> <span class="n">gal</span>
@@ -570,7 +575,7 @@
       
     </aside>
   </div>
-</div><script src="../../../../../_static/documentation_options.js?v=acc74ff5"></script>
+</div><script src="../../../../../_static/documentation_options.js?v=3eb8911e"></script>
     <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../_static/scripts/furo.js?v=46bd48cc"></script>

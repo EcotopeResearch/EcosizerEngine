@@ -412,7 +412,7 @@ class DHWSystem:
             If size() has not been called yet.
         """
         if self._minimum_capacity_kbtuh is None:
-            raise RuntimeError("size() must be called before get_minimum_capacity_kbtuh().")
+            raise RuntimeError("System was built, not sized: call size() before get_minimum_capacity_kbtuh().")
         return self._minimum_capacity_kbtuh
 
     def get_minimum_storage_storageT_gal(self) -> float:
@@ -426,7 +426,7 @@ class DHWSystem:
             If size() has not been called yet.
         """
         if self._minimum_storage_storageT_gal is None:
-            raise RuntimeError("size() must be called before get_minimum_storage_storageT_gal().")
+            raise RuntimeError("System was built, not sized: call size() before get_minimum_storage_storageT_gal().")
         return self._minimum_storage_storageT_gal
 
     def get_sizing_curve(

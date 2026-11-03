@@ -194,6 +194,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../quickstart.html">Quick Start</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecobuilder.html">EcoBuilder (Component-by-Component API)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/building.html">Building &amp; Climate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/dhwsystems.html">DHW Systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/components.html">Equipment Components</a></li>
@@ -245,7 +246,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.components.storage.StratifiedTank</span><span class="w"> </span><span class="kn">import</span> <span class="n">StratifiedTank</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.DHWSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_peak_indices</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.SwingSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwingSystem</span><span class="p">,</span> <span class="n">_ELEMENT_DEADBAND_F</span><span class="p">,</span> <span class="n">_hr_to_min</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_RHO_CP</span><span class="p">,</span> <span class="n">_W_TO_KBTUH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_RHO_CP</span><span class="p">,</span> <span class="n">_BTUH_PER_W</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.building.Building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
@@ -254,7 +255,7 @@
 <div class="viewcode-block" id="SwingERTrdOffSystem">
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SwingERTrdOffSystem</span><span class="p">(</span><span class="n">SwingSystem</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Swing tank system with an electric resistance (ER) element sized to</span>
 <span class="sd">    compensate when the primary HPWH cannot maintain the swing tank at supply</span>
 <span class="sd">    temperature during peak demand events.</span>
@@ -303,7 +304,7 @@
 <span class="sd">            return_temp_f           = 110.0,</span>
 <span class="sd">            return_flow_gpm         = 3.0,</span>
 <span class="sd">        )</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="SwingERTrdOffSystem.__init__">
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem.__init__">[docs]</a>
@@ -358,7 +359,7 @@
         <span class="n">control_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">control_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Controls</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SwingERTrdOffSystem</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build a ``SwingERTrdOffSystem`` from pre-sized components by sizing only</span>
 <span class="sd">        the ER element of the swing tank.</span>
 
@@ -393,7 +394,7 @@
 <span class="sd">        er_safety_factor : float</span>
 <span class="sd">            Multiplier applied to the raw ER capacity result (default 1.0).</span>
 <span class="sd">        control_schedule : list[str] | None</span>
-<span class="sd">            24-element hour-of-day schedule for the primary heaters&#39; controls.</span>
+<span class="sd">            24-element hour-of-day schedule for the primary heaters' controls.</span>
 <span class="sd">        control_map : dict[str, Controls] | None</span>
 <span class="sd">            Controls map for the primary heaters.</span>
 
@@ -402,7 +403,7 @@
 <span class="sd">        SwingERTrdOffSystem</span>
 <span class="sd">            Fully constructed system with ``tm_water_heater`` sized to include</span>
 <span class="sd">            the ER addition.  Primary components are the objects passed in.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">system</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">water_heaters</span><span class="o">=</span><span class="n">water_heaters</span><span class="p">,</span>
             <span class="n">storage_tank</span><span class="o">=</span><span class="n">storage_tank</span><span class="p">,</span>
@@ -439,8 +440,8 @@
         <span class="p">)</span>
         <span class="n">system</span><span class="o">.</span><span class="n">tm_water_heater</span> <span class="o">=</span> <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
             <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span><span class="p">,</span>
-            <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
-            <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">"normal"</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">"normal"</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">system</span></div>
@@ -509,8 +510,8 @@
         <span class="p">)</span>
         <span class="n">system</span><span class="o">.</span><span class="n">tm_water_heater</span> <span class="o">=</span> <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
             <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span><span class="p">,</span>
-            <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
-            <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">"normal"</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">"normal"</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">system</span></div>
@@ -530,9 +531,9 @@
         <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.8</span><span class="p">,</span>
         <span class="n">load_shift_fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Size the system: base SwingSystem sizing followed by ER element sizing.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">size</span><span class="p">(</span>
             <span class="n">building</span><span class="p">,</span>
             <span class="n">control_schedule</span><span class="o">=</span><span class="n">control_schedule</span><span class="p">,</span>
@@ -544,7 +545,7 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_size_er_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Determine additional ER capacity for the swing tank TM element by</span>
 <span class="sd">        simulating the full system over 2 days with two initial primary-tank</span>
 <span class="sd">        conditions (primary empty and primary full).</span>
@@ -578,13 +579,13 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        building : Building</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">inlet_t_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
 
         <span class="c1"># Primary HPWH capacity at design conditions.</span>
         <span class="c1"># The original codebase queried the real performance map at</span>
         <span class="c1"># (design_OAT, design_inlet + 15.0°F, storage_temp_f) to find the</span>
-        <span class="c1"># HPWH&#39;s actual output at worst-case conditions.  With NominalPerformanceMap</span>
+        <span class="c1"># HPWH's actual output at worst-case conditions.  With NominalPerformanceMap</span>
         <span class="c1"># the result is always _minimum_capacity_kbtuh regardless of temperatures,</span>
         <span class="c1"># so we use it directly.  The +15.0°F inlet offset is preserved here for</span>
         <span class="c1"># reference when this path is extended to real performance maps.</span>
@@ -681,7 +682,7 @@
         <span class="n">primary_storage_t_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">tm_capacity_kbtuh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Advance the swing tank by one minute during the ER sizing simulation.</span>
 
 <span class="sd">        Identical to ``SwingSystem._run_one_swing_step()`` except:</span>
@@ -715,7 +716,7 @@
 <span class="sd">        deficit_f : float</span>
 <span class="sd">            Degrees the tank fell below ``supply_temp_f`` before clamping.</span>
 <span class="sd">            0.0 when the base TM element alone maintained temperature.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">tm_vol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span>
         <span class="n">t_new</span>  <span class="o">=</span> <span class="n">t_curr</span>
 
@@ -724,8 +725,8 @@
             <span class="n">vol_remaining</span> <span class="o">=</span> <span class="n">tm_vol</span> <span class="o">-</span> <span class="n">hw_out</span>
             <span class="k">if</span> <span class="n">vol_remaining</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Swing tank (</span><span class="si">{</span><span class="n">tm_vol</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> gal) is undersized: &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;per-minute draw of </span><span class="si">{</span><span class="n">hw_out</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> gal exceeds tank volume.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Swing tank (</span><span class="si">{</span><span class="n">tm_vol</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> gal) is undersized: "</span>
+                    <span class="sa">f</span><span class="s2">"per-minute draw of </span><span class="si">{</span><span class="n">hw_out</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> gal exceeds tank volume."</span>
                 <span class="p">)</span>
             <span class="n">t_new</span> <span class="o">=</span> <span class="p">(</span><span class="n">hw_out</span> <span class="o">*</span> <span class="n">primary_storage_t_f</span> <span class="o">+</span> <span class="n">t_curr</span> <span class="o">*</span> <span class="n">vol_remaining</span><span class="p">)</span> <span class="o">/</span> <span class="n">tm_vol</span>
 
@@ -764,17 +765,17 @@
 <div class="viewcode-block" id="SwingERTrdOffSystem.get_er_capacity_kbtuh">
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem.get_er_capacity_kbtuh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_er_capacity_kbtuh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the additional ER capacity added to the TM element [kBTU/hr].&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the additional ER capacity added to the TM element [kBTU/hr]."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;size() must be called before get_er_capacity_kbtuh().&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"System was built, not sized: call size() before get_er_capacity_kbtuh()."</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span></div>
 
 
 <div class="viewcode-block" id="SwingERTrdOffSystem.get_er_capacity_kw">
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem.SwingERTrdOffSystem.get_er_capacity_kw">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_er_capacity_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the additional ER capacity added to the TM element [kW].&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_er_capacity_kbtuh</span><span class="p">()</span> <span class="o">/</span> <span class="n">_W_TO_KBTUH</span></div>
+<span class="w">        </span><span class="sd">"""Return the additional ER capacity added to the TM element [kW]."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_er_capacity_kbtuh</span><span class="p">()</span> <span class="o">/</span> <span class="n">_BTUH_PER_W</span></div>
 
 
     <span class="c1"># ------------------------------------------------------------------</span>
@@ -788,7 +789,7 @@
         <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
         <span class="n">additional_er_safety</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Compute ER element size vs. percent-of-peak-load-covered trade-off points.</span>
 
 <span class="sd">        Iterates building magnitude from 120% down to the fraction where no ER</span>
@@ -814,12 +815,12 @@
 <span class="sd">        startind : int</span>
 <span class="sd">            Index in the returned lists corresponding to 100% coverage (the</span>
 <span class="sd">            actual sized system).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;get_er_sized_points() requires a system where ER sizing was &quot;</span>
-                <span class="s2">&quot;needed.  No ER addition was found — check that size() has been &quot;</span>
-                <span class="s2">&quot;called and that peak demand exceeds primary HPWH capacity.&quot;</span>
+                <span class="s2">"get_er_sized_points() requires a system where ER sizing was "</span>
+                <span class="s2">"needed.  No ER addition was found — check that size() has been "</span>
+                <span class="s2">"called and that peak demand exceeds primary HPWH capacity."</span>
             <span class="p">)</span>
 
         <span class="n">original_daily_gal</span>   <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span>
@@ -848,12 +849,12 @@
                 <span class="n">total_tm_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span>
                 <span class="n">er_needed</span>  <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_er_capacity_kbtuh</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
 
-            <span class="n">er_cap_kw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">total_tm_i</span> <span class="o">/</span> <span class="n">_W_TO_KBTUH</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="n">er_cap_kw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">total_tm_i</span> <span class="o">/</span> <span class="n">_BTUH_PER_W</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
             <span class="n">fract_covered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
             <span class="n">i</span> <span class="o">-=</span> <span class="mf">10.0</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">er_needed</span><span class="p">:</span>
-                <span class="k">break</span>  <span class="c1"># no ER at this fraction; lower fractions won&#39;t need it either</span>
+                <span class="k">break</span>  <span class="c1"># no ER at this fraction; lower fractions won't need it either</span>
 
         <span class="c1"># Restore mutated state</span>
         <span class="n">building</span><span class="o">.</span><span class="n">daily_dhw_use_supplyT_gal</span> <span class="o">=</span> <span class="n">original_daily_gal</span>
@@ -875,7 +876,7 @@
         <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
         <span class="n">additional_er_safety</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return a Plotly figure showing the ER element size vs. percent coverage</span>
 <span class="sd">        trade-off curve, with a slider to select the operating point.</span>
 
@@ -892,7 +893,7 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        plotly.graph_objects.Figure</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">er_cap_kw</span><span class="p">,</span> <span class="n">fract_covered</span><span class="p">,</span> <span class="n">startind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_er_sized_points</span><span class="p">(</span>
             <span class="n">building</span><span class="p">,</span> <span class="n">additional_er_safety</span>
         <span class="p">)</span>
@@ -904,10 +905,10 @@
             <span class="n">x</span><span class="o">=</span><span class="n">fract_covered</span><span class="p">,</span>
             <span class="n">y</span><span class="o">=</span><span class="n">er_cap_kw</span><span class="p">,</span>
             <span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;#28a745&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#28a745"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
             <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">&quot;Percent Coverage: %</span><span class="si">{x:.1f}</span><span class="s2">%&lt;br&gt;&quot;</span>
-                <span class="s2">&quot;ER Heating Capacity: %</span><span class="si">{y:.1f}</span><span class="s2"> kW&quot;</span>
+                <span class="s2">"Percent Coverage: %</span><span class="si">{x:.1f}</span><span class="s2">%&lt;br&gt;"</span>
+                <span class="s2">"ER Heating Capacity: %</span><span class="si">{y:.1f}</span><span class="s2"> kW"</span>
             <span class="p">),</span>
             <span class="n">opacity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
         <span class="p">))</span>
@@ -918,22 +919,22 @@
                 <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">fract_covered</span><span class="p">[</span><span class="n">ii</span><span class="p">]],</span>
                 <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">er_cap_kw</span><span class="p">[</span><span class="n">ii</span><span class="p">]],</span>
                 <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;markers&quot;</span><span class="p">,</span>
-                <span class="n">marker_symbol</span><span class="o">=</span><span class="s2">&quot;diamond&quot;</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">"markers"</span><span class="p">,</span>
+                <span class="n">marker_symbol</span><span class="o">=</span><span class="s2">"diamond"</span><span class="p">,</span>
                 <span class="n">opacity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">marker_color</span><span class="o">=</span><span class="s2">&quot;#2EA3F2&quot;</span><span class="p">,</span>
+                <span class="n">marker_color</span><span class="o">=</span><span class="s2">"#2EA3F2"</span><span class="p">,</span>
                 <span class="n">marker_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;System Size&quot;</span><span class="p">,</span>
-                <span class="n">hoverlabel</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">),</span> <span class="n">bordercolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">),</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"System Size"</span><span class="p">,</span>
+                <span class="n">hoverlabel</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"white"</span><span class="p">),</span> <span class="n">bordercolor</span><span class="o">=</span><span class="s2">"white"</span><span class="p">),</span>
             <span class="p">))</span>
 
         <span class="c1"># Make the starting marker visible</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">startind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
-            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Electric Resistance Sizing Curve&quot;</span><span class="p">,</span>
-            <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Percent Coverage (%)&quot;</span><span class="p">,</span>
-            <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Electric Resistance Heating Capacity (kW)&quot;</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"Electric Resistance Sizing Curve"</span><span class="p">,</span>
+            <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">"Percent Coverage (%)"</span><span class="p">,</span>
+            <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">"Electric Resistance Heating Capacity (kW)"</span><span class="p">,</span>
             <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -941,32 +942,32 @@
         <span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">data</span><span class="p">)):</span>
             <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Percent Coverage: &lt;b&gt;</span><span class="si">{</span><span class="n">fract_covered</span><span class="p">[</span><span class="n">ii</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">&lt;/b&gt; %, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Electric Resistance Heating Capacity: &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;&lt;b&gt;</span><span class="si">{</span><span class="n">er_cap_kw</span><span class="p">[</span><span class="n">ii</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&lt;/b&gt; kW&quot;</span>
+                <span class="sa">f</span><span class="s2">"Percent Coverage: &lt;b&gt;</span><span class="si">{</span><span class="n">fract_covered</span><span class="p">[</span><span class="n">ii</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">&lt;/b&gt; %, "</span>
+                <span class="sa">f</span><span class="s2">"Electric Resistance Heating Capacity: "</span>
+                <span class="sa">f</span><span class="s2">"&lt;b&gt;</span><span class="si">{</span><span class="n">er_cap_kw</span><span class="p">[</span><span class="n">ii</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&lt;/b&gt; kW"</span>
             <span class="p">)</span>
             <span class="n">step</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
                 <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">,</span>
-                <span class="n">args</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;visible&quot;</span><span class="p">:</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">data</span><span class="p">)}],</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">"update"</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">[{</span><span class="s2">"visible"</span><span class="p">:</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">data</span><span class="p">)}],</span>
             <span class="p">)</span>
-            <span class="n">step</span><span class="p">[</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;visible&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>  <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># curve always visible</span>
-            <span class="n">step</span><span class="p">[</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;visible&quot;</span><span class="p">][</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># this marker</span>
+            <span class="n">step</span><span class="p">[</span><span class="s2">"args"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">"visible"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>  <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># curve always visible</span>
+            <span class="n">step</span><span class="p">[</span><span class="s2">"args"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">"visible"</span><span class="p">][</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># this marker</span>
             <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
 
         <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">sliders</span><span class="o">=</span><span class="p">[</span><span class="nb">dict</span><span class="p">(</span>
             <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span>
             <span class="n">active</span><span class="o">=</span><span class="n">startind</span><span class="p">,</span>
             <span class="n">currentvalue</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
-                <span class="n">font</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">},</span>
-                <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;&lt;b&gt;Electric Resistance Size&lt;/b&gt; &quot;</span><span class="p">,</span>
+                <span class="n">font</span><span class="o">=</span><span class="p">{</span><span class="s2">"size"</span><span class="p">:</span> <span class="mi">16</span><span class="p">},</span>
+                <span class="n">prefix</span><span class="o">=</span><span class="s2">"&lt;b&gt;Electric Resistance Size&lt;/b&gt; "</span><span class="p">,</span>
                 <span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">xanchor</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+                <span class="n">xanchor</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span>
             <span class="p">),</span>
-            <span class="n">pad</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+            <span class="n">pad</span><span class="o">=</span><span class="p">{</span><span class="s2">"t"</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
             <span class="n">minorticklen</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
             <span class="n">ticklen</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-            <span class="n">bgcolor</span><span class="o">=</span><span class="s2">&quot;#CCD9DB&quot;</span><span class="p">,</span>
+            <span class="n">bgcolor</span><span class="o">=</span><span class="s2">"#CCD9DB"</span><span class="p">,</span>
             <span class="n">borderwidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="p">)])</span>
 
@@ -1005,7 +1006,7 @@
       
     </aside>
   </div>
-</div><script src="../../../../../_static/documentation_options.js?v=acc74ff5"></script>
+</div><script src="../../../../../_static/documentation_options.js?v=3eb8911e"></script>
     <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../_static/scripts/furo.js?v=46bd48cc"></script>

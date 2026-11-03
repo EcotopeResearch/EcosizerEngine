@@ -825,37 +825,21 @@ class EcosizerEngine:
 
     def _build_building(self):
         """Construct and return the Building for the configured type and climate."""
-        from ecoengine.objects.building.Building import Building
-        from ecoengine.objects.building.ClimateZone import ClimateZone
-
-        zone = self._build_climate_zone(ClimateZone)
-        return Building.from_building_type(
+        from .system_assembly_utils import build_building
+        return build_building(
             building_type           = self.building_type,
             magnitude               = self.magnitude,
-            climate_zone            = zone,
+            zip_code_or_climate_zone= self.zip_code_or_climate_zone,
             gpdpp                   = self.gpdpp,
             custom_peak_load_shape  = self.custom_peak_load_shape,
             custom_avg_load_shape   = self.custom_avg_load_shape,
+            climate_data_dir        = self.climate_data_dir,
         )
 
-    def _build_climate_zone(self, ClimateZone):
+    def _build_climate_zone(self):
         """Resolve zip_code_or_climate_zone to a ClimateZone instance."""
-        czv = self.zip_code_or_climate_zone
-        cdd = self.climate_data_dir
-        if isinstance(czv, dict):
-            return ClimateZone.from_design_conditions(**czv)
-        if isinstance(czv, str) and czv.isdigit() and len(czv) == 5:
-            return ClimateZone.from_zip_code(czv, climate_data_dir=cdd)
-        if isinstance(czv, int):
-            return ClimateZone.from_zone_id(czv, climate_data_dir=cdd)
-        if isinstance(czv, str):
-            return ClimateZone.from_weather_station(czv, climate_data_dir=cdd)
-        raise ValueError(
-            f"Cannot determine ClimateZone from {czv!r}. "
-            "Pass a 5-digit CA zip code string, a zone ID int (1–96), "
-            "a weather station name string, or a dict with 'design_oat_f' "
-            "and/or 'design_inlet_water_temp_f'."
-        )
+        from .system_assembly_utils import build_climate_zone
+        return build_climate_zone(self.zip_code_or_climate_zone, self.climate_data_dir)
 
     def _build_control_map(self):
         """
@@ -1323,7 +1307,6 @@ class EcosizerEngine:
         / ``tm_capacity_kbtuh`` / ``tm_model`` exactly like ``swing_tank``.
         """
         from ecoengine.objects.components.heating.WaterHeater import WaterHeater
-        from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 
         control_schedule, control_map = self._build_control_map()
         if self.schematic in _DUAL_FUEL_SCHEMATICS:
@@ -1356,333 +1339,90 @@ class EcosizerEngine:
                 for _ in range(self.num_heaters)
             ]
 
-        def _primary_tank(strat_slope=None):
-            if self.storage_volume_storageT_gal is None:
-                raise ValueError(
-                    f"storage_volume_storageT_gal is required for schematic '{self.schematic}'."
-                )
-            kwargs = {"total_volume_gal": self.storage_volume_storageT_gal}
-            if strat_slope is not None:
-                kwargs["strat_slope"] = strat_slope
-            return StratifiedTank(**kwargs)
-
-        if self.schematic in ["primary_no_recirc", "singlepass_norecirc"]:
-            from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem
-            system = DHWSystem(
-                water_heaters=water_heaters,
-                storage_tank=_primary_tank(),
-                supply_temp_f=self.supply_temp_f,
-                storage_temp_f=self.storage_temp_f,
-                max_daily_run_hr=self.max_daily_run_hr,
-                defrost_factor=self.defrost_factor,
-            )
-            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
-            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
-            return system
-
-        if self.schematic in ["parallel_loop", "paralleltank"]:
-            from ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem import ParallelLoopSystem
-            from ecoengine.objects.components.heating.Controls import Controls
-            from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
-            self._require_recirc_params()
-            self._require_tm_params()
-            tm_controls = Controls(
-                on_sensor_fract=0.5,
-                on_trigger_t_f=self.tm_on_temp_f,
-                off_sensor_fract=0.5,
-                off_trigger_t_f=self.tm_off_temp_f,
-                outlet_temp_f=self.tm_off_temp_f,
-            )
-            system = ParallelLoopSystem(
-                water_heaters=water_heaters,
-                storage_tank=_primary_tank(),
-                supply_temp_f=self.supply_temp_f,
-                storage_temp_f=self.storage_temp_f,
-                return_temp_f=self.return_temp_f,
-                return_flow_gpm=self.return_flow_gpm,
-                tm_on_temp_f=self.tm_on_temp_f,
-                tm_off_temp_f=self.tm_off_temp_f,
-                tm_off_time_hr=self.tm_off_time_hr,
-                tm_safety_factor=self.tm_safety_factor,
-                tm_storage_tank=MixedStorageTank(total_volume_gal=self.tm_storage_vol),
-                tm_water_heater=self._build_tm_water_heater(tm_controls),
-                num_tm_heaters=self.num_tm_heaters,
-                max_daily_run_hr=self.max_daily_run_hr,
-                defrost_factor=self.defrost_factor,
-            )
-            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
-            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
-            system._minimum_tm_volume_gal = self.tm_storage_vol
-            system._minimum_tm_capacity_kbtuh = self.tm_capacity_kbtuh
-            return system
-
-        if self.schematic in ["swing_tank", "swingtank"]:
-            from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import SwingSystem, _ELEMENT_DEADBAND_F
-            from ecoengine.objects.components.heating.Controls import Controls
-            from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
-            self._require_recirc_params()
-            self._require_tm_params()
-            tm_controls = Controls(
-                on_sensor_fract=0.5,
-                on_trigger_t_f=self.supply_temp_f,
-                off_sensor_fract=0.5,
-                off_trigger_t_f=self.supply_temp_f + _ELEMENT_DEADBAND_F,
-                outlet_temp_f=self.supply_temp_f + _ELEMENT_DEADBAND_F,
-            )
-            system = SwingSystem(
-                water_heaters=water_heaters,
-                storage_tank=_primary_tank(),
-                supply_temp_f=self.supply_temp_f,
-                storage_temp_f=self.storage_temp_f,
-                return_temp_f=self.return_temp_f,
-                return_flow_gpm=self.return_flow_gpm,
-                tm_safety_factor=self.tm_safety_factor,
-                max_daily_run_hr=self.max_daily_run_hr,
-                defrost_factor=self.defrost_factor,
-            )
-            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
-            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
-            system._minimum_tm_volume_gal = self.tm_storage_vol
-            system._minimum_tm_capacity_kbtuh = self.tm_capacity_kbtuh
-            system.tm_storage_tank = MixedStorageTank(total_volume_gal=self.tm_storage_vol)
-            system.tm_water_heater = self._build_tm_water_heater(tm_controls, force_electric_resistance = True)
-            return system
-
-        if self.schematic in ["single_pass_rtp", "sprtp"]:
-            from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import (
-                SinglePassRTPSystem, _SPRTP_STRAT_SLOPE,
-            )
-            from ecoengine.objects.components.storage.EnergyTank import EnergyTank
-            self._require_recirc_params()
-            cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
-            system = SinglePassRTPSystem(
-                water_heaters=water_heaters,
-                storage_tank=EnergyTank(
-                    total_volume_gal=self.storage_volume_storageT_gal,
-                    cold_temp_f=cold_temp_f,
-                    storage_temp_f=self.storage_temp_f,
-                    strat_slope=_SPRTP_STRAT_SLOPE,
-                ),
-                supply_temp_f=self.supply_temp_f,
-                storage_temp_f=self.storage_temp_f,
-                return_temp_f=self.return_temp_f,
-                return_flow_gpm=self.return_flow_gpm,
-                max_daily_run_hr=self.max_daily_run_hr,
-                defrost_factor=self.defrost_factor,
-                tm_safety_factor=self.tm_safety_factor,
-            )
-            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
-            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
-            return system
-
-        if self.schematic in ["multi_pass_rtp", "mprtp"]:
-            from ecoengine.objects.dhwsystems.rtp_systems.MultiPassRTPSystem import (
-                MultiPassRTPSystem, _MPRTP_STRAT_SLOPE, _MPRTP_MAX_DAILY_RUN_HR,
-            )
-            from ecoengine.objects.components.storage.SlugOverlayTank import SlugOverlayTank
-            self._require_recirc_params()
-            cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
-            system = MultiPassRTPSystem(
-                water_heaters=water_heaters,
-                storage_tank=SlugOverlayTank(
-                    total_volume_gal=self.storage_volume_storageT_gal,
-                    cold_temp_f=cold_temp_f,
-                    storage_temp_f=self.storage_temp_f,
-                    supply_temp_f=self.supply_temp_f,
-                    strat_slope=_MPRTP_STRAT_SLOPE,
-                    drawdown_fract=self.drawdown_fract,
-                ),
-                supply_temp_f=self.supply_temp_f,
-                storage_temp_f=self.storage_temp_f,
-                return_temp_f=self.return_temp_f,
-                return_flow_gpm=self.return_flow_gpm,
-                max_daily_run_hr=_MPRTP_MAX_DAILY_RUN_HR,
-                defrost_factor=self.defrost_factor,
-                tm_safety_factor=self.tm_safety_factor,
-            )
-            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
-            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
-            return system
-
-        if self.schematic == "instant_wh":
-            from ecoengine.objects.dhwsystems.InstantWHSystem import InstantWHSystem
-            system = InstantWHSystem(
-                supply_temp_f=self.supply_temp_f,
-                storage_temp_f=self.storage_temp_f,
-                defrost_factor=self.defrost_factor,
-            )
-            system.water_heaters = water_heaters
-            return system
-
-        if self.schematic == "sprtp_in_series":
-            from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem import (
-                SP_RTPInSeriesSystem, _GAS_DEADBAND_F,
-            )
-            from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import _SPRTP_STRAT_SLOPE
-            from ecoengine.objects.components.heating.Controls import Controls
-            from ecoengine.objects.components.storage.EnergyTank import EnergyTank
-            from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
-            self._require_recirc_params()
-            self._require_gas_capacity_param()
-            self._require_gas_storage_param()
-            cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
-            system = SP_RTPInSeriesSystem(
-                water_heaters=water_heaters,
-                storage_tank=EnergyTank(
-                    total_volume_gal=self.storage_volume_storageT_gal,
-                    cold_temp_f=cold_temp_f,
-                    storage_temp_f=self.storage_temp_f,
-                    strat_slope=_SPRTP_STRAT_SLOPE,
-                ),
-                supply_temp_f=self.supply_temp_f,
-                storage_temp_f=self.storage_temp_f,
-                return_temp_f=self.return_temp_f,
-                return_flow_gpm=self.return_flow_gpm,
-                max_daily_run_hr=self.max_daily_run_hr,
-                defrost_factor=self.defrost_factor,
-                tm_safety_factor=self.tm_safety_factor,
-            )
-            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
-            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
-            gas_controls = Controls(
-                on_sensor_fract=0.5,
-                on_trigger_t_f=self.supply_temp_f + 5.0,
-                off_sensor_fract=0.5,
-                off_trigger_t_f=self.supply_temp_f + 5.0 + _GAS_DEADBAND_F,
-                outlet_temp_f=self.supply_temp_f + 5.0 + _GAS_DEADBAND_F,
-            )
-            system.gas_water_heater = WaterHeater.from_nominal_capacity(
-                nominal_capacity_kbtuh=self.gas_capacity_kbtuh,
-                control_schedule=["normal"] * 24,
-                control_map={"normal": gas_controls},
-            )
-            system.gas_storage_tank = MixedStorageTank(total_volume_gal=self.gas_storage_vol_gal)
-            system._in_series_storage_vol_gal = self.gas_storage_vol_gal
-            system._in_series_capacity_kbtuh = self.gas_capacity_kbtuh
-            return system
-
-        if self.schematic == "sprtp_in_parallel":
-            from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem import SP_RTPInParallelSystem
-            from ecoengine.objects.dhwsystems.rtp_systems.SinglePassRTPSystem import _SPRTP_STRAT_SLOPE
-            from ecoengine.objects.components.storage.EnergyTank import EnergyTank
-            self._require_recirc_params()
-            self._require_gas_capacity_param()
-            cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
-            system = SP_RTPInParallelSystem(
-                water_heaters=water_heaters,
-                storage_tank=EnergyTank(
-                    total_volume_gal=self.storage_volume_storageT_gal,
-                    cold_temp_f=cold_temp_f,
-                    storage_temp_f=self.storage_temp_f,
-                    strat_slope=_SPRTP_STRAT_SLOPE,
-                ),
-                supply_temp_f=self.supply_temp_f,
-                storage_temp_f=self.storage_temp_f,
-                return_temp_f=self.return_temp_f,
-                return_flow_gpm=self.return_flow_gpm,
-                max_daily_run_hr=self.max_daily_run_hr,
-                defrost_factor=self.defrost_factor,
-                tm_safety_factor=self.tm_safety_factor,
-            )
-            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
-            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
-            system.gas_water_heater = WaterHeater.from_nominal_capacity(
-                nominal_capacity_kbtuh=self.gas_capacity_kbtuh,
-                control_schedule=["normal"] * 24,
-                control_map={"normal": self._build_gas_controls()},
-            )
-            system._gas_capacity_kbtuh = self.gas_capacity_kbtuh
-            return system
-
-        if self.schematic == "mprtp_in_series":
-            from ecoengine.objects.dhwsystems.rtp_systems.MP_RTPInSeriesSystem import MP_RTPInSeriesSystem
-            from ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem import _GAS_DEADBAND_F
-            from ecoengine.objects.dhwsystems.rtp_systems.MultiPassRTPSystem import (
-                _MPRTP_STRAT_SLOPE, _MPRTP_MAX_DAILY_RUN_HR,
-            )
-            from ecoengine.objects.components.heating.Controls import Controls
-            from ecoengine.objects.components.storage.SlugOverlayTank import SlugOverlayTank
-            from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
-            self._require_recirc_params()
-            self._require_gas_capacity_param()
-            self._require_gas_storage_param()
-            cold_temp_f = self._building.get_design_inlet_water_temp_f() or 50.0
-            system = MP_RTPInSeriesSystem(
-                water_heaters=water_heaters,
-                storage_tank=SlugOverlayTank(
-                    total_volume_gal=self.storage_volume_storageT_gal,
-                    cold_temp_f=cold_temp_f,
-                    storage_temp_f=self.storage_temp_f,
-                    supply_temp_f=self.supply_temp_f,
-                    strat_slope=_MPRTP_STRAT_SLOPE,
-                    drawdown_fract=self.drawdown_fract,
-                ),
-                supply_temp_f=self.supply_temp_f,
-                storage_temp_f=self.storage_temp_f,
-                return_temp_f=self.return_temp_f,
-                return_flow_gpm=self.return_flow_gpm,
-                max_daily_run_hr=_MPRTP_MAX_DAILY_RUN_HR,
-                defrost_factor=self.defrost_factor,
-                tm_safety_factor=self.tm_safety_factor,
-            )
-            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
-            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
-            gas_controls = Controls(
-                on_sensor_fract=0.5,
-                on_trigger_t_f=self.supply_temp_f + 5.0,
-                off_sensor_fract=0.5,
-                off_trigger_t_f=self.supply_temp_f + 5.0 + _GAS_DEADBAND_F,
-                outlet_temp_f=self.supply_temp_f + 5.0 + _GAS_DEADBAND_F,
-            )
-            system.gas_water_heater = WaterHeater.from_nominal_capacity(
-                nominal_capacity_kbtuh=self.gas_capacity_kbtuh,
-                control_schedule=["normal"] * 24,
-                control_map={"normal": gas_controls},
-            )
-            system.gas_storage_tank = MixedStorageTank(total_volume_gal=self.gas_storage_vol_gal)
-            system._in_series_storage_vol_gal = self.gas_storage_vol_gal
-            system._in_series_capacity_kbtuh = self.gas_capacity_kbtuh
-            return system
-
-        if self.schematic == "swing_dual_fuel":
-            from ecoengine.objects.dhwsystems.recirc_systems.SwingDualFuelSystem import SwingDualFuelSystem
-            from ecoengine.objects.dhwsystems.recirc_systems.SwingSystem import _ELEMENT_DEADBAND_F
-            from ecoengine.objects.components.heating.Controls import Controls
-            from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
-            self._require_recirc_params()
-            self._require_tm_params()
-            tm_controls = Controls(
-                on_sensor_fract=0.5,
-                on_trigger_t_f=self.supply_temp_f,
-                off_sensor_fract=0.5,
-                off_trigger_t_f=self.supply_temp_f + _ELEMENT_DEADBAND_F,
-                outlet_temp_f=self.supply_temp_f + _ELEMENT_DEADBAND_F,
-            )
-            system = SwingDualFuelSystem(
-                water_heaters=water_heaters,
-                storage_tank=_primary_tank(),
-                supply_temp_f=self.supply_temp_f,
-                storage_temp_f=self.storage_temp_f,
-                return_temp_f=self.return_temp_f,
-                return_flow_gpm=self.return_flow_gpm,
-                tm_safety_factor=self.tm_safety_factor,
-                max_daily_run_hr=self.max_daily_run_hr,
-                defrost_factor=self.defrost_factor,
-            )
-            system._minimum_capacity_kbtuh = self.heating_capacity_kbtuh
-            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
-            system._minimum_tm_volume_gal = self.tm_storage_vol
-            system._minimum_tm_capacity_kbtuh = self.tm_capacity_kbtuh
-            system.tm_storage_tank = MixedStorageTank(total_volume_gal=self.tm_storage_vol)
-            system.tm_water_heater = self._build_tm_water_heater(tm_controls, force_electric_resistance=True)
-            return system
-
-        raise ValueError(
-            f"Unknown schematic {self.schematic!r}. "
-            "Supported values: 'primary_no_recirc', 'parallel_loop', 'swing_tank', "
-            "'single_pass_rtp', 'multi_pass_rtp', 'instant_wh', 'sprtp_in_series', "
-            "'sprtp_in_parallel', 'mprtp_in_series', 'swing_dual_fuel'."
+        from .system_assembly_utils import (
+            assemble_dhw_system, canonical_schematic, default_tm_controls,
+            default_in_series_gas_controls, SCHEMATICS, RECIRC_SCHEMATICS,
+            TM_SCHEMATICS, GAS_SCHEMATICS, IN_SERIES_SCHEMATICS,
         )
+
+        schematic = canonical_schematic(self.schematic)
+        if schematic not in SCHEMATICS:
+            # Let assemble_dhw_system raise its unknown-schematic error
+            return assemble_dhw_system(self.schematic, water_heaters, self.supply_temp_f, self.storage_temp_f)
+
+        # Engine-level checks first, so error messages name the engine's own parameters
+        if schematic in RECIRC_SCHEMATICS:
+            self._require_recirc_params()
+        if schematic in TM_SCHEMATICS:
+            self._require_tm_params()
+        if schematic in GAS_SCHEMATICS:
+            self._require_gas_capacity_param()
+        if schematic in IN_SERIES_SCHEMATICS:
+            self._require_gas_storage_param()
+        if schematic != "instant_wh" and self.storage_volume_storageT_gal is None:
+            raise ValueError(
+                f"storage_volume_storageT_gal is required for schematic '{self.schematic}'."
+            )
+
+        tm_water_heater = None
+        if schematic in TM_SCHEMATICS:
+            tm_controls = default_tm_controls(
+                schematic, self.supply_temp_f, self.tm_on_temp_f, self.tm_off_temp_f
+            )
+            # Swing variants always use an electric-resistance TM element
+            tm_water_heater = self._build_tm_water_heater(
+                tm_controls, force_electric_resistance=(schematic != "parallel_loop")
+            )
+
+        gas_water_heater = None
+        if schematic in GAS_SCHEMATICS:
+            gas_controls = (
+                self._build_gas_controls()
+                if schematic == "sprtp_in_parallel"
+                else default_in_series_gas_controls(self.supply_temp_f)
+            )
+            gas_water_heater = WaterHeater.from_nominal_capacity(
+                nominal_capacity_kbtuh=self.gas_capacity_kbtuh,
+                control_schedule=["normal"] * 24,
+                control_map={"normal": gas_controls},
+            )
+
+        system = assemble_dhw_system(
+            schematic,
+            water_heaters,
+            self.supply_temp_f,
+            self.storage_temp_f,
+            self.storage_volume_storageT_gal,
+            return_temp_f=self.return_temp_f,
+            return_flow_gpm=self.return_flow_gpm,
+            tm_water_heater=tm_water_heater,
+            tm_storage_vol_gal=self.tm_storage_vol,
+            num_tm_heaters=self.num_tm_heaters,
+            tm_on_temp_f=self.tm_on_temp_f,
+            tm_off_temp_f=self.tm_off_temp_f,
+            gas_water_heater=gas_water_heater,
+            gas_storage_vol_gal=self.gas_storage_vol_gal,
+            cold_temp_f=self._building.get_design_inlet_water_temp_f() or 50.0,
+            drawdown_fract=self.drawdown_fract,
+            max_daily_run_hr=self.max_daily_run_hr,
+            defrost_factor=self.defrost_factor,
+            tm_safety_factor=self.tm_safety_factor,
+            tm_off_time_hr=self.tm_off_time_hr,
+        )
+
+        # Pre-sized values stand in for sizing results
+        if schematic != "instant_wh":
+            system._minimum_capacity_kbtuh       = self.heating_capacity_kbtuh
+            system._minimum_storage_storageT_gal = self.storage_volume_storageT_gal
+        if schematic in TM_SCHEMATICS:
+            system._minimum_tm_volume_gal     = self.tm_storage_vol
+            system._minimum_tm_capacity_kbtuh = self.tm_capacity_kbtuh
+        if schematic in IN_SERIES_SCHEMATICS:
+            system._in_series_storage_vol_gal = self.gas_storage_vol_gal
+            system._in_series_capacity_kbtuh  = self.gas_capacity_kbtuh
+        if schematic == "sprtp_in_parallel":
+            system._gas_capacity_kbtuh = self.gas_capacity_kbtuh
+        return system
 
     # ------------------------------------------------------------------
     # Sizing results

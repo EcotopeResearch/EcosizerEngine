@@ -195,6 +195,7 @@
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Quick Start</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/ecobuilder.html">EcoBuilder (Component-by-Component API)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/building.html">Building &amp; Climate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/dhwsystems.html">DHW Systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/components.html">Equipment Components</a></li>
@@ -256,13 +257,14 @@ simulation.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine</span><span class="w"> </span><span class="kn">import</span> <span class="n">EcosizerEngine</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">EcosizerEngine</span><span class="p">(</span>
-    <span class="n">building_type</span>            <span class="o">=</span> <span class="s2">&quot;multi_family&quot;</span><span class="p">,</span>
+    <span class="n">building_type</span>            <span class="o">=</span> <span class="s2">"multi_family"</span><span class="p">,</span>
     <span class="n">magnitude</span>                <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>          <span class="c1"># units</span>
-    <span class="n">zip_code_or_climate_zone</span> <span class="o">=</span> <span class="s2">&quot;94103&quot;</span><span class="p">,</span>       <span class="c1"># San Francisco zip</span>
+    <span class="n">zip_code_or_climate_zone</span> <span class="o">=</span> <span class="s2">"94103"</span><span class="p">,</span>       <span class="c1"># San Francisco zip</span>
     <span class="n">supply_temp_f</span>            <span class="o">=</span> <span class="mf">120.0</span><span class="p">,</span>
     <span class="n">storage_temp_f</span>           <span class="o">=</span> <span class="mf">150.0</span><span class="p">,</span>
-    <span class="n">schematic</span>                <span class="o">=</span> <span class="s2">&quot;primary_no_recirc&quot;</span><span class="p">,</span>
+    <span class="n">schematic</span>                <span class="o">=</span> <span class="s2">"primary_no_recirc"</span><span class="p">,</span>
     <span class="n">num_heaters</span>              <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">hpwh_model</span>               <span class="o">=</span> <span class="s2">"MODELS_GenericHPWH3_C_SP"</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">engine</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
@@ -286,12 +288,12 @@ simulation.</p>
 <p>For buildings with a recirculation loop, choose a recirc schematic and
 provide the loop parameters:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span> <span class="o">=</span> <span class="n">EcosizerEngine</span><span class="p">(</span>
-    <span class="n">building_type</span>            <span class="o">=</span> <span class="s2">&quot;multi_family&quot;</span><span class="p">,</span>
+    <span class="n">building_type</span>            <span class="o">=</span> <span class="s2">"multi_family"</span><span class="p">,</span>
     <span class="n">magnitude</span>                <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
     <span class="n">zip_code_or_climate_zone</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>             <span class="c1"># CA climate zone ID</span>
     <span class="n">supply_temp_f</span>            <span class="o">=</span> <span class="mf">120.0</span><span class="p">,</span>
     <span class="n">storage_temp_f</span>           <span class="o">=</span> <span class="mf">150.0</span><span class="p">,</span>
-    <span class="n">schematic</span>                <span class="o">=</span> <span class="s2">&quot;swing_tank&quot;</span><span class="p">,</span>
+    <span class="n">schematic</span>                <span class="o">=</span> <span class="s2">"swing_tank"</span><span class="p">,</span>
     <span class="n">return_temp_f</span>            <span class="o">=</span> <span class="mf">110.0</span><span class="p">,</span>
     <span class="n">return_flow_gpm</span>          <span class="o">=</span> <span class="mf">4.0</span><span class="p">,</span>
     <span class="n">num_heaters</span>              <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
@@ -338,6 +340,35 @@ provide the loop parameters:</p>
 </table>
 </div>
 </section>
+<section id="building-a-system-component-by-component">
+<h2>Building a System Component by Component<a class="headerlink" href="#building-a-system-component-by-component" title="Link to this heading">¶</a></h2>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">EcoBuilder</span></code> builds a pre-sized system from components you
+define, so each heater can have its own controls and schedule. It does no
+sizing. Simulate the result with
+<a class="reference internal" href="api/simulation.html#ecoengine.interfaces.Simulator.simulate_3day" title="ecoengine.interfaces.Simulator.simulate_3day"><code class="xref py py-func docutils literal notranslate"><span class="pre">simulate_3day()</span></code></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine</span><span class="w"> </span><span class="kn">import</span> <span class="n">EcoBuilder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.interfaces.Simulator</span><span class="w"> </span><span class="kn">import</span> <span class="n">simulate_3day</span>
+
+<span class="n">eb</span> <span class="o">=</span> <span class="n">EcoBuilder</span><span class="p">()</span>
+<span class="n">eb</span><span class="o">.</span><span class="n">define_temperatures</span><span class="p">(</span><span class="n">supply_temp_f</span><span class="o">=</span><span class="mf">120.0</span><span class="p">,</span> <span class="n">storage_temp_f</span><span class="o">=</span><span class="mf">150.0</span><span class="p">)</span>
+<span class="n">eb</span><span class="o">.</span><span class="n">define_storage_volume</span><span class="p">(</span><span class="mf">800.0</span><span class="p">)</span>
+
+<span class="c1"># Heater locked out 16:00-20:00</span>
+<span class="n">schedule</span> <span class="o">=</span> <span class="n">eb</span><span class="o">.</span><span class="n">build_control_schedule</span><span class="p">([[</span><span class="s2">"normal"</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="s2">"shed"</span><span class="p">,</span> <span class="mi">16</span><span class="p">],</span> <span class="p">[</span><span class="s2">"normal"</span><span class="p">,</span> <span class="mi">20</span><span class="p">]])</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"normal"</span><span class="p">:</span> <span class="n">eb</span><span class="o">.</span><span class="n">build_control_setting</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">120.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">150.0</span><span class="p">,</span> <span class="mf">150.0</span><span class="p">),</span>
+    <span class="s2">"shed"</span><span class="p">:</span>   <span class="n">eb</span><span class="o">.</span><span class="n">build_control_setting</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mf">150.0</span><span class="p">),</span>
+<span class="p">}</span>
+<span class="n">eb</span><span class="o">.</span><span class="n">build_water_heater</span><span class="p">(</span><span class="n">eb</span><span class="o">.</span><span class="n">build_performance_map</span><span class="p">(</span><span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="mf">300.0</span><span class="p">),</span>
+                      <span class="n">schedule</span><span class="p">,</span> <span class="n">cmap</span><span class="p">)</span>
+
+<span class="n">system</span>   <span class="o">=</span> <span class="n">eb</span><span class="o">.</span><span class="n">build_system</span><span class="p">(</span><span class="s2">"primary_no_recirc"</span><span class="p">)</span>
+<span class="n">building</span> <span class="o">=</span> <span class="n">eb</span><span class="o">.</span><span class="n">build_building</span><span class="p">(</span><span class="s2">"multi_family"</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="s2">"94103"</span><span class="p">,</span> <span class="n">gpdpp</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+<span class="n">run</span>      <span class="o">=</span> <span class="n">simulate_3day</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">building</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">get_summary</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
 <section id="annual-simulation-cost-analysis">
 <h2>Annual Simulation &amp; Cost Analysis<a class="headerlink" href="#annual-simulation-cost-analysis" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine</span><span class="w"> </span><span class="kn">import</span> <span class="n">EcosizerEngine</span>
@@ -349,12 +380,12 @@ provide the loop parameters:</p>
 <span class="p">)</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">EcosizerEngine</span><span class="p">(</span>
-    <span class="n">building_type</span>            <span class="o">=</span> <span class="s2">&quot;multi_family&quot;</span><span class="p">,</span>
+    <span class="n">building_type</span>            <span class="o">=</span> <span class="s2">"multi_family"</span><span class="p">,</span>
     <span class="n">magnitude</span>                <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
-    <span class="n">zip_code_or_climate_zone</span> <span class="o">=</span> <span class="s2">&quot;94103&quot;</span><span class="p">,</span>
+    <span class="n">zip_code_or_climate_zone</span> <span class="o">=</span> <span class="s2">"94103"</span><span class="p">,</span>
     <span class="n">supply_temp_f</span>            <span class="o">=</span> <span class="mf">120.0</span><span class="p">,</span>
     <span class="n">storage_temp_f</span>           <span class="o">=</span> <span class="mf">150.0</span><span class="p">,</span>
-    <span class="n">schematic</span>                <span class="o">=</span> <span class="s2">&quot;primary_no_recirc&quot;</span><span class="p">,</span>
+    <span class="n">schematic</span>                <span class="o">=</span> <span class="s2">"primary_no_recirc"</span><span class="p">,</span>
     <span class="n">utility_cost_tracker</span>     <span class="o">=</span> <span class="n">tracker</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -371,7 +402,7 @@ provide the loop parameters:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_oat_buckets</span><span class="p">,</span> <span class="n">get_weather_stations</span>
 
 <span class="c1"># OAT distribution for a zip code (used in MPRTP sizing)</span>
-<span class="n">buckets</span> <span class="o">=</span> <span class="n">get_oat_buckets</span><span class="p">(</span><span class="n">zip_code</span><span class="o">=</span><span class="s2">&quot;94103&quot;</span><span class="p">)</span>
+<span class="n">buckets</span> <span class="o">=</span> <span class="n">get_oat_buckets</span><span class="p">(</span><span class="n">zip_code</span><span class="o">=</span><span class="s2">"94103"</span><span class="p">)</span>
 
 <span class="c1"># List available weather stations</span>
 <span class="n">stations</span> <span class="o">=</span> <span class="n">get_weather_stations</span><span class="p">()</span>
@@ -440,6 +471,7 @@ provide the loop parameters:</p>
 <li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
 <li><a class="reference internal" href="#recirculation-systems">Recirculation Systems</a></li>
 <li><a class="reference internal" href="#available-schematics">Available Schematics</a></li>
+<li><a class="reference internal" href="#building-a-system-component-by-component">Building a System Component by Component</a></li>
 <li><a class="reference internal" href="#annual-simulation-cost-analysis">Annual Simulation &amp; Cost Analysis</a></li>
 <li><a class="reference internal" href="#climate-zone-helpers">Climate Zone Helpers</a></li>
 </ul>
@@ -453,7 +485,7 @@ provide the loop parameters:</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=acc74ff5"></script>
+</div><script src="_static/documentation_options.js?v=3eb8911e"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

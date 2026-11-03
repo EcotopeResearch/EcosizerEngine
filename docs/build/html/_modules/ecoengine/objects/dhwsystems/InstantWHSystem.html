@@ -194,6 +194,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quick Start</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/ecobuilder.html">EcoBuilder (Component-by-Component API)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/building.html">Building &amp; Climate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/dhwsystems.html">DHW Systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../api/components.html">Equipment Components</a></li>
@@ -235,21 +236,21 @@
           <h1>Source code for ecoengine.objects.dhwsystems.InstantWHSystem</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_RHO_CP</span><span class="p">,</span> <span class="n">_W_TO_KBTUH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.constants.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">_RHO_CP</span><span class="p">,</span> <span class="n">_BTUH_PER_W</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.DHWSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">DHWSystem</span>
 
 
 <div class="viewcode-block" id="InstantWHSystem">
 <a class="viewcode-back" href="../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.InstantWHSystem.InstantWHSystem">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">InstantWHSystem</span><span class="p">(</span><span class="n">DHWSystem</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Instantaneous (tankless) water heater system.</span>
 
 <span class="sd">    No storage tank — the heater meets demand in real time each timestep.</span>
 <span class="sd">    Sizing sets the minimum capacity needed to serve peak instantaneous demand;</span>
 <span class="sd">    storage volume is always zero.  Load shifting is not supported because</span>
 <span class="sd">    there is no tank to pre-charge.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="InstantWHSystem.__init__">
 <a class="viewcode-back" href="../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.InstantWHSystem.InstantWHSystem.__init__">[docs]</a>
@@ -282,7 +283,7 @@
         <span class="n">storage_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">defrost_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstantWHSystem</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Size the system for the given building, then return it.</span>
 
 <span class="sd">        Parameters</span>
@@ -291,7 +292,7 @@
 <span class="sd">        supply_temp_f : float</span>
 <span class="sd">        storage_temp_f : float</span>
 <span class="sd">        defrost_factor : float</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">system</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">supply_temp_f</span><span class="o">=</span><span class="n">supply_temp_f</span><span class="p">,</span>
             <span class="n">storage_temp_f</span><span class="o">=</span><span class="n">storage_temp_f</span><span class="p">,</span>
@@ -308,7 +309,7 @@
 <div class="viewcode-block" id="InstantWHSystem.size">
 <a class="viewcode-back" href="../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.InstantWHSystem.InstantWHSystem.size">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Set minimum capacity to serve peak instantaneous demand.</span>
 
 <span class="sd">        Capacity is the kBTU/hr required to heat the peak one-minute demand</span>
@@ -321,7 +322,7 @@
 <span class="sd">            Must have a ClimateZone so that design inlet temperature is available.</span>
 <span class="sd">        **kwargs</span>
 <span class="sd">            Accepted but ignored (load-shift params, strat_slope, etc.).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">design_inlet_temp_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_design_inlet_temp</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
         <span class="n">delta_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">-</span> <span class="n">design_inlet_temp_f</span>
 
@@ -343,15 +344,15 @@
         <span class="n">building</span><span class="p">,</span>
         <span class="n">timestep_interval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">interval_min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"normal"</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Serve demand instantly each timestep — no tank draw or charge cycle.</span>
 
-<span class="sd">        Capacity is computed from this timestep&#39;s actual demand and inlet</span>
+<span class="sd">        Capacity is computed from this timestep's actual demand and inlet</span>
 <span class="sd">        temperature, so it tracks demand exactly.  Usable volume is always</span>
 <span class="sd">        zero (no storage).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">demand_supplyT_gal</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_dhw_load_supplyT_gal</span><span class="p">(</span><span class="n">timestep_interval</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">)</span>
         <span class="n">oat_f</span>              <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_oat_f</span><span class="p">(</span><span class="n">timestep_interval</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">)</span>
         <span class="n">inlet_temp_f</span>       <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_inlet_water_temp_f</span><span class="p">(</span><span class="n">timestep_interval</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">)</span>
@@ -364,14 +365,14 @@
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;demand_supplyT_gal&quot;</span><span class="p">:</span>        <span class="n">demand_supplyT_gal</span><span class="p">,</span>
-            <span class="s2">&quot;usable_volume_supplyT_gal&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s2">&quot;heater_output_kbtuh&quot;</span><span class="p">:</span>       <span class="n">capacity_kbtuh</span><span class="p">,</span>
-            <span class="s2">&quot;heater_power_in_kw&quot;</span><span class="p">:</span>        <span class="n">capacity_kbtuh</span> <span class="o">/</span> <span class="n">_W_TO_KBTUH</span><span class="p">,</span>  <span class="c1"># COP of 1.0</span>
-            <span class="s2">&quot;oat_f&quot;</span><span class="p">:</span>                     <span class="n">oat_f</span><span class="p">,</span>
-            <span class="s2">&quot;inlet_water_temp_f&quot;</span><span class="p">:</span>        <span class="n">inlet_temp_f</span><span class="p">,</span>
-            <span class="s2">&quot;tank_temps_f&quot;</span><span class="p">:</span>              <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">]</span> <span class="o">*</span> <span class="mi">6</span><span class="p">,</span>
-            <span class="s2">&quot;mode&quot;</span><span class="p">:</span>                      <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+            <span class="s2">"demand_supplyT_gal"</span><span class="p">:</span>        <span class="n">demand_supplyT_gal</span><span class="p">,</span>
+            <span class="s2">"usable_volume_supplyT_gal"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">"heater_output_kbtuh"</span><span class="p">:</span>       <span class="n">capacity_kbtuh</span><span class="p">,</span>
+            <span class="s2">"heater_power_in_kw"</span><span class="p">:</span>        <span class="n">capacity_kbtuh</span> <span class="o">/</span> <span class="n">_BTUH_PER_W</span><span class="p">,</span>  <span class="c1"># COP of 1.0</span>
+            <span class="s2">"oat_f"</span><span class="p">:</span>                     <span class="n">oat_f</span><span class="p">,</span>
+            <span class="s2">"inlet_water_temp_f"</span><span class="p">:</span>        <span class="n">inlet_temp_f</span><span class="p">,</span>
+            <span class="s2">"tank_temps_f"</span><span class="p">:</span>              <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">]</span> <span class="o">*</span> <span class="mi">6</span><span class="p">,</span>
+            <span class="s2">"mode"</span><span class="p">:</span>                      <span class="s2">"normal"</span><span class="p">,</span>
         <span class="p">}</span></div>
 </div>
 
@@ -407,7 +408,7 @@
       
     </aside>
   </div>
-</div><script src="../../../../_static/documentation_options.js?v=acc74ff5"></script>
+</div><script src="../../../../_static/documentation_options.js?v=3eb8911e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/scripts/furo.js?v=46bd48cc"></script>
