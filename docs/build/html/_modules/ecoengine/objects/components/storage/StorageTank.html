@@ -194,6 +194,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../quickstart.html">Quick Start</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecobuilder.html">EcoBuilder (Component-by-Component API)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/building.html">Building &amp; Climate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/dhwsystems.html">DHW Systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/components.html">Equipment Components</a></li>
@@ -245,7 +246,7 @@
 <div class="viewcode-block" id="StorageTank">
 <a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.storage.StorageTank.StorageTank">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">StorageTank</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Abstract base class for all storage tank models.</span>
 
 <span class="sd">    Defines the interface that WaterHeater, Controls, and DHWSystem rely on.</span>
@@ -253,7 +254,7 @@
 
 <span class="sd">    Every subclass must expose ``total_volume_gal`` as a plain attribute and</span>
 <span class="sd">    implement the five simulation methods listed below.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">total_volume_gal</span><span class="p">:</span> <span class="nb">float</span>
 
@@ -264,26 +265,42 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">storage_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">cold_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">percent_useable</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">initial_hot_fract</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set initial tank thermal state before a simulation begins.&quot;&quot;&quot;</span></div>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Set initial tank thermal state before a simulation begins.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        storage_temp_f : float</span>
+<span class="sd">            Hot storage setpoint [°F].</span>
+<span class="sd">        cold_temp_f : float</span>
+<span class="sd">            Cold/incoming water temperature [°F].</span>
+<span class="sd">        initial_hot_fract : float</span>
+<span class="sd">            Physical fraction of tank volume at or above ``supply_temp_f``</span>
+<span class="sd">            (0-1) at simulation start.</span>
+<span class="sd">        supply_temp_f : float</span>
+<span class="sd">            DHW delivery temperature [°F] -- the reference temperature that</span>
+<span class="sd">            ``initial_hot_fract`` is measured against.</span>
+<span class="sd">        """</span></div>
 
 
 <div class="viewcode-block" id="StorageTank.get_temperature_at_fraction">
 <a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.storage.StorageTank.StorageTank.get_temperature_at_fraction">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_temperature_at_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fract</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return water temperature at fractional tank height (0=bottom, 1=top).</span>
 <span class="sd">        Used by Controls to decide whether to fire the heater.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<span class="sd">        """</span></div>
 
 
 <div class="viewcode-block" id="StorageTank.get_usable_volume_supplyT_gal">
 <a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.storage.StorageTank.StorageTank.get_usable_volume_supplyT_gal">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_usable_volume_supplyT_gal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return gallons currently at or above supply temperature.&quot;&quot;&quot;</span></div>
+<span class="w">        </span><span class="sd">"""Return gallons currently at or above supply temperature."""</span></div>
 
 
 <div class="viewcode-block" id="StorageTank.draw">
@@ -296,7 +313,7 @@
         <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">outlet_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove DHW demand from the tank and replace with cold make-up water.&quot;&quot;&quot;</span></div>
+<span class="w">        </span><span class="sd">"""Remove DHW demand from the tank and replace with cold make-up water."""</span></div>
 
 
 <div class="viewcode-block" id="StorageTank.heat">
@@ -308,7 +325,7 @@
         <span class="n">duration_min</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">outlet_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply heat from active water heaters for one timestep.&quot;&quot;&quot;</span></div>
+<span class="w">        </span><span class="sd">"""Apply heat from active water heaters for one timestep."""</span></div>
 
 
 <div class="viewcode-block" id="StorageTank.add_recirc_return">
@@ -321,7 +338,7 @@
         <span class="n">duration_min</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Apply recirculation loop heat loss to the tank.</span>
 
 <span class="sd">        Parameters</span>
@@ -335,24 +352,24 @@
 <span class="sd">        supply_temp_f : float | None</span>
 <span class="sd">            DHW delivery temperature [°F].  This determines how much heat the</span>
 <span class="sd">            recirc loop actually loses: ``loss = flow × rho_cp × (supply_temp - return_temp)``.</span>
-<span class="sd">            If ``None``, defaults to ``outlet_temp_f`` (the tank&#39;s current hot-end</span>
+<span class="sd">            If ``None``, defaults to ``outlet_temp_f`` (the tank's current hot-end</span>
 <span class="sd">            temperature), which gives the correct result for TM tanks where the</span>
 <span class="sd">            supply and storage temperatures are equal.  Pass explicitly for</span>
 <span class="sd">            primary storage tanks (SPRTP) where ``supply_temp_f &lt; storage_temp_f``.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<span class="sd">        """</span></div>
 
 
 <div class="viewcode-block" id="StorageTank.get_average_draw_temp_f">
 <a class="viewcode-back" href="../../../../../api/components.html#ecoengine.objects.components.storage.StorageTank.StorageTank.get_average_draw_temp_f">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_average_draw_temp_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">draw_gal</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the volume-weighted average temperature of the top ``draw_gal``</span>
 <span class="sd">        physical gallons.</span>
 
 <span class="sd">        Used by SwingSystem to determine the effective feed temperature from the</span>
 <span class="sd">        primary storage tank when the hot zone may be partially depleted.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<span class="sd">        """</span></div>
 
 
 <div class="viewcode-block" id="StorageTank.draw_physical_gal">
@@ -364,7 +381,7 @@
         <span class="n">inlet_temp_f</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">supply_temp_f</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Remove ``gal`` physical gallons from the top of the tank and replace</span>
 <span class="sd">        with cold make-up water at the bottom.</span>
 
@@ -372,7 +389,7 @@
 <span class="sd">        caller provides physical gallons directly. ``supply_temp_f`` is used</span>
 <span class="sd">        by stratified tanks to floor ``_delta_gal`` at the no-usable-hot-water</span>
 <span class="sd">        state rather than the absolute fully-cold state.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<span class="sd">        """</span></div>
 </div>
 
 </pre></div>
@@ -407,7 +424,7 @@
       
     </aside>
   </div>
-</div><script src="../../../../../_static/documentation_options.js?v=acc74ff5"></script>
+</div><script src="../../../../../_static/documentation_options.js?v=3eb8911e"></script>
     <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../_static/scripts/furo.js?v=46bd48cc"></script>

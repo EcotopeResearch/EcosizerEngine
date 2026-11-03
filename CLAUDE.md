@@ -57,7 +57,8 @@ The engine performs three core functions:
 ### Layer Overview
 
 ```
-interfaces/          # Public API (EcosizerEngine orchestration, Simulator dispatch)
+interfaces/          # Public API (EcosizerEngine orchestration, EcoBuilder, Simulator dispatch,
+                     #   system_assembly_utils shared build helpers)
 objects/
   building/          # Building model (occupancy, loads, climate)
   components/        # Equipment: WaterHeater, StorageTank, Controls, PerformanceMap
@@ -72,6 +73,10 @@ data/
 ### Key Classes
 
 **`EcosizerEngine`** (`interfaces/EcosizerEngine.py`) — Top-level orchestrator. Accepts all user-facing parameters and drives the pipeline: `build()` → `size()` → `simulate_3day()` / `simulate_annual()`. Also exposes `get_sizing_results()`, `get_simulation_summary()`, `get_annual_cost_estimate()`, and `plot_sizing_curve()`. Module-level `get_oat_buckets(zip_code, zone_id, weather_station)` convenience function also lives here and is re-exported from the top-level `ecoengine` package (`from ecoengine import get_oat_buckets`).
+
+**`EcoBuilder`** (`interfaces/EcoBuilder.py`) — Builds a pre-sized `DHWSystem` component by component, with no sizing. Methods can be called in any order: `define_temperatures()` (the only place `storage_temp_f` is set), `define_storage_volume(gal, storage_type='primary'|'tm'|'in_series', drawdown_fract, supply_temp_f)`, `define_recirc()`, `build_performance_map(model_name | nominal_capacity_kbtuh)`, `build_control_setting()` (all four sensor/trigger args `None` → `AlwaysOffControls`), `build_control_schedule([[mode, start_hour], ...])`, `build_water_heater(..., system='primary'|'tm'|'in_series'|None)`, then `build_system(schematic)`. `build_building()` returns a `Building` but does not store it. Re-exported from `ecoengine`. Applies no control overrides (no dual-fuel shed forcing, no forced-ER TM) and sets no `_minimum_*` sizing fields.
+
+**`system_assembly_utils`** (`interfaces/system_assembly_utils.py`) — Shared by `EcosizerEngine` and `EcoBuilder`: `build_climate_zone()`, `build_building()`, `assemble_dhw_system()` (schematic dispatch, alias names, tank type and strat slope per schematic, TM/gas attachment, missing-field errors), `required_fields()`, the schematic name sets, and the engine's default TM/in-series gas controls. Change schematic wiring here, not in `EcosizerEngine`.
 
 **`Building`** (`objects/building/Building.py`) — Encapsulates occupancy type, daily DHW demand, 24-hr load shape, and climate data. Key factory: `Building.from_building_type()` supports named types (`multi_family`, `apartment`, `office`, `mens_dorm`, `womens_dorm`, `nursing_home`, `motel`, `food_service_a/b`, `elementary_school`, `junior_high`, `senior_high`) and multi-use blending (weighted mix of types). For `multi_family` with `standard_gpd='ca'`, uses California bedroom-count-based GPD profiles from `multi_family.json`.
 
@@ -122,6 +127,12 @@ data/
 
 **`SwingDualFuelSystem` supplemental sizing** — `_size_supplemental()` calls `size_supplemental_heating_and_storage()` (in `utils.py`) which runs a peak-aligned 2-day simulation on an `_SwingDualFuelPrimary` proxy to generate `outage_volume_gal` and `outage_temp_delta_f` arrays. The proxy returns `"swing_inlet_temp_f"` (actual inlet temp to swing tank), so `temperature_variable="swing_inlet_temp_f"` must be passed. `gas_backup_from_window()` then selects the worst 30-minute outage window by scoring with `sum(vol × delta)` (heat-deficit rate), **not** `sum(delta)` alone — the delta-only scoring fails when the primary is fully depleted and recirc-only flow dominates the first window. The revert path is documented in comments in `utils.py`. Building a `SwingDualFuelSystem` without auto-sizing (e.g. for simulation comparison): construct `SwingSystem(water_heaters=[], storage_tank=None, ...)` directly, then set `storage_tank`, `water_heaters`, `tm_storage_tank`, and `tm_water_heater` manually. Use `_ELEMENT_DEADBAND_F` (importable from `SwingSystem.py`) for the swing tank `Controls` on/off deadband.
 
+**`EcoBuilder` schematic specifics** — For `sprtp_in_parallel` the gas backup heater goes in `water_heaters` with `fuel_type='gas'`; `build_system()` moves the single gas heater to `system.gas_water_heater` (0 or 2+ gas heaters → error). `sprtp_in_series`/`mprtp_in_series` use `in_series_water_heaters` + `in_series_storage_vol_gal`. TM and in-series slots take one heater for now, because `ParallelLoopSystem`, `SwingSystem` (and subclasses) and the three RTP dual-fuel systems hold a single `tm_water_heater` / `gas_water_heater`. For `parallel_loop`, `tm_on_temp_f`/`tm_off_temp_f` (used in `simulate_step`) come from the TM heater's hour-0 controls. RTP tanks use a 50 °F cold temperature; simulations re-initialize it.
+
+**Unsized getters** — `get_minimum_*()` and similar getters raise `RuntimeError("System was built, not sized: ...")` when the system was assembled without sizing (e.g. by `EcoBuilder`).
+
+**Regression baseline** — `tests/test_ecosizer_engine_regression.py` hardcodes sizing results and pre-sized 3-day simulation results for every schematic, generated from the code before the `system_assembly_utils` refactor. Regenerate the numbers only for a deliberate algorithm change.
+
 ### Data Flow
 
 ```
@@ -154,9 +165,9 @@ User parameters
 
 ## Implementation Status
 
-**All classes are fully implemented.** The codebase is feature-complete with 332 passing tests.
+**All classes are fully implemented.** The codebase is feature-complete with 489 passing tests.
 
-Implemented components: `EcosizerEngine`, `Simulator`, `Building`, `ClimateZone`, `UtilityCostTracker`, `WaterHeater`, `Controls`, `PerformanceMap` (+ `NominalPerformanceMap`, `PklPerformanceMap`, `HPWHsimPerformanceMap`), `StorageTank` (+ `StratifiedTank`, `MixedStorageTank`), `DHWSystem` and all subclasses (including `SwingDualFuelSystem` and `SwingERTrdOffSystem`), `SimulationRun`.
+Implemented components: `EcosizerEngine`, `EcoBuilder`, `Simulator`, `Building`, `ClimateZone`, `UtilityCostTracker`, `WaterHeater`, `Controls`, `PerformanceMap` (+ `NominalPerformanceMap`, `PklPerformanceMap`, `HPWHsimPerformanceMap`), `StorageTank` (+ `StratifiedTank`, `MixedStorageTank`), `DHWSystem` and all subclasses (including `SwingDualFuelSystem` and `SwingERTrdOffSystem`), `SimulationRun`.
 
 ## Common Extension Points
 

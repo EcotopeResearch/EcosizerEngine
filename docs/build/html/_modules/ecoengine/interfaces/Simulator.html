@@ -194,6 +194,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quick Start</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/ecobuilder.html">EcoBuilder (Component-by-Component API)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/building.html">Building &amp; Climate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/dhwsystems.html">DHW Systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api/components.html">Equipment Components</a></li>
@@ -245,8 +246,8 @@
 
 <div class="viewcode-block" id="simulate">
 <a class="viewcode-back" href="../../../api/simulation.html#ecoengine.interfaces.Simulator.simulate">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">:</span> <span class="n">DHWSystem</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;3day&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationRun</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">:</span> <span class="n">DHWSystem</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"3day"</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationRun</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Run a time-step simulation of a sized DHWSystem in a Building.</span>
 
 <span class="sd">    At every timestep the simulator:</span>
@@ -267,8 +268,8 @@
 <span class="sd">    building : Building</span>
 <span class="sd">        The building to simulate the system in.</span>
 <span class="sd">    duration : str</span>
-<span class="sd">        &#39;3day&#39; for a 3-day design-day simulation (1-minute steps) or</span>
-<span class="sd">        &#39;annual&#39; for a full-year simulation (10-minute steps).</span>
+<span class="sd">        '3day' for a 3-day design-day simulation (1-minute steps) or</span>
+<span class="sd">        'annual' for a full-year simulation (10-minute steps).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -278,40 +279,63 @@
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If duration is not &#39;3day&#39; or &#39;annual&#39;.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">duration</span> <span class="o">==</span> <span class="s2">&quot;3day&quot;</span><span class="p">:</span>
+<span class="sd">        If duration is not '3day' or 'annual'.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">duration</span> <span class="o">==</span> <span class="s2">"3day"</span><span class="p">:</span>
         <span class="n">duration_min</span>  <span class="o">=</span> <span class="n">THREE_DAY_DURATION_MIN</span>
         <span class="n">timestep_min</span>  <span class="o">=</span> <span class="n">THREE_DAY_TIMESTEP_MIN</span>
-    <span class="k">elif</span> <span class="n">duration</span> <span class="o">==</span> <span class="s2">&quot;annual&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">duration</span> <span class="o">==</span> <span class="s2">"annual"</span><span class="p">:</span>
         <span class="n">duration_min</span>  <span class="o">=</span> <span class="n">ANNUAL_DURATION_MIN</span>
         <span class="n">timestep_min</span>  <span class="o">=</span> <span class="n">ANNUAL_TIMESTEP_MIN</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;duration must be &#39;3day&#39; or &#39;annual&#39;, got </span><span class="si">{</span><span class="n">duration</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"duration must be '3day' or 'annual', got </span><span class="si">{</span><span class="n">duration</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="n">sim_run</span> <span class="o">=</span> <span class="n">SimulationRun</span><span class="p">(</span><span class="n">duration_min</span><span class="p">,</span> <span class="n">timestep_min</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.recirc_systems.SwingSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwingSystem</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.recirc_systems.SwingERTrdOffSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SwingERTrdOffSystem</span>
-    <span class="n">sim_run</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SwingSystem</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SwingERTrdOffSystem</span><span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInSeriesSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SP_RTPInSeriesSystem</span><span class="p">,</span> <span class="n">_GAS_DEADBAND_F</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.rtp_systems.SP_RTPInParallelSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">SP_RTPInParallelSystem</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ecoengine.objects.dhwsystems.rtp_systems.MP_RTPInSeriesSystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">MP_RTPInSeriesSystem</span>
+    <span class="n">_is_in_series</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="p">(</span><span class="n">SP_RTPInSeriesSystem</span><span class="p">,</span> <span class="n">MP_RTPInSeriesSystem</span><span class="p">))</span>
+    <span class="n">sim_run</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SwingSystem</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SwingERTrdOffSystem</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SP_RTPInParallelSystem</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">_is_in_series</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">_is_in_series</span><span class="p">:</span>
+        <span class="n">sim_run</span><span class="o">.</span><span class="n">tm_panel_label</span> <span class="o">=</span> <span class="s2">"In Series Heating"</span>
+    <span class="n">sim_run</span><span class="o">.</span><span class="n">merge_tm_into_primary_panel</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">SP_RTPInParallelSystem</span><span class="p">)</span>
 
     <span class="c1"># Initialize storage tanks</span>
     <span class="n">inlet_temp_f</span>    <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">get_design_inlet_water_temp_f</span><span class="p">()</span> <span class="ow">or</span> <span class="mf">50.0</span>
-    <span class="n">percent_useable</span> <span class="o">=</span> <span class="n">_initial_percent_useable</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">)</span>
+    <span class="n">initial_hot_fract</span> <span class="o">=</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">get_initial_hot_fract</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">storage_tank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">dhw_system</span><span class="o">.</span><span class="n">storage_tank</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
-            <span class="n">storage_temp_f</span>  <span class="o">=</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
-            <span class="n">cold_temp_f</span>     <span class="o">=</span> <span class="n">inlet_temp_f</span><span class="p">,</span>
-            <span class="n">percent_useable</span> <span class="o">=</span> <span class="n">percent_useable</span><span class="p">,</span> <span class="c1"># TODO I don&#39;t think this is right</span>
+            <span class="n">storage_temp_f</span>    <span class="o">=</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">,</span>
+            <span class="n">cold_temp_f</span>       <span class="o">=</span> <span class="n">inlet_temp_f</span><span class="p">,</span>
+            <span class="n">initial_hot_fract</span> <span class="o">=</span> <span class="n">initial_hot_fract</span><span class="p">,</span>
+            <span class="n">supply_temp_f</span>     <span class="o">=</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="c1"># Initialize TM tank if present (ParallelLoopSystem, SwingSystem)</span>
-    <span class="n">tm_tank</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="s2">&quot;tm_storage_tank&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">tm_tank</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="s2">"tm_storage_tank"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">tm_tank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">tm_off_temp_f</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="s2">&quot;tm_off_temp_f&quot;</span><span class="p">,</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">)</span>
+        <span class="n">tm_off_temp_f</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="s2">"tm_off_temp_f"</span><span class="p">,</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">storage_temp_f</span><span class="p">)</span>
         <span class="n">tm_tank</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
-            <span class="n">storage_temp_f</span>  <span class="o">=</span> <span class="n">tm_off_temp_f</span><span class="p">,</span>
-            <span class="n">cold_temp_f</span>     <span class="o">=</span> <span class="n">inlet_temp_f</span><span class="p">,</span>
-            <span class="n">percent_useable</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">storage_temp_f</span>    <span class="o">=</span> <span class="n">tm_off_temp_f</span><span class="p">,</span>
+            <span class="n">cold_temp_f</span>       <span class="o">=</span> <span class="n">inlet_temp_f</span><span class="p">,</span>
+            <span class="n">initial_hot_fract</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">supply_temp_f</span>     <span class="o">=</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="c1"># Initialize gas backup tank if present (SP_RTPInSeriesSystem)</span>
+    <span class="n">gas_tank</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="s2">"gas_storage_tank"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gas_tank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">gas_tank</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
+            <span class="n">storage_temp_f</span>    <span class="o">=</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">+</span> <span class="n">_GAS_DEADBAND_F</span><span class="p">,</span>
+            <span class="n">cold_temp_f</span>       <span class="o">=</span> <span class="n">inlet_temp_f</span><span class="p">,</span>
+            <span class="n">initial_hot_fract</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">supply_temp_f</span>     <span class="o">=</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="n">sim_run</span><span class="o">.</span><span class="n">supply_temp_f</span> <span class="o">=</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span>
@@ -323,27 +347,31 @@
             <span class="n">interval_min</span>      <span class="o">=</span> <span class="n">timestep_min</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">sim_run</span><span class="o">.</span><span class="n">record_timestep</span><span class="p">(</span>
-            <span class="n">dhw_demand_supplyT_gal</span>    <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;demand_supplyT_gal&quot;</span><span class="p">],</span>
-            <span class="n">usable_volume_supplyT_gal</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;usable_volume_supplyT_gal&quot;</span><span class="p">],</span>
-            <span class="n">heater_output_kbtuh</span>       <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;heater_output_kbtuh&quot;</span><span class="p">],</span>
-            <span class="n">heater_power_in_kw</span>        <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;heater_power_in_kw&quot;</span><span class="p">],</span>
-            <span class="n">oat_f</span>                     <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;oat_f&quot;</span><span class="p">],</span>
-            <span class="n">inlet_water_temp_f</span>        <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;inlet_water_temp_f&quot;</span><span class="p">],</span>
-            <span class="n">tank_temps_f</span>              <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;tank_temps_f&quot;</span><span class="p">],</span>
-            <span class="n">mode</span>                      <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mode&quot;</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">),</span>
-            <span class="n">tm_tank_temp_f</span>            <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tm_tank_temp_f&quot;</span><span class="p">),</span>
-            <span class="n">tm_heater_output_kbtuh</span>    <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tm_heater_output_kbtuh&quot;</span><span class="p">),</span>
-            <span class="n">tm_heater_input_kw</span>    <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tm_heater_input_kw&quot;</span><span class="p">),</span>
+            <span class="n">dhw_demand_supplyT_gal</span>    <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">"demand_supplyT_gal"</span><span class="p">],</span>
+            <span class="n">usable_volume_supplyT_gal</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">"usable_volume_supplyT_gal"</span><span class="p">],</span>
+            <span class="n">heater_output_kbtuh</span>       <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">"heater_output_kbtuh"</span><span class="p">],</span>
+            <span class="n">heater_power_in_kw</span>        <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">"heater_power_in_kw"</span><span class="p">],</span>
+            <span class="n">oat_f</span>                     <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">"oat_f"</span><span class="p">],</span>
+            <span class="n">inlet_water_temp_f</span>        <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">"inlet_water_temp_f"</span><span class="p">],</span>
+            <span class="n">tank_temps_f</span>              <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">"tank_temps_f"</span><span class="p">],</span>
+            <span class="n">mode</span>                      <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mode"</span><span class="p">,</span> <span class="s2">"normal"</span><span class="p">),</span>
+            <span class="n">tm_tank_temp_f</span>            <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tm_tank_temp_f"</span><span class="p">),</span>
+            <span class="n">tm_heater_output_kbtuh</span>    <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tm_heater_output_kbtuh"</span><span class="p">),</span> <span class="c1">#TODO rename this for gas heating you know?</span>
+            <span class="n">tm_heater_input_kw</span>    <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tm_heater_input_kw"</span><span class="p">),</span>
+            <span class="c1"># Raw, not the fallback-resolved value below: only schematics that</span>
+            <span class="c1"># actually report a delivery temperature get the recorded series.</span>
+            <span class="n">delivery_temp_f</span>           <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"delivery_temp_f"</span><span class="p">),</span>
         <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;usable_volume_supplyT_gal&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">sim_run</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="ow">or</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tm_tank_temp_f&quot;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span>
+        
+        <span class="n">delivery_temp_f</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"delivery_temp_f"</span><span class="p">,</span> <span class="n">step</span><span class="p">[</span><span class="s2">"tank_temps_f"</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">step</span><span class="p">[</span><span class="s2">"usable_volume_supplyT_gal"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">delivery_temp_f</span> <span class="o">&lt;</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span>
+            <span class="n">tm_tank_temp_f</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tm_tank_temp_f"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sim_run</span><span class="o">.</span><span class="n">show_tm_panel</span> <span class="ow">or</span> <span class="n">tm_tank_temp_f</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">tm_tank_temp_f</span> <span class="o">&lt;</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">:</span>
                 <span class="n">sim_run</span><span class="o">.</span><span class="n">record_outage</span><span class="p">(</span><span class="n">timestep_min</span><span class="p">)</span>
 
         <span class="c1"># Check outlet-deficit stop condition. For systems where the TM/swing</span>
         <span class="c1"># tank is the actual delivery point (e.g. SwingSystem), use its</span>
         <span class="c1"># temperature; for all others fall back to the primary tank top.</span>
-        <span class="n">delivery_temp_f</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;delivery_temp_f&quot;</span><span class="p">,</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;tank_temps_f&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">sim_run</span><span class="o">.</span><span class="n">check_outlet_deficit</span><span class="p">(</span><span class="n">delivery_temp_f</span><span class="p">,</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">supply_temp_f</span><span class="p">):</span>
             <span class="k">break</span>
     <span class="k">return</span> <span class="n">sim_run</span></div>
@@ -353,7 +381,7 @@
 <div class="viewcode-block" id="simulate_3day">
 <a class="viewcode-back" href="../../../api/simulation.html#ecoengine.interfaces.Simulator.simulate_3day">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">simulate_3day</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">:</span> <span class="n">DHWSystem</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationRun</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convenience wrapper: run a 3-day simulation at 1-minute timesteps.</span>
 
 <span class="sd">    Parameters</span>
@@ -366,15 +394,15 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    SimulationRun</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">simulate</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="s2">&quot;3day&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span></div>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">simulate</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="s2">"3day"</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="simulate_annual">
 <a class="viewcode-back" href="../../../api/simulation.html#ecoengine.interfaces.Simulator.simulate_annual">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">simulate_annual</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">:</span> <span class="n">DHWSystem</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationRun</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convenience wrapper: run a full annual simulation at 10-minute timesteps.</span>
 
 <span class="sd">    Parameters</span>
@@ -387,35 +415,14 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    SimulationRun</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">simulate</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="s2">&quot;annual&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span></div>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">simulate</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="s2">"annual"</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_run_kwargs</span><span class="p">)</span></div>
 
 
 
 <span class="c1"># ---------------------------------------------------------------------------</span>
 <span class="c1"># Private helpers</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_initial_percent_useable</span><span class="p">(</span><span class="n">dhw_system</span><span class="p">:</span> <span class="n">DHWSystem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Determine the initial tank charge level (fraction hot) from the system&#39;s</span>
-<span class="sd">    &quot;normal&quot; Controls on-aquastat fraction.</span>
-
-<span class="sd">    Starting the tank at ``1 - on_sensor_fract`` matches the original</span>
-<span class="sd">    engine&#39;s initialisation: the tank begins at the on-trigger level so the</span>
-<span class="sd">    heater fires immediately on the first cold hour and the simulation</span>
-<span class="sd">    reaches steady state quickly.</span>
-
-<span class="sd">    Falls back to 1.0 (fully charged) when no Controls are configured.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">wh</span> <span class="ow">in</span> <span class="n">dhw_system</span><span class="o">.</span><span class="n">water_heaters</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">wh</span><span class="o">.</span><span class="n">control_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="c1"># Prefer &quot;normal&quot; key; otherwise take the first available Controls.</span>
-        <span class="n">ctrl</span> <span class="o">=</span> <span class="n">wh</span><span class="o">.</span><span class="n">control_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;normal&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">wh</span><span class="o">.</span><span class="n">control_map</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ctrl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">ctrl</span><span class="o">.</span><span class="n">on_sensor_fract</span><span class="p">))</span>
-    <span class="k">return</span> <span class="mf">1.0</span>
 </pre></div>
         </article>
       </div>
@@ -448,7 +455,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=acc74ff5"></script>
+</div><script src="../../../_static/documentation_options.js?v=3eb8911e"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

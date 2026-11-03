@@ -868,7 +868,7 @@ class SwingSystem(RecircSystem):
 
     def get_minimum_tm_volume_gal(self) -> float:
         if self._minimum_tm_volume_gal is None:
-            raise RuntimeError("size() must be called before get_minimum_tm_volume_gal().")
+            raise RuntimeError("System was built, not sized: call size() before get_minimum_tm_volume_gal().")
         return self._minimum_tm_volume_gal
 
     def get_minimum_tm_ca_volume_gal(self) -> float:
@@ -880,12 +880,12 @@ class SwingSystem(RecircSystem):
         Capped at 480 gal when the standard sizing table drives a larger result.
         """
         if self._minimum_tm_ca_volume_gal is None:
-            raise RuntimeError("size() must be called before get_minimum_tm_ca_volume_gal().")
+            raise RuntimeError("System was built, not sized: call size() before get_minimum_tm_ca_volume_gal().")
         return self._minimum_tm_ca_volume_gal
 
     def get_minimum_tm_capacity_kbtuh(self) -> float:
         if self._minimum_tm_capacity_kbtuh is None:
-            raise RuntimeError("size() must be called before get_minimum_tm_capacity_kbtuh().")
+            raise RuntimeError("System was built, not sized: call size() before get_minimum_tm_capacity_kbtuh().")
         return self._minimum_tm_capacity_kbtuh
 
     # ------------------------------------------------------------------

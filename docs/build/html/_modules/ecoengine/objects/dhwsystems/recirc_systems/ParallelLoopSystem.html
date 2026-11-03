@@ -194,6 +194,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../quickstart.html">Quick Start</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../api/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecosizerengine.html">EcosizerEngine (Top-Level API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../api/ecobuilder.html">EcoBuilder (Component-by-Component API)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/building.html">Building &amp; Climate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/dhwsystems.html">DHW Systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../api/components.html">Equipment Components</a></li>
@@ -252,7 +253,7 @@
 <div class="viewcode-block" id="ParallelLoopSystem">
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem.ParallelLoopSystem">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ParallelLoopSystem</span><span class="p">(</span><span class="n">RecircSystem</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Parallel loop system: a separate temperature-maintenance (TM) tank sits in</span>
 <span class="sd">    parallel with the primary storage tank.</span>
 
@@ -274,7 +275,7 @@
 <span class="sd">            tm_on_temp_f    = 115.0,</span>
 <span class="sd">            tm_off_temp_f   = 120.0,</span>
 <span class="sd">        )</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="ParallelLoopSystem.__init__">
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem.ParallelLoopSystem.__init__">[docs]</a>
@@ -296,7 +297,7 @@
         <span class="n">max_daily_run_hr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">24.0</span><span class="p">,</span>
         <span class="n">defrost_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        water_heaters : list[WaterHeater]</span>
@@ -335,7 +336,7 @@
 <span class="sd">            Maximum hours the primary heating system may run per day.</span>
 <span class="sd">        defrost_factor : float</span>
 <span class="sd">            Fraction of rated capacity available after defrost (0–1).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">water_heaters</span><span class="p">,</span>
             <span class="n">storage_tank</span><span class="p">,</span>
@@ -385,7 +386,7 @@
         <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.8</span><span class="p">,</span>
         <span class="n">load_shift_fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParallelLoopSystem</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Size the system for the given building, then build it.</span>
 
 <span class="sd">        Parameters</span>
@@ -420,7 +421,7 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        ParallelLoopSystem</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">system</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">water_heaters</span><span class="o">=</span><span class="p">[],</span>
             <span class="n">storage_tank</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -468,8 +469,8 @@
         <span class="p">)</span>
         <span class="n">system</span><span class="o">.</span><span class="n">tm_water_heater</span> <span class="o">=</span> <span class="n">WaterHeater</span><span class="o">.</span><span class="n">from_nominal_capacity</span><span class="p">(</span>
             <span class="n">nominal_capacity_kbtuh</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span> <span class="o">/</span> <span class="n">system</span><span class="o">.</span><span class="n">num_tm_heaters</span><span class="p">,</span>
-            <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
-            <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
+            <span class="n">control_schedule</span><span class="o">=</span><span class="p">[</span><span class="s2">"normal"</span><span class="p">]</span> <span class="o">*</span> <span class="mi">24</span><span class="p">,</span>
+            <span class="n">control_map</span><span class="o">=</span><span class="p">{</span><span class="s2">"normal"</span><span class="p">:</span> <span class="n">tm_controls</span><span class="p">},</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">system</span></div>
@@ -480,26 +481,26 @@
     <span class="c1"># ------------------------------------------------------------------</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_tm_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Raise ValueError if TM parameters are physically inconsistent.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Raise ValueError if TM parameters are physically inconsistent."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;tm_safety_factor must be &gt; 1.0. The TM heater must be able to &quot;</span>
-                <span class="s2">&quot;outpace recirc losses over a full cycle.&quot;</span>
+                <span class="s2">"tm_safety_factor must be &gt; 1.0. The TM heater must be able to "</span>
+                <span class="s2">"outpace recirc losses over a full cycle."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_off_time_hr</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;tm_off_time_hr must be &gt; 0 and &lt;= 1.0 hour.&quot;</span>
+                <span class="s2">"tm_off_time_hr must be &gt; 0 and &lt;= 1.0 hour."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_off_temp_f</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_on_temp_f</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;tm_off_temp_f must be greater than tm_on_temp_f.&quot;</span>
+                <span class="s2">"tm_off_temp_f must be greater than tm_on_temp_f."</span>
             <span class="p">)</span>
         <span class="n">expected_runtime_hr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_off_time_hr</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_safety_factor</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">_TM_MIN_RUNTIME_HR</span> <span class="o">&gt;=</span> <span class="n">expected_runtime_hr</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Expected TM heater runtime (</span><span class="si">{</span><span class="n">expected_runtime_hr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> min) is below &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;the recommended minimum (</span><span class="si">{</span><span class="n">_TM_MIN_RUNTIME_HR</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> min). &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Increase tm_off_time_hr or tm_safety_factor.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Expected TM heater runtime (</span><span class="si">{</span><span class="n">expected_runtime_hr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> min) is below "</span>
+                <span class="sa">f</span><span class="s2">"the recommended minimum (</span><span class="si">{</span><span class="n">_TM_MIN_RUNTIME_HR</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> min). "</span>
+                <span class="sa">f</span><span class="s2">"Increase tm_off_time_hr or tm_safety_factor."</span>
             <span class="p">)</span>
 
     <span class="c1"># ------------------------------------------------------------------</span>
@@ -516,14 +517,14 @@
         <span class="n">strat_slope</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.8</span><span class="p">,</span>
         <span class="n">load_shift_fract_total_vol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Size both the primary DHW system and the TM system.</span>
 
 <span class="sd">        Primary sizing uses the standard DHWSystem max-deficit algorithm.</span>
 <span class="sd">        TM sizing uses recirc loss rate, off-time, and safety factor.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_tm_inputs</span><span class="p">()</span>
-        <span class="c1"># Primary sizing (DHWSystem.size() via RecircSystem which doesn&#39;t override it)</span>
+        <span class="c1"># Primary sizing (DHWSystem.size() via RecircSystem which doesn't override it)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">size</span><span class="p">(</span>
             <span class="n">building</span><span class="p">,</span>
             <span class="n">control_schedule</span><span class="o">=</span><span class="n">control_schedule</span><span class="p">,</span>
@@ -538,7 +539,7 @@
 <div class="viewcode-block" id="ParallelLoopSystem.size_tm_system">
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem.ParallelLoopSystem.size_tm_system">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">size_tm_system</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Size the temperature-maintenance tank and heater from recirc loss parameters.</span>
 
 <span class="sd">        Formulas</span>
@@ -555,7 +556,7 @@
 <span class="sd">            Must outpace the recirc loss by the safety factor:</span>
 
 <span class="sd">                TMCap_kbtuh = safety_factor × recirc_loss_kbtuh</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">recirc_loss_btuhr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_recirc_loss_kbtuh</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1000.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span> <span class="o">=</span> <span class="p">(</span>
             <span class="p">(</span><span class="n">recirc_loss_btuhr</span> <span class="o">/</span> <span class="n">_RHO_CP</span><span class="p">)</span>
@@ -572,7 +573,7 @@
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem.ParallelLoopSystem.get_minimum_tm_volume_gal">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_minimum_tm_volume_gal</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;size() must be called before get_minimum_tm_volume_gal().&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"System was built, not sized: call size() before get_minimum_tm_volume_gal()."</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_volume_gal</span></div>
 
 
@@ -580,7 +581,7 @@
 <a class="viewcode-back" href="../../../../../api/dhwsystems.html#ecoengine.objects.dhwsystems.recirc_systems.ParallelLoopSystem.ParallelLoopSystem.get_minimum_tm_capacity_kbtuh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_minimum_tm_capacity_kbtuh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;size() must be called before get_minimum_tm_capacity_kbtuh().&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"System was built, not sized: call size() before get_minimum_tm_capacity_kbtuh()."</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_tm_capacity_kbtuh</span></div>
 
 
@@ -595,9 +596,9 @@
         <span class="n">building</span> <span class="p">:</span> <span class="n">Building</span><span class="p">,</span>
         <span class="n">timestep_interval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">interval_min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"normal"</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Execute one simulation timestep for the parallel loop system.</span>
 
 <span class="sd">        Delegates the entire primary system step to DHWSystem.simulate_step()</span>
@@ -624,14 +625,14 @@
 <span class="sd">        timestep_interval : int</span>
 <span class="sd">        interval_min : int</span>
 <span class="sd">        mode : str</span>
-<span class="sd">            Ignored — operating mode determined by each heater&#39;s control schedule.</span>
+<span class="sd">            Ignored — operating mode determined by each heater's control schedule.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
 <span class="sd">            Same keys as DHWSystem.simulate_step(). heater_output_kbtuh and</span>
 <span class="sd">            heater_power_in_kw include both primary and TM heater contributions.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># Run primary system: super() → RecircSystem → DHWSystem</span>
         <span class="n">step</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">simulate_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">timestep_interval</span><span class="p">,</span> <span class="n">interval_min</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
 
@@ -639,7 +640,7 @@
         <span class="c1"># TM system — recirc loss applied first, then heater responds</span>
         <span class="c1"># ------------------------------------------------------------------</span>
         <span class="n">hour_of_day</span> <span class="o">=</span> <span class="p">(</span><span class="n">timestep_interval</span> <span class="o">*</span> <span class="n">interval_min</span> <span class="o">//</span> <span class="mi">60</span><span class="p">)</span> <span class="o">%</span> <span class="mi">24</span>
-        <span class="n">oat_f</span>       <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;oat_f&quot;</span><span class="p">]</span>
+        <span class="n">oat_f</span>       <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">"oat_f"</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">add_recirc_return</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">return_flow_gpm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_temp_f</span><span class="p">,</span> <span class="n">interval_min</span>
@@ -665,12 +666,12 @@
         <span class="c1"># TM thermal output is tracked separately in tm_heater_output_kbtuh.</span>
         <span class="c1"># heater_power_in_kw merges both so get_total_energy_kwh() is accurate.</span>
         <span class="c1"># if tm_kw is not None:</span>
-        <span class="c1">#     step[&quot;heater_power_in_kw&quot;] = (step[&quot;heater_power_in_kw&quot;] or 0.0) + tm_kw</span>
+        <span class="c1">#     step["heater_power_in_kw"] = (step["heater_power_in_kw"] or 0.0) + tm_kw</span>
 
         <span class="c1"># TM panel data (consumed by SimulationRun for the TM subplot)</span>
-        <span class="n">step</span><span class="p">[</span><span class="s2">&quot;tm_tank_temp_f&quot;</span><span class="p">]</span>         <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">get_temperature_at_fraction</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-        <span class="n">step</span><span class="p">[</span><span class="s2">&quot;tm_heater_output_kbtuh&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tm_kbtuh</span>
-        <span class="n">step</span><span class="p">[</span><span class="s2">&quot;tm_heater_input_kw&quot;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">tm_kw</span>
+        <span class="n">step</span><span class="p">[</span><span class="s2">"tm_tank_temp_f"</span><span class="p">]</span>         <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_storage_tank</span><span class="o">.</span><span class="n">get_temperature_at_fraction</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">step</span><span class="p">[</span><span class="s2">"tm_heater_output_kbtuh"</span><span class="p">]</span> <span class="o">=</span> <span class="n">tm_kbtuh</span>
+        <span class="n">step</span><span class="p">[</span><span class="s2">"tm_heater_input_kw"</span><span class="p">]</span>     <span class="o">=</span> <span class="n">tm_kw</span>
         <span class="k">return</span> <span class="n">step</span></div>
 </div>
 
@@ -706,7 +707,7 @@
       
     </aside>
   </div>
-</div><script src="../../../../../_static/documentation_options.js?v=acc74ff5"></script>
+</div><script src="../../../../../_static/documentation_options.js?v=3eb8911e"></script>
     <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../_static/scripts/furo.js?v=46bd48cc"></script>
