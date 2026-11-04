@@ -388,7 +388,7 @@ class ParallelLoopSystem(RecircSystem):
             self.return_flow_gpm, self.return_temp_f, interval_min
         )
 
-        self.tm_water_heater.update_state(self.tm_storage_tank, hour_of_day)
+        self.tm_water_heater.update_state(self.tm_storage_tank, timestep_interval, interval_min)
 
         tm_top_temp_f   = self.tm_storage_tank.get_temperature_at_fraction(1.0)
         tm_inlet_temp_f = (self.tm_off_temp_f + self.tm_on_temp_f) / 2.0

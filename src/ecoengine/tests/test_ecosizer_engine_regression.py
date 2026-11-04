@@ -218,11 +218,13 @@ _PRESIZED_CASES = {
              tm=None, gas=None,
              sim=(536.2116666666717, 56.44333333333333, True, 0, 244573.8082050017, 0.0, 246.4151413608322)),
     ),
+    # sim values regenerated when WaterHeater.update_state() changed to force
+    # heaters off only on the first interval of a mode change (was: first hour)
     "primary_no_recirc|load_shift": (
         {**_PRE, **_LOAD_SHIFT},
         dict(cls="DHWSystem", tank=("StratifiedTank", 500.0, 2.8, None), heaters=[300.0],
              tm=None, gas=None,
-             sim=(0.0, 0.0, True, 0, 248700.0, 0.0, 175.39120875286173)),
+             sim=(0.0, 0.0, True, 0, 245700.0, 0.0, 131.28759840926728)),
     ),
 }
 

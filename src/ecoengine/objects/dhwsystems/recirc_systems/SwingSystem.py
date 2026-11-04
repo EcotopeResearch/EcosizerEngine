@@ -953,7 +953,7 @@ class SwingSystem(RecircSystem):
         )
         # --- 2. Primary heater: update state and heat primary tank ---
         for wh in self.water_heaters:
-            wh.update_state(self.storage_tank, hour_of_day)
+            wh.update_state(self.storage_tank, timestep_interval, interval_min)
 
         top_temp_f    = self.storage_tank.get_temperature_at_fraction(1.0)
         primary_kbtuh = sum(
@@ -992,7 +992,7 @@ class SwingSystem(RecircSystem):
             self.get_recirc_loss_kbtuh(), interval_min
         )
         # --- 7. TM element: update state and heat swing tank ---
-        self.tm_water_heater.update_state(self.tm_storage_tank, hour_of_day)
+        self.tm_water_heater.update_state(self.tm_storage_tank, timestep_interval, interval_min)
         tm_ctrl     = self.tm_water_heater.get_controls_for_hour(hour_of_day)
         tm_outlet_f = tm_ctrl.off_trigger_t_f
         tm_kbtuh    = self.tm_water_heater.get_output_kbtuh(oat_f, tm_outlet_f)

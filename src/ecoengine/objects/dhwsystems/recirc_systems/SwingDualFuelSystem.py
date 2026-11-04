@@ -84,7 +84,7 @@ class _SwingDualFuelPrimary(DHWSystem):
         outlet_temp_f = self._get_outlet_temp_f(hour_of_day)
 
         for wh in self.water_heaters:
-            wh.update_state(self.storage_tank, hour_of_day)
+            wh.update_state(self.storage_tank, timestep_interval, interval_min)
 
         total_kbtuh = sum(
             wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
@@ -420,7 +420,7 @@ class SwingDualFuelSystem(SwingSystem):
 
         # --- 2. Primary heater: update state and heat primary tank ---
         for wh in self.water_heaters:
-            wh.update_state(self.storage_tank, hour_of_day)
+            wh.update_state(self.storage_tank, timestep_interval, interval_min)
 
         primary_kbtuh = sum(
             wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
@@ -463,7 +463,7 @@ class SwingDualFuelSystem(SwingSystem):
         self.tm_storage_tank.mix_primary_inflow(result["storage_draw_gal"], result["inlet_temp_f"])
 
         # --- 5. TM element: update state and heat swing tank ---
-        self.tm_water_heater.update_state(self.tm_storage_tank, hour_of_day)
+        self.tm_water_heater.update_state(self.tm_storage_tank, timestep_interval, interval_min)
         tm_ctrl     = self.tm_water_heater.get_controls_for_hour(hour_of_day)
         tm_outlet_f = tm_ctrl.off_trigger_t_f
         tm_kbtuh    = self.tm_water_heater.get_output_kbtuh(oat_f, tm_outlet_f)
