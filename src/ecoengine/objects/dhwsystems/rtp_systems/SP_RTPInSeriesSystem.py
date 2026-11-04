@@ -354,7 +354,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         self.storage_tank.update_cold_temp_f(inlet_temp_f)
         # Update on/off state for each heater based on current tank condition
         for wh in self.water_heaters:
-            wh.update_state(self.storage_tank, hour_of_day)
+            wh.update_state(self.storage_tank, timestep_interval, interval_min)
 
         # Apply heating from all active heaters to the tank
         total_kbtuh    = sum(
@@ -391,7 +391,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
 
         # Gas water heater heating
         self.gas_storage_tank.mix_primary_inflow(draw_gal, primary_draw_temp_f)
-        self.gas_water_heater.update_state(self.gas_storage_tank, hour_of_day)
+        self.gas_water_heater.update_state(self.gas_storage_tank, timestep_interval, interval_min)
         gas_ctrl     = self.gas_water_heater.get_controls_for_hour(hour_of_day)
         gas_outlet_f = gas_ctrl.outlet_temp_f if gas_ctrl is not None else self.supply_temp_f + _GAS_DEADBAND_F
         gas_kbtuh    = self.gas_water_heater.get_output_kbtuh(oat_f, gas_outlet_f)

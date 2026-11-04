@@ -590,7 +590,7 @@ class MultiPassRTPSystem(RTPSystem):
         # the fully-mixed slug zone, so get_temperature_at_fraction returns
         # slug_temp_f.  The heater turns off when slug_temp_f >= off_trigger_t_f.
         for wh in self.water_heaters:
-            wh.update_state(tank, hour_of_day)
+            wh.update_state(tank, timestep_interval, interval_min)
 
         is_heating = any(wh.is_active() for wh in self.water_heaters)
 

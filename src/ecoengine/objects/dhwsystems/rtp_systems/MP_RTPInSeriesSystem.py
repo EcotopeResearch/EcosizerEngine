@@ -347,7 +347,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
         # the fully-mixed slug zone, so get_temperature_at_fraction returns
         # slug_temp_f.  The heater turns off when slug_temp_f >= off_trigger_t_f.
         for wh in self.water_heaters:
-            wh.update_state(tank, hour_of_day)
+            wh.update_state(tank, timestep_interval, interval_min)
 
         is_heating = any(wh.is_active() for wh in self.water_heaters)
 
@@ -401,7 +401,7 @@ class MP_RTPInSeriesSystem(MultiPassRTPSystem):
             self.gas_storage_tank.mix_primary_inflow(draw_gal, primary_draw_temp_f)
 
         # Gas water heater heating
-        self.gas_water_heater.update_state(self.gas_storage_tank, hour_of_day)
+        self.gas_water_heater.update_state(self.gas_storage_tank, timestep_interval, interval_min)
         gas_ctrl     = self.gas_water_heater.get_controls_for_hour(hour_of_day)
         gas_outlet_f = gas_ctrl.outlet_temp_f
         gas_kbtuh    = self.gas_water_heater.get_output_kbtuh(oat_f, gas_outlet_f)

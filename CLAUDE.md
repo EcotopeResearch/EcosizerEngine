@@ -148,7 +148,7 @@ User parameters
             → ClimateZone.get_oat_f(t, interval_min)
             → DHWSystem.simulate_step(demand, oat, ...)
                 → Controls.should_turn_on/off()
-                → WaterHeater.update_state(storage_tank, hour_of_day)
+                → WaterHeater.update_state(storage_tank, timestep_interval, interval_min)
                 → StorageTank.draw() / heat() / add_recirc_return()
                 → SimulationRun.record_timestep()
     → EcosizerEngine.get_simulation_summary() / get_annual_cost_estimate()

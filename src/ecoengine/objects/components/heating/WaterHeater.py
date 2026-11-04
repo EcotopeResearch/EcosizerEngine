@@ -307,33 +307,44 @@ class WaterHeater:
             raise ValueError(f"No Controls configured for hour {hour_of_day}.")
         return controls.outlet_temp_f
 
-    def update_state(self, storage_tank: StorageTank, hour_of_day: int) -> None:
+    def update_state(
+        self,
+        storage_tank: StorageTank,
+        timestep_interval: int,
+        interval_min: int = 1,
+    ) -> None:
         """
-        Look up the active Controls for the given hour, then update
+        Look up the active Controls for this timestep's hour, then update
         active/inactive state based on current tank condition.
 
+        On the first interval after a mode change in the control schedule,
+        the heater is turned off before the control check.
         If the heater is currently ON, check should_turn_off().
         If the heater is currently OFF, check should_turn_on().
 
         Parameters
         ----------
         storage_tank : StorageTank
-        hour_of_day : int
-            Hour of the day (0-23), used to select the active Controls from
-            the control schedule.
+        timestep_interval : int
+            Number of elapsed intervals since the start of the simulation.
+        interval_min : int
+            Length of each interval [minutes]. Default 1.
 
         Raises
         ------
         ValueError
-            If no Controls are configured for the given hour.
+            If no Controls are configured for this timestep's hour.
         """
+        hour_of_day = (timestep_interval * interval_min // 60) % 24
         controls = self.get_controls_for_hour(hour_of_day)
         if controls is None:
             raise ValueError(f"No Controls configured for hour {hour_of_day}.")
-        
+
         # QPL Alignment block : QPL states Upon change of load shift operation, disable all heaters if “on sensor” is warmer than “on temperature”.
-        # To do this in EcosizerEngine, we simply turn off water heaters at the beginning of a mode change
-        previous_hour = 23 if hour_of_day == 0 else hour_of_day - 1
+        # To do this in EcosizerEngine, we turn off water heaters on the first interval of a mode change.
+        # previous_hour is the hour of the previous timestep, so it differs from hour_of_day
+        # only on the first interval of an hour (timestep 0 → hour 23).
+        previous_hour = ((timestep_interval - 1) * interval_min // 60) % 24
         if self.control_schedule[hour_of_day] != self.control_schedule[previous_hour]:
             self.turn_off()
 

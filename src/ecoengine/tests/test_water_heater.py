@@ -13,6 +13,7 @@ from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 _ON_SENSOR_FRACT  = 0.8
 _OFF_SENSOR_FRACT = 0.2
 _SWITCH_HOUR      = 10   # first hour of the "shed" block
+_SWITCH_MIN       = _SWITCH_HOUR * 60   # first 1-minute interval of the "shed" block
 
 
 def _make_tank() -> StratifiedTank:
@@ -75,7 +76,7 @@ class TestUpdateStateModeSwitch:
         tank = _make_tank()
         heater = _make_heater(tank, _schedule_with_switch())
 
-        heater.update_state(tank, _SWITCH_HOUR - 1)
+        heater.update_state(tank, _SWITCH_MIN - 1)
 
         assert heater.is_active()
 
@@ -83,10 +84,10 @@ class TestUpdateStateModeSwitch:
         tank = _make_tank()
         heater = _make_heater(tank, _schedule_with_switch())
 
-        heater.update_state(tank, _SWITCH_HOUR - 1)
+        heater.update_state(tank, _SWITCH_MIN - 1)
         assert heater.is_active()
 
-        heater.update_state(tank, _SWITCH_HOUR)
+        heater.update_state(tank, _SWITCH_MIN)
 
         assert not heater.is_active()
 
@@ -95,9 +96,9 @@ class TestUpdateStateModeSwitch:
         tank = _make_tank()
         heater = _make_heater(tank, _schedule_with_switch())
 
-        heater.update_state(tank, _SWITCH_HOUR - 1)
-        heater.update_state(tank, _SWITCH_HOUR)
-        heater.update_state(tank, _SWITCH_HOUR + 1)
+        heater.update_state(tank, _SWITCH_MIN - 1)
+        heater.update_state(tank, _SWITCH_MIN)
+        heater.update_state(tank, _SWITCH_MIN + 60)
 
         assert not heater.is_active()
 
@@ -107,6 +108,49 @@ class TestUpdateStateModeSwitch:
         heater = _make_heater(tank, ["shed"] * 24)
         heater.turn_on()
 
-        heater.update_state(tank, _SWITCH_HOUR)
+        heater.update_state(tank, _SWITCH_MIN)
 
         assert heater.is_active()
+
+    def test_turn_off_only_on_first_interval(self):
+        """After the first interval of the new mode, normal control logic resumes."""
+        tank = _make_tank()
+        heater = _make_heater(tank, _schedule_with_switch())
+
+        heater.update_state(tank, _SWITCH_MIN - 1)
+        heater.update_state(tank, _SWITCH_MIN)
+        assert not heater.is_active()
+
+        # Restarted heater is not forced off again later in the same hour
+        heater.turn_on()
+        heater.update_state(tank, _SWITCH_MIN + 1)
+
+        assert heater.is_active()
+
+    def test_ten_minute_intervals(self):
+        """With interval_min=10 the switch is at timestep 60 (hour 10), and only there."""
+        tank = _make_tank()
+        heater = _make_heater(tank, _schedule_with_switch())
+        steps_per_hour = 6
+
+        heater.update_state(tank, _SWITCH_HOUR * steps_per_hour - 1, interval_min=10)
+        assert heater.is_active()
+
+        heater.update_state(tank, _SWITCH_HOUR * steps_per_hour, interval_min=10)
+        assert not heater.is_active()
+
+        heater.turn_on()
+        heater.update_state(tank, _SWITCH_HOUR * steps_per_hour + 1, interval_min=10)
+        assert heater.is_active()
+
+    def test_mode_switch_at_midnight(self):
+        """A change between hour 23 (normal) and hour 0 (shed) is detected."""
+        tank = _make_tank()
+        heater = _make_heater(tank, ["shed"] + ["normal"] * 23)
+
+        heater.update_state(tank, 24 * 60 - 1)
+        assert heater.is_active()
+
+        heater.update_state(tank, 24 * 60)
+
+        assert not heater.is_active()
