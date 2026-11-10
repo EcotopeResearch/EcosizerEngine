@@ -199,6 +199,7 @@ class SwingERTrdOffSystem(SwingSystem):
             nominal_capacity_kbtuh=system._minimum_tm_capacity_kbtuh,
             control_schedule=["normal"] * 24,
             control_map={"normal": tm_controls},
+            heating_type="electric_resistance",
         )
 
         return system
@@ -266,6 +267,7 @@ class SwingERTrdOffSystem(SwingSystem):
             nominal_capacity_kbtuh=system._minimum_tm_capacity_kbtuh,
             control_schedule=["normal"] * 24,
             control_map={"normal": tm_controls},
+            heating_type="electric_resistance",
         )
 
         return system

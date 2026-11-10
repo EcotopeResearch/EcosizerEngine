@@ -225,7 +225,10 @@ def _builder_run(spec: _Spec, design_inlet_temp_f: float):
         eb.define_storage_volume(spec.tm[0], "tm")
         tm_on, tm_off = spec.tm_temps or (_SUPPLY_T_F, _SUPPLY_T_F + 8.0)
         tm_controls = default_tm_controls(s, _SUPPLY_T_F, tm_on, tm_off)
-        _add_heater(eb, spec.tm[1], normal_only, {"normal": tm_controls}, system="tm")
+        # Engine's nominal TM is electric resistance, except the swing_dual_fuel gas swing tank
+        tm_heating_type = "gas" if s == "swing_dual_fuel" else "electric_resistance"
+        _add_heater(eb, spec.tm[1], normal_only, {"normal": tm_controls},
+                    heating_type=tm_heating_type, system="tm")
 
     if s == "sprtp_in_parallel":
         on_f, on_t, off_f, off_t = spec.gas_controls or (
@@ -233,12 +236,12 @@ def _builder_run(spec: _Spec, design_inlet_temp_f: float):
             default_gas_controls.off_sensor_fract, default_gas_controls.off_trigger_t_f,
         )
         gas_controls = eb.build_control_setting(on_f, on_t, off_f, off_t, _STORAGE_T_F)
-        _add_heater(eb, spec.gas[1], normal_only, {"normal": gas_controls}, fuel_type="gas")
+        _add_heater(eb, spec.gas[1], normal_only, {"normal": gas_controls}, heating_type="gas")
     elif s in IN_SERIES_SCHEMATICS:
         eb.define_storage_volume(spec.gas[0], "in_series")
         _add_heater(eb, spec.gas[1], normal_only,
                     {"normal": default_in_series_gas_controls(_SUPPLY_T_F)},
-                    fuel_type="gas", system="in_series")
+                    heating_type="gas", system="in_series")
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")

@@ -6,7 +6,7 @@ import numpy as np
 from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.EnergyTank import EnergyTank
-from ecoengine.constants.constants import _RHO_CP, _BTUH_PER_W
+from ecoengine.constants.constants import _RHO_CP
 from ..utils import (
     mixing_valve_behavior,
     size_supplemental_heating_and_storage,
@@ -356,6 +356,7 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             nominal_capacity_kbtuh=self._gas_capacity_kbtuh,
             control_schedule=["normal"] * 24,
             control_map={"normal": gas_controls},
+            heating_type="gas",
         )
 
     # ------------------------------------------------------------------
@@ -441,15 +442,13 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
         )
         gas_outlet_temp_f = self.gas_water_heater.get_controls_for_hour(hour_of_day).outlet_temp_f
         gas_kbtuh = self.gas_water_heater.get_output_kbtuh(oat_f, gas_outlet_temp_f, inlet_temp_f)
-        total_kw: float | None = None
-        active_kws = [
+        # Gas input power is recorded in tm_heater_input_kw, separate from the
+        # primary heater_power_in_kw; SimulationRun combines them.
+        gas_kw_val = self.gas_water_heater.get_power_in_kw(oat_f, gas_outlet_temp_f, inlet_temp_f)
+        total_kw = sum(
             wh.get_power_in_kw(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
             for wh in self.water_heaters
-            if wh.is_active()
-        ]
-        # TODO track gas use
-        if any(kw is not None for kw in active_kws):
-            total_kw = sum(kw or 0.0 for kw in active_kws)
+        )
 
         self.storage_tank.heat(total_kbtuh, interval_min, outlet_temp_f)
         self.storage_tank.heat(gas_kbtuh, interval_min, outlet_temp_f) # outlet temperature should always stay the same as HPWH settings
@@ -488,6 +487,6 @@ class SP_RTPInParallelSystem(SinglePassRTPSystem):
             "tank_temps_f":              tank_temps_f,
             "mode":                      mode,
             "tm_heater_output_kbtuh":    gas_kbtuh,
-            "tm_heater_input_kw":        gas_kbtuh / _BTUH_PER_W,
+            "tm_heater_input_kw":        gas_kw_val,
             "draw_thru_system_gal":      draw_gal,
         }

@@ -606,15 +606,9 @@ class MultiPassRTPSystem(RTPSystem):
         total_kbtuh = sum(
             wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day)) for wh in self.water_heaters
         )
-        active_kws  = [
+        total_kw = sum(
             wh.get_power_in_kw(oat_f, wh.get_outlet_temp_f(hour_of_day))
             for wh in self.water_heaters
-            if wh.is_active()
-        ]
-        total_kw: float | None = (
-            sum(kw or 0.0 for kw in active_kws)
-            if any(kw is not None for kw in active_kws)
-            else None
         )
 
         # --- Mixing valve draw ---

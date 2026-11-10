@@ -1265,8 +1265,19 @@ class EcosizerEngine:
                 f"Schematic '{self.schematic}' requires gas_storage_vol_gal in pre-sized mode."
             )
 
-    def _build_tm_water_heater(self, tm_controls, force_electric_resistance : bool = False):
-        """Build the TM WaterHeater (single unit) from tm_model or tm_capacity_kbtuh."""
+    def _build_tm_water_heater(
+        self,
+        tm_controls,
+        force_electric_resistance: bool = False,
+        nominal_heating_type: str = "electric_resistance",
+    ):
+        """
+        Build the TM WaterHeater (single unit) from tm_model or tm_capacity_kbtuh.
+
+        ``nominal_heating_type`` sets the heating type of a nominal-capacity TM
+        heater: ``'electric_resistance'`` for TM elements, ``'gas'`` for the
+        ``swing_dual_fuel`` gas swing tank.
+        """
         from ecoengine.objects.components.heating.WaterHeater import WaterHeater
         if force_electric_resistance:
             self.num_tm_heaters = 1
@@ -1288,6 +1299,7 @@ class EcosizerEngine:
             nominal_capacity_kbtuh=per_unit_kbtuh,
             control_schedule=["normal"] * 24,
             control_map={"normal": tm_controls},
+            heating_type=nominal_heating_type,
         )
 
     def _build_presized_dhw_system(self):
@@ -1369,9 +1381,12 @@ class EcosizerEngine:
             tm_controls = default_tm_controls(
                 schematic, self.supply_temp_f, self.tm_on_temp_f, self.tm_off_temp_f
             )
-            # Swing variants always use an electric-resistance TM element
+            # Swing variants always use a nominal TM element: electric
+            # resistance for swing_tank, gas for the swing_dual_fuel swing tank.
             tm_water_heater = self._build_tm_water_heater(
-                tm_controls, force_electric_resistance=(schematic != "parallel_loop")
+                tm_controls,
+                force_electric_resistance=(schematic != "parallel_loop"),
+                nominal_heating_type="gas" if schematic == "swing_dual_fuel" else "electric_resistance",
             )
 
         gas_water_heater = None
@@ -1385,6 +1400,7 @@ class EcosizerEngine:
                 nominal_capacity_kbtuh=self.gas_capacity_kbtuh,
                 control_schedule=["normal"] * 24,
                 control_map={"normal": gas_controls},
+                heating_type="gas",
             )
 
         system = assemble_dhw_system(
@@ -1535,6 +1551,58 @@ class EcosizerEngine:
             Monthly energy breakdown (kWh) by month.
         """
         return {"monthly_energy_kwh": simulation_run.get_monthly_energy_kwh()}
+
+    def get_parameters(self) -> dict:
+        """
+        Return every public engine field and its current value.
+
+        Private fields (``_building``, ``_dhw_system``) are left out; use
+        ``print_parameters()`` to also see the built system's heaters and tanks.
+
+        Returns
+        -------
+        dict
+            ``{field_name: value}`` in the order the fields were set.
+        """
+        return {k: v for k, v in vars(self).items() if not k.startswith("_")}
+
+    def print_parameters(self, include_system: bool = True) -> None:
+        """
+        Print every public engine field and its current value, for debugging.
+
+        Parameters
+        ----------
+        include_system : bool
+            Also print the built DHWSystem: class, storage tanks, and for each
+            heater its role, heating type, performance map class, model name
+            and nominal capacity. Default True.
+        """
+        params = self.get_parameters()
+        width  = max(len(k) for k in params)
+        print("EcosizerEngine parameters")
+        for k, v in params.items():
+            print(f"  {k:<{width}} = {v!r}")
+
+        if not include_system or self._dhw_system is None:
+            return
+        system = self._dhw_system
+        print(f"Built system: {type(system).__name__}")
+        for attr in ("storage_tank", "tm_storage_tank", "gas_storage_tank"):
+            tank = getattr(system, attr, None)
+            if tank is not None:
+                print(f"  {attr}: {type(tank).__name__}, "
+                      f"{getattr(tank, 'total_volume_gal', None)} gal")
+        heaters = [("primary", wh) for wh in getattr(system, "water_heaters", None) or []]
+        for role, attr in (("tm", "tm_water_heater"), ("gas", "gas_water_heater")):
+            wh = getattr(system, attr, None)
+            if wh is not None:
+                heaters.append((role, wh))
+        for role, wh in heaters:
+            pm = wh.performance_map
+            print(f"  {role} heater: heating_type={wh.heating_type!r}, "
+                  f"map={type(pm).__name__}, model={getattr(pm, 'model_name', '') or None!r}, "
+                  f"nominal_capacity_kbtuh={getattr(pm, 'nominal_capacity_kbtuh', None)!r}, "
+                  f"num_units={getattr(pm, 'num_units', None)!r}")
 
     def get_hw_magnitude(self) -> float:
         """

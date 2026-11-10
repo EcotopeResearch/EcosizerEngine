@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from ecoengine.constants.constants import _HEATING_TYPES
 from ecoengine.objects.components.heating.PerformanceMap import NominalPerformanceMap, PerformanceMap
+
+HeatingType = Literal["electric_resistance", "gas", "heat_pump"]
 
 if TYPE_CHECKING:
     from ecoengine.objects.components.heating.Controls import Controls
@@ -49,7 +52,7 @@ class WaterHeater:
         performance_map: PerformanceMap | None,
         control_schedule: list[str] | None,
         control_map: dict[str, Controls] | None,
-        fuel_type: Literal["electric", "gas"] = "electric",
+        heating_type: HeatingType = "heat_pump",
     ) -> None:
         """
         Parameters
@@ -63,13 +66,29 @@ class WaterHeater:
         control_map : dict[str, Controls] | None
             Maps schedule strings to Controls objects.
             None when no control logic is configured.
-        fuel_type : "electric" | "gas"
-            Fuel source for this heater. Default is "electric".
+        heating_type : "electric_resistance" | "gas" | "heat_pump"
+            Heating technology. Default is "heat_pump". When
+            ``performance_map`` is a ``NominalPerformanceMap``, the heater
+            stores a copy of it with this heating type, so its power uses the
+            matching nominal COP. The passed map is not modified.
+
+        Raises
+        ------
+        ValueError
+            If ``heating_type`` is not a known heating type.
         """
+        if heating_type not in _HEATING_TYPES:
+            raise ValueError(f"heating_type must be one of {_HEATING_TYPES}, got {heating_type!r}.")
+        if isinstance(performance_map, NominalPerformanceMap) and performance_map.heating_type != heating_type:
+            performance_map = NominalPerformanceMap(
+                performance_map.nominal_capacity_kbtuh,
+                model_name=performance_map.model_name,
+                heating_type=heating_type,
+            )
         self.performance_map  = performance_map
         self.control_schedule = control_schedule
         self.control_map      = control_map
-        self.fuel_type        = fuel_type
+        self.heating_type     = heating_type
         self._active          = False
 
     # ------------------------------------------------------------------
@@ -82,7 +101,7 @@ class WaterHeater:
         nominal_capacity_kbtuh: float,
         control_schedule: list[str] | None,
         control_map: dict[str, Controls] | None,
-        fuel_type: Literal["electric", "gas"] = "electric",
+        heating_type: HeatingType = "heat_pump",
     ) -> WaterHeater:
         """
         Create a WaterHeater with a constant-capacity placeholder performance map.
@@ -99,18 +118,19 @@ class WaterHeater:
             24-element list mapping each hour to a key in control_map.
         control_map : dict[str, Controls] | None
             Maps schedule strings to Controls objects.
-        fuel_type : "electric" | "gas"
-            Fuel source for this heater. Default is "electric".
+        heating_type : "electric_resistance" | "gas" | "heat_pump"
+            Heating technology; selects the nominal COP used for power input.
+            Default is "heat_pump".
 
         Returns
         -------
         WaterHeater
         """
         return cls(
-            performance_map=NominalPerformanceMap(nominal_capacity_kbtuh),
+            performance_map=NominalPerformanceMap(nominal_capacity_kbtuh, heating_type=heating_type),
             control_schedule=control_schedule,
             control_map=control_map,
-            fuel_type=fuel_type,
+            heating_type=heating_type,
         )
 
     @classmethod
@@ -122,7 +142,7 @@ class WaterHeater:
         num_units: int = 1,
         design_inlet_temp_f: float = 50.0,
         nominal_capacity_kbtuh: float | None = None,
-        fuel_type: Literal["electric", "gas"] = "electric",
+        heating_type: HeatingType = "heat_pump",
         perf_map_dir: str | None = None,
     ) -> WaterHeater:
         """
@@ -144,8 +164,9 @@ class WaterHeater:
             Cold-water inlet temperature used when not supplied per-call. Default 50 °F.
         nominal_capacity_kbtuh : float | None
             Total system capacity for ER fallback sizing. Default None.
-        fuel_type : "electric" | "gas"
-            Fuel source for this heater. Default is "electric".
+        heating_type : "electric_resistance" | "gas" | "heat_pump"
+            Heating technology label. Default is "heat_pump". Does not change
+            the model map, which has its own power data.
         perf_map_dir : str | None
             Path to directory containing ``maps.json`` and ``pkls/``.
             Passed through to ``PerformanceMap.from_model_name()``.
@@ -164,7 +185,7 @@ class WaterHeater:
             ),
             control_schedule=control_schedule,
             control_map=control_map,
-            fuel_type=fuel_type,
+            heating_type=heating_type,
         )
 
     # ------------------------------------------------------------------
@@ -242,9 +263,10 @@ class WaterHeater:
         oat_f: float,
         outlet_temp_f: float,
         inlet_temp_f: float | None = None,
-    ) -> float | None:
+    ) -> float:
         """
-        Return electrical power input [kW] at current conditions.
+        Return actual power input this timestep [kW]: the performance map's
+        power if active, 0 if not.
 
         Parameters
         ----------
@@ -256,11 +278,14 @@ class WaterHeater:
 
         Returns
         -------
-        float | None
+        float
+            0.0 when the heater is inactive, has no performance map, or the
+            map has no power data.
         """
-        if self.performance_map is not None:
-            return self.performance_map.get_power_in_kw(oat_f, outlet_temp_f, inlet_temp_f)
-        return None
+        if not self._active or self.performance_map is None:
+            return 0.0
+        kw = self.performance_map.get_power_in_kw(oat_f, outlet_temp_f, inlet_temp_f)
+        return kw if kw is not None else 0.0
 
     def get_output_kbtuh(
         self,

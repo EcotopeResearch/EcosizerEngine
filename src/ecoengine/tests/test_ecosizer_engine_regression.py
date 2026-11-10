@@ -154,31 +154,31 @@ _PRESIZED_CASES = {
         _PRE,
         dict(cls="DHWSystem", tank=("StratifiedTank", 500.0, 2.8, None), heaters=[300.0],
              tm=None, gas=None,
-             sim=(0.0, 0.0, True, 0, 250200.0, 0.0, 246.6289343451633)),
+             sim=(488.84249248711563, 35.168524639361436, True, 0, 250200.0, 0.0, 246.6289343451633)),
     ),
     "parallel_loop": (
         {**_RECIRC, **_PRE, **_TM},
         dict(cls="ParallelLoopSystem", tank=("StratifiedTank", 500.0, 2.8, None), heaters=[300.0],
              tm=(100.0, 30.0), gas=None,
-             sim=(0.0, 0.0, True, 0, 250200.0, 129270.0, 246.6289343451633)),
+             sim=(1153.496758588054, 44.42339954445655, True, 0, 250200.0, 129270.0, 246.6289343451633)),
     ),
     "swing_tank": (
         {**_RECIRC, **_PRE, **_TM},
         dict(cls="SwingSystem", tank=("StratifiedTank", 500.0, 2.8, None), heaters=[300.0],
              tm=(100.0, 30.0), gas=None,
-             sim=(224.19934457593402, 0.0, True, 0, 310800.0, 45900.0, 245.7935710845034)),
+             sim=(843.2425021862258, 44.42339954445655, True, 0, 310800.0, 45900.0, 245.7935710845034)),
     ),
     "single_pass_rtp": (
         {**_RECIRC, **_PRE},
         dict(cls="SinglePassRTPSystem", tank=("EnergyTank", 500.0, 1.7, None), heaters=[300.0],
              tm=None, gas=None,
-             sim=(0.0, 0.0, True, 0, 359400.0, 0.0, 245.34592100154748)),
+             sim=(702.1982086325885, 35.168524639361436, True, 0, 359400.0, 0.0, 245.34592100154748)),
     ),
     "multi_pass_rtp": (
         {**_RECIRC, **_PRE, "drawdown_fract": 0.8},
         dict(cls="MultiPassRTPSystem", tank=("SlugOverlayTank", 500.0, 0.8, 0.8), heaters=[300.0],
              tm=None, gas=None,
-             sim=(0.0, 0.0, True, 0, 1295700.0, 0.0, 244.0911273821446)),
+             sim=(2531.5476319565482, 35.168524639361436, True, 0, 1295700.0, 0.0, 244.0911273821446)),
     ),
     # storage_volume_storageT_gal=0.0 is what routes instant_wh to the pre-sized path
     "instant_wh": (
@@ -191,25 +191,25 @@ _PRESIZED_CASES = {
         {**_RECIRC, **_DUAL, **_GAS_IN_SERIES},
         dict(cls="SP_RTPInSeriesSystem", tank=("EnergyTank", 200.0, 1.7, None), heaters=[60.0],
              tm=None, gas=(100.0, 200.0),
-             sim=(495.29005533766895, 0.0, True, 0, 247380.0, 101400.0, 0.0)),
+             sim=(1004.6907099472771, 68.73287096183972, True, 0, 247380.0, 101400.0, 0.0)),
     ),
     "sprtp_in_parallel": (
         {**_RECIRC, **_DUAL, "gas_capacity_kbtuh": 200.0},
         dict(cls="SP_RTPInParallelSystem", tank=("EnergyTank", 200.0, 1.7, None), heaters=[60.0],
              tm=None, gas=(None, 200.0),
-             sim=(632.0565400463005, 0.0, True, 0, 222660.0, 129400.0, 44.430706029505245)),
+             sim=(1100.357323521819, 68.73287096183972, True, 0, 222660.0, 129400.0, 44.430706029505245)),
     ),
     "mprtp_in_series": (
         {**_RECIRC, **_DUAL, **_GAS_IN_SERIES},
         dict(cls="MP_RTPInSeriesSystem", tank=("SlugOverlayTank", 200.0, 0.8, 1.0), heaters=[60.0],
              tm=None, gas=(100.0, 200.0),
-             sim=(603.7263396423695, 0.0, True, 0, 223500.0, 123600.0, 0.0)),
+             sim=(1072.1772577552376, 68.73287096183972, True, 0, 223500.0, 123600.0, 0.0)),
     ),
     "swing_dual_fuel": (
         {**_RECIRC, **_DUAL, "tm_storage_vol": 100.0, "tm_capacity_kbtuh": 200.0},
         dict(cls="SwingDualFuelSystem", tank=("StratifiedTank", 200.0, 2.8, None), heaters=[60.0],
              tm=(100.0, 200.0), gas=None,
-             sim=(62.521821581086925, 0.0, False, 23, 12840.0, 12800.0, 0.0)),
+             sim=(90.89932467897638, 68.73287096183972, False, 23, 12840.0, 12800.0, 0.0)),
     ),
     "primary_no_recirc|model": (
         {"hpwh_model": "MODELS_GenericHPWH3_C_SP", "num_heaters": 2,
@@ -224,7 +224,7 @@ _PRESIZED_CASES = {
         {**_PRE, **_LOAD_SHIFT},
         dict(cls="DHWSystem", tank=("StratifiedTank", 500.0, 2.8, None), heaters=[300.0],
              tm=None, gas=None,
-             sim=(0.0, 0.0, True, 0, 245700.0, 0.0, 131.28759840926728)),
+             sim=(480.0503613272755, 35.168524639361436, True, 0, 245700.0, 0.0, 131.28759840926728)),
     ),
 }
 
@@ -277,6 +277,8 @@ class TestPresizedRegression:
         assert sum(run.heater_output_kbtuh) == pytest.approx(out_sum, rel=_REL)
         assert sum(v or 0.0 for v in run.tm_heater_output_kbtuh) == pytest.approx(tm_sum, rel=_REL, abs=1e-9)
         assert min(run.usable_volume_supplyT_gal) == pytest.approx(min_usable, rel=_REL, abs=1e-9)
+        # TM / gas power must be recorded every step so it lines up with primary power
+        assert len(run.tm_heater_input_kw) in (0, len(run.heater_power_in_kw))
 
 
 # ---------------------------------------------------------------------------
@@ -302,3 +304,25 @@ class TestClimateRegression:
         assert b.get_design_oat_f()             == pytest.approx(oat, rel=_REL)
         assert b.get_design_inlet_water_temp_f() == pytest.approx(inlet, rel=_REL)
         assert b.daily_dhw_use_supplyT_gal      == pytest.approx(daily_gal, rel=_REL)
+
+
+# ---------------------------------------------------------------------------
+# get_parameters / print_parameters
+# ---------------------------------------------------------------------------
+
+def test_get_parameters_returns_public_fields():
+    engine = _engine("primary_no_recirc", _PRE)
+    params = engine.get_parameters()
+    assert params["schematic"] == "primary_no_recirc"
+    assert params["heating_capacity_kbtuh"] == 300.0
+    assert not any(k.startswith("_") for k in params)
+
+
+def test_print_parameters_includes_system(capsys):
+    engine = _engine("swing_tank", {**_RECIRC, **_PRE, **_TM})
+    engine.print_parameters()
+    out = capsys.readouterr().out
+    assert "schematic" in out and "'swing_tank'" in out
+    assert "Built system: SwingSystem" in out
+    assert "primary heater: heating_type='heat_pump'" in out
+    assert "tm heater: heating_type='electric_resistance'" in out

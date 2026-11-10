@@ -663,3 +663,45 @@ def test_monthly_cost_breakdown_structure():
     assert len(breakdown["demand"]) == 12
     assert isinstance(breakdown["base"], float)
     assert breakdown["base"] == pytest.approx(uc.monthly_base_charge)
+
+
+# ---------------------------------------------------------------------------
+# Primary + TM / gas power are combined in every SimulationRun total
+# ---------------------------------------------------------------------------
+
+def _make_split_run(primary_kw: float, tm_kw: float) -> SimulationRun:
+    """Annual 10-min run whose power is split between primary and TM series."""
+    steps_per_year = 365 * 24 * 6
+    sr = _make_sim_run(10, steps_per_year, primary_kw)
+    sr.tm_heater_input_kw = [tm_kw] * steps_per_year
+    return sr
+
+
+def test_split_power_matches_single_series_in_all_totals():
+    """A 1.5 + 0.5 kW split must give the same totals as a single 2.0 kW series."""
+    split = _make_split_run(1.5, 0.5)
+    whole = _make_sim_run(10, 365 * 24 * 6, 2.0)
+    uc = _make_uc()
+
+    assert split.get_total_energy_kwh() == pytest.approx(whole.get_total_energy_kwh())
+    assert split.get_peak_demand_kw() == pytest.approx(2.0)
+    assert split.get_monthly_energy_kwh() == pytest.approx(whole.get_monthly_energy_kwh())
+    assert split.get_annual_utility_cost(uc) == pytest.approx(whole.get_annual_utility_cost(uc))
+
+    split_monthly = split.get_monthly_cost_breakdown(uc)
+    whole_monthly = whole.get_monthly_cost_breakdown(uc)
+    assert split_monthly["energy"] == pytest.approx(whole_monthly["energy"])
+    assert split_monthly["demand"] == pytest.approx(whole_monthly["demand"])
+
+    split_detail = split.get_monthly_cost_breakdown_detailed(uc)
+    whole_detail = whole.get_monthly_cost_breakdown_detailed(uc)
+    for key in ("energy_peak", "energy_off_peak", "demand_peak", "demand_off_peak"):
+        assert split_detail[key] == pytest.approx(whole_detail[key])
+
+
+def test_peak_demand_sums_series_per_timestep():
+    """Peak is the max of the per-step sum, not the max of either series."""
+    sr = _make_sim_run(10, 3, 0.0)
+    sr.heater_power_in_kw = [5.0, None, 1.0]
+    sr.tm_heater_input_kw = [0.0, 4.0, 4.5]
+    assert sr.get_peak_demand_kw() == pytest.approx(5.5)
