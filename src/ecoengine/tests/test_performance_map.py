@@ -8,6 +8,9 @@ Bundled models used (anonymized):
   HPWHsimPerformanceMap (multi-entry SP): MODELS_GenericHPWH2_R_SP
 """
 import pytest
+from ecoengine.constants.constants import (
+    _BTUH_PER_W, _ELECTRIC_RESISTANCE_COP, _GAS_COP, _HEAT_PUMP_COP,
+)
 from ecoengine.objects.components.heating.PerformanceMap import (
     HPWHsimPerformanceMap,
     NominalPerformanceMap,
@@ -31,9 +34,27 @@ class TestNominalPerformanceMap:
         nm = NominalPerformanceMap(100.0)
         assert nm.get_capacity_kbtuh(47.0, 150.0, inlet_temp_f=60.0) == pytest.approx(100.0)
 
-    def test_power_is_none(self):
+    def test_power_defaults_to_heat_pump_cop(self):
         nm = NominalPerformanceMap(407.2)
-        assert nm.get_power_in_kw(47.0, 150.0) is None
+        assert nm.heating_type == "heat_pump"
+        assert nm.get_power_in_kw(47.0, 150.0) == pytest.approx(407.2 / _BTUH_PER_W / _HEAT_PUMP_COP)
+
+    @pytest.mark.parametrize("heating_type, cop", [
+        ("electric_resistance", _ELECTRIC_RESISTANCE_COP),
+        ("gas",                 _GAS_COP),
+        ("heat_pump",           _HEAT_PUMP_COP),
+    ])
+    def test_power_uses_heating_type_cop(self, heating_type, cop):
+        nm = NominalPerformanceMap(100.0, heating_type=heating_type)
+        assert nm.get_power_in_kw(-20.0, 150.0, inlet_temp_f=40.0) == pytest.approx(100.0 / _BTUH_PER_W / cop)
+        assert nm.get_cop(47.0, 150.0) == pytest.approx(cop)
+
+    def test_unknown_heating_type_raises(self):
+        with pytest.raises(ValueError, match="heating_type"):
+            NominalPerformanceMap(100.0, heating_type="electric")
+
+    def test_always_within_operating_bounds(self):
+        assert NominalPerformanceMap(100.0).is_within_operating_bounds(-40.0)
 
     def test_factory_method_produces_nominal(self):
         nm = NominalPerformanceMap(51.56)

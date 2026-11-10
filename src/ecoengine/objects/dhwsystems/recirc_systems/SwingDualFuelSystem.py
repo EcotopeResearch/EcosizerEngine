@@ -7,7 +7,7 @@ from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
 from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 from ecoengine.objects.dhwsystems.DHWSystem import DHWSystem
-from ecoengine.constants.constants import _RHO_CP, _BTUH_PER_W
+from ecoengine.constants.constants import _RHO_CP
 from ecoengine.objects.dhwsystems.utils import (
     mixing_valve_behavior,
     mixing_valve_behavior_swing,
@@ -322,6 +322,7 @@ class SwingDualFuelSystem(SwingSystem):
             nominal_capacity_kbtuh=self._minimum_tm_capacity_kbtuh,
             control_schedule=["normal"] * 24,
             control_map={"normal": tm_controls},
+            heating_type="gas",
         )
 
     # ------------------------------------------------------------------
@@ -426,13 +427,9 @@ class SwingDualFuelSystem(SwingSystem):
             wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
             for wh in self.water_heaters
         )
-        primary_kw_list = [
+        primary_kw = sum(
             wh.get_power_in_kw(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
             for wh in self.water_heaters
-            if wh.is_active()
-        ]
-        primary_kw: float | None = (
-            sum(kw or 0.0 for kw in primary_kw_list) if primary_kw_list else None
         )
         self.storage_tank.heat(primary_kbtuh, interval_min, outlet_temp_f)
 
@@ -467,11 +464,7 @@ class SwingDualFuelSystem(SwingSystem):
         tm_ctrl     = self.tm_water_heater.get_controls_for_hour(hour_of_day)
         tm_outlet_f = tm_ctrl.off_trigger_t_f
         tm_kbtuh    = self.tm_water_heater.get_output_kbtuh(oat_f, tm_outlet_f)
-        tm_kw_val   = (
-            self.tm_water_heater.get_power_in_kw(oat_f, tm_outlet_f)
-            if self.tm_water_heater.is_active()
-            else None
-        )
+        tm_kw_val   = self.tm_water_heater.get_power_in_kw(oat_f, tm_outlet_f)
         self.tm_storage_tank.heat(tm_kbtuh, interval_min, tm_outlet_f)
 
         # --- 6. Draw computed volume from primary storage ---
@@ -490,15 +483,15 @@ class SwingDualFuelSystem(SwingSystem):
             for f in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
         ]
 
-        # heater_output_kbtuh is PRIMARY-ONLY (used for gal/hr plot in top chart).
-        # heater_power_in_kw merges both so get_total_energy_kwh() is accurate.
-        total_kw: float | None = (primary_kw or 0.0) if primary_kw is not None or tm_kw_val is not None else None
+        # heater_output_kbtuh and heater_power_in_kw are PRIMARY-ONLY. Gas swing
+        # heater power is recorded separately in tm_heater_input_kw;
+        # SimulationRun combines them.
         swing_mid_temp_f = self.tm_storage_tank.get_temperature_at_fraction(0.5)
         return {
             "demand_supplyT_gal":        demand_supplyT_gal,
             "usable_volume_supplyT_gal": usable_vol_gal,
             "heater_output_kbtuh":       primary_kbtuh,
-            "heater_power_in_kw":        total_kw,
+            "heater_power_in_kw":        primary_kw,
             "oat_f":                     oat_f,
             "inlet_water_temp_f":        inlet_temp_f,
             "tank_temps_f":              tank_temps_f,
@@ -509,5 +502,5 @@ class SwingDualFuelSystem(SwingSystem):
             # TM panel data (consumed by SimulationRun for the swing-tank subplot)
             "tm_tank_temp_f":            swing_mid_temp_f,
             "tm_heater_output_kbtuh":    tm_kbtuh,
-            "tm_heater_input_kw":        tm_kbtuh / _BTUH_PER_W,
+            "tm_heater_input_kw":        tm_kw_val,
         }

@@ -383,14 +383,10 @@ class SinglePassRTPSystem(RTPSystem):
                 wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
                 for wh in self.water_heaters
             )
-            total_kw: float | None = None
-            active_kws = [
+            total_kw = sum(
                 wh.get_power_in_kw(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
                 for wh in self.water_heaters
-                if wh.is_active()
-            ]
-            if any(kw is not None for kw in active_kws):
-                total_kw = sum(kw or 0.0 for kw in active_kws)
+            )
 
             self.storage_tank.heat(total_kbtuh, interval_min, outlet_temp_f)
             top_temp_f     = self.storage_tank.get_temperature_at_fraction(1.0)

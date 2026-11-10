@@ -4,8 +4,9 @@ import json
 import math
 import os
 import pickle
+from typing import Literal
 
-from ecoengine.constants.constants import _BTUH_PER_W
+from ecoengine.constants.constants import _BTUH_PER_W, _NOMINAL_COP_BY_HEATING_TYPE
 
 # Bundled data directory — used as a fallback when perf_map_dir is not supplied.
 # Will be removed once the data is fully externalised.
@@ -60,9 +61,9 @@ class PerformanceMap:
         - ``PklPerformanceMap``    — pickle-based LinearND interpolator (lab data)
         - ``HPWHsimPerformanceMap``— coefficient-based polynomial (HPWHsim model)
 
-    * ``NominalPerformanceMap(nominal_capacity_kbtuh)``
-        Constant-output placeholder for use during preliminary sizing.
-        **Do not change this subclass.**
+    * ``NominalPerformanceMap(nominal_capacity_kbtuh, heating_type)``
+        Constant-output placeholder for use during preliminary sizing. Power
+        input uses a fixed nominal COP for the heating type.
 
     API notes
     ---------
@@ -236,7 +237,7 @@ class PerformanceMap:
 
 
 # ---------------------------------------------------------------------------
-# NominalPerformanceMap — constant-output placeholder (do not change)
+# NominalPerformanceMap — constant-output placeholder
 # ---------------------------------------------------------------------------
 
 class NominalPerformanceMap(PerformanceMap):
@@ -247,10 +248,16 @@ class NominalPerformanceMap(PerformanceMap):
     Every capacity query returns the fixed nominal_capacity_kbtuh regardless of
     outdoor air temperature or water temperature — analogous to how
     ClimateZone.from_design_conditions() returns a constant OAT for all timesteps.
-    Power and COP queries remain stubs until a real map is assigned.
+    Power input is the nominal capacity divided by a fixed COP chosen by
+    ``heating_type`` (see ``_NOMINAL_COP_BY_HEATING_TYPE`` in constants.py).
     """
 
-    def __init__(self, nominal_capacity_kbtuh: float, model_name: str = "") -> None:
+    def __init__(
+        self,
+        nominal_capacity_kbtuh: float,
+        model_name: str = "",
+        heating_type: Literal["electric_resistance", "gas", "heat_pump"] = "heat_pump",
+    ) -> None:
         """
         Parameters
         ----------
@@ -258,13 +265,36 @@ class NominalPerformanceMap(PerformanceMap):
             Fixed heating output capacity [kBTU/hr] returned for all conditions.
         model_name : str
             Optional human-readable identifier.
+        heating_type : "electric_resistance" | "gas" | "heat_pump"
+            Selects the nominal COP used by ``get_power_in_kw()``.
+            Default "heat_pump".
+
+        Raises
+        ------
+        ValueError
+            If ``heating_type`` is not a known heating type.
         """
+        if heating_type not in _NOMINAL_COP_BY_HEATING_TYPE:
+            raise ValueError(
+                f"heating_type must be one of {tuple(_NOMINAL_COP_BY_HEATING_TYPE)}, "
+                f"got {heating_type!r}."
+            )
         super().__init__(map_data=None, model_name=model_name)
         self.nominal_capacity_kbtuh = nominal_capacity_kbtuh
+        self.heating_type           = heating_type
+        self.cop                    = _NOMINAL_COP_BY_HEATING_TYPE[heating_type]
 
     def get_capacity_kbtuh(self, oat_f: float, outlet_temp_f: float, inlet_temp_f: float | None = None) -> float:
         """Return the fixed nominal capacity [kBTU/hr] regardless of conditions."""
         return self.nominal_capacity_kbtuh
+
+    def get_power_in_kw(self, oat_f: float, outlet_temp_f: float, inlet_temp_f: float | None = None) -> float:
+        """Return power input [kW]: nominal capacity / nominal COP for the heating type."""
+        return self.nominal_capacity_kbtuh / _BTUH_PER_W / self.cop
+
+    def is_within_operating_bounds(self, oat_f: float) -> bool:
+        """A nominal map has no operating limits."""
+        return True
 
 
 # ---------------------------------------------------------------------------

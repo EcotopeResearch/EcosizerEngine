@@ -7,6 +7,7 @@ even though it would otherwise keep heating toward the new mode's OFF point.
 """
 import pytest
 from ecoengine.objects.components.heating.Controls import Controls
+from ecoengine.objects.components.heating.PerformanceMap import NominalPerformanceMap
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.StratifiedTank import StratifiedTank
 
@@ -154,3 +155,29 @@ class TestUpdateStateModeSwitch:
         heater.update_state(tank, 24 * 60)
 
         assert not heater.is_active()
+
+
+class TestHeatingType:
+    def test_default_is_heat_pump(self):
+        wh = WaterHeater.from_nominal_capacity(100.0, None, None)
+        assert wh.heating_type == "heat_pump"
+        assert wh.performance_map.heating_type == "heat_pump"
+
+    def test_from_nominal_capacity_passes_heating_type_to_map(self):
+        wh = WaterHeater.from_nominal_capacity(100.0, None, None, heating_type="gas")
+        assert wh.performance_map.heating_type == "gas"
+
+    def test_init_copies_nominal_map_with_heater_heating_type(self):
+        pm = NominalPerformanceMap(100.0)
+        wh = WaterHeater(pm, None, None, heating_type="electric_resistance")
+        assert wh.performance_map.heating_type == "electric_resistance"
+        assert wh.performance_map.nominal_capacity_kbtuh == 100.0
+        assert pm.heating_type == "heat_pump"  # passed map is not modified
+
+    def test_init_keeps_matching_nominal_map(self):
+        pm = NominalPerformanceMap(100.0, heating_type="gas")
+        assert WaterHeater(pm, None, None, heating_type="gas").performance_map is pm
+
+    def test_unknown_heating_type_raises(self):
+        with pytest.raises(ValueError, match="heating_type"):
+            WaterHeater.from_nominal_capacity(100.0, None, None, heating_type="electric")

@@ -6,7 +6,7 @@ from ecoengine.objects.components.heating.Controls import Controls
 from ecoengine.objects.components.heating.WaterHeater import WaterHeater
 from ecoengine.objects.components.storage.EnergyTank import EnergyTank
 from ecoengine.objects.components.storage.MixedStorageTank import MixedStorageTank
-from ecoengine.constants.constants import _RHO_CP, _BTUH_PER_W
+from ecoengine.constants.constants import _RHO_CP
 from ..utils import (
     mixing_valve_behavior,
     size_supplemental_heating_and_storage,
@@ -240,6 +240,7 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             nominal_capacity_kbtuh=gas_capacity_kbtuh,
             control_schedule=["normal"] * 24,
             control_map={"normal": gas_controls},
+            heating_type="gas",
         )
         self.gas_storage_tank = MixedStorageTank(total_volume_gal=gas_storage_vol_gal)
 
@@ -361,14 +362,10 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             wh.get_output_kbtuh(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
             for wh in self.water_heaters
         )
-        total_kw: float | None = None
-        active_kws = [
+        total_kw = sum(
             wh.get_power_in_kw(oat_f, wh.get_outlet_temp_f(hour_of_day), inlet_temp_f)
             for wh in self.water_heaters
-            if wh.is_active()
-        ]
-        if any(kw is not None for kw in active_kws):
-            total_kw = sum(kw or 0.0 for kw in active_kws)
+        )
 
         self.storage_tank.heat(total_kbtuh, interval_min, outlet_temp_f)
 
@@ -395,11 +392,9 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
         gas_ctrl     = self.gas_water_heater.get_controls_for_hour(hour_of_day)
         gas_outlet_f = gas_ctrl.outlet_temp_f if gas_ctrl is not None else self.supply_temp_f + _GAS_DEADBAND_F
         gas_kbtuh    = self.gas_water_heater.get_output_kbtuh(oat_f, gas_outlet_f)
-        gas_kw_val   = ( # TODO figure out gas carbon outputs
-            self.gas_water_heater.get_power_in_kw(oat_f, gas_outlet_f)
-            if self.gas_water_heater.is_active()
-            else None
-        )
+        # Gas input power is recorded in tm_heater_input_kw, separate from the
+        # primary heater_power_in_kw; SimulationRun combines them.
+        gas_kw_val   = self.gas_water_heater.get_power_in_kw(oat_f, gas_outlet_f) # TODO figure out gas carbon outputs
         self.gas_storage_tank.heat(gas_kbtuh, interval_min, gas_outlet_f)
 
         usable_vol_gal = self.storage_tank.get_usable_volume_supplyT_gal(
@@ -421,6 +416,6 @@ class SP_RTPInSeriesSystem(SinglePassRTPSystem):
             "mode":                      mode,
             "tm_tank_temp_f":          self.gas_storage_tank.get_temperature_at_fraction(1.0),
             "tm_heater_output_kbtuh":  gas_kbtuh,
-            "tm_heater_input_kw":      gas_kbtuh / _BTUH_PER_W,
+            "tm_heater_input_kw":      gas_kw_val,
             "delivery_temp_f":         gas_top_t,
         }

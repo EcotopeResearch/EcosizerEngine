@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import warnings
 
+from ecoengine.constants.constants import _HEATING_TYPES
 from ecoengine.objects.building.Building import Building
 from ecoengine.objects.components.heating.Controls import AlwaysOffControls, Controls
 from ecoengine.objects.components.heating.PerformanceMap import (
@@ -46,7 +47,6 @@ from .system_assembly_utils import (
 )
 
 _SYSTEM_SLOTS  = ("primary", "tm", "in_series")
-_FUEL_TYPES    = ("electric", "gas")
 _MP_SCHEMATICS = frozenset({"multi_pass_rtp", "mprtp_in_series"})
 
 # assemble_dhw_system argument name → EcoBuilder field name (for error messages)
@@ -76,7 +76,7 @@ class EcoBuilder:
     water_heaters : list[WaterHeater]
         Heaters heating the primary storage tank. For ``sprtp_in_parallel``
         this list also holds the single gas backup heater
-        (``fuel_type='gas'``).
+        (``heating_type='gas'``).
     tm_water_heaters : list[WaterHeater]
         Heaters for the temperature-maintenance tank, if applicable.
     in_series_water_heaters : list[WaterHeater]
@@ -217,7 +217,8 @@ class EcoBuilder:
             minimum OAT.
         nominal_capacity_kbtuh : float, optional
             Without ``model_name``: the constant total capacity [kBTU/hr] of a
-            ``NominalPerformanceMap``.
+            ``NominalPerformanceMap``. Its power input uses the nominal COP
+            of the heater's ``heating_type``, set in ``build_water_heater()``.
         num_units : int
             Number of identical units (model maps only). Default 1.
         design_inlet_temp_f : float
@@ -337,7 +338,7 @@ class EcoBuilder:
         performance_map: PerformanceMap,
         control_schedule: list[str],
         control_map: dict[str, Controls],
-        fuel_type: str = "electric",
+        heating_type: str = "heat_pump",
         system: str | None = "primary",
     ) -> WaterHeater:
         """
@@ -351,8 +352,10 @@ class EcoBuilder:
             24-element schedule, e.g. from ``build_control_schedule()``.
         control_map : dict[str, Controls]
             Controls for every mode in ``control_schedule``.
-        fuel_type : str
-            ``'electric'`` or ``'gas'``.
+        heating_type : str
+            ``'heat_pump'`` (default), ``'electric_resistance'`` or ``'gas'``.
+            With a nominal performance map this sets the nominal COP used
+            for power input.
         system : str | None
             ``'primary'`` → ``water_heaters``, ``'tm'`` → ``tm_water_heaters``,
             ``'in_series'`` → ``in_series_water_heaters``, None → not added
@@ -361,15 +364,15 @@ class EcoBuilder:
         Raises
         ------
         ValueError
-            On an unknown ``system`` or ``fuel_type``, a schedule that is not
+            On an unknown ``system`` or ``heating_type``, a schedule that is not
             24 entries long, or schedule modes missing from ``control_map``.
         TypeError
             If ``performance_map`` is not a PerformanceMap.
         """
         if system is not None and system not in _SYSTEM_SLOTS:
             raise ValueError(f"system must be one of {_SYSTEM_SLOTS} or None, got {system!r}.")
-        if fuel_type not in _FUEL_TYPES:
-            raise ValueError(f"fuel_type must be one of {_FUEL_TYPES}, got {fuel_type!r}.")
+        if heating_type not in _HEATING_TYPES:
+            raise ValueError(f"heating_type must be one of {_HEATING_TYPES}, got {heating_type!r}.")
         if not isinstance(performance_map, PerformanceMap):
             raise TypeError(
                 "performance_map must be a PerformanceMap; use build_performance_map()."
@@ -386,7 +389,7 @@ class EcoBuilder:
             performance_map  = performance_map,
             control_schedule = list(control_schedule),
             control_map      = dict(control_map),
-            fuel_type        = fuel_type,
+            heating_type     = heating_type,
         )
         if system is not None:
             getattr(self, "water_heaters" if system == "primary" else f"{system}_water_heaters").append(heater)
@@ -435,7 +438,7 @@ class EcoBuilder:
         Schematic notes
         ---------------
         * ``sprtp_in_parallel``: exactly one primary heater must have
-          ``fuel_type='gas'``; it becomes the gas backup heater.
+          ``heating_type='gas'``; it becomes the gas backup heater.
         * ``parallel_loop``: the TM tank's cycling temperatures are taken
           from the TM heater's hour-0 controls (``on_trigger_t_f`` /
           ``off_trigger_t_f``).
@@ -456,11 +459,11 @@ class EcoBuilder:
         primary_heaters = list(self.water_heaters)
         gas_heater = None
         if name == "sprtp_in_parallel":
-            gas_heaters = [wh for wh in primary_heaters if wh.fuel_type == "gas"]
+            gas_heaters = [wh for wh in primary_heaters if wh.heating_type == "gas"]
             if len(gas_heaters) != 1:
                 raise ValueError(
                     "sprtp_in_parallel requires exactly one primary heater with "
-                    f"fuel_type='gas'; found {len(gas_heaters)}."
+                    f"heating_type='gas'; found {len(gas_heaters)}."
                 )
             gas_heater      = gas_heaters[0]
             primary_heaters = [wh for wh in primary_heaters if wh is not gas_heater]

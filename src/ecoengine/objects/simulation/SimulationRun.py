@@ -309,6 +309,19 @@ class SimulationRun:
             f"of the simulation{temp_clause}."
         )
 
+    def _combined_kw(self, i: int) -> float:
+        """
+        Return total power input [kW] at timestep ``i``: primary heater power
+        plus TM / gas heater power (``tm_heater_input_kw``), with None as 0.
+
+        Step methods record the two series separately; every total that
+        reports system power should combine them through this helper.
+        """
+        kw = self.heater_power_in_kw[i] or 0.0
+        if i < len(self.tm_heater_input_kw):
+            kw += self.tm_heater_input_kw[i] or 0.0
+        return kw
+
     def get_total_energy_kwh(self) -> float:
         """
         Return total electrical energy consumed over the simulation [kWh].
@@ -330,12 +343,17 @@ class SimulationRun:
         """
         Return peak instantaneous power draw observed during the simulation [kW].
 
+        Primary and TM / gas heater power are summed at each timestep before
+        taking the maximum.
+
         Returns
         -------
         float
         """
-        non_none = [p for p in self.heater_power_in_kw if p is not None]
-        return max(non_none) if non_none else 0.0
+        return max(
+            (self._combined_kw(i) for i in range(len(self.heater_power_in_kw))),
+            default=0.0,
+        )
 
     def get_summary(self) -> dict:
         """
@@ -695,10 +713,8 @@ class SimulationRun:
         energy_cost = 0.0
         max_kw_by_period: dict[int, float] = {}
 
-        for i, kw_raw in enumerate(self.heater_power_in_kw):
-            kw = kw_raw or 0.0
-            if self.tm_heater_input_kw and i < len(self.tm_heater_input_kw):
-                kw += self.tm_heater_input_kw[i] or 0.0
+        for i in range(len(self.heater_power_in_kw)):
+            kw = self._combined_kw(i)
             rate = uc.get_energy_charge_at_step(i, self.timestep_min)
             energy_cost += kw * hours_per_step * rate
 
@@ -731,8 +747,8 @@ class SimulationRun:
         energy_by_month = [0.0] * 12
         max_kw_by_period: dict[int, float] = {}
 
-        for i, kw_raw in enumerate(self.heater_power_in_kw):
-            kw   = kw_raw or 0.0
+        for i in range(len(self.heater_power_in_kw)):
+            kw   = self._combined_kw(i)
             rate = uc.get_energy_charge_at_step(i, self.timestep_min)
             energy_by_month[_step_to_month(i, self.timestep_min)] += (
                 kw * hours_per_step * rate
@@ -772,10 +788,8 @@ class SimulationRun:
         energy_off_peak     = [0.0] * 12
         max_kw_by_period: dict[int, float] = {}
 
-        for i, kw_raw in enumerate(self.heater_power_in_kw):
-            kw = kw_raw or 0.0
-            if self.tm_heater_input_kw and i < len(self.tm_heater_input_kw):
-                kw += self.tm_heater_input_kw[i] or 0.0
+        for i in range(len(self.heater_power_in_kw)):
+            kw = self._combined_kw(i)
             period = uc.get_demand_period_at_step(i, self.timestep_min)
             rate   = uc.get_energy_charge_at_step(i, self.timestep_min)
             month  = _step_to_month(i, self.timestep_min)
@@ -828,7 +842,7 @@ class SimulationRun:
         for month_idx, days in enumerate(_DAYS_IN_MONTH):
             n_steps = days * steps_per_day
             monthly[month_idx] = sum(
-                (self.heater_power_in_kw[i] or 0.0) * hours_per_step
+                self._combined_kw(i) * hours_per_step
                 for i in range(step, min(step + n_steps, len(self.heater_power_in_kw)))
             )
             step += n_steps

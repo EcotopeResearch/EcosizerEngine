@@ -16,6 +16,7 @@ import warnings
 
 import pytest
 
+from ecoengine.constants.constants import _BTUH_PER_W, _NOMINAL_COP_BY_HEATING_TYPE
 from ecoengine.interfaces.EcoBuilder import EcoBuilder
 from ecoengine.interfaces.EcosizerEngine import EcosizerEngine
 from ecoengine.interfaces.Simulator import simulate_3day
@@ -211,14 +212,23 @@ class TestBuildWaterHeater:
     def test_none_slot_only_returns(self):
         eb = EcoBuilder()
         wh = _add_heater(eb, 50.0, system=None)
-        assert wh.fuel_type == "electric"
+        assert wh.heating_type == "heat_pump"
         assert eb.water_heaters == eb.tm_water_heaters == eb.in_series_water_heaters == []
 
-    def test_fuel_type(self):
-        assert _add_heater(EcoBuilder(), 50.0, fuel_type="gas").fuel_type == "gas"
+    def test_heating_type(self):
+        assert _add_heater(EcoBuilder(), 50.0, heating_type="gas").heating_type == "gas"
 
-    @pytest.mark.parametrize("kwargs", [dict(system="gas"), dict(fuel_type="propane")])
-    def test_bad_slot_or_fuel(self, kwargs):
+    @pytest.mark.parametrize("heating_type", ["electric_resistance", "gas", "heat_pump"])
+    def test_heating_type_sets_nominal_map_cop(self, heating_type):
+        wh = _add_heater(EcoBuilder(), 50.0, heating_type=heating_type)
+        expected_kw = 50.0 / _BTUH_PER_W / _NOMINAL_COP_BY_HEATING_TYPE[heating_type]
+        assert wh.performance_map.heating_type == heating_type
+        assert wh.get_power_in_kw(50.0, 140.0) == 0.0  # inactive
+        wh.turn_on()
+        assert wh.get_power_in_kw(50.0, 140.0) == pytest.approx(expected_kw)
+
+    @pytest.mark.parametrize("kwargs", [dict(system="gas"), dict(heating_type="propane"), dict(heating_type="electric")])
+    def test_bad_slot_or_heating_type(self, kwargs):
         with pytest.raises(ValueError):
             _add_heater(EcoBuilder(), 50.0, **kwargs)
 
@@ -279,14 +289,14 @@ class TestBuildSystem:
         eb = _ready_builder()
         eb.define_recirc(_RETURN_T_F, _RETURN_GPM)
         for _ in range(n_gas):
-            _add_heater(eb, 200.0, fuel_type="gas")
+            _add_heater(eb, 200.0, heating_type="gas")
         with pytest.raises(ValueError, match=f"found {n_gas}"):
             eb.build_system("sprtp_in_parallel")
 
     def test_sprtp_in_parallel_splits_gas_heater(self):
         eb = _ready_builder()
         eb.define_recirc(_RETURN_T_F, _RETURN_GPM)
-        gas = _add_heater(eb, 200.0, fuel_type="gas")
+        gas = _add_heater(eb, 200.0, heating_type="gas")
         system = eb.build_system("sprtp_in_parallel")
         assert system.gas_water_heater is gas
         assert system.water_heaters == [eb.water_heaters[0]]
@@ -296,7 +306,7 @@ class TestBuildSystem:
         eb.define_temperatures(_SUPPLY_T_F, _STORAGE_T_F)
         eb.define_storage_volume(300.0)
         eb.define_recirc(_RETURN_T_F, _RETURN_GPM)
-        _add_heater(eb, 200.0, fuel_type="gas")
+        _add_heater(eb, 200.0, heating_type="gas")
         with pytest.raises(ValueError, match="water_heaters"):
             eb.build_system("sprtp_in_parallel")
 
@@ -347,7 +357,7 @@ class TestBuildSystem:
             eb.build_control_schedule([["normal", 0], ["shed", 16], ["normal", 20]]),
             {"normal": _normal_controls(eb), "shed": shed},
         )
-        _add_heater(eb, 200.0, fuel_type="gas")
+        _add_heater(eb, 200.0, heating_type="gas")
         system = eb.build_system("sprtp_in_parallel")
         assert system.water_heaters[0].control_map["shed"] is shed
 
@@ -424,11 +434,11 @@ def _builder_run(schematic, cap, vol, tm, gas, drawdown):
             default_gas_controls.off_sensor_fract, default_gas_controls.off_trigger_t_f,
             _STORAGE_T_F,
         )
-        _add_heater(eb, gas[1], gas_controls, fuel_type="gas")
+        _add_heater(eb, gas[1], gas_controls, heating_type="gas")
     elif gas:
         eb.define_storage_volume(gas[0], "in_series")
         _add_heater(eb, gas[1], default_in_series_gas_controls(_SUPPLY_T_F),
-                    fuel_type="gas", system="in_series")
+                    heating_type="gas", system="in_series")
     building = eb.build_building("multi_family", 100, _CLIMATE, gpdpp=25)
     return simulate_3day(eb.build_system(schematic), building)
 
