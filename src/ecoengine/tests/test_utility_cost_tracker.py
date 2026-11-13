@@ -705,3 +705,91 @@ def test_peak_demand_sums_series_per_timestep():
     sr.heater_power_in_kw = [5.0, None, 1.0]
     sr.tm_heater_input_kw = [0.0, 4.0, 4.5]
     assert sr.get_peak_demand_kw() == pytest.approx(5.5)
+
+
+# ---------------------------------------------------------------------------
+# Windowed demand: max average kW over demand_interval_min inside one period
+# ---------------------------------------------------------------------------
+
+def _one_day_run(timestep_min: int, spikes: dict[int, float]) -> SimulationRun:
+    """One-day run, 0 kW except {step: kW} spikes."""
+    n_steps = 24 * 60 // timestep_min
+    sr = _make_sim_run(timestep_min, n_steps, 0.0)
+    for step, kw in spikes.items():
+        sr.heater_power_in_kw[step] = kw
+    return sr
+
+
+_JAN_OFF, _JAN_PEAK = 0, 1   # from_params keys: month*2 (off-peak), month*2+1 (peak 16-21)
+
+
+def test_demand_interval_defaults_to_15_min():
+    assert _make_uc().demand_interval_min == 15
+
+
+def test_single_10min_spike_averaged_over_15min():
+    """A 30 kW 10-minute step inside off-peak bills as 30 * 10/15 = 20 kW."""
+    sr = _one_day_run(10, {12: 30.0})          # 02:00-02:10, off-peak
+    demand = sr.get_max_demand_kw_by_period(_make_uc())
+    assert demand[_JAN_OFF] == pytest.approx(20.0)
+    assert demand[_JAN_PEAK] == pytest.approx(0.0)
+
+
+def test_single_1min_spike_averaged_over_15min():
+    sr = _one_day_run(1, {17 * 60: 60.0})      # 17:00-17:01, peak
+    assert sr.get_max_demand_kw_by_period(_make_uc())[_JAN_PEAK] == pytest.approx(4.0)
+
+
+def test_two_consecutive_10min_steps_inside_peak_bill_full_kw():
+    """
+    30 kW for 16:20-16:40 (two 10-min steps, entirely inside peak) contains a
+    full 15-minute window at 30 kW (e.g. 16:20-16:35), so peak demand is 30 kW.
+    """
+    sr = _one_day_run(10, {98: 30.0, 99: 30.0})   # steps 16:20 and 16:30
+    demand = sr.get_max_demand_kw_by_period(_make_uc())
+    assert demand[_JAN_PEAK] == pytest.approx(30.0)
+    assert demand[_JAN_OFF] == pytest.approx(0.0)
+
+
+def test_window_spanning_two_periods_is_ignored():
+    """
+    30 kW from 15:50 to 16:10 straddles the off-peak -> peak boundary at 16:00.
+    The 15:55-16:10 window (30 kW avg) spans both periods and is ignored, so each
+    period only sees 10 of 15 minutes at 30 kW -> 20 kW.
+    """
+    sr = _one_day_run(10, {95: 30.0, 96: 30.0})   # steps 15:50 and 16:00
+    demand = sr.get_max_demand_kw_by_period(_make_uc())
+    assert demand[_JAN_OFF] == pytest.approx(20.0)
+    assert demand[_JAN_PEAK] == pytest.approx(20.0)
+
+
+def test_configurable_interval_matching_timestep_gives_step_max():
+    """With demand_interval_min == timestep, demand is the single-step max."""
+    sr = _one_day_run(10, {12: 30.0, 100: 7.0})
+    demand = sr.get_max_demand_kw_by_period(_make_uc(demand_interval_min=10))
+    assert demand[_JAN_OFF] == pytest.approx(30.0)
+    assert demand[_JAN_PEAK] == pytest.approx(7.0)
+
+
+def test_windowed_demand_feeds_costs():
+    """Peak demand charge uses the 15-min average, in every cost function."""
+    sr = _one_day_run(10, {100: 30.0})          # 16:40-16:50, peak
+    uc = _make_uc(pk_demand_charge=10.0, off_pk_demand_charge=0.0,
+                  pk_energy_charge=0.0, off_pk_energy_charge=0.0, monthly_base_charge=0.0)
+    expected = 10.0 * 20.0
+    assert sr.get_annual_utility_cost(uc) == pytest.approx(expected)
+    assert sum(sr.get_monthly_cost_breakdown(uc)["demand"]) == pytest.approx(expected)
+    assert sum(sr.get_monthly_cost_breakdown_detailed(uc)["demand_peak"]) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("bad", [0, -15, 7.5, True])
+def test_demand_interval_must_be_positive_int(bad):
+    with pytest.raises(ValueError, match="demand_interval_min"):
+        _make_uc(demand_interval_min=bad)
+
+
+def test_from_csv_accepts_demand_interval(tmp_path):
+    path = str(tmp_path / "rates.csv")
+    _make_uc().to_csv(path)
+    assert UtilityCostTracker.from_csv(path).demand_interval_min == 15
+    assert UtilityCostTracker.from_csv(path, demand_interval_min=30).demand_interval_min == 30

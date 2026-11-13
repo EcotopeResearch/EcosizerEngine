@@ -1,4 +1,7 @@
+import math
 import numbers
+
+import numpy as np
 
 from ecoengine.constants.constants import _RHO_CP
 
@@ -693,11 +696,71 @@ class SimulationRun:
 
         return fig
 
+    def get_max_demand_kw_by_period(self, uc) -> dict[int, float]:
+        """
+        Return the billed demand [kW] of each demand period: the highest
+        average combined kW (primary + TM / gas) over any
+        ``uc.demand_interval_min``-minute window that lies entirely inside
+        that period.
+
+        Windows slide at the finer of the simulation timestep and the demand
+        interval: each timestep is split into sub-steps of
+        ``gcd(timestep_min, demand_interval_min)`` minutes (e.g. 5 min for a
+        10-min simulation with a 15-min interval), and every window start on
+        that grid is tried. A window that spans two different demand periods
+        is ignored. A period with no complete window inside the simulated
+        time gets no entry, so it has no demand charge.
+
+        Parameters
+        ----------
+        uc : UtilityCostTracker
+
+        Returns
+        -------
+        dict[int, float]
+            ``{period_key: max windowed average kW}``.
+        """
+        n_steps = len(self.heater_power_in_kw)
+        interval_min = uc.demand_interval_min
+        sub_min = math.gcd(self.timestep_min, interval_min)
+        win     = interval_min // sub_min             # sub-steps per window
+
+        # Power and demand period on the sub-step grid
+        kw = np.repeat(
+            np.array([self._combined_kw(i) for i in range(n_steps)], dtype=float),
+            self.timestep_min // sub_min,
+        )
+        n_sub = len(kw)
+        if n_sub < win:
+            return {}
+        chart   = np.asarray(uc.demand_period_chart)
+        hours   = (np.arange(n_sub) * sub_min) // 60
+        periods = chart[hours % len(chart)]
+
+        # Average kW of the window starting at each sub-step
+        csum    = np.concatenate(([0.0], np.cumsum(kw)))
+        n_win   = n_sub - win + 1
+        avg_kw  = (csum[win:] - csum[:n_win]) / win
+
+        # A window is valid when its period never changes inside it
+        changes = np.concatenate(([0], np.cumsum(periods[1:] != periods[:-1])))
+        starts  = np.arange(n_win)
+        valid   = changes[starts + win - 1] == changes[starts]
+
+        start_periods = periods[:n_win]
+        max_kw_by_period: dict[int, float] = {}
+        for period in np.unique(start_periods[valid]):
+            mask = valid & (start_periods == period)
+            max_kw_by_period[int(period)] = float(avg_kw[mask].max())
+        return max_kw_by_period
+
     def get_annual_utility_cost(self, uc) -> float:
         """
         Compute total annual utility cost from this simulation run.
 
-        Cost = energy charges + demand charges (max kW per period) + yearly base.
+        Cost = energy charges + demand charges + yearly base. Demand charges
+        use each period's highest ``uc.demand_interval_min``-minute average kW
+        (see ``get_max_demand_kw_by_period``).
 
         Parameters
         ----------
@@ -711,17 +774,13 @@ class SimulationRun:
         """
         hours_per_step = self.timestep_min / 60.0
         energy_cost = 0.0
-        max_kw_by_period: dict[int, float] = {}
 
         for i in range(len(self.heater_power_in_kw)):
             kw = self._combined_kw(i)
             rate = uc.get_energy_charge_at_step(i, self.timestep_min)
             energy_cost += kw * hours_per_step * rate
 
-            period = uc.get_demand_period_at_step(i, self.timestep_min)
-            if period not in max_kw_by_period or kw > max_kw_by_period[period]:
-                max_kw_by_period[period] = kw
-
+        max_kw_by_period = self.get_max_demand_kw_by_period(uc)
         demand_cost = sum(
             uc.get_demand_charge_for_period(p, max_kw)
             for p, max_kw in max_kw_by_period.items()
@@ -745,7 +804,6 @@ class SimulationRun:
         """
         hours_per_step  = self.timestep_min / 60.0
         energy_by_month = [0.0] * 12
-        max_kw_by_period: dict[int, float] = {}
 
         for i in range(len(self.heater_power_in_kw)):
             kw   = self._combined_kw(i)
@@ -753,9 +811,7 @@ class SimulationRun:
             energy_by_month[_step_to_month(i, self.timestep_min)] += (
                 kw * hours_per_step * rate
             )
-            period = uc.get_demand_period_at_step(i, self.timestep_min)
-            if period not in max_kw_by_period or kw > max_kw_by_period[period]:
-                max_kw_by_period[period] = kw
+        max_kw_by_period = self.get_max_demand_kw_by_period(uc)
 
         # Assign each period's demand charge to its calendar month.
         # Period key = month * num_periods + offset → month = key // num_periods.
@@ -786,7 +842,6 @@ class SimulationRun:
         hours_per_step      = self.timestep_min / 60.0
         energy_peak         = [0.0] * 12
         energy_off_peak     = [0.0] * 12
-        max_kw_by_period: dict[int, float] = {}
 
         for i in range(len(self.heater_power_in_kw)):
             kw = self._combined_kw(i)
@@ -798,8 +853,7 @@ class SimulationRun:
                 energy_peak[month] += cost
             else:
                 energy_off_peak[month] += cost
-            if period not in max_kw_by_period or kw > max_kw_by_period[period]:
-                max_kw_by_period[period] = kw
+        max_kw_by_period = self.get_max_demand_kw_by_period(uc)
 
         num_periods    = 3 if uc.include_discount else 2
         demand_peak    = [0.0] * 12
