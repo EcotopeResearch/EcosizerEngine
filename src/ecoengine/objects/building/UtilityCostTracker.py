@@ -260,6 +260,13 @@ class UtilityCostTracker:
         )
 
         uc = UtilityCostTracker.from_csv("utility_rates.csv")
+
+    Demand interval
+    ---------------
+    ``demand_interval_min`` (default 15) is the averaging window for demand
+    charges: the billed demand of a period is the highest average kW over any
+    ``demand_interval_min``-minute window that lies entirely inside that
+    period (see ``SimulationRun.get_max_demand_kw_by_period``).
     """
 
     def __init__(
@@ -272,7 +279,12 @@ class UtilityCostTracker:
         monthly_base_charge: float,
         energy_charge_by_hour: list[float] | None = None,
         include_discount: bool = False,
+        demand_interval_min: int = 15,
     ) -> None:
+        if not isinstance(demand_interval_min, int) or isinstance(demand_interval_min, bool) or demand_interval_min <= 0:
+            raise ValueError(
+                f"demand_interval_min must be a positive integer number of minutes, got {demand_interval_min!r}."
+            )
         self.demand_period_chart  = demand_period_chart
         self.demand_charge_map    = demand_charge_map
         self.energy_charge_map    = energy_charge_map
@@ -281,6 +293,7 @@ class UtilityCostTracker:
         self.monthly_base_charge  = monthly_base_charge
         self.energy_charge_by_hour: list[float] = energy_charge_by_hour or []
         self.include_discount     = include_discount
+        self.demand_interval_min  = demand_interval_min
 
     # ------------------------------------------------------------------
     # Factory constructors
@@ -303,6 +316,7 @@ class UtilityCostTracker:
         dscnt_end_hour=None,
         discnt_demand_charge=None,
         discnt_energy_charge=None,
+        demand_interval_min: int = 15,
     ) -> UtilityCostTracker:
         """
         Build a UtilityCostTracker from rate parameters.
@@ -348,6 +362,8 @@ class UtilityCostTracker:
             Discount demand charge [$/kW].
         discnt_energy_charge : float or list[float] or None
             Discount energy rate [$/kWh].
+        demand_interval_min : int
+            Averaging window for demand charges [minutes]. Default 15.
 
         Returns
         -------
@@ -414,6 +430,7 @@ class UtilityCostTracker:
             is_discount_map=is_discount_map,
             monthly_base_charge=monthly_base_charge,
             include_discount=include_discount,
+            demand_interval_min=demand_interval_min,
         )
 
     @classmethod
@@ -421,6 +438,7 @@ class UtilityCostTracker:
         cls,
         csv_path: str | None = None,
         csv_file: TextIOWrapper | None = None,
+        demand_interval_min: int = 15,
     ) -> UtilityCostTracker:
         """
         Build a UtilityCostTracker from an 8760-row CSV file.
@@ -439,6 +457,8 @@ class UtilityCostTracker:
         ----------
         csv_path : str or None
         csv_file : TextIOWrapper or None
+        demand_interval_min : int
+            Averaging window for demand charges [minutes]. Default 15.
 
         Returns
         -------
@@ -554,6 +574,7 @@ class UtilityCostTracker:
             is_discount_map=is_discount_map,
             monthly_base_charge=monthly_base_charge,
             energy_charge_by_hour=energy_charge_by_hour,
+            demand_interval_min=demand_interval_min,
         )
 
     # ------------------------------------------------------------------

@@ -101,7 +101,9 @@ data/
 
 **`Controls`** (`objects/components/heating/Controls.py`) — Holds on/off temperature setpoints for a single operating schedule block (e.g., load-up, normal, shed). A `control_map` is a `dict[str, Controls]` keyed by schedule label (e.g., `"normal"`, `"load_up"`, `"shed"`).
 
-**`SimulationRun`** (`objects/simulation/SimulationRun.py`) — Accumulates per-timestep outputs. Key methods: `record_timestep()`, `record_outage()`, `is_successful()`, `get_summary()`, `get_total_energy_kwh()`, `get_peak_demand_kw()`, `to_csv()`, `to_plotly()`, `get_annual_utility_cost()`, `get_monthly_cost_breakdown()`.
+**`SimulationRun`** (`objects/simulation/SimulationRun.py`) — Accumulates per-timestep outputs. Key methods: `record_timestep()`, `record_outage()`, `is_successful()`, `get_summary()`, `get_total_energy_kwh()`, `get_peak_demand_kw()`, `to_csv()`, `to_plotly()`, `get_annual_utility_cost()`, `get_monthly_cost_breakdown()`, `get_max_demand_kw_by_period()`.
+
+**Demand charges use a windowed average** — A period's billed demand is the highest average combined kW over any `UtilityCostTracker.demand_interval_min`-minute window (default 15) lying entirely inside that period; windows spanning two periods are ignored. Windows slide on a `gcd(timestep_min, demand_interval_min)` grid (5 min for annual runs with a 15-min interval). All three cost functions get demand from `SimulationRun.get_max_demand_kw_by_period()`.
 
 **`Simulator`** (`interfaces/Simulator.py`) — Module-level functions: `simulate(dhw_system, building, duration)`, `simulate_3day()`, `simulate_annual()`.
 
